@@ -1,0 +1,72 @@
+name: Tâche Codex
+about: Mission courte, bornée et testable pour Codex
+title: "[Sprint XX] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Utiliser cette issue pour une seule mission Codex clairement délimitée.
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objectif
+      description: Décrire le résultat attendu en quelques phrases.
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: Documents de référence
+      description: Lister les fichiers ou spécifications utiles.
+      placeholder: |
+        - THEME_SPECIFICATION.md
+        - DESIGN_SYSTEM.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: included
+    attributes:
+      label: Périmètre inclus
+      description: Ce que Codex doit réellement réaliser.
+    validations:
+      required: true
+
+  - type: textarea
+    id: excluded
+    attributes:
+      label: Hors périmètre
+      description: Ce que Codex ne doit pas modifier.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d’acceptation
+      description: Utiliser une checklist vérifiable.
+      placeholder: |
+        - [ ] Le composant fonctionne sans erreur PHP.
+        - [ ] Aucun CDN obligatoire n’est ajouté.
+        - [ ] Le rendu reste lisible sans JavaScript.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests et vérifications
+      description: Commandes, scénarios et contrôles à exécuter.
+    validations:
+      required: true
+
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: Livrables attendus
+      description: Fichiers, rapport et preuves à fournir.
+    validations:
+      required: true
