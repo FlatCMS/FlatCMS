@@ -1,0 +1,423 @@
+{
+  "id": "contact_form_main",
+  "name": "Prendre contact",
+  "slug": "contact-main",
+  "description": "",
+  "recipient_email": "",
+  "submit_label": "Envoyer la demande",
+  "success_message": "Merci, votre message a bien été transmis à l'atelier.",
+  "is_active": true,
+  "is_default": true,
+  "fields": {
+    "name": true,
+    "email": true,
+    "subject": false,
+    "phone": true,
+    "message": true
+  },
+  "custom_fields": [
+    {
+      "key": "nom",
+      "label": "Nom",
+      "type": "text",
+      "required": true,
+      "placeholder": "Votre nom",
+      "help": "",
+      "position_after": "message",
+      "width": "half",
+      "options": []
+    },
+    {
+      "key": "prenom",
+      "label": "Prénom",
+      "type": "text",
+      "required": true,
+      "placeholder": "Votre prénom",
+      "help": "",
+      "position_after": "message",
+      "width": "half",
+      "options": []
+    },
+    {
+      "key": "demande",
+      "label": "Objet de la demande",
+      "type": "select",
+      "required": true,
+      "placeholder": "Sélectionner une option",
+      "help": "",
+      "position_after": "message",
+      "width": "half",
+      "options": [
+        "Commande sur mesure",
+        "Visite de l'atelier",
+        "Collaboration",
+        "Question générale"
+      ]
+    },
+    {
+      "key": "echeance",
+      "label": "Échéance souhaitée",
+      "type": "select",
+      "required": false,
+      "placeholder": "Sélectionner une option",
+      "help": "",
+      "position_after": "message",
+      "width": "half",
+      "options": [
+        "Cette semaine",
+        "Ce mois-ci",
+        "Sous 1 à 2 mois",
+        "À planifier"
+      ]
+    },
+    {
+      "key": "ville",
+      "label": "Ville ou pays",
+      "type": "text",
+      "required": true,
+      "placeholder": "Ville ou pays",
+      "help": "",
+      "position_after": "message",
+      "width": "half",
+      "options": []
+    },
+    {
+      "key": "phone",
+      "label": "Téléphone",
+      "type": "tel",
+      "required": false,
+      "placeholder": "Votre téléphone",
+      "help": "",
+      "position_after": "message",
+      "width": "half",
+      "options": []
+    },
+    {
+      "key": "votre_site",
+      "label": "Votre site",
+      "type": "url",
+      "required": false,
+      "placeholder": "https://example.test",
+      "help": "",
+      "position_after": "message",
+      "width": "full",
+      "options": []
+    }
+  ],
+  "attachments": {
+    "enabled": true,
+    "required": false,
+    "max_files": 2,
+    "max_size_mb": 8,
+    "allowed_extensions": [
+      "pdf",
+      "jpg",
+      "jpeg",
+      "png",
+      "webp"
+    ]
+  },
+  "created_at": "2026-05-10 10:50:00",
+  "updated_at": "2026-05-18 20:36:24",
+  "form_type": "contact",
+  "newsletter_legal_url": "/page/legal-notice",
+  "newsletter_privacy_url": "/page/privacy-policy",
+  "source_locale": "fr-FR",
+  "translations": {
+    "fr-FR": {
+      "submit_label": "",
+      "success_message": "",
+      "fields": []
+    },
+    "en-US": {
+      "submit_label": "Send request",
+      "success_message": "Thanks, your message has been sent to the workshop.",
+      "fields": {
+        "nom": {
+          "label": "Last name",
+          "placeholder": "Your last name",
+          "help": "",
+          "options": []
+        },
+        "prenom": {
+          "label": "First name",
+          "placeholder": "Your first name",
+          "help": "",
+          "options": []
+        },
+        "demande": {
+          "label": "Request topic",
+          "placeholder": "Select an option",
+          "help": "",
+          "options": [
+            "Custom order",
+            "Workshop visit",
+            "Collaboration",
+            "General question"
+          ]
+        },
+        "echeance": {
+          "label": "Preferred timeframe",
+          "placeholder": "Select an option",
+          "help": "",
+          "options": [
+            "This week",
+            "This month",
+            "Within 1 to 2 months",
+            "To be scheduled"
+          ]
+        },
+        "ville": {
+          "label": "City or country",
+          "placeholder": "City or country",
+          "help": "",
+          "options": []
+        },
+        "phone": {
+          "label": "Phone",
+          "placeholder": "Your phone number",
+          "help": "",
+          "options": []
+        },
+        "votre_site": {
+          "label": "Website",
+          "placeholder": "https://example.test",
+          "help": "",
+          "options": []
+        }
+      }
+    },
+    "de-DE": {
+      "submit_label": "Anfrage senden",
+      "success_message": "Danke, Ihre Nachricht wurde an das Atelier gesendet.",
+      "fields": {
+        "nom": {
+          "label": "Nachname",
+          "placeholder": "Ihr Nachname",
+          "help": "",
+          "options": []
+        },
+        "prenom": {
+          "label": "Vorname",
+          "placeholder": "Ihr Vorname",
+          "help": "",
+          "options": []
+        },
+        "demande": {
+          "label": "Betreff der Anfrage",
+          "placeholder": "Eine Option wählen",
+          "help": "",
+          "options": [
+            "Maßanfertigung",
+            "Atelierbesuch",
+            "Zusammenarbeit",
+            "Allgemeine Frage"
+          ]
+        },
+        "echeance": {
+          "label": "Gewünschter Zeitraum",
+          "placeholder": "Eine Option wählen",
+          "help": "",
+          "options": [
+            "Diese Woche",
+            "Diesen Monat",
+            "Innerhalb von 1 bis 2 Monaten",
+            "Noch zu planen"
+          ]
+        },
+        "ville": {
+          "label": "Stadt oder Land",
+          "placeholder": "Stadt oder Land",
+          "help": "",
+          "options": []
+        },
+        "phone": {
+          "label": "Telefon",
+          "placeholder": "Ihre Telefonnummer",
+          "help": "",
+          "options": []
+        },
+        "votre_site": {
+          "label": "Website",
+          "placeholder": "https://example.test",
+          "help": "",
+          "options": []
+        }
+      }
+    },
+    "es-ES": {
+      "submit_label": "Enviar solicitud",
+      "success_message": "Gracias, tu mensaje ha sido enviado al taller.",
+      "fields": {
+        "nom": {
+          "label": "Apellido",
+          "placeholder": "Tu apellido",
+          "help": "",
+          "options": []
+        },
+        "prenom": {
+          "label": "Nombre",
+          "placeholder": "Tu nombre",
+          "help": "",
+          "options": []
+        },
+        "demande": {
+          "label": "Motivo de la solicitud",
+          "placeholder": "Selecciona una opción",
+          "help": "",
+          "options": [
+            "Encargo a medida",
+            "Visita al taller",
+            "Colaboración",
+            "Pregunta general"
+          ]
+        },
+        "echeance": {
+          "label": "Plazo deseado",
+          "placeholder": "Selecciona una opción",
+          "help": "",
+          "options": [
+            "Esta semana",
+            "Este mes",
+            "En 1 o 2 meses",
+            "Por planificar"
+          ]
+        },
+        "ville": {
+          "label": "Ciudad o país",
+          "placeholder": "Ciudad o país",
+          "help": "",
+          "options": []
+        },
+        "phone": {
+          "label": "Teléfono",
+          "placeholder": "Tu teléfono",
+          "help": "",
+          "options": []
+        },
+        "votre_site": {
+          "label": "Sitio web",
+          "placeholder": "https://example.test",
+          "help": "",
+          "options": []
+        }
+      }
+    },
+    "it-IT": {
+      "submit_label": "Invia la richiesta",
+      "success_message": "Grazie, il tuo messaggio è stato inviato all'atelier.",
+      "fields": {
+        "nom": {
+          "label": "Cognome",
+          "placeholder": "Il tuo cognome",
+          "help": "",
+          "options": []
+        },
+        "prenom": {
+          "label": "Nome",
+          "placeholder": "Il tuo nome",
+          "help": "",
+          "options": []
+        },
+        "demande": {
+          "label": "Oggetto della richiesta",
+          "placeholder": "Seleziona un'opzione",
+          "help": "",
+          "options": [
+            "Ordine su misura",
+            "Visita all'atelier",
+            "Collaborazione",
+            "Domanda generale"
+          ]
+        },
+        "echeance": {
+          "label": "Tempistica desiderata",
+          "placeholder": "Seleziona un'opzione",
+          "help": "",
+          "options": [
+            "Questa settimana",
+            "Questo mese",
+            "Entro 1 o 2 mesi",
+            "Da pianificare"
+          ]
+        },
+        "ville": {
+          "label": "Città o paese",
+          "placeholder": "Città o paese",
+          "help": "",
+          "options": []
+        },
+        "phone": {
+          "label": "Telefono",
+          "placeholder": "Il tuo telefono",
+          "help": "",
+          "options": []
+        },
+        "votre_site": {
+          "label": "Sito web",
+          "placeholder": "https://example.test",
+          "help": "",
+          "options": []
+        }
+      }
+    },
+    "pt-PT": {
+      "submit_label": "Enviar pedido",
+      "success_message": "Obrigado, a sua mensagem foi enviada para o atelier.",
+      "fields": {
+        "nom": {
+          "label": "Apelido",
+          "placeholder": "O seu apelido",
+          "help": "",
+          "options": []
+        },
+        "prenom": {
+          "label": "Primeiro nome",
+          "placeholder": "O seu primeiro nome",
+          "help": "",
+          "options": []
+        },
+        "demande": {
+          "label": "Motivo do pedido",
+          "placeholder": "Selecione uma opção",
+          "help": "",
+          "options": [
+            "Encomenda por medida",
+            "Visita ao atelier",
+            "Colaboração",
+            "Questão geral"
+          ]
+        },
+        "echeance": {
+          "label": "Prazo desejado",
+          "placeholder": "Selecione uma opção",
+          "help": "",
+          "options": [
+            "Esta semana",
+            "Este mês",
+            "Dentro de 1 a 2 meses",
+            "A planear"
+          ]
+        },
+        "ville": {
+          "label": "Cidade ou país",
+          "placeholder": "Cidade ou país",
+          "help": "",
+          "options": []
+        },
+        "phone": {
+          "label": "Telefone",
+          "placeholder": "O seu telefone",
+          "help": "",
+          "options": []
+        },
+        "votre_site": {
+          "label": "Site web",
+          "placeholder": "https://example.test",
+          "help": "",
+          "options": []
+        }
+      }
+    }
+  }
+}

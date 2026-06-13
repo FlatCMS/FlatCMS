@@ -1,0 +1,13 @@
+{
+  "id": "cat_workshop",
+  "name": "Atelier",
+  "slug": "atelier",
+  "description": "Gestes, fabrication et coulisses du travail en céramique.",
+  "module": "blog",
+  "status": "active",
+  "created_at": "2026-05-10 08:35:00",
+  "updated_at": "2026-05-10 08:35:00",
+  "translation_group": "cat_workshop",
+  "locale": "fr-FR",
+  "source_locale": "fr-FR"
+}

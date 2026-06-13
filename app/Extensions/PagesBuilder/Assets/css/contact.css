@@ -1,0 +1,147 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: LicenseRef-FlatCMS-Commercial
+ *
+ * Premium FlatCMS component. See LICENSING.md, COMMERCIAL_LICENSE.md and TRADEMARK.md.
+ */
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget {
+  --pb-contact-widget-shell-padding: var(--fc-form-shell-padding, 1.25rem);
+  --pb-contact-widget-surface: var(--fc-form-shell-bg, var(--color-bg-secondary, #1e293b));
+  --pb-contact-widget-border-color: var(--fc-form-shell-border, var(--color-border, #334155));
+  --pb-contact-widget-border-style: solid;
+  --pb-contact-widget-border-width: 1px;
+  --pb-contact-widget-radius: var(--fc-form-shell-radius, 0.75rem);
+  --pb-contact-widget-shadow: none;
+  --pb-contact-widget-text: var(--color-text-primary, inherit);
+  --pb-contact-widget-label-color: var(--fc-form-label-color, var(--color-text-secondary, #cbd5e1));
+  --pb-contact-widget-input-bg: var(--fc-form-input-bg, var(--color-bg-primary, #0f172a));
+  --pb-contact-widget-input-border: var(--fc-form-input-border, var(--color-border, #334155));
+  --pb-contact-widget-input-color: var(--fc-form-input-color, var(--color-text-primary, #f8fafc));
+  --pb-contact-widget-placeholder-color: var(--fc-form-placeholder-color, var(--color-text-muted, #94a3b8));
+  display: grid;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-contact-widget-variant-subtle {
+  --pb-contact-widget-surface: var(--fc-form-shell-bg, var(--fc-card-bg, var(--color-bg-secondary, #1e293b)));
+  --pb-contact-widget-border-color: var(--fc-form-shell-border, var(--fc-card-border, var(--color-border, #334155)));
+  --pb-contact-widget-shadow: var(--fc-card-shadow, none);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-contact-widget-variant-strong {
+  --pb-contact-widget-surface: var(--fc-card-strong-bg, color-mix(in srgb, var(--color-primary, #6366f1) 8%, var(--fc-form-shell-bg, var(--color-bg-secondary, #1e293b))));
+  --pb-contact-widget-border-color: var(--fc-card-strong-border, color-mix(in srgb, var(--color-primary, #6366f1) 28%, var(--fc-form-shell-border, var(--color-border, #334155))));
+  --pb-contact-widget-shadow: var(--fc-card-strong-shadow, 0 18px 36px rgba(99, 102, 241, 0.12));
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-contact-widget-variant-dark {
+  --pb-contact-widget-surface: var(--fc-form-shell-bg, var(--fc-card-bg, var(--color-bg-secondary, #1e293b)));
+  --pb-contact-widget-border-color: var(--fc-form-shell-border, var(--fc-card-border, var(--color-border, #334155)));
+  --pb-contact-widget-shadow: 0 22px 48px rgba(2, 6, 23, 0.28);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-center {
+  justify-items: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-right {
+  justify-items: end;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget-title {
+  display: block;
+  margin: 0;
+  color: var(--pb-contact-widget-text);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-center .pb-contact-widget-title {
+  text-align: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-right .pb-contact-widget-title {
+  text-align: right;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget-embed {
+  width: min(100%, 100%);
+  min-width: 0;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-preview-contact {
+  width: 100%;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-center .pb-preview-contact {
+  justify-items: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-right .pb-preview-contact {
+  justify-items: end;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-preview-contact-title,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-form-card {
+  color: var(--pb-contact-widget-text);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .flatcms-contact-native-form,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-preview-contact-form,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .pb-form-card {
+  padding: var(--pb-contact-widget-shell-padding);
+  border-style: var(--pb-contact-widget-border-style);
+  border-width: var(--pb-contact-widget-border-width);
+  border-color: var(--pb-contact-widget-border-color);
+  border-radius: var(--pb-contact-widget-radius);
+  background: var(--pb-contact-widget-surface);
+  box-shadow: var(--pb-contact-widget-shadow);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .flatcms-contact-native-form,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-preview-contact-form {
+  gap: var(--fc-form-shell-gap, 1rem);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .form-label,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-preview-contact-label,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .flatcms-contact-choice-item,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-preview-contact-choice-item,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .flatcms-contact-hint,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-preview-contact-help,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .flatcms-contact-consent-links,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .flatcms-contact-consent-links a {
+  color: var(--pb-contact-widget-label-color);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .form-input,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-preview-contact-input {
+  border-color: var(--pb-contact-widget-input-border);
+  border-radius: var(--fc-form-input-radius, 0.5rem);
+  background: var(--pb-contact-widget-input-bg);
+  color: var(--pb-contact-widget-input-color);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .form-input::placeholder,
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-preview-contact-input::placeholder {
+  color: var(--pb-contact-widget-placeholder-color);
+  opacity: 0.72;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-contact-widget .pb-contact-widget-embed .flatcms-contact-native select.form-input {
+  background-color: var(--pb-contact-widget-input-bg);
+}
+
+
+@media (max-width: 768px) {
+  :where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-center,
+  :where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-right {
+    justify-items: stretch;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-center .pb-contact-widget-title,
+  :where(.pb-page, .pb-block-preview) .pb-contact-widget.pb-align-right .pb-contact-widget-title {
+    text-align: left;
+  }
+}

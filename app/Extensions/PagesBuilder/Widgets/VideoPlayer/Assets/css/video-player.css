@@ -1,0 +1,285 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: LicenseRef-FlatCMS-Commercial
+ *
+ * Premium FlatCMS component. See LICENSING.md, COMMERCIAL_LICENSE.md and TRADEMARK.md.
+ */
+
+.pb-video-player {
+    --pb-video-player-height: 420px;
+    display: grid;
+    gap: 1rem;
+    text-align: left;
+}
+
+.pb-video-player-align-center {
+    text-align: center;
+}
+
+.pb-video-player-align-right {
+    text-align: right;
+}
+
+.pb-video-player-header {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.pb-video-player-title,
+.pb-video-player-subtitle {
+    margin: 0;
+}
+
+.pb-video-player-title {
+    font-size: var(--fc-heading-h2-size, clamp(1.9rem, 3.8vw, 3rem));
+    line-height: var(--fc-heading-h2-line-height, 1.05);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-text-primary, #0f172a);
+}
+
+.pb-video-player-subtitle {
+    font-size: var(--fc-body-lg-size, 1rem);
+    line-height: var(--fc-body-lg-line-height, 1.7);
+    color: var(--color-text-secondary, #475569);
+}
+
+.pb-video-player-shell {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    border-radius: var(--fc-card-radius, 1.25rem);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+        radial-gradient(circle at top, rgba(96, 165, 250, 0.18), transparent 48%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.98));
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+}
+
+.pb-video-player-skin-soft .pb-video-player-shell {
+    background:
+        radial-gradient(circle at top, rgba(14, 165, 233, 0.16), transparent 46%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(17, 24, 39, 0.95));
+    border-color: color-mix(in srgb, var(--color-primary, #3b82f6) 24%, rgba(255, 255, 255, 0.12));
+}
+
+.pb-video-player-skin-cinema .pb-video-player-shell {
+    background:
+        radial-gradient(circle at top, rgba(251, 191, 36, 0.12), transparent 42%),
+        linear-gradient(180deg, rgba(3, 7, 18, 0.96), rgba(0, 0, 0, 1));
+    border-color: rgba(251, 191, 36, 0.18);
+}
+
+.pb-video-player-shell.is-empty {
+    display: grid;
+    place-items: center;
+    padding: clamp(1.5rem, 4vw, 2.75rem);
+}
+
+.pb-video-player-stage {
+    position: relative;
+    min-height: var(--pb-video-player-height);
+    overflow: hidden;
+}
+
+.pb-video-player-placeholder {
+    display: grid;
+    justify-items: center;
+    gap: 0.85rem;
+    max-width: 30rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.pb-video-player-placeholder-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 1.6rem;
+}
+
+.pb-video-player-placeholder-title,
+.pb-video-player-placeholder-text {
+    margin: 0;
+}
+
+.pb-video-player-placeholder-title {
+    font-size: var(--fc-heading-h4-size, clamp(1.05rem, 1.5vw, 1.22rem));
+    line-height: var(--fc-heading-h4-line-height, 1.28);
+}
+
+.pb-video-player-placeholder-text {
+    font-size: var(--fc-body-sm-size, 0.9rem);
+    line-height: var(--fc-body-sm-line-height, 1.55);
+}
+
+.pb-video-player-media {
+    display: block;
+    width: 100%;
+    height: var(--pb-video-player-height);
+    object-fit: contain;
+    background: #000;
+}
+
+.pb-video-player-design-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: transparent;
+    opacity: 0;
+}
+
+.pb-video-player-shell.is-ambient .pb-video-player-media {
+    object-fit: cover;
+}
+
+
+.pb-video-player-ui,
+.pb-video-player-big-play {
+    display: none;
+}
+
+.pb-video-player-shell.is-enhanced .pb-video-player-ui,
+.pb-video-player-shell.is-enhanced .pb-video-player-big-play {
+    display: block;
+}
+
+.pb-video-player-shell.is-ambient .pb-video-player-ui,
+.pb-video-player-shell.is-ambient .pb-video-player-big-play {
+    display: none !important;
+}
+
+.pb-video-player-shell.is-enhanced .pb-video-player-big-play {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    z-index: 3;
+    transform: translate(-50%, -50%);
+    width: 4.75rem;
+    height: 4.75rem;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.82);
+    color: #fff;
+    font-size: 1.55rem;
+    box-shadow: 0 18px 34px rgba(2, 6, 23, 0.4);
+    cursor: pointer;
+    transition: transform 0.24s ease, background-color 0.24s ease, opacity 0.24s ease;
+}
+
+.pb-video-player-shell.is-enhanced .pb-video-player-big-play:hover,
+.pb-video-player-shell.is-enhanced .pb-video-player-big-play:focus-visible {
+    transform: translate(-50%, -50%) scale(1.04);
+    background: color-mix(in srgb, var(--color-primary, #3b82f6) 42%, rgba(15, 23, 42, 0.84));
+}
+
+.pb-video-player-shell.is-playing .pb-video-player-big-play {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pb-video-player-ui {
+    position: relative;
+    z-index: 1;
+    padding: 0.75rem 0.85rem 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.96));
+    color: #fff;
+}
+
+.pb-video-player-progress-wrap {
+    padding: 0 0.15rem 0.6rem;
+}
+
+.pb-video-player-progress,
+.pb-video-player-volume {
+    width: 100%;
+    margin: 0;
+    accent-color: var(--color-primary, #3b82f6);
+    cursor: pointer;
+}
+
+.pb-video-player-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 0;
+}
+
+.pb-video-player-control-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.pb-video-player-control-btn:hover,
+.pb-video-player-control-btn:focus-visible {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.pb-video-player-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.88);
+    white-space: nowrap;
+}
+
+.pb-video-player-time-separator,
+.pb-video-player-controls-spacer {
+    opacity: 0.55;
+}
+
+.pb-video-player-controls-spacer {
+    flex: 1 1 auto;
+}
+
+.pb-video-player-volume {
+    width: min(7rem, 22vw);
+}
+
+.pb-video-player .pb-empty {
+    margin: 0;
+}
+
+@media (max-width: 720px) {
+    .pb-video-player-stage,
+    .pb-video-player-media {
+        min-height: clamp(220px, 52vw, var(--pb-video-player-height));
+        height: clamp(220px, 52vw, var(--pb-video-player-height));
+    }
+
+    .pb-video-player-ui {
+        padding: 0.7rem 0.7rem 0.8rem;
+    }
+
+    .pb-video-player-volume {
+        display: none;
+    }
+
+    .pb-video-player-controls {
+        gap: 0.45rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pb-video-player-shell.is-enhanced .pb-video-player-big-play,
+    .pb-video-player-control-btn {
+        transition: none;
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "name": "Posts",
+    "version": "1.0.0",
+    "description": "Blog posts management.",
+    "type": "content",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": "qt9ordTN4xXa+/VyX270p9F2SOp2QR1/SF4/F061dRLh7CspmfvTLoIIAdPwDESvXum3y8a1VGTaOztzwYFWvOv5/w45uCJFgtSVCCm6y4eUb4dEpQ2QIs3hAyqlsji3xSb3SQN8GlWr1pBL8ll5DfgGkdQ7OncatFSTi1Zs7VvcZSBXEesUavYxgUtDhQYxafRnIOm7aeiHZKAczMsmFZ58jUhu/muP07hX9S1ZheNaqQou0x+19/QUV1mM2W2EtafU1E8NWr1nubcre0CIvYSaSlMXhZkOLRGja8tkEHZyVibvOuZRRrbdDxiNla9/HqDq1MiUy4f0gAQl7QnpN5lfnrwt9MWZQNyEAhSMVryS+hU62/ueXByShstxPMjj1py/vb0Wx0U5eGC0zitioGYm6Ya5EBq97IfQch1hyRi9Z3ejAtXlk0dRZ8kUFE471wI8j3pMk7ohv/aVia6b/BOpHZ5DdjCPJw0dfcsthm4cyO4wnld2PXRF7vnJv1ixvkRDTnm80aTSfiuHH50lSjzjHwfj42VFozs26UH83uxZvRw2P6loc+A7j22HnQkws4bQholKtdNnjVzJiDFn7d04aoTcMtvJ1pMICF2+bCwrVzFYDR/wsrnSVZREeloXZkcrZf/sMLWhP2VQxtST9Z+qai6b3CSLQop9BHGdPWM="
+}

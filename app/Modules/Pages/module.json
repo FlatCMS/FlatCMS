@@ -1,0 +1,17 @@
+{
+    "name": "Pages",
+    "version": "1.0.0",
+    "description": "Pages management.",
+    "type": "content",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": "oQOEqXHhKIj5wavz7pKNzCyOETtWv93y997uoNe4P4MiDm32iVj9AH+dE+yDEe7jrtsmz9IWUS8L4O3y1IWCwm4Cz+HcyqQHxCJaY3M8bcRfVVeYFsW0XUH1jRRAK4svGj6VX3f1Zlb9hQ+KRcKEMAseKNHWaZ8beKN1iPh6u2+ddHZaUh+NkizuLG4kNDR81UylqvgX8kGnIoA7vw6zc7vcesQQHn3VNkzDo5TntENjEu11NQmtaTEi1x5/k0FpSKfelF99pty3fvd/Y2tU/eh6CYN15HWr+KZzfEh0WeHJ556pcWMbe9t0C8zLkHdQQWh+8SC2l+p+hilBkFcZNVuWkzgpvOXfqB+ZDiH+QfL/gm1Sn5QWpjDZilJs2YR3qesVM8hC5JwQwlXSyPMFokdM7pGcMvLwmMIl5y64cCxojPu2rqtTYys6UTS/ftbEEj3stRqIm6dPr+1yNIRjBGddsuqTLa1Ga4+mNSz5yD+6wFF5XiI9bdOG5OrHo7NhO25uZgxUH8eVEzoqPC/ghjg7BGbEq58EzExfxZORjJIXQ6Gufpq65ms8rjWuL28CVmjHqZA8MmGQNifijutgohTylpb3BcciztJK05uKkQc5dI89fMGLUJzyidPIjuoEaFRIENlasvwaaKm8wJDgLMvXRnP57el+sICPqRmTrZA="
+}

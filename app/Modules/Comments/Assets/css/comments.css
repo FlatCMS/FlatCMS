@@ -1,0 +1,184 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+.comments-filter-form {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: nowrap;
+}
+
+.comments-filter-controls {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.comments-filter-form .form-label {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.comments-filter-controls .form-select {
+  min-height: 40px;
+}
+
+.comment-content {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.comment-content-link {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.comment-content-link:hover {
+  color: var(--color-primary);
+}
+
+.comment-content-link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.comment-actions-cell {
+  white-space: nowrap;
+}
+
+.comment-actions {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.comment-actions form {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 36px;
+  flex: 0 0 auto;
+}
+
+.comment-actions .table-action {
+  width: 36px;
+  height: 36px;
+}
+
+.comments-read-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+}
+
+.comments-read-modal[hidden] {
+  display: none;
+}
+
+.comments-read-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.comments-read-modal__dialog {
+  position: relative;
+  max-width: 760px;
+  margin: 10vh auto 0;
+  width: calc(100% - 32px);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: 24px;
+}
+
+.comments-read-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.comments-read-modal__close:hover {
+  color: var(--color-text);
+  background: var(--color-bg-tertiary);
+}
+
+.comments-read-modal__title {
+  margin: 0 36px 12px 0;
+}
+
+.comments-read-modal__meta {
+  margin: 0 0 6px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.comments-read-modal__content {
+  margin-top: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  padding: 14px;
+  line-height: 1.6;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 55vh;
+  overflow: auto;
+}
+
+body.comments-modal-open {
+  overflow: hidden;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .comments-filter-form {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .comments-filter-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .comments-filter-controls .form-select {
+    flex: 1;
+  }
+
+  .comments-read-modal__dialog {
+    margin-top: 6vh;
+    width: calc(100% - 20px);
+    padding: 16px;
+  }
+}

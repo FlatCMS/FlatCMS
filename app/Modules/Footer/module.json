@@ -1,0 +1,17 @@
+{
+    "name": "Footer",
+    "version": "1.0.0",
+    "description": "Core footer management module.",
+    "type": "content",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": "Ixmjq/kOhhVid70RkHcfVxRjfMS96pup/M8Ju15GUuv87bLOYRKRJJEJAjfdlnAvUCP0voe0MlD71eq9mbpC0nK/IoJ7No+0NIoWPA/98IDHzq1rH/NDl1Cdr/fuyYllOH3ktnZAwtvf3cerju0ve5cMsjZy5M/XxRo0yDhMu8dLzViS0ClspdU4Fnx9q8Mw7vIkrKk/xOrfs+7e4W2VQDhtNAbhC0QOKiO96Fk6CDBAnrksS+sayWnLcqNtkQLsZ9a1paG1Gjpr06yE2brxw0tsc13jXPgsi/Lf9XdbcKAa2MDlLMKxd1Ra6Br0FSWROjNBl+/urVMgWRw1vJX9PkmT8e48pZJFW/pGBJQ+bzQFHTu4qywMA+LmohCM27ybqftEE9Crt69t8PFfjGWojYkldj6hYVNsq4AdhD9acPcUSQwJqM4Y1AEfGSW+Ee1m85pzGkIQW7MsteuujMYw9sfmOg0gwzqBc6xiXFZ86EdO3pXWV85gETr4L25VfKZjt2ge0Wj3uoJhaiBmuGY5uVeEhHfqCOmLxb2ER0Frb1N5Chetn6fmb5DMZPOLMXmgjCXswrzAlGQ1CCrJB7skjg/GyVBnn4U0dc0Jj3LWi2qF5d752JvBwcv/b2lcRFhgFzXMZjfk02ghQW4aw+5cN5aQ2VHqGuYeBZgcipNJn7A="
+}

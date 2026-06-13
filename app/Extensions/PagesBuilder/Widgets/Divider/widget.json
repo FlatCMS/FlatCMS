@@ -1,0 +1,18 @@
+{
+    "name": "Divider",
+    "key": "divider",
+    "version": "1.0.0",
+    "description": "Official FlatCMS divider widget.",
+    "category": "layout",
+    "builders": [
+        "pages",
+        "menu",
+        "footer"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "GFs/kzsyz4if7F9J30PK/xvUu8eMP5vqWgqFQ7DGv9Rv736Lcy/ogGYAEg3xCi4bNF8klxuiuqNoPbVagLI7XeUj9HhTmOyp+T7iNnADwjIrZwUJ5EdQQTRpACrzq64veJvINMQ0GVanH4nPCKtkCJW63/12OfQ55fNBDmfXSVj+Zt5wgamZwsgaPzsADmCoB5m5E3w2vGxmPnxCF0aojjs50/cf8iyvnG3pbPb0maHoLidrX+RX98oPemT9EhBK8vBIdwgrD5vmcUmwLmY7tlcdMNTVbwIZcePqLB6LCFU4e0ZWkYYT6OzT6AB1G/BUtPoEYRQ+KoBgR2Dh4BV/Z6fLgGwXoq9FmR3r691W4AiT7id8s4f8hR2fuwVXvZSQ4TU+Rh1DzbbTwVUGu+DbXhBUnHQFkCU9tyPjxas/vT0CvxmEfvITijqW7UECAcP3fUyizRrkUXj6oUi8im7e7Im+GAD1zohOPPPNRxXwAjtyiwjvZnSznUa3Ub5QJsmeu2bDysaRAz2lPx7e3mNbewcnLLXMhhVpI1hD/pMUowBq5KwFbVd3Myr6uXzopXKQJtUe/DAomu0pr9recQvGMkn3H2FuiNNfn8PHjrzjHmRXIFqPznZ/DktjhqQEyUL/S1RqEk6FhNYkC9UfTgp3NamZbqrcoyDKwkaA+fOPTeY="
+}

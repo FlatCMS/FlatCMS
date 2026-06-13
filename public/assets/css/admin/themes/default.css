@@ -1,0 +1,146 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+@layer theme {
+  :root {
+    /* Primary - Blue */
+    --color-primary: #2563eb;
+    --color-primary-dark: #1d4ed8;
+    --color-primary-light: #3b82f6;
+
+    /* Secondary - Blue */
+    --color-secondary: #3b82f6;
+    --color-secondary-dark: #2563eb;
+    --color-secondary-light: #60a5fa;
+
+    /* Status Colors */
+    --color-success: #16a34a;
+    --color-success-light: #22c55e;
+    --color-success-dark: #15803d;
+    --color-warning: #d97706;
+    --color-warning-light: #f59e0b;
+    --color-warning-dark: #b45309;
+    --color-danger: #dc2626;
+    --color-danger-light: #ef4444;
+    --color-danger-dark: #b91c1c;
+    --color-info: #3b82f6;
+    --color-info-light: #60a5fa;
+    --color-info-dark: #2563eb;
+
+    /* Backgrounds */
+    --color-bg-primary: #f9fafb;
+    --color-bg-secondary: #ffffff;
+    --color-bg-tertiary: #f3f4f6;
+    --color-bg-hover: #e5e7eb;
+
+    /* Text */
+    --color-text-primary: #111827;
+    --color-text-secondary: #4b5563;
+    --color-text-muted: #9ca3af;
+
+    /* Borders */
+    --color-border: #e5e7eb;
+    --color-border-light: #f3f4f6;
+    --color-border-dark: #d1d5db;
+
+    /* Inputs */
+    --color-input-bg: #ffffff;
+    --color-input-border: #e5e7eb;
+    --color-input-focus: #2563eb;
+
+    /* Cards */
+    --color-card-bg: #ffffff;
+    --color-card-border: #e5e7eb;
+
+    /* Header */
+    --color-header-bg: var(--color-bg-secondary);
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    --gradient-purple: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+    --gradient-dark: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+
+    /* Canonical Buttons - Default */
+    --btn-primary-bg: #2563eb;
+    --btn-primary-bg-hover: #1d4ed8;
+    --btn-primary-bg-active: #1e40af;
+    --btn-primary-color: #ffffff;
+    --btn-primary-shadow: 0 4px 10px rgba(37, 99, 235, 0.24);
+    --btn-primary-shadow-hover: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+
+    --btn-secondary-bg: #f8fafc;
+    --btn-secondary-bg-hover: #f1f5f9;
+    --btn-secondary-bg-active: #e2e8f0;
+    --btn-secondary-color: #1f2937;
+    --btn-secondary-border: #cbd5e1;
+    --btn-secondary-border-hover: #94a3b8;
+    --btn-secondary-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --btn-secondary-shadow-hover: 0 6px 12px rgba(148, 163, 184, 0.2);
+
+    --btn-ghost-bg: transparent;
+    --btn-ghost-color: #475569;
+    --btn-ghost-border: #cbd5e1;
+    --btn-ghost-bg-hover: #f1f5f9;
+    --btn-ghost-color-hover: #0f172a;
+    --btn-ghost-border-hover: #94a3b8;
+    --btn-ghost-shadow: none;
+    --btn-ghost-shadow-hover: none;
+
+    --btn-outline-bg: transparent;
+    --btn-outline-color: #4b5563;
+    --btn-outline-border: #d1d5db;
+    --btn-outline-bg-hover: #f8fafc;
+    --btn-outline-color-hover: #111827;
+    --btn-outline-border-hover: #9ca3af;
+
+    /* Badge states */
+    --badge-primary-bg: rgba(37, 99, 235, 0.14);
+    --badge-primary-color: #1d4ed8;
+    --badge-primary-border: rgba(37, 99, 235, 0.34);
+    --badge-primary-shadow: 0 8px 16px -14px rgba(37, 99, 235, 0.72);
+
+    --badge-secondary-bg: rgba(59, 130, 246, 0.14);
+    --badge-secondary-color: #2563eb;
+    --badge-secondary-border: rgba(59, 130, 246, 0.34);
+    --badge-secondary-shadow: 0 8px 16px -14px rgba(59, 130, 246, 0.72);
+
+    --badge-success-bg: rgba(22, 163, 74, 0.14);
+    --badge-success-color: #15803d;
+    --badge-success-border: rgba(22, 163, 74, 0.34);
+    --badge-success-shadow: 0 8px 16px -14px rgba(22, 163, 74, 0.72);
+
+    --badge-warning-bg: rgba(217, 119, 6, 0.14);
+    --badge-warning-color: #b45309;
+    --badge-warning-border: rgba(217, 119, 6, 0.34);
+    --badge-warning-shadow: 0 8px 16px -14px rgba(217, 119, 6, 0.7);
+
+    --badge-danger-bg: rgba(220, 38, 38, 0.14);
+    --badge-danger-color: #b91c1c;
+    --badge-danger-border: rgba(220, 38, 38, 0.34);
+    --badge-danger-shadow: 0 8px 16px -14px rgba(220, 38, 38, 0.72);
+
+    --badge-info-bg: rgba(14, 165, 233, 0.14);
+    --badge-info-color: #0369a1;
+    --badge-info-border: rgba(14, 165, 233, 0.34);
+    --badge-info-shadow: 0 8px 16px -14px rgba(14, 165, 233, 0.72);
+
+    --badge-neutral-shadow: 0 8px 16px -14px rgba(15, 23, 42, 0.32);
+
+    /* Editor dropdown */
+    --editor-dropdown-bg: #ffffff;
+    --editor-dropdown-border: #dbe2ea;
+    --editor-dropdown-text: #334155;
+    --editor-dropdown-hover-bg: #eff3f8;
+    --editor-dropdown-hover-text: #0f172a;
+    --editor-dropdown-shadow: 0 14px 28px -18px rgba(15, 23, 42, 0.32);
+  }
+
+  body.admin-body {
+    background: var(--gradient-dark);
+  }
+}

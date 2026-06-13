@@ -1,0 +1,225 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+body.admin-body .sun-editor {
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
+  overflow: visible;
+}
+
+body.admin-body .sun-editor .se-toolbar {
+  outline: 0;
+  border-bottom: 1px solid var(--color-input-border);
+  background: var(--color-card-bg);
+  overflow: visible;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion {
+  padding: 4px 3px;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-row-primary {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-row-secondary {
+  width: 100%;
+  display: none;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-input-border);
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion.fc-se-expanded .fc-se-toolbar-row-secondary {
+  display: flex;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-toggle {
+  margin-left: auto !important;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-toggle .fc-se-toolbar-chevron {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform 0.2s ease;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion.fc-se-expanded .fc-se-toolbar-toggle .fc-se-toolbar-chevron {
+  transform: rotate(-135deg) translateY(-1px);
+}
+
+body.admin-body .sun-editor .se-btn-module-border {
+  border: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+body.admin-body .sun-editor .se-btn {
+  color: var(--color-text-secondary);
+  border-radius: 8px;
+}
+
+body.admin-body .sun-editor .se-btn:enabled:focus,
+body.admin-body .sun-editor .se-btn:enabled:hover {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  color: var(--color-text-primary);
+}
+
+body.admin-body .sun-editor .se-btn:enabled.on,
+body.admin-body .sun-editor .se-btn:enabled.active {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+}
+
+body.admin-body .sun-editor .se-wrapper .se-wrapper-inner {
+  background: var(--color-input-bg);
+}
+
+body.admin-body .sun-editor .se-wrapper .se-wrapper-wysiwyg,
+body.admin-body .sun-editor .sun-editor-editable {
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
+}
+
+body.admin-body .sun-editor .se-resizing-bar {
+  border-top: 1px solid var(--color-input-border);
+  background: var(--color-card-bg);
+}
+
+body.admin-body .sun-editor .se-list-layer {
+  background: var(--editor-dropdown-bg, var(--color-card-bg));
+  border-color: var(--editor-dropdown-border, var(--color-input-border));
+  color: var(--editor-dropdown-text, var(--color-text-primary));
+  box-shadow: var(--editor-dropdown-shadow, 0 12px 24px -16px rgba(2, 6, 23, 0.45));
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list,
+body.admin-body .sun-editor .se-list-layer .se-btn-list .txt,
+body.admin-body .sun-editor .se-list-layer .se-list-inner .default {
+  color: var(--editor-dropdown-text, var(--color-text-primary));
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list *,
+body.admin-body .sun-editor .se-list-layer .se-list-inner .default * {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h1,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h2,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h3,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h4,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h5,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h6,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul p,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul div,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul pre,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul blockquote {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list:focus,
+body.admin-body .sun-editor .se-list-layer .se-btn-list:hover {
+  background: var(--editor-dropdown-hover-bg, var(--color-bg-hover));
+  color: var(--editor-dropdown-text, var(--color-text-primary));
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list:active {
+  background: var(--editor-dropdown-hover-bg, var(--color-bg-hover));
+  color: var(--editor-dropdown-text, var(--color-text-primary));
+  box-shadow: none;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list:focus *,
+body.admin-body .sun-editor .se-list-layer .se-btn-list:hover * {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list:active * {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list.default_value {
+  background: color-mix(in srgb, var(--editor-dropdown-bg, var(--color-card-bg)) 88%, var(--color-bg-hover) 12%) !important;
+  border-top-color: var(--editor-dropdown-border, var(--color-input-border)) !important;
+  border-bottom-color: var(--editor-dropdown-border, var(--color-input-border)) !important;
+  color: var(--editor-dropdown-text, var(--color-text-primary)) !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list.default_value:hover,
+body.admin-body .sun-editor .se-list-layer .se-btn-list.default_value:focus,
+body.admin-body .sun-editor .se-list-layer .se-btn-list.default_value:active {
+  background: var(--editor-dropdown-hover-bg, var(--color-bg-hover)) !important;
+  color: var(--editor-dropdown-text, var(--color-text-primary)) !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-list-inner .se-list-basic li button.active,
+body.admin-body .sun-editor .se-list-layer .se-list-inner .se-list-basic li button.active:hover,
+body.admin-body .sun-editor .se-list-layer .se-list-inner .se-list-basic li button.active:active {
+  background: var(--editor-dropdown-hover-bg, var(--color-bg-hover)) !important;
+  border-color: transparent !important;
+  color: var(--editor-dropdown-text, var(--color-text-primary)) !important;
+  box-shadow: none !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-list-inner .se-list-basic li button.active * {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer.se-list-format ul blockquote {
+  background: transparent !important;
+  border-color: var(--editor-dropdown-border, var(--color-input-border)) !important;
+}
+
+body.admin-body .sun-editor .se-btn-select .txt {
+  color: var(--color-text-secondary);
+}
+
+body.admin-body .sun-editor .se-btn-select svg,
+body.admin-body .sun-editor .se-btn svg {
+  fill: currentColor;
+}
+
+body.admin-body[data-theme="modern-pro"]:not(.light-mode) .sun-editor .se-wrapper .se-wrapper-code {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+body.admin-body .sun-editor:focus-within {
+  border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 22%, transparent);
+}

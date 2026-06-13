@@ -1,0 +1,35 @@
+{
+  "source_locale": "fr-FR",
+  "translations": {
+    "fr-FR": {
+      "site_name": "Atelier Nova",
+      "site_description": "Studio de céramique artisanale contemporaine",
+      "site_slogan": "Objets façonnés à la main"
+    },
+    "en-US": {
+      "site_name": "Atelier Nova",
+      "site_description": "Contemporary handcrafted ceramics studio",
+      "site_slogan": "Hand-shaped objects"
+    },
+    "de-DE": {
+      "site_name": "Atelier Nova",
+      "site_description": "Studio für zeitgenössische handgefertigte Keramik",
+      "site_slogan": "Von Hand geformte Objekte"
+    },
+    "es-ES": {
+      "site_name": "Atelier Nova",
+      "site_description": "Estudio de cerámica artesanal contemporánea",
+      "site_slogan": "Objetos modelados a mano"
+    },
+    "it-IT": {
+      "site_name": "Atelier Nova",
+      "site_description": "Studio di ceramica artigianale contemporanea",
+      "site_slogan": "Oggetti modellati a mano"
+    },
+    "pt-PT": {
+      "site_name": "Atelier Nova",
+      "site_description": "Estúdio de cerâmica artesanal contemporânea",
+      "site_slogan": "Objetos moldados à mão"
+    }
+  }
+}

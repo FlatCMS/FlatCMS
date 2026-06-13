@@ -1,0 +1,13 @@
+{
+  "id": "comment_tableware_1",
+  "post_id": "post_artisanal_tableware",
+  "post_type": "post",
+  "author_name": "Sophie L.",
+  "author_email": "sophie@example.test",
+  "content": "Le retour des objets de table artisanaux se voit aussi dans la manière de dresser et de partager les repas.",
+  "status": "approved",
+  "ip": "127.0.0.1",
+  "user_agent": "FlatCMS Sample Data",
+  "created_at": "2026-05-16 08:20:00",
+  "updated_at": "2026-05-16 08:20:00"
+}

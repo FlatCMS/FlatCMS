@@ -1,0 +1,23 @@
+{
+    "spacer_widget_label": "Espacement",
+    "spacer_field_height": "Hauteur (px)",
+    "spacer_section_surface": "Surface",
+    "spacer_section_surface_help": "Ajoutez un fond, une bordure ou une ombre à la zone d'espacement.",
+    "spacer_field_use_custom_design": "Personnaliser l’apparence",
+    "spacer_field_design_surface_color": "Fond du widget",
+    "spacer_field_design_border_style": "Style du contour",
+    "spacer_field_design_border_width": "Épaisseur du contour",
+    "spacer_field_design_border_color": "Couleur du contour",
+    "spacer_field_design_radius": "Angles arrondis",
+    "spacer_field_design_shadow": "Intensité de l’ombre",
+    "spacer_option_design_border_style_inherit": "Conserver le style du widget",
+    "spacer_option_design_border_style_none": "Aucune",
+    "spacer_option_design_border_style_solid": "Solide",
+    "spacer_option_design_border_style_dashed": "Tirets",
+    "spacer_option_design_border_style_dotted": "Pointillés",
+    "spacer_option_design_shadow_inherit": "Hériter du widget",
+    "spacer_option_design_shadow_none": "Aucune",
+    "spacer_option_design_shadow_soft": "Discrète",
+    "spacer_option_design_shadow_medium": "Équilibrée",
+    "spacer_option_design_shadow_strong": "Forte"
+}

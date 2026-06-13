@@ -1,0 +1,17 @@
+{
+    "name": "Languages",
+    "version": "1.0.0",
+    "description": "Translations manager.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "required": true,
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "MrL92bL/0bG1KNNIQLu0ALq9113gtNuhbPSL9MB49XDDh1D4KZPh8OMO9OfuiG9koqZLy0Y8YOqSy31Fa4Ck8d9IR9b36j97//EbAwp6aircY72u3m6NJ1LfRY3jGJlKti3253wK3fzsbAv3IuVtQHs8Dzt6GUrRKMFMIlZyfPxn1aCvaeBUuhhmMuvNej6vbZA9DmUEscUFZ+BXrLOF+69jEN58FsWJEoI1jQ1M+zlt92T0yA+MkD+mw37O3c1TElSl5w6C3xYkARDCHTqHEbzMkfb+kisvYNT8dHe7npQLypCRDy2Mwm6SaVDsaqyQeDpPax78so9NJf/KFYvnmx/glyO3AdYQXioZqjk/umnNaRaomS3Cu4aui3ZDS0phauwchLOQZ6K0HHwObvNVZK2CMztWF2sRp0u7Ya7qPfAD82qE+OORWtE0C5EyDjX+cj63swVdkfEuX5yvX9UILjkFdCVCF0WJ7JJOuWevL+q1LU8Mka6sTCu4sdLe9j1BxYN14BhV8IMt+9uUlPPtAjESQpk9dLM+kJuhfWAB4ABovQKuJ/eoO02LvNdXqTNDPxhQLVO8SlLCO4Oapbg8ZPEzmBYEOOfexrzM5jbegZ1cx0CRzTE3HKzIts7fftLpT7BIoZhmOrL8IfIoJ879JFPg/2uNRHgziheW0ORJvBY="
+}

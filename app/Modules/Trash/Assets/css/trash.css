@@ -1,0 +1,196 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+.trash-empty-state {
+  padding: var(--spacing-6);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.trash-filter-bar {
+  display: flex;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.trash-batch-form {
+  padding: var(--spacing-4) var(--spacing-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.trash-batch-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+
+.trash-batch-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.trash-batch-count {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.trash-select-column {
+  width: 56px;
+  text-align: center;
+}
+
+.trash-row-checkbox {
+  margin: 0;
+}
+
+.trash-action-cell {
+  white-space: nowrap;
+}
+
+.trash-table-actions {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.trash-table-actions form {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 36px;
+  flex: 0 0 auto;
+}
+
+.trash-table-actions .table-action {
+  width: 36px;
+  height: 36px;
+}
+
+.trash-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+.trash-type-badge.is-page {
+  border-color: color-mix(in srgb, var(--color-primary, #4f46e5) 30%, transparent);
+  background: color-mix(in srgb, var(--color-primary, #4f46e5) 8%, var(--color-bg-secondary));
+  color: var(--color-primary, #4f46e5);
+}
+
+.trash-type-badge.is-post {
+  border-color: color-mix(in srgb, var(--color-success, #22c55e) 30%, transparent);
+  background: color-mix(in srgb, var(--color-success, #22c55e) 10%, var(--color-bg-secondary));
+  color: var(--color-success, #22c55e);
+}
+
+.trash-type-badge.is-category {
+  border-color: color-mix(in srgb, var(--color-warning, #f59e0b) 30%, transparent);
+  background: color-mix(in srgb, var(--color-warning, #f59e0b) 10%, var(--color-bg-secondary));
+  color: var(--color-warning, #f59e0b);
+}
+
+.trash-type-badge.is-theme {
+  border-color: color-mix(in srgb, var(--color-info, #3b82f6) 30%, transparent);
+  background: color-mix(in srgb, var(--color-info, #3b82f6) 10%, var(--color-bg-secondary));
+  color: var(--color-info, #3b82f6);
+}
+
+.trash-type-badge.is-media {
+  border-color: color-mix(in srgb, var(--color-danger, #ef4444) 30%, transparent);
+  background: color-mix(in srgb, var(--color-danger, #ef4444) 10%, var(--color-bg-secondary));
+  color: var(--color-danger, #ef4444);
+}
+
+.trash-pagination {
+  margin-top: var(--spacing-5);
+  padding-top: var(--spacing-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.trash-pagination .pagination-wrapper {
+  margin-top: 0;
+}
+
+.trash-pagination .pagination {
+  gap: var(--spacing-2);
+  padding: 0;
+}
+
+.trash-pagination .pagination-btn {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 var(--spacing-3);
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  box-shadow: none;
+}
+
+.trash-pagination .pagination-btn:hover:not(.active):not(.is-disabled) {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-dark);
+  box-shadow: none;
+  transform: none;
+}
+
+.trash-pagination .pagination-btn.active {
+  background: var(--gradient-primary);
+  border-color: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.trash-pagination .pagination-btn.is-disabled {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.trash-pagination .pagination-ellipsis {
+  min-width: 32px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .trash-batch-form,
+  .trash-filter-bar {
+    padding: var(--spacing-4);
+  }
+
+  .trash-batch-controls {
+    align-items: stretch;
+  }
+
+  .trash-batch-controls .form-select,
+  .trash-batch-controls .btn {
+    width: 100%;
+  }
+}

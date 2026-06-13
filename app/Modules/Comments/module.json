@@ -1,0 +1,17 @@
+{
+    "name": "Comments",
+    "version": "1.0.0",
+    "description": "Comments moderation.",
+    "type": "content",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": "j+xC/aCp05r7E8lUeOCqfikIA83BvYBe4jEQ1Xirf+SKymsATOV+a5SjqGkpnLmdzKUA9MBwr1thzUIAeaJ3lclczNIjchXz7TaTWiozr2OKhYYQTyioUGrz4goY26yGcvgb6K7UH3fGq//tQ5ceEggAUWGHfYqDdPp1uRmwBhkPAUNhM1RpKteJ1W6WR9VGDVeAmQzRUi15ufBk67PAXXtYZTMtD6T2i9G/akNmIpttowJot2fyry0tNijVuFqPr7fGCjMy1gqKZHUvwyTFpJhIAHFjnrd88L07yGWniYQYcdofAXyKV4Bl3yc2UxqVVViJofGNknKDyOvpH96+k6W3RjRgjIEgvko+tZZ57dtgErQa7Kbtuqws018GxW8kJdaNWz25/R0cF46sNaOI2KhhB2gFlnkIE3EnVcDJAfxA6EMeKdh8nSwQ5GJY1BVGWxjKsLzEnZt2T3e73SiQgPccpXUiWHDhi6PUthPk3MUwiooHK04anEl5qcsakqGKuSK3q1fZn7dWDwZltuorUrECjDzAmRshP0dTYLCMJw7W7TdyUqHGWAi9BqiBp5mjD/dd07dhWoAibzZ1Xi0VIxh88xNs4po5rji4fdp3ub5PDwbc+DR8LlSCN6nyYRQh2d91IuM9MtMz1l0jpA+g3slWmy+tIeSfHdDsCzV8vv8="
+}

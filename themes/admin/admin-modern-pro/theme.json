@@ -1,0 +1,64 @@
+{
+    "name": "Admin Modern Pro",
+    "slug": "admin-modern-pro",
+    "description": "Thème d'administration moderne avec un design sombre élégant et des dégradés subtils. Réduit la fatigue oculaire lors de longues sessions de travail tout en offrant une esthétique professionnelle.",
+    "version": "1.0.0",
+    "author": "Alain BROYE",
+    "screenshot": "screenshot.png",
+    "type": "admin",
+    "official": true,
+    "origin": "flatcms",
+    "colors": {
+        "primary": "#4F46E5",
+        "primary-dark": "#4338CA",
+        "secondary": "#8B5CF6",
+        "secondary-dark": "#7C3AED",
+        "background": "#0F172A",
+        "surface": "#1E293B",
+        "text": "#F1F5F9",
+        "text-muted": "#94A3B8",
+        "border": "#334155",
+        "success": "#10B981",
+        "danger": "#EF4444",
+        "warning": "#F59E0B",
+        "info": "#3B82F6"
+    },
+    "assets": {
+        "css": "/themes/admin/admin-modern-pro/assets/css/admin.css",
+        "js": "/assets/js/admin/admin-modern-pro.js"
+    },
+    "features": [
+        "sidebar",
+        "dark-mode",
+        "responsive",
+        "glassmorphism",
+        "animations"
+    ],
+    "translations": {
+        "fr-FR": {
+            "name": "Admin Modern Pro",
+            "description": "Thème d'administration moderne avec un design sombre élégant et des dégradés subtils. Réduit la fatigue oculaire lors de longues sessions de travail tout en offrant une esthétique professionnelle."
+        },
+        "en-US": {
+            "name": "Admin Modern Pro",
+            "description": "Modern admin theme with an elegant dark design and subtle gradients. It reduces eye strain during long work sessions while delivering a professional look."
+        },
+        "de-DE": {
+            "name": "Admin Modern Pro",
+            "description": "Modernes Administrations-Theme mit elegantem dunklem Design und dezenten Farbverläufen. Es reduziert die Augenbelastung bei langen Arbeitssitzungen und bietet gleichzeitig ein professionelles Erscheinungsbild."
+        },
+        "es-ES": {
+            "name": "Admin Modern Pro",
+            "description": "Tema de administración moderno con un diseño oscuro elegante y degradados sutiles. Reduce la fatiga visual durante largas sesiones de trabajo y mantiene una estética profesional."
+        },
+        "it-IT": {
+            "name": "Admin Modern Pro",
+            "description": "Tema di amministrazione moderno con un design scuro elegante e gradienti sottili. Riduce l'affaticamento visivo durante le lunghe sessioni di lavoro offrendo al tempo stesso un'estetica professionale."
+        },
+        "pt-PT": {
+            "name": "Admin Modern Pro",
+            "description": "Tema de administração moderno com um design escuro elegante e gradientes subtis. Reduz a fadiga ocular durante longas sessões de trabalho, mantendo uma estética profissional."
+        }
+    },
+    "signature": "UXtqGpFFy1cBxMoL1wr+0HagqeS9DAuM+dDj4XqINboKqa2Os0g9Obw04x0hOc27RL+g3lDiA7g6rSehcxsx9/NI+e+Kad15iywChV8wJrXp0piNRI1xEUw7qzrdyGUObade/DhxThdBNWUBda9jLRvI7a8N4jeBKvhI8sRI6TLx0OlnUdyVQfe9fCDfz7Fcalr5VoXOXCURWp8iZCMK96s040vRh/1dB1FNCN4ebo4VBRHN3my2bZBM4LRXZPIS73NwUExsYs39ocwtAirCW3A1KBB88iEwmOD/LCHy/+Hu00xuHnPKxE4bKkFZBxrpetHfAuV/SBJSX79cjb3XeePaB1PNlzLLauKYDGlLKHdEQM1pqsASwbi1S72bHOAS40ZDUtOrzSNGRedTE7ROLf8mLXiSiHNOo6EwH1SGXnjdjr9CJzHSGDjMsh7DVZooEs+wkXdY75YUBA/U3wyElsLnspBn3KPC72MfpMcWIo/JNZbrGB9y04WulIhyDWoa9h7EknUrhqN8EVfwPmJwtb87n0CUuxpD3xd8oZsgt/ZmhB7zOQh9e+wzvCsRECfNmE54FXsEtxNTooElC74DvOtTcIVieco7hhjR76yncQHynioBujOzkVTEmYzjrpgm52bSDTKFsddOoyLF6LwrTFgXNl22Lp9oph8ofC8kX60="
+}

@@ -1,0 +1,17 @@
+{
+    "name": "Media",
+    "version": "1.0.0",
+    "description": "Media library.",
+    "type": "content",
+    "author": "Alain BROYE",
+    "required": true,
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "Gkz3SoPK+/ypM8p7s7rYp+4blkdyeX3ggp6C2d1pu/+3dLSL/TD06//jUAXA7G8TkTR4qphjgHY8aVvrLSI4zrGzFm8Ilic0h+U7UXU7bZ3/3jE/96hJlcFV4KoAsIBJyMkDOT5YuXkzEoljArIoEhSqDptpjMo9g4f6qMutDTp1fEs7cKpDP1208Ps2hbi6AyEpcCJAMlejPSZHvAFMLuhY+qHBr7IJ0e8Wj9PY89LQ3O04CZFn5VSS7Atb+9yzpH0g6/nLNA4mzmfOCNm6/XEnc0LzDhwMNfl70aJtNxLr0RN2xi3pH4NNh+tN4fRK8FaOGTxeMZJFY9w60BXeKV2qr/rn6HgmAf3CkwLNfVU4pYv1ngoMriF0xnZwDKDu0n1habRYjZTI/WwA+GPN8olqPhDSDyufIVLsKmSUJ6pMl9x224fu6beXDNZVoP1f4hxLvTZYPkbWjkYO5ElNMbVbFSm+i9W1Kzy7ZGcU4uzIydNMz4JYaLmdbGOMcOeih9uhR+0AuMdInpBC/RMvpYZaJcl6EBa1ffTM1yIUnYuKYxw5Owe3FCU9uHLfIQWjY0/0OYRzN/p7RSuohAnYCPIqfCsMnM/0DJHL7+0NFpHVrVahXcPJAJOOH1FFGyHasMG9Y154bANfNUb27ws8JDrplWrpcuBlLaLuIxhtv1o="
+}

@@ -1,0 +1,16 @@
+{
+    "name": "ContactSection",
+    "key": "contact_section",
+    "version": "1.0.0",
+    "description": "Official FlatCMS marketing contact section widget.",
+    "category": "content",
+    "builders": [
+        "pages"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "HUYuHt5a79+UOXtgZ0ZAhnELc+sX0LLwl/TdWFKkuNTuc6T5qD2TwdS9ziZhPqnGUbDLI/9CSOT4UjCMuI+o1IP4dU2i99vrqNNGDrjJxfElBetgH2tHZQsfAz3bZDM59dmrPeYsQhKeUCrIxY/q8jYfUZoYHh0ft0x1hVYzOfXVUcR1fYN2wcwW20y9r1Mfi2Hj3DAFYJ43b/0J8NOwpBrYwa0vXavJWKXThfs6z3IRTpYmyqhUw0eNbDptpqTdNBv1jotJg6OIoEUHlpCCxG2NJdBfgWBbWe9jOwkNPs2hgJ+oSE3s6cEe7wFdJk3aGuJvbhx7JWvNK4aw4gR1DU5naeLbeQrUagU1GZ/96jMEa95bCUSibq/ftkNR3eFbiS33/xE/yUNS41eR4MiMIoMfiqE8VfQbqmFaqKlyTwdAQB/aZ2Rcpe97zDqgTtklb+ecy1E4EOtZ6Pt7d1gJsdR9rElbusm4PmsubZs3mBOS8Jk0IWtSUw8f8Mn1xqx/y6lTYqvi8hL+ZVtSSeOkOXzMg/hVH8/4aRbaSdwkF9VdnpBufgd2aevyvjhRMZ/CvVR1EywXSqAmY+ppx9M8nMahUCIbMkXs8/mRYCjxaOnwGxULDJK0XTvfyWD5XM9y6iu3TcZb2MGOOjMzt8OtvPJjgem7NEeEQ9hkQBC9abo="
+}

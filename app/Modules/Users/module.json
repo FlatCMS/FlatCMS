@@ -1,0 +1,17 @@
+{
+    "name": "Users",
+    "version": "1.0.0",
+    "description": "Users management.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "required": true,
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "o6RtxOaOPeLGmH5cTKVIGZTxaPY1otXrPLfiQbSMCN/JeV17BBva/1b6YF/VczVFxUSv+4a6gIf2tXzBOac4Uc+s5KZroA/fLawB9fIIkuqKJmRUlBiFYAzdKrxz9OTUC0OwoWJbediFdv6R4DruXMArFlsOuY8S7x++TrDnHPyxwtfh3rAnUCxaAhAtPFxJQ+9z0d5T8I4ki7S3L3ijNoPAdmOB0s8g9VuBL9zwOHMdYL7QJVvXCiCRjClTk5L9DdSA3GskrAEXyC70ro9iosz91coq4h30DRVUPQNEy6QNdzoa2tlvWS8D/0PypEYY4driAiF2mN7k2kgz3Do1uBPvp3zFG01JDo7XChY4VRa/Urld9O3v/pop+Z6QGjhAr+LKlT4wwB6UMOA1TW2p/8XcItyOQtX5Vhk13jfUhmlbwvDnmZVvx3K6wTnqlemr7mnrokhH3c/ZA8c5aayfHOt6SlckKqnX5faJA79dFkZmXyjvtZHSeLDirbwJbWDYKW5fbm9gjpXl/pCij2K//KOArS5WoqnmI7Def1gTkz98K4VwvPs3Dwf9lOiNi1d/pU5U0LbSVjfC71+WCdQnLAMqyA38nbNJ7spjrVOZlx7l89upeqnXLdMHaxPsTf2ljCxgRlsRrwMnRkOKURHzLq+FsoIOXyTVswEMtyLF6no="
+}

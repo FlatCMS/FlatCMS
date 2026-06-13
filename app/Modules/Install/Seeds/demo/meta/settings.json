@@ -1,0 +1,23 @@
+{
+  "site_name": "Atelier Nova",
+  "site_description": "Studio de céramique artisanale contemporaine",
+  "site_slogan": "Objets façonnés à la main",
+  "site_name_enabled": 1,
+  "site_slogan_enabled": 1,
+  "site_logo_variant": "compact",
+  "site_logo": "/uploads/logo/logo-carre-atelier-nova.webp",
+  "site_favicon": "/uploads/logo/logo-carre-atelier-nova.webp",
+  "meta_title": "Atelier Nova - Céramique artisanale contemporaine",
+  "meta_description": "Atelier Nova façonne des objets de céramique artisanale pour la table, le thé et les intérieurs calmes.",
+  "meta_keywords": "céramique artisanale, atelier céramique, objets faits main, art de la table, Atelier Nova",
+  "mail_from_name": "Atelier Nova",
+  "posts_per_page": "6",
+  "promo_banner_enabled": 1,
+  "promo_banner_text": "\"Atelier\" : Découverte de la poterie du 25 au 30 mai 2026",
+  "promo_banner_cta_label": "S'inscrire",
+  "promo_banner_cta_url": "/page/contact",
+  "promo_banner_cta_variant": "primary",
+  "promo_banner_alignment": "center",
+  "promo_banner_background_color": "#D48C70",
+  "promo_banner_text_color": "#FFFFFF"
+}

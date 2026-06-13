@@ -1,0 +1,620 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+body.admin-body .sun-editor {
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
+  overflow: visible;
+}
+
+body.admin-body .sun-editor .se-toolbar {
+  outline: 0;
+  border-bottom: 1px solid var(--color-input-border);
+  background: var(--color-card-bg);
+  overflow: visible;
+  border-top-left-radius: calc(var(--radius-lg, 12px) - 1px);
+  border-top-right-radius: calc(var(--radius-lg, 12px) - 1px);
+}
+
+body.admin-body .sun-editor .se-btn-module-border {
+  border: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+body.admin-body .sun-editor .se-btn {
+  color: var(--color-text-secondary);
+  border-radius: 8px;
+}
+
+body.admin-body .sun-editor .se-btn:enabled:focus,
+body.admin-body .sun-editor .se-btn:enabled:hover {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  color: var(--color-text-primary);
+}
+
+body.admin-body .sun-editor .se-btn:enabled.on,
+body.admin-body .sun-editor .se-btn:enabled.active {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+}
+
+body.admin-body .sun-editor .fc-se-color-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 1px 2px;
+  flex: 0 0 auto;
+}
+
+body.admin-body .sun-editor .fc-se-color-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body.admin-body .sun-editor .fc-ui-toolbar-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+body.admin-body .sun-editor .fc-ui-toolbar-btn:hover {
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-bg-tertiary) 65%, transparent);
+}
+
+body.admin-body .sun-editor .fc-ui-color-picker {
+  position: relative;
+}
+
+body.admin-body .sun-editor .fc-ui-native-color {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+body.admin-body .sun-editor .fc-ui-color-swatch {
+  position: relative;
+  overflow: hidden;
+}
+
+body.admin-body .sun-editor .fc-ui-color-swatch::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 6px;
+  background: var(--pb-textstyle-swatch-color, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+body.admin-body .sun-editor .fc-ui-color-swatch.is-empty::before {
+  background:
+    linear-gradient(45deg, rgba(148, 163, 184, 0.25) 25%, transparent 25%, transparent 75%, rgba(148, 163, 184, 0.25) 75%, rgba(148, 163, 184, 0.25)),
+    linear-gradient(45deg, rgba(148, 163, 184, 0.25) 25%, transparent 25%, transparent 75%, rgba(148, 163, 184, 0.25) 75%, rgba(148, 163, 184, 0.25));
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+body.admin-body .sun-editor .se-wrapper {
+  border-bottom-left-radius: calc(var(--radius-lg, 12px) - 1px);
+  border-bottom-right-radius: calc(var(--radius-lg, 12px) - 1px);
+  overflow: hidden;
+}
+
+body.admin-body .sun-editor .se-wrapper .se-wrapper-inner {
+  background: var(--color-input-bg);
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
+body.admin-body .sun-editor .se-wrapper .se-wrapper-wysiwyg,
+body.admin-body .sun-editor .sun-editor-editable {
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
+  margin-bottom: 0;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
+body.admin-body .sun-editor .sun-editor-editable table {
+  border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, var(--color-card-bg) 76%, var(--color-input-bg));
+}
+
+body.admin-body .sun-editor .sun-editor-editable table thead {
+  border-bottom-color: color-mix(in srgb, var(--color-border-dark, var(--color-border)) 88%, transparent);
+}
+
+body.admin-body .sun-editor .sun-editor-editable table tr {
+  border-color: color-mix(in srgb, var(--color-border) 72%, transparent);
+}
+
+body.admin-body .sun-editor .sun-editor-editable table th {
+  background: color-mix(in srgb, var(--color-card-bg) 68%, var(--color-bg-tertiary) 32%);
+}
+
+body.admin-body .sun-editor .sun-editor-editable table td,
+body.admin-body .sun-editor .sun-editor-editable table th {
+  border-color: color-mix(in srgb, var(--color-border) 78%, transparent);
+  min-width: 3.75rem;
+  vertical-align: top;
+}
+
+body.admin-body .sun-editor .sun-editor-editable table td > div,
+body.admin-body .sun-editor .sun-editor-editable table th > div {
+  min-height: 1.5rem;
+}
+
+body.admin-body .sun-editor .se-resizing-bar {
+  margin-top: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-input-border) 70%, transparent);
+  border-bottom-left-radius: calc(var(--radius-lg, 12px) - 1px);
+  border-bottom-right-radius: calc(var(--radius-lg, 12px) - 1px);
+  background: color-mix(in srgb, var(--color-input-bg) 82%, var(--color-card-bg));
+  min-height: 14px;
+}
+
+body.admin-body .sun-editor .se-navigation {
+  margin: 0;
+  align-self: center;
+}
+
+body.admin-body .sun-editor .se-list-layer {
+  background: var(--editor-dropdown-bg, var(--color-card-bg));
+  border-color: var(--editor-dropdown-border, var(--color-input-border));
+  color: var(--editor-dropdown-text, var(--color-text-primary));
+  box-shadow: var(--editor-dropdown-shadow, 0 12px 24px -16px rgba(2, 6, 23, 0.45));
+}
+
+body.admin-body .sun-editor .se-list-layer,
+body.admin-body .sun-editor .se-btn-group-sub,
+body.admin-body .sun-editor .se-submenu,
+body.admin-body .sun-editor .se-selector-table,
+body.admin-body .sun-editor .se-toolbar-more-layer,
+body.admin-body .sun-editor .se-toolbar-more-layer .se-more-layer {
+  z-index: 1090 !important;
+}
+
+body.admin-body .sun-editor .se-controller,
+body.admin-body .sun-editor .se-dialog,
+body.admin-body .sun-editor .se-controller-resizing,
+body.admin-body .sun-editor .se-resizing-container {
+  z-index: 1091 !important;
+}
+
+body.admin-body .sun-editor .se-dialog {
+  color: var(--color-text-primary);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-back {
+  background: color-mix(in srgb, var(--color-bg-primary) 72%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-inner {
+  border: 1px solid color-mix(in srgb, var(--color-card-border, var(--color-input-border)) 88%, transparent);
+  border-radius: var(--radius-xl);
+  background: transparent;
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-xl), 0 0 0 1px color-mix(in srgb, var(--color-card-border, var(--color-input-border)) 24%, transparent);
+  overflow: hidden;
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-inner .se-dialog-content {
+  background: var(--color-card-bg) !important;
+  border: 1px solid color-mix(in srgb, var(--color-card-border, var(--color-input-border)) 88%, transparent) !important;
+  border-radius: var(--radius-xl) !important;
+  background-clip: padding-box !important;
+  color: var(--color-text-primary) !important;
+  box-shadow: var(--shadow-xl), 0 0 0 1px color-mix(in srgb, var(--color-card-border, var(--color-input-border)) 24%, transparent) !important;
+  overflow: hidden !important;
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-header {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-card-border, var(--color-input-border)) 78%, transparent);
+  background: color-mix(in srgb, var(--color-card-bg) 76%, var(--color-bg-secondary) 24%);
+  color: var(--color-text-primary);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-header .se-modal-title {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--btn-ghost-border, var(--color-border));
+  border-radius: var(--radius-full);
+  background: var(--btn-ghost-bg, transparent);
+  color: var(--btn-ghost-color, var(--color-text-secondary));
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-close:hover,
+body.admin-body .sun-editor .se-dialog .se-dialog-close:focus {
+  background: var(--btn-ghost-bg-hover, var(--color-bg-hover));
+  border-color: var(--btn-ghost-border-hover, var(--color-border-dark));
+  color: var(--btn-ghost-color-hover, var(--color-text-primary));
+  box-shadow: var(--btn-ghost-shadow-hover, var(--btn-ghost-shadow, none));
+  transform: translateY(-1px);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-body,
+body.admin-body .sun-editor .se-dialog .se-dialog-content {
+  background: var(--color-card-bg);
+  color: var(--color-text-primary);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-form {
+  color: var(--color-text-primary);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-form *,
+body.admin-body .sun-editor .se-dialog .se-dialog-footer * {
+  color: inherit;
+}
+
+body.admin-body .sun-editor .se-dialog button,
+body.admin-body .sun-editor .se-dialog input,
+body.admin-body .sun-editor .se-dialog select,
+body.admin-body .sun-editor .se-dialog textarea,
+body.admin-body .sun-editor .se-dialog label,
+body.admin-body .sun-editor .se-dialog span,
+body.admin-body .sun-editor .se-dialog .txt {
+  color: var(--color-text-primary) !important;
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-body,
+body.admin-body .sun-editor .se-dialog .se-dialog-content,
+body.admin-body .sun-editor .se-dialog .se-dialog-form,
+body.admin-body .sun-editor .se-dialog .se-dialog-footer {
+  font-family: var(--font-family);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-form label,
+body.admin-body .sun-editor .se-dialog .se-dialog-footer label,
+body.admin-body .sun-editor .se-dialog .se-dialog-form .se-dialog-size-text {
+  color: var(--color-text-secondary) !important;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-footer > div > label,
+body.admin-body .sun-editor .se-dialog .se-dialog-form-footer label,
+body.admin-body .sun-editor .se-dialog .se-anchor-rel-wrapper label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-tabs {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-card-border, var(--color-input-border)) 70%, transparent);
+  background: color-mix(in srgb, var(--color-card-bg) 82%, var(--color-bg-secondary) 18%);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-tabs button {
+  color: var(--color-text-secondary);
+  border-bottom-color: transparent;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-tabs button.active,
+body.admin-body .sun-editor .se-dialog .se-dialog-tabs button:hover,
+body.admin-body .sun-editor .se-dialog .se-dialog-tabs button:focus {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+body.admin-body .sun-editor .se-dialog .se-input-form {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+body.admin-body .sun-editor .se-dialog .se-input-form::placeholder {
+  color: var(--color-text-muted);
+}
+
+body.admin-body .sun-editor .se-dialog .se-input-form:focus {
+  outline: none;
+  border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 22%, transparent);
+}
+
+body.admin-body .sun-editor .se-dialog input[type="checkbox"],
+body.admin-body .sun-editor .se-dialog input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+body.admin-body .sun-editor .se-dialog .se-link-preview,
+body.admin-body .sun-editor .se-dialog .se-anchor-rel-preview,
+body.admin-body .sun-editor .se-dialog .se-anchor-preview-form {
+  border: 1px solid color-mix(in srgb, var(--color-card-border, var(--color-input-border)) 70%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-input-bg) 86%, var(--color-card-bg) 14%);
+  color: var(--color-text-secondary);
+}
+
+body.admin-body .sun-editor .se-dialog .se-anchor-rel-btn,
+body.admin-body .sun-editor .se-dialog .se-dialog-files-edge-button,
+body.admin-body .sun-editor .se-dialog .se-dialog-btn-revert {
+  border: 1px solid var(--btn-outline-border, var(--color-input-border));
+  border-radius: var(--btn-radius, var(--radius-lg));
+  background: var(--btn-outline-bg, transparent);
+  color: var(--btn-outline-color, var(--color-primary));
+  box-shadow: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+body.admin-body .sun-editor .se-dialog .se-anchor-rel-btn:hover,
+body.admin-body .sun-editor .se-dialog .se-anchor-rel-btn:focus,
+body.admin-body .sun-editor .se-dialog .se-dialog-files-edge-button:hover,
+body.admin-body .sun-editor .se-dialog .se-dialog-files-edge-button:focus,
+body.admin-body .sun-editor .se-dialog .se-dialog-btn-revert:hover,
+body.admin-body .sun-editor .se-dialog .se-dialog-btn-revert:focus {
+  background: var(--btn-outline-bg-hover, var(--color-bg-hover));
+  border-color: var(--btn-outline-border-hover, var(--color-input-focus));
+  color: var(--btn-outline-color-hover, var(--color-text-primary));
+  transform: translateY(-1px);
+}
+
+body.admin-body .sun-editor .se-dialog .se-btn-primary {
+  border: 1px solid var(--btn-primary-border, transparent);
+  border-radius: var(--btn-radius, var(--radius-lg));
+  background: var(--btn-primary-bg, var(--gradient-primary));
+  color: var(--btn-primary-color, var(--color-white));
+  box-shadow: var(--btn-primary-shadow, var(--shadow-sm));
+  transition: background var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+body.admin-body .sun-editor .se-dialog .se-btn-primary:hover,
+body.admin-body .sun-editor .se-dialog .se-btn-primary:focus {
+  background: var(--btn-primary-bg-hover, var(--btn-primary-bg, var(--gradient-primary)));
+  color: var(--btn-primary-color-hover, var(--btn-primary-color, var(--color-white)));
+  box-shadow: var(--btn-primary-shadow-hover, var(--shadow-primary));
+  transform: translateY(-1px);
+}
+
+body.admin-body .sun-editor .se-dialog .se-btn-primary:active {
+  background: var(--btn-primary-bg-active, var(--btn-primary-bg-hover, var(--btn-primary-bg, var(--gradient-primary))));
+  transform: translateY(0);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-btn-check,
+body.admin-body .sun-editor .se-dialog .se-dialog-btn-radio {
+  border-color: var(--color-input-border);
+  background: color-mix(in srgb, var(--color-input-bg) 88%, var(--color-card-bg) 12%);
+  color: var(--color-text-secondary);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-btn-check.active,
+body.admin-body .sun-editor .se-dialog .se-dialog-btn-radio.active,
+body.admin-body .sun-editor .se-dialog .se-dialog-btn-check:checked,
+body.admin-body .sun-editor .se-dialog .se-dialog-btn-radio:checked {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-input-border));
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-input-bg));
+  color: var(--color-primary);
+}
+
+body.admin-body .sun-editor .se-dialog .se-dialog-footer {
+  border-top: 1px solid color-mix(in srgb, var(--color-card-border, var(--color-input-border)) 70%, transparent);
+  background: color-mix(in srgb, var(--color-card-bg) 76%, var(--color-bg-secondary) 24%);
+  color: var(--color-text-secondary);
+}
+
+body.admin-body .sun-editor .se-list-layer .se-selector-color,
+body.admin-body .sun-editor .se-list-layer .se-selector-color .se-color-pallet,
+body.admin-body .sun-editor .se-selector-table .se-table-size-picker,
+body.admin-body .sun-editor .se-selector-table .se-table-size-highlighted,
+body.admin-body .sun-editor .se-selector-table .se-table-size-unhighlighted {
+  z-index: 1092 !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list,
+body.admin-body .sun-editor .se-list-layer .se-btn-list .txt,
+body.admin-body .sun-editor .se-list-layer .se-list-inner .default {
+  color: var(--editor-dropdown-text, var(--color-text-primary));
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list *,
+body.admin-body .sun-editor .se-list-layer .se-list-inner .default * {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h1,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h2,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h3,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h4,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h5,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul h6,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul p,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul div,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul pre,
+body.admin-body .sun-editor .se-list-layer.se-list-format ul blockquote {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list:focus,
+body.admin-body .sun-editor .se-list-layer .se-btn-list:hover {
+  background: var(--editor-dropdown-hover-bg, var(--color-bg-hover));
+  color: var(--editor-dropdown-text, var(--color-text-primary));
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list:active {
+  background: var(--editor-dropdown-hover-bg, var(--color-bg-hover));
+  color: var(--editor-dropdown-text, var(--color-text-primary));
+  box-shadow: none;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list:focus *,
+body.admin-body .sun-editor .se-list-layer .se-btn-list:hover * {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list:active * {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list.default_value {
+  background: color-mix(in srgb, var(--editor-dropdown-bg, var(--color-card-bg)) 88%, var(--color-bg-hover) 12%) !important;
+  border-top-color: var(--editor-dropdown-border, var(--color-input-border)) !important;
+  border-bottom-color: var(--editor-dropdown-border, var(--color-input-border)) !important;
+  color: var(--editor-dropdown-text, var(--color-text-primary)) !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-btn-list.default_value:hover,
+body.admin-body .sun-editor .se-list-layer .se-btn-list.default_value:focus,
+body.admin-body .sun-editor .se-list-layer .se-btn-list.default_value:active {
+  background: var(--editor-dropdown-hover-bg, var(--color-bg-hover)) !important;
+  color: var(--editor-dropdown-text, var(--color-text-primary)) !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-list-inner .se-list-basic li button.active,
+body.admin-body .sun-editor .se-list-layer .se-list-inner .se-list-basic li button.active:hover,
+body.admin-body .sun-editor .se-list-layer .se-list-inner .se-list-basic li button.active:active {
+  background: var(--editor-dropdown-hover-bg, var(--color-bg-hover)) !important;
+  border-color: transparent !important;
+  color: var(--editor-dropdown-text, var(--color-text-primary)) !important;
+  box-shadow: none !important;
+}
+
+body.admin-body .sun-editor .se-list-layer .se-list-inner .se-list-basic li button.active * {
+  color: inherit !important;
+}
+
+body.admin-body .sun-editor .se-list-layer.se-list-format ul blockquote {
+  background: transparent !important;
+  border-color: var(--editor-dropdown-border, var(--color-input-border)) !important;
+}
+
+body.admin-body .sun-editor .se-btn-select .txt {
+  color: var(--color-text-secondary);
+}
+
+body.admin-body .sun-editor .se-btn-select svg,
+body.admin-body .sun-editor .se-btn svg {
+  fill: currentColor;
+}
+
+body.admin-body[data-theme="modern-pro"]:not(.light-mode) .sun-editor .se-wrapper .se-wrapper-code {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+body.admin-body .sun-editor:focus-within {
+  border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 22%, transparent);
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion {
+  padding: 4px 3px;
+  border-top-left-radius: calc(var(--radius-lg, 12px) - 1px);
+  border-top-right-radius: calc(var(--radius-lg, 12px) - 1px);
+  background: var(--color-card-bg);
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  border-top-left-radius: calc(var(--radius-lg, 12px) - 1px);
+  border-top-right-radius: calc(var(--radius-lg, 12px) - 1px);
+  background: var(--color-card-bg);
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-row-primary {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  border-top-left-radius: calc(var(--radius-lg, 12px) - 1px);
+  background: var(--color-card-bg);
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-row-secondary {
+  width: 100%;
+  display: none;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-input-border);
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion.fc-se-expanded .fc-se-toolbar-row-secondary {
+  display: flex;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-toggle {
+  margin-left: auto !important;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top-right-radius: calc(var(--radius-lg, 12px) - 1px);
+  background: var(--color-card-bg);
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-toggle .fc-se-toolbar-chevron {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform 0.2s ease;
+}
+
+body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion.fc-se-expanded .fc-se-toolbar-toggle .fc-se-toolbar-chevron {
+  transform: rotate(-135deg) translateY(-1px);
+}

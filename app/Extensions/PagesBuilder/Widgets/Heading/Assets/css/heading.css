@@ -1,0 +1,91 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: LicenseRef-FlatCMS-Commercial
+ *
+ * Premium FlatCMS component. See LICENSING.md, COMMERCIAL_LICENSE.md and TRADEMARK.md.
+ */
+
+.pb-heading {
+    width: 100%;
+}
+
+.pb-heading-align-left {
+    text-align: left;
+}
+
+.pb-heading-align-center {
+    text-align: center;
+}
+
+.pb-heading-align-right {
+    text-align: right;
+}
+
+.pb-heading-inner {
+    margin: 0;
+    color: var(--color-text-heading, var(--color-text-primary, #111827));
+    font-family: "Cabin", var(--font-family-heading, var(--font-family-base, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif));
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+}
+
+.pb-heading-tag-h1 {
+    font-size: var(--fc-heading-h1-size, clamp(2.35rem, 4.6vw, 3.6rem));
+    line-height: var(--fc-heading-h1-line-height, 1.02);
+}
+
+.pb-heading-tag-h2 {
+    font-size: var(--fc-heading-h2-size, clamp(1.9rem, 3.8vw, 3rem));
+    line-height: var(--fc-heading-h2-line-height, 1.05);
+}
+
+.pb-heading-tag-h3 {
+    font-size: var(--fc-heading-h3-size, clamp(1.28rem, 2.2vw, 1.7rem));
+    line-height: var(--fc-heading-h3-line-height, 1.18);
+}
+
+.pb-heading-tag-h4 {
+    font-size: var(--fc-heading-h4-size, clamp(1.05rem, 1.5vw, 1.22rem));
+    line-height: var(--fc-heading-h4-line-height, 1.28);
+}
+
+.pb-heading-tag-h5 {
+    font-size: var(--fc-heading-h5-size, 1rem);
+    line-height: var(--fc-heading-h5-line-height, 1.32);
+}
+
+.pb-heading-tag-h6 {
+    font-size: var(--fc-heading-h6-size, 0.92rem);
+    line-height: var(--fc-heading-h6-line-height, 1.28);
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.pb-heading .pb-styled-text-icon,
+.pb-heading .pb-styled-text-list-marker {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: baseline;
+}
+
+.pb-heading .pb-styled-text-icon-start,
+.pb-heading .pb-styled-text-list-marker {
+    margin-right: 0.45rem;
+}
+
+.pb-heading .pb-styled-text-icon-end {
+    margin-left: 0.45rem;
+}
+
+.pb-heading-empty {
+    min-height: 4.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.pb-heading-empty .pb-empty {
+    width: 100%;
+}

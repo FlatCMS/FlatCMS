@@ -1,0 +1,23 @@
+{
+  "spacer_widget_label": "Spazio",
+  "spacer_field_height": "Altezza (px)",
+  "spacer_section_surface": "Superficie",
+  "spacer_section_surface_help": "Aggiungi uno sfondo, un bordo o un'ombra all'area di spaziatura.",
+  "spacer_field_use_custom_design": "Attiva design personalizzato",
+  "spacer_field_design_surface_color": "Colore di sfondo",
+  "spacer_field_design_border_style": "Stile del bordo",
+  "spacer_field_design_border_width": "Spessore del bordo",
+  "spacer_field_design_border_color": "Colore del bordo",
+  "spacer_field_design_radius": "Raggio degli angoli",
+  "spacer_field_design_shadow": "Ombra",
+  "spacer_option_design_border_style_inherit": "Ereditato dal tema",
+  "spacer_option_design_border_style_none": "Nessun bordo",
+  "spacer_option_design_border_style_solid": "Pieno",
+  "spacer_option_design_border_style_dashed": "Tratteggiato",
+  "spacer_option_design_border_style_dotted": "Puntinato",
+  "spacer_option_design_shadow_inherit": "Ereditata dal tema",
+  "spacer_option_design_shadow_none": "Nessuna",
+  "spacer_option_design_shadow_soft": "Leggera",
+  "spacer_option_design_shadow_medium": "Media",
+  "spacer_option_design_shadow_strong": "Forte"
+}

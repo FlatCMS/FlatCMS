@@ -1,0 +1,18 @@
+{
+    "name": "Backups",
+    "version": "1.0.0",
+    "description": "Site data backup and restore manager.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "sidebar_visible": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": "GxygKjdg0gBxQ5OA58cP8IAjRY1xoG8TpiW9TfbWzZhNL7+RsB7GHxS2VQO1C+v2TzoYbM7VObgu6oGxsWo5rLwrfNrU8uXQpV78XOW8+8mEgZntSqqcEtYQ9K2AkgBkQRuCwVjf8wedExAnQCm/3DbpLM+OVn844xXq8d6tY7EbYOwl6xNsjoGepocBh1DzOz9EGJd9+cCZ6Eo3QgbzGWJNNcxUfh/ig7bzEd811oLOqtkzx3edxZSko5cGsi4nZ5eJZQ1cxe65NzTH0xmWjEW0hloL35NZ+ELALFnMELkZm/5EjPYVFnKJHAjs8mz0DAOByCToTQUB7JFtLJNkqqUSv/s+/M900JgghitbSPDBq86eAodMk3KOqAXVyAkSny+f67NYvajW2L4z/9mu3lyCjWEUE8fDvPsYNZ+fNCbqL2wROOzKrbxAWBqIbHMWfpvLK9M68Zye1njNGy1hgO14sQcCTfUwZ5HyDk+i2ACSkfWSudA/vU76Gy3vMuZqlEi3XPQ1uzocmOIEX/y6F9V3+OMXYs81mWc1MCjbYyM+pFj+i7ydDrolblRa/AcxixYmH1pbuDZ65IRLJ/Bo2Xm5eYjbImG1GpmXXQ/vFzKIH6sh0qfy6yxjs3YsRtB0LAKYMWMt7CSKirHvyIn4XiGMQAnQ0xnit4Xlr9ggQ9w="
+}

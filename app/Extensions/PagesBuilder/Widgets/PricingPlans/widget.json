@@ -1,0 +1,16 @@
+{
+    "name": "PricingPlans",
+    "key": "pricing_plans",
+    "version": "1.0.0",
+    "description": "Official FlatCMS pricing plans widget.",
+    "category": "content",
+    "builders": [
+        "pages"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "UJL69FRwUJx6RilYRolqF8LOjHfxVEh/5JtQgUNsuzRSgxt+bqQt2h05vFWMKMXa73QFMa+UTvVqxZPTooYiQhGC8jZK80XiLPhCEOorcHoL80+nK0gL7GcfZfvJMoVmwZLwdDe8BvVYYQQVOFz4dq2URFBj5k0ZVEpfz4hXsHvg/SWwEEm4aQfwLg0zTietyqx2mbKmEVyxJIoVodTtZDXrfVpNO6ZfMRFHHd4xbXwww1r8mpgVyYesly3IVA0oBnMSXVlDGsLBevSTA8pz5qwpIvsYN06Dar8kXaykXelvWt9FmZfc0n83cZtVdLP3iAre14zmeOBudo05yK9J7AQm94WPdWRWLGC9KyE8aD0mreB/H0dmmGrJC6Y/VEYNhngC0DvmCNxA8Y873q/8L+eEys02f8QnjPgghX19P14ujf6SkDJrwAveK5d0RUl2HSHE4l3Ll1hcfjGu3AYlzyMU20WoA9F1HVu7qo6Z2GQVRkWvcKrrbPtu4stmIjeB+M24sYTeyHG9Th+dIJf5vwCMgFhs6ZooiITUxmU9TVT1b7keul2KwdIufh749SysvEOPH+aQ8bWo51+aU3e8YIySL+rAX0q/JOEeDTZWE70BSBz6UFtvhDCS2c4Tq1Pm2i9fygJrO87i3Myk7lzMicHE10Cc6GDe+4kPcoZyU7M="
+}

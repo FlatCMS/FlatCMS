@@ -1,0 +1,17 @@
+{
+    "name": "Themes",
+    "version": "1.0.0",
+    "description": "Themes manager.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "required": true,
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "e/VOtatyvg2ga24m25/r5mpfWTbgy68IkwWuqQcY6WitS5751PbzeRqoU1crvXrSptREzZ0FfmnIeZTHjsqV+Uul9d7ua5lLFH2c2id8wUiAHDW2LQLxXGIP99sY6mAcFfH76ryvNMhZCFBZNKEe0Jn405qV8oneZWrxgQvGIbfx5lY9xIc9G9lAP7+EHCQ6dJ8fEBZfhjyhwzCH3evASkkD5WUITcwfSX/naIZU1r+0m+yJJ/7ck1PUYvCuywjGqvob90IYRkUsFW2Rj3Nr7NRIGati2vg21C/RrsOg/0kn6ExUP8E8LqdCa10dbSCI53Hi7BWMQWbpf3Yp6yy+NCEtH8mLgHdncN7kJQe5IS84K9zRMw9AVkWzIusNRzDwPPA454T2QaC5xPstww7pdKjfjSRe/wX7bTpvDZ4ThwkkGJbSilaDWrqF8pQMiA8mlYZeiumOlmG1GDpbe8ebCGqK6xPwCH713t7un8fnPo3gKIWs2hR4/C/abXvtvZZpah+5qiBOt/PD2z7QY33ZbTfyqmW8Zq313Q8VWHvUP05xediFV2GfYg1rdt+K5TaGIWicL9cINGQLBSrIxVVb+K/85e9MGA0I/XNBdE3y8/Ecq2LvpYsxkCO/6CPNH/U9JB5Lu9nj6HygDFoJjOG3uBFzc5IB1Icln/KvVIs6u4A="
+}

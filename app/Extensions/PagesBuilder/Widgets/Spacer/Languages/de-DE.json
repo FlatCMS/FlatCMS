@@ -1,0 +1,23 @@
+{
+  "spacer_widget_label": "Abstand",
+  "spacer_field_height": "Höhe (px)",
+  "spacer_section_surface": "Oberfläche",
+  "spacer_section_surface_help": "Fügen Sie dem Abstandsbereich einen Hintergrund, Rahmen oder Schatten hinzu.",
+  "spacer_field_use_custom_design": "Benutzerdefiniertes Design aktivieren",
+  "spacer_field_design_surface_color": "Hintergrundfarbe",
+  "spacer_field_design_border_style": "Rahmenstil",
+  "spacer_field_design_border_width": "Rahmenbreite",
+  "spacer_field_design_border_color": "Rahmenfarbe",
+  "spacer_field_design_radius": "Eckenradius",
+  "spacer_field_design_shadow": "Schatten",
+  "spacer_option_design_border_style_inherit": "Vom Theme erben",
+  "spacer_option_design_border_style_none": "Kein Rahmen",
+  "spacer_option_design_border_style_solid": "Durchgezogen",
+  "spacer_option_design_border_style_dashed": "Gestrichelt",
+  "spacer_option_design_border_style_dotted": "Gepunktet",
+  "spacer_option_design_shadow_inherit": "Vom Theme erben",
+  "spacer_option_design_shadow_none": "Keiner",
+  "spacer_option_design_shadow_soft": "Leicht",
+  "spacer_option_design_shadow_medium": "Mittel",
+  "spacer_option_design_shadow_strong": "Stark"
+}

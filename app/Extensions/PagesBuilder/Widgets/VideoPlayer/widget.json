@@ -1,0 +1,16 @@
+{
+    "name": "VideoPlayer",
+    "key": "video_player",
+    "version": "1.0.0",
+    "description": "Official FlatCMS video player widget.",
+    "category": "media",
+    "builders": [
+        "pages"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "hlOVAwfG2eBS3J+Uzy/k2XXhrNeC0AxD8Ju1cGsmrJv/8w/oFq6lBEYzkS3q8jnMFzGO0dizvSKjtCG2g3a+FQ7laEi4lb3gLVlFsqwyYBnUZlDXjcC0R1WsHgT04JHgUjszVQZPr6AAw1YuK9tshr5uQo07n+hvCQM0QNkM4qt4Qa3bJEas0VFWbwLMLdSWoCVyA89WIiLkaW9T/EVVH7/zCUQqR7+eECevQrF2f5VJOyY2RkRPe1+0SYXp5bCUYxjL7lFAzI9WO0AsWxoq9mmgGHv+jigqnb3ztm+KjO5AODIUV10qkUgUJdeVipHgGuGAopCNkQRplJn08GEOWgPtWIP91SpEfBbQjKcSjtUbGBDd8aMZ7xGo9b13nNjmZZK6fAhGt3i8fRsmwwCO7BbaQynHc+5jo4PXNcIXL2ywwEDphZUcoNCExxSYg+eJzNcR18y9PJFwsJQiP25CVGhe+VpCa7z+leGrxzwwi8+qVuNVi67NSDGa7v3z80UWEhaucZKMh/s9SarrCsda6D3oMq40aYYCbfN63o5pBa9Uzi0c+GytGfqNwxH1wUyxN029I5lmwp8fnxjUl0XY01arbCzUgVNPDP06//OWV4RrLhySE+3EslpMq4B9eUGKb/5A0DSvLzFza3zPg1Veib9RlOUIsAx7wNwrhFxlTt0="
+}

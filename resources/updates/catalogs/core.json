@@ -1,0 +1,23 @@
+{
+  "catalog": "core",
+  "channel": "stable",
+  "packages": [
+    {
+      "slug": "flatcms",
+      "name": "FlatCMS",
+      "type": "core",
+      "version": "1.0.0",
+      "channel": "stable",
+      "vendor": "flatcms",
+      "official": true,
+      "requires_php": "8.1",
+      "sha256": "c77a92d17fc2e545501910b230dbf8674469d91c9236530844b36991a40418eb",
+      "signature": "",
+      "min_core_version": "",
+      "max_core_version": "",
+      "changelog": "First stable public release of the FlatCMS core.",
+      "published_at": "2026-03-23T09:42:56Z",
+      "availability": "published"
+    }
+  ]
+}

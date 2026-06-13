@@ -1,0 +1,677 @@
+{
+  "pages": {
+    "page_home": {
+      "en-US": {
+        "title": "Home",
+        "slug": "home",
+        "content": "<p>{{SITE_NAME}} creates a world of handcrafted ceramics inspired by wabi-sabi, Mediterranean light and the slow gestures of the workshop.</p><p><img src=\"/uploads/images/demo-atelier-home-hero.png\" alt=\"Wabi-sabi living room with handcrafted ceramics\"></p><h2>An editorial showcase, without builders</h2><p>This demo shows how to present an artisanal brand with classic pages, a native journal, a standard menu and a simple but coherent footer.</p><ul><li>Collections designed for the table, tea and calm interiors.</li><li>A workshop story told with restraint, texture and natural light.</li><li>An editorial journal that extends the brand universe.</li></ul><p class=\"prose-action-links\"><a href=\"/page/collections\" class=\"btn btn-primary\">Discover the collections</a><a href=\"/page/atelier\" class=\"btn btn-primary\">Enter the workshop</a><a href=\"/blog\" class=\"btn btn-primary\">Read the journal</a></p>",
+        "meta_title": "Home - {{SITE_NAME}}",
+        "meta_description": "Editorial showcase for handcrafted ceramics, collections, workshop and brand journal."
+      },
+      "de-DE": {
+        "title": "Startseite",
+        "slug": "startseite",
+        "content": "<p>{{SITE_NAME}} erschafft eine Welt handgefertigter Keramik, inspiriert von Wabi-Sabi, mediterranem Licht und den langsamen Gesten des Ateliers.</p><p><img src=\"/uploads/images/demo-atelier-home-hero.png\" alt=\"Wabi-Sabi-Wohnraum mit handgefertigter Keramik\"></p><h2>Eine editoriale Präsentationsseite ohne Builder</h2><p>Diese Demo zeigt, wie sich eine handwerkliche Marke mit klassischen Seiten, einem nativen Journal, einem Standardmenü und einem schlichten, stimmigen Footer präsentieren lässt.</p><ul><li>Kollektionen für Tischkultur, Tee und ruhige Innenräume.</li><li>Ein Atelier, erzählt mit Zurückhaltung, Materialität und natürlichem Licht.</li><li>Ein redaktionelles Journal, das das Markenuniversum fortführt.</li></ul><p class=\"prose-action-links\"><a href=\"/page/kollektionen\" class=\"btn btn-primary\">Kollektionen entdecken</a><a href=\"/page/atelier\" class=\"btn btn-primary\">Das Atelier betreten</a><a href=\"/blog\" class=\"btn btn-primary\">Das Journal lesen</a></p>",
+        "meta_title": "Startseite - {{SITE_NAME}}",
+        "meta_description": "Editoriale Präsentation für handgefertigte Keramik, Kollektionen, Atelier und Markenjournal."
+      },
+      "es-ES": {
+        "title": "Inicio",
+        "slug": "inicio",
+        "content": "<p>{{SITE_NAME}} compone un universo de cerámicas artesanales inspirado por el wabi-sabi, la luz mediterránea y los gestos lentos del taller.</p><p><img src=\"/uploads/images/demo-atelier-home-hero.png\" alt=\"Salón wabi-sabi con cerámicas artesanales\"></p><h2>Un sitio editorial, sin builders</h2><p>Esta demo muestra cómo presentar una marca artesanal con páginas clásicas, un diario nativo, un menú estándar y un pie de página simple pero coherente.</p><ul><li>Colecciones pensadas para la mesa, el té y los interiores serenos.</li><li>Un taller contado con sobriedad, materia y luz natural.</li><li>Un diario editorial para prolongar el universo de marca.</li></ul><p class=\"prose-action-links\"><a href=\"/page/colecciones\" class=\"btn btn-primary\">Descubrir las colecciones</a><a href=\"/page/taller\" class=\"btn btn-primary\">Entrar en el taller</a><a href=\"/blog\" class=\"btn btn-primary\">Leer el diario</a></p>",
+        "meta_title": "Inicio - {{SITE_NAME}}",
+        "meta_description": "Escaparate editorial de cerámicas artesanales, colecciones, taller y diario de marca."
+      },
+      "it-IT": {
+        "title": "Home",
+        "slug": "home",
+        "content": "<p>{{SITE_NAME}} compone un universo di ceramiche artigianali ispirato al wabi-sabi, alla luce mediterranea e ai gesti lenti dell'atelier.</p><p><img src=\"/uploads/images/demo-atelier-home-hero.png\" alt=\"Salotto wabi-sabi con ceramiche artigianali\"></p><h2>Un sito vetrina editoriale, senza builder</h2><p>Questa demo mostra come presentare un marchio artigianale con pagine classiche, un giornale nativo, un menu standard e un footer semplice ma coerente.</p><ul><li>Collezioni pensate per la tavola, il tè e gli interni quieti.</li><li>Un atelier raccontato con sobrietà, materia e luce naturale.</li><li>Un giornale editoriale per prolungare l'universo del marchio.</li></ul><p class=\"prose-action-links\"><a href=\"/page/collezioni\" class=\"btn btn-primary\">Scoprire le collezioni</a><a href=\"/page/laboratorio\" class=\"btn btn-primary\">Entrare nell'atelier</a><a href=\"/blog\" class=\"btn btn-primary\">Leggere il giornale</a></p>",
+        "meta_title": "Home - {{SITE_NAME}}",
+        "meta_description": "Vetrina editoriale di ceramiche artigianali, collezioni, atelier e giornale di marca."
+      },
+      "pt-PT": {
+        "title": "Início",
+        "slug": "inicio",
+        "content": "<p>{{SITE_NAME}} compõe um universo de cerâmicas artesanais inspirado pelo wabi-sabi, pela luz mediterrânica e pelos gestos lentos do atelier.</p><p><img src=\"/uploads/images/demo-atelier-home-hero.png\" alt=\"Sala wabi-sabi com cerâmicas artesanais\"></p><h2>Um site vitrine editorial, sem builders</h2><p>Esta demo mostra como apresentar uma marca artesanal com páginas clássicas, um jornal nativo, um menu standard e um footer simples mas coerente.</p><ul><li>Coleções pensadas para a mesa, o chá e interiores tranquilos.</li><li>Um atelier contado com sobriedade, matéria e luz natural.</li><li>Um jornal editorial para prolongar o universo da marca.</li></ul><p class=\"prose-action-links\"><a href=\"/page/colecoes\" class=\"btn btn-primary\">Descobrir as coleções</a><a href=\"/page/atelie\" class=\"btn btn-primary\">Entrar no atelier</a><a href=\"/blog\" class=\"btn btn-primary\">Ler o jornal</a></p>",
+        "meta_title": "Início - {{SITE_NAME}}",
+        "meta_description": "Montra editorial de cerâmicas artesanais, coleções, atelier e jornal da marca."
+      }
+    },
+    "page_collections": {
+      "en-US": {
+        "title": "Collections",
+        "slug": "collections",
+        "content": "<p>The collections bring together pieces shaped for everyday use, slow rituals and calm interiors.</p><p><img src=\"/uploads/images/demo-atelier-collections-banner.png\" alt=\"Banner of handcrafted collections\"></p><h2>Four signature lines</h2><h3>Earth</h3><p>Warm, textured mineral tones inspired by raw clay.</p><h3>Matte white</h3><p>A luminous, restrained and quiet line for minimalist tables.</p><h3>Tea rituals</h3><p>Teapots, cups and small bowls designed for the gestures of the morning.</p><h3>Interior objects</h3><p>Vases, dishes and decorative pieces that leave space for the material itself.</p><p class=\"prose-action-links\"><a href=\"/page/contact\" class=\"btn btn-primary\">Request a piece or a series</a></p>",
+        "meta_title": "Collections - {{SITE_NAME}}",
+        "meta_description": "Handcrafted collections for the table, tea and calm interiors."
+      },
+      "de-DE": {
+        "title": "Kollektionen",
+        "slug": "kollektionen",
+        "content": "<p>Die Kollektionen versammeln Stücke, die für den Alltag, langsame Rituale und ruhige Innenräume geformt wurden.</p><p><img src=\"/uploads/images/demo-atelier-collections-banner.png\" alt=\"Banner handwerklicher Kollektionen\"></p><h2>Vier charakteristische Linien</h2><h3>Erde</h3><p>Warme, texturierte Mineralfarben, inspiriert von rohem Ton.</p><h3>Mattweiß</h3><p>Eine helle, reduzierte und stille Linie für minimalistische Tische.</p><h3>Teerituale</h3><p>Teekannen, Tassen und kleine Schalen für die Gesten des Morgens.</p><h3>Objekte für den Innenraum</h3><p>Vasen, Schalen und dekorative Stücke, die der Materialität Raum lassen.</p><p class=\"prose-action-links\"><a href=\"/page/kontakt\" class=\"btn btn-primary\">Ein Stück oder eine Serie anfragen</a></p>",
+        "meta_title": "Kollektionen - {{SITE_NAME}}",
+        "meta_description": "Handwerkliche Kollektionen für Tischkultur, Tee und ruhige Innenräume."
+      },
+      "es-ES": {
+        "title": "Colecciones",
+        "slug": "colecciones",
+        "content": "<p>Las colecciones reúnen piezas modeladas para los usos cotidianos, los rituales lentos y los interiores apacibles.</p><p><img src=\"/uploads/images/demo-atelier-collections-banner.png\" alt=\"Banner de colecciones artesanales\"></p><h2>Cuatro líneas distintivas</h2><h3>Tierra</h3><p>Tonos minerales, cálidos y texturizados inspirados en la arcilla en bruto.</p><h3>Blanco mate</h3><p>Una línea luminosa, sobria y silenciosa para mesas minimalistas.</p><h3>Rituales de té</h3><p>Teteras, tazas y pequeños cuencos pensados para los gestos de la mañana.</p><h3>Objetos de interior</h3><p>Jarrones, cuencos y piezas decorativas que dejan espacio a la materia.</p><p class=\"prose-action-links\"><a href=\"/page/contacto\" class=\"btn btn-primary\">Solicitar una pieza o una serie</a></p>",
+        "meta_title": "Colecciones - {{SITE_NAME}}",
+        "meta_description": "Colecciones artesanales para la mesa, el té y los interiores tranquilos."
+      },
+      "it-IT": {
+        "title": "Collezioni",
+        "slug": "collezioni",
+        "content": "<p>Le collezioni riuniscono pezzi modellati per l'uso quotidiano, i rituali lenti e gli interni pacati.</p><p><img src=\"/uploads/images/demo-atelier-collections-banner.png\" alt=\"Banner di collezioni artigianali\"></p><h2>Quattro linee distintive</h2><h3>Terra</h3><p>Tonalità minerali, calde e materiche ispirate all'argilla grezza.</p><h3>Bianco opaco</h3><p>Una linea luminosa, sobria e silenziosa per tavole minimaliste.</p><h3>Rituali del tè</h3><p>Teiere, tazze e piccole ciotole pensate per i gesti del mattino.</p><h3>Oggetti d'interno</h3><p>Vasi, coppette e pezzi decorativi che lasciano spazio alla materia.</p><p class=\"prose-action-links\"><a href=\"/page/contatto\" class=\"btn btn-primary\">Richiedere un pezzo o una serie</a></p>",
+        "meta_title": "Collezioni - {{SITE_NAME}}",
+        "meta_description": "Collezioni artigianali per la tavola, il tè e gli interni tranquilli."
+      },
+      "pt-PT": {
+        "title": "Coleções",
+        "slug": "colecoes",
+        "content": "<p>As coleções reúnem peças moldadas para usos quotidianos, rituais lentos e interiores tranquilos.</p><p><img src=\"/uploads/images/demo-atelier-collections-banner.png\" alt=\"Banner de coleções artesanais\"></p><h2>Quatro linhas assinatura</h2><h3>Terra</h3><p>Tons minerais, quentes e texturados inspirados na argila bruta.</p><h3>Branco mate</h3><p>Uma linha luminosa, sóbria e silenciosa para mesas minimalistas.</p><h3>Rituais de chá</h3><p>Bules, chávenas e pequenas taças pensadas para os gestos da manhã.</p><h3>Objetos de interior</h3><p>Jarras, taças e peças decorativas que deixam espaço para a matéria.</p><p class=\"prose-action-links\"><a href=\"/page/contacto\" class=\"btn btn-primary\">Pedir uma peça ou uma série</a></p>",
+        "meta_title": "Coleções - {{SITE_NAME}}",
+        "meta_description": "Coleções artesanais para a mesa, o chá e interiores tranquilos."
+      }
+    },
+    "page_atelier": {
+      "en-US": {
+        "title": "Atelier",
+        "slug": "atelier",
+        "content": "<p>The workshop is a place of slow rhythm, natural light and precise gestures. Every object takes shape there without industrial automation.</p><p><img src=\"/uploads/images/demo-atelier-workshop.png\" alt=\"Living ceramics workshop\"></p><h2>A human-scale place of making</h2><p>We work in small series, paying particular attention to textures, irregularities and the final touch.</p><ul><li>Selection of natural clays and mineral pigments.</li><li>Shaping, drying and firing at the workshop's own pace.</li><li>Manual control of every surface before signature.</li></ul><p class=\"prose-action-links\"><a href=\"/page/craftsmanship\" class=\"btn btn-primary\">Discover the craftsmanship</a></p>",
+        "meta_title": "Atelier - {{SITE_NAME}}",
+        "meta_description": "Step inside the workshop and the making rhythm of handcrafted ceramics."
+      },
+      "de-DE": {
+        "title": "Atelier",
+        "slug": "atelier",
+        "content": "<p>Das Atelier ist ein Ort des langsamen Rhythmus, des natürlichen Lichts und präziser Gesten. Jedes Objekt nimmt dort ohne industrielle Automatisierung Form an.</p><p><img src=\"/uploads/images/demo-atelier-workshop.png\" alt=\"Lebendiges Keramikatelier\"></p><h2>Ein Produktionsort in menschlichem Maßstab</h2><p>Wir arbeiten in kleinen Serien und achten besonders auf Texturen, Unregelmäßigkeiten und die finale Haptik.</p><ul><li>Auswahl natürlicher Tone und mineralischer Pigmente.</li><li>Formen, Trocknen und Brennen im Rhythmus des Ateliers.</li><li>Manuelle Kontrolle jeder Oberfläche vor der Signatur.</li></ul><p class=\"prose-action-links\"><a href=\"/page/handwerk\" class=\"btn btn-primary\">Das Handwerk entdecken</a></p>",
+        "meta_title": "Atelier - {{SITE_NAME}}",
+        "meta_description": "Tauchen Sie in das Atelier und den Herstellungsrhythmus handgefertigter Keramik ein."
+      },
+      "es-ES": {
+        "title": "Taller",
+        "slug": "taller",
+        "content": "<p>El taller es un lugar de ritmo lento, luz natural y gestos precisos. Cada objeto toma forma allí sin automatismos industriales.</p><p><img src=\"/uploads/images/demo-atelier-workshop.png\" alt=\"Taller de cerámica vivo\"></p><h2>Un espacio de producción a escala humana</h2><p>Trabajamos en series pequeñas, con una atención especial a las texturas, las irregularidades y el tacto final.</p><ul><li>Selección de arcillas naturales y pigmentos minerales.</li><li>Modelado, secado y cocción al ritmo del taller.</li><li>Control manual de cada superficie antes de la firma.</li></ul><p class=\"prose-action-links\"><a href=\"/page/saber-hacer\" class=\"btn btn-primary\">Descubrir el saber hacer</a></p>",
+        "meta_title": "Taller - {{SITE_NAME}}",
+        "meta_description": "Descubre el taller y el ritmo de fabricación de las cerámicas artesanales."
+      },
+      "it-IT": {
+        "title": "Laboratorio",
+        "slug": "laboratorio",
+        "content": "<p>L'atelier è un luogo di ritmo lento, luce naturale e gesti precisi. Ogni oggetto prende forma lì senza automatismi industriali.</p><p><img src=\"/uploads/images/demo-atelier-workshop.png\" alt=\"Laboratorio di ceramica vivo\"></p><h2>Uno spazio di produzione a misura d'uomo</h2><p>Lavoriamo in piccole serie, con un'attenzione particolare alle texture, alle irregolarità e al tatto finale.</p><ul><li>Selezione di argille naturali e pigmenti minerali.</li><li>Modellazione, asciugatura e cottura al ritmo dell'atelier.</li><li>Controllo manuale di ogni superficie prima della firma.</li></ul><p class=\"prose-action-links\"><a href=\"/page/saper-fare\" class=\"btn btn-primary\">Scoprire il savoir-faire</a></p>",
+        "meta_title": "Laboratorio - {{SITE_NAME}}",
+        "meta_description": "Immergiti nell’atelier e nel ritmo di produzione delle ceramiche artigianali."
+      },
+      "pt-PT": {
+        "title": "Atelier",
+        "slug": "atelie",
+        "content": "<p>O atelier é um lugar de ritmo lento, luz natural e gestos precisos. Cada objeto ganha forma ali sem automatismos industriais.</p><p><img src=\"/uploads/images/demo-atelier-workshop.png\" alt=\"Atelier de cerâmica vivo\"></p><h2>Um espaço de produção à escala humana</h2><p>Trabalhamos em pequenas séries, com atenção particular às texturas, irregularidades e ao toque final.</p><ul><li>Seleção de argilas naturais e pigmentos minerais.</li><li>Moldagem, secagem e cozedura ao ritmo do atelier.</li><li>Controlo manual de cada superfície antes da assinatura.</li></ul><p class=\"prose-action-links\"><a href=\"/page/saber-fazer\" class=\"btn btn-primary\">Descobrir o saber-fazer</a></p>",
+        "meta_title": "Atelier - {{SITE_NAME}}",
+        "meta_description": "Mergulhe no atelier e no ritmo de produção das cerâmicas artesanais."
+      }
+    },
+    "page_savoir_faire": {
+      "en-US": {
+        "title": "Craftsmanship",
+        "slug": "craftsmanship",
+        "content": "<p>The craftsmanship relies on a short chain of decisions: material, gesture, resting time, firing and finishing.</p><p><img src=\"/uploads/images/demo-atelier-craftsmanship-banner.png\" alt=\"Craftsmanship banner\"></p><h2>Key stages</h2><ol><li><strong>Raw materials</strong>: clays, pigments and glazes chosen for their character.</li><li><strong>Shaping</strong>: every piece is built or modelled by hand.</li><li><strong>Drying and firing</strong>: long timing protects the material and durability.</li><li><strong>Finishing</strong>: edges, textures and details are refined by hand.</li><li><strong>Signature</strong>: every object carries the workshop's final trace.</li></ol><p>This process creates pieces that belong together without ever becoming identical.</p>",
+        "meta_title": "Craftsmanship - {{SITE_NAME}}",
+        "meta_description": "Making stages, materials and gestures behind every handcrafted piece."
+      },
+      "de-DE": {
+        "title": "Handwerk",
+        "slug": "handwerk",
+        "content": "<p>Das Handwerk beruht auf einer kurzen Kette von Entscheidungen: Material, Geste, Ruhezeit, Brennen und Finish.</p><p><img src=\"/uploads/images/demo-atelier-craftsmanship-banner.png\" alt=\"Banner Handwerk\"></p><h2>Die wichtigsten Schritte</h2><ol><li><strong>Rohmaterialien</strong>: Tone, Pigmente und Glasuren, ausgewählt wegen ihres Charakters.</li><li><strong>Formgebung</strong>: Jedes Stück wird von Hand aufgebaut oder modelliert.</li><li><strong>Trocknen und Brennen</strong>: Die lange Zeit schützt Material und Haltbarkeit.</li><li><strong>Finish</strong>: Kanten, Texturen und Details werden von Hand überarbeitet.</li><li><strong>Signatur</strong>: Jedes Objekt trägt die letzte Spur des Ateliers.</li></ol><p>Dieser Prozess schafft Stücke, die zusammengehören, ohne jemals identisch zu werden.</p>",
+        "meta_title": "Handwerk - {{SITE_NAME}}",
+        "meta_description": "Herstellungsschritte, Materialien und Gesten hinter jedem handwerklichen Stück."
+      },
+      "es-ES": {
+        "title": "Saber hacer",
+        "slug": "saber-hacer",
+        "content": "<p>El saber hacer se apoya en una cadena corta de decisiones: materia, gesto, tiempo de reposo, cocción y acabados.</p><p><img src=\"/uploads/images/demo-atelier-craftsmanship-banner.png\" alt=\"Banner de saber hacer\"></p><h2>Las etapas clave</h2><ol><li><strong>Materias primas</strong>: arcillas, pigmentos y esmaltes elegidos por su carácter.</li><li><strong>Modelado</strong>: cada pieza se levanta o modela a mano.</li><li><strong>Secado y cocción</strong>: el tiempo largo protege la materia y la durabilidad.</li><li><strong>Acabados</strong>: bordes, texturas y detalles se retoman a mano.</li><li><strong>Firma</strong>: cada objeto conserva la huella final del taller.</li></ol><p>Este proceso da lugar a piezas coherentes entre sí, sin volverlas jamás idénticas.</p>",
+        "meta_title": "Saber hacer - {{SITE_NAME}}",
+        "meta_description": "Etapas de fabricación, materias y gestos detrás de cada pieza artesanal."
+      },
+      "it-IT": {
+        "title": "Saper fare",
+        "slug": "saper-fare",
+        "content": "<p>Il savoir-faire si basa su una catena breve di decisioni: materia, gesto, tempo di riposo, cottura e finiture.</p><p><img src=\"/uploads/images/demo-atelier-craftsmanship-banner.png\" alt=\"Banner savoir-faire\"></p><h2>Le tappe chiave</h2><ol><li><strong>Materie grezze</strong>: argille, pigmenti e smalti scelti per il loro carattere.</li><li><strong>Modellazione</strong>: ogni pezzo viene costruito o modellato a mano.</li><li><strong>Asciugatura e cottura</strong>: il tempo lungo protegge la materia e la durata.</li><li><strong>Finiture</strong>: bordi, texture e dettagli vengono ripresi a mano.</li><li><strong>Firma</strong>: ogni oggetto porta la traccia finale dell'atelier.</li></ol><p>Questo processo crea pezzi coerenti tra loro senza renderli mai identici.</p>",
+        "meta_title": "Saper fare - {{SITE_NAME}}",
+        "meta_description": "Fasi di lavorazione, materie e gesti dietro ogni pezzo artigianale."
+      },
+      "pt-PT": {
+        "title": "Saber-fazer",
+        "slug": "saber-fazer",
+        "content": "<p>O saber-fazer assenta numa cadeia curta de decisões: matéria, gesto, tempo de repouso, cozedura e acabamentos.</p><p><img src=\"/uploads/images/demo-atelier-craftsmanship-banner.png\" alt=\"Banner saber-fazer\"></p><h2>As etapas-chave</h2><ol><li><strong>Matérias-primas</strong>: argilas, pigmentos e esmaltes escolhidos pelo seu carácter.</li><li><strong>Moldagem</strong>: cada peça é montada ou modelada à mão.</li><li><strong>Secagem e cozedura</strong>: o tempo longo protege a matéria e a durabilidade.</li><li><strong>Acabamentos</strong>: rebordos, texturas e detalhes são revistos à mão.</li><li><strong>Assinatura</strong>: cada objeto conserva a marca final do atelier.</li></ol><p>Este processo dá origem a peças coerentes entre si, sem nunca as tornar idênticas.</p>",
+        "meta_title": "Saber-fazer - {{SITE_NAME}}",
+        "meta_description": "Etapas de fabrico, matérias e gestos por trás de cada peça artesanal."
+      }
+    },
+    "page_about": {
+      "en-US": {
+        "title": "About",
+        "slug": "about",
+        "content": "<p>{{SITE_NAME}} was born from a simple desire: to slow down, return to materiality and create objects that move through everyday life without noise.</p><p><img src=\"/uploads/images/demo-atelier-portrait.png\" alt=\"Portrait of an artisan in the workshop\"></p><h2>Three founding values</h2><ul><li><strong>Handmade</strong>: every object keeps the trace of a human gesture.</li><li><strong>Natural materials</strong>: clay, wood, linen and light guide the whole.</li><li><strong>Slow living</strong>: pieces designed for durable and intentional use.</li></ul><p>The site follows the same philosophy: few effects, clear content and a stable editorial atmosphere.</p>",
+        "meta_title": "About - {{SITE_NAME}}",
+        "meta_description": "Philosophy, materiality and values of a handcrafted ceramics workshop."
+      },
+      "de-DE": {
+        "title": "Über uns",
+        "slug": "ueber-uns",
+        "content": "<p>{{SITE_NAME}} entstand aus einem einfachen Wunsch: zu verlangsamen, zur Materialität zurückzukehren und Objekte zu schaffen, die den Alltag leise begleiten.</p><p><img src=\"/uploads/images/demo-atelier-portrait.png\" alt=\"Porträt einer Kunsthandwerkerin im Atelier\"></p><h2>Drei grundlegende Werte</h2><ul><li><strong>Handarbeit</strong>: Jedes Objekt bewahrt die Spur der menschlichen Geste.</li><li><strong>Natürliche Materialien</strong>: Ton, Holz, Leinen und Licht leiten das Ganze.</li><li><strong>Langsames Leben</strong>: Stücke für langlebige und bewusste Nutzungen.</li></ul><p>Die Website folgt derselben Philosophie: wenige Effekte, klare Inhalte und eine stabile editoriale Atmosphäre.</p>",
+        "meta_title": "Über uns - {{SITE_NAME}}",
+        "meta_description": "Philosophie, Materialität und Werte eines handwerklichen Keramikateliers."
+      },
+      "es-ES": {
+        "title": "Acerca de",
+        "slug": "acerca-de",
+        "content": "<p>{{SITE_NAME}} nació de una voluntad simple: frenar, volver a la materia y crear objetos que atraviesen la vida cotidiana sin ruido.</p><p><img src=\"/uploads/images/demo-atelier-portrait.png\" alt=\"Retrato de artesana en el taller\"></p><h2>Tres valores fundadores</h2><ul><li><strong>Hecho a mano</strong>: cada objeto conserva la huella del gesto humano.</li><li><strong>Materiales naturales</strong>: tierra, madera, lino y luz guían el conjunto.</li><li><strong>Vida lenta</strong>: piezas pensadas para usos duraderos e intencionales.</li></ul><p>El sitio adopta la misma filosofía: pocos efectos, contenidos claros y una atmósfera editorial estable.</p>",
+        "meta_title": "Acerca de - {{SITE_NAME}}",
+        "meta_description": "Filosofía, materia y valores de un taller de cerámica artesanal."
+      },
+      "it-IT": {
+        "title": "Chi siamo",
+        "slug": "chi-siamo",
+        "content": "<p>{{SITE_NAME}} è nato da un desiderio semplice: rallentare, tornare alla materia e creare oggetti che attraversino il quotidiano senza rumore.</p><p><img src=\"/uploads/images/demo-atelier-portrait.png\" alt=\"Ritratto di artigiana nell'atelier\"></p><h2>Tre valori fondanti</h2><ul><li><strong>Fatto a mano</strong>: ogni oggetto conserva la traccia del gesto umano.</li><li><strong>Materiali naturali</strong>: terra, legno, lino e luce guidano l'insieme.</li><li><strong>Vita lenta</strong>: pezzi pensati per usi durevoli e intenzionali.</li></ul><p>Il sito segue la stessa filosofia: pochi effetti, contenuti chiari e un'atmosfera editoriale stabile.</p>",
+        "meta_title": "Chi siamo - {{SITE_NAME}}",
+        "meta_description": "Filosofia, materia e valori di un atelier di ceramica artigianale."
+      },
+      "pt-PT": {
+        "title": "Sobre",
+        "slug": "sobre",
+        "content": "<p>{{SITE_NAME}} nasceu de uma vontade simples: abrandar, regressar à matéria e criar objetos que atravessem o quotidiano sem ruído.</p><p><img src=\"/uploads/images/demo-atelier-portrait.png\" alt=\"Retrato de artesã no atelier\"></p><h2>Três valores fundadores</h2><ul><li><strong>Feito à mão</strong>: cada objeto guarda a marca do gesto humano.</li><li><strong>Materiais naturais</strong>: terra, madeira, linho e luz orientam o conjunto.</li><li><strong>Vida lenta</strong>: peças pensadas para usos duradouros e intencionais.</li></ul><p>O site segue a mesma filosofia: poucos efeitos, conteúdos claros e uma atmosfera editorial estável.</p>",
+        "meta_title": "Sobre - {{SITE_NAME}}",
+        "meta_description": "Filosofia, matéria e valores de um atelier de cerâmica artesanal."
+      }
+    },
+    "page_contact": {
+      "en-US": {
+        "title": "Contact",
+        "slug": "contact",
+        "content": "<p>Questions, collaborations, custom orders or a visit to the workshop: this form centralises the first contact points.</p><p><img src=\"/uploads/images/demo-atelier-contact-banner.png\" alt=\"Handcrafted contact banner\"></p><h2>Contact details</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>France</p><p><strong>Email</strong><br>contact@atelier-nova.fr</p><p><strong>Phone</strong><br>+33 4 92 01 02 03</p><h2>Write to the workshop</h2>[contact-form slug=\"contact-main\"]<h2>Frequently asked questions</h2><h3>Are all the pieces shaped by hand?</h3><p>Yes. Every piece is modelled, fired and finished in the workshop.</p><h3>Can a visit be arranged?</h3><p>Yes, by appointment and depending on the production schedule.</p><h3>Do you ship internationally?</h3><p>Yes, with reinforced packaging and tracking adapted to the destination.</p>",
+        "meta_title": "Contact - {{SITE_NAME}}",
+        "meta_description": "Contact, custom requests and workshop visits."
+      },
+      "de-DE": {
+        "title": "Kontakt",
+        "slug": "kontakt",
+        "content": "<p>Fragen, Kooperationen, Maßanfertigungen oder ein Besuch im Atelier: Dieses Formular bündelt die ersten Kontaktaufnahmen.</p><p><img src=\"/uploads/images/demo-atelier-contact-banner.png\" alt=\"Handwerkliches Kontaktbanner\"></p><h2>Kontaktdaten</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>Frankreich</p><p><strong>E-Mail</strong><br>contact@atelier-nova.fr</p><p><strong>Telefon</strong><br>+33 4 92 01 02 03</p><h2>An das Atelier schreiben</h2>[contact-form slug=\"contact-main\"]<h2>Häufige Fragen</h2><h3>Werden alle Stücke von Hand geformt?</h3><p>Ja. Jedes Stück wird im Atelier modelliert, gebrannt und fertiggestellt.</p><h3>Kann man einen Besuch organisieren?</h3><p>Ja, nach Terminvereinbarung und je nach Produktionskalender.</p><h3>Versenden Sie international?</h3><p>Ja, mit verstärkter Verpackung und angepasster Sendungsverfolgung je nach Zielort.</p>",
+        "meta_title": "Kontakt - {{SITE_NAME}}",
+        "meta_description": "Kontakt, Maßanfertigungen und Besuche im Atelier."
+      },
+      "es-ES": {
+        "title": "Contacto",
+        "slug": "contacto",
+        "content": "<p>Preguntas, colaboraciones, encargos a medida o visita al taller: este formulario centraliza los primeros contactos.</p><p><img src=\"/uploads/images/demo-atelier-contact-banner.png\" alt=\"Banner de contacto artesanal\"></p><h2>Datos de contacto</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>Francia</p><p><strong>Email</strong><br>contact@atelier-nova.fr</p><p><strong>Teléfono</strong><br>+33 4 92 01 02 03</p><h2>Escribir al taller</h2>[contact-form slug=\"contact-main\"]<h2>Preguntas frecuentes</h2><h3>¿Todas las piezas están hechas a mano?</h3><p>Sí. Cada pieza se modela, cuece y termina en el taller.</p><h3>¿Se puede organizar una visita?</h3><p>Sí, con cita previa y según el calendario de producción.</p><h3>¿Enviáis al extranjero?</h3><p>Sí, con embalaje reforzado y seguimiento adaptado al destino.</p>",
+        "meta_title": "Contacto - {{SITE_NAME}}",
+        "meta_description": "Contacto, encargos a medida y visitas al taller."
+      },
+      "it-IT": {
+        "title": "Contatto",
+        "slug": "contatto",
+        "content": "<p>Domande, collaborazioni, ordini su misura o visita all'atelier: questo modulo centralizza i primi contatti.</p><p><img src=\"/uploads/images/demo-atelier-contact-banner.png\" alt=\"Banner contatto artigianale\"></p><h2>Contatti</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>Francia</p><p><strong>Email</strong><br>contact@atelier-nova.fr</p><p><strong>Telefono</strong><br>+33 4 92 01 02 03</p><h2>Scrivere all'atelier</h2>[contact-form slug=\"contact-main\"]<h2>Domande frequenti</h2><h3>Tutti i pezzi sono modellati a mano?</h3><p>Sì. Ogni pezzo viene modellato, cotto e rifinito nell'atelier.</p><h3>È possibile organizzare una visita?</h3><p>Sì, su appuntamento e secondo il calendario di produzione.</p><h3>Spedite all'estero?</h3><p>Sì, con imballaggio rinforzato e tracciamento adeguato alla destinazione.</p>",
+        "meta_title": "Contatto - {{SITE_NAME}}",
+        "meta_description": "Contatti, richieste su misura e visite all’atelier."
+      },
+      "pt-PT": {
+        "title": "Contacto",
+        "slug": "contacto",
+        "content": "<p>Perguntas, colaborações, encomendas por medida ou visita ao atelier: este formulário centraliza os primeiros contactos.</p><p><img src=\"/uploads/images/demo-atelier-contact-banner.png\" alt=\"Banner de contacto artesanal\"></p><h2>Contactos</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>França</p><p><strong>Email</strong><br>contact@atelier-nova.fr</p><p><strong>Telefone</strong><br>+33 4 92 01 02 03</p><h2>Escrever ao atelier</h2>[contact-form slug=\"contact-main\"]<h2>Perguntas frequentes</h2><h3>Todas as peças são moldadas à mão?</h3><p>Sim. Cada peça é moldada, cozida e acabada no atelier.</p><h3>É possível organizar uma visita?</h3><p>Sim, por marcação e segundo o calendário de produção.</p><h3>Enviam para o estrangeiro?</h3><p>Sim, com embalagem reforçada e seguimento adaptado ao destino.</p>",
+        "meta_title": "Contacto - {{SITE_NAME}}",
+        "meta_description": "Contacto, pedidos por medida e visitas ao atelier."
+      }
+    }
+  },
+  "posts": {
+    "post_artisanal_tableware": {
+      "en-US": {
+        "title": "The return of handcrafted tableware",
+        "slug": "return-handcrafted-tableware",
+        "excerpt": "Handmade table objects are returning to the centre of domestic use and everyday rituals.",
+        "content": "<p>Plates, bowls, cups and pitchers are no longer only functional. They shape the atmosphere of the table and the pleasure of use.</p><h2>Why this return is lasting</h2><ul><li>Handcrafted pieces carry the aesthetics of real use more convincingly.</li><li>They create a more personal, less standardised table.</li><li>They extend slow gestures: serving, sharing, setting the table, starting again.</li></ul><p>This renewed attention to the table is part of a broader search for presence and materiality at home.</p>",
+        "meta_title": "The return of handcrafted tableware",
+        "meta_description": "Why handmade table objects are reclaiming a strong place in contemporary interiors."
+      },
+      "de-DE": {
+        "title": "Die Rückkehr der handwerklichen Tischkultur",
+        "slug": "rueckkehr-handwerkliche-tischkultur",
+        "excerpt": "Handgefertigte Tischobjekte rücken wieder in den Mittelpunkt häuslicher Nutzungen und täglicher Rituale.",
+        "content": "<p>Teller, Schalen, Tassen und Krüge sind nicht mehr nur funktional. Sie prägen die Atmosphäre des Tisches und die Freude an der Nutzung.</p><h2>Warum diese Rückkehr von Dauer ist</h2><ul><li>Handwerkliche Stücke tragen die Ästhetik des realen Gebrauchs überzeugender.</li><li>Sie schaffen einen persönlicheren, weniger standardisierten Tisch.</li><li>Sie verlängern langsame Gesten: servieren, teilen, anrichten, wieder beginnen.</li></ul><p>Diese neue Aufmerksamkeit für den Tisch gehört zu einer breiteren Suche nach Präsenz und Materialität im Zuhause.</p>",
+        "meta_title": "Die Rückkehr der handwerklichen Tischkultur",
+        "meta_description": "Warum handgefertigte Tischobjekte wieder einen starken Platz in zeitgenössischen Innenräumen einnehmen."
+      },
+      "es-ES": {
+        "title": "El regreso del arte de la mesa artesanal",
+        "slug": "regreso-arte-mesa-artesanal",
+        "excerpt": "Los objetos de mesa hechos a mano vuelven al centro de los usos domésticos y los rituales cotidianos.",
+        "content": "<p>Platos, cuencos, tazas y jarras ya no son solo funcionales. Participan en la atmósfera de la mesa y en el placer del uso.</p><h2>Por qué este regreso es duradero</h2><ul><li>Las piezas artesanales sostienen mejor una estética del uso real.</li><li>Crean una mesa más personal y menos estandarizada.</li><li>Prolongan los gestos lentos: servir, compartir, poner la mesa y volver a empezar.</li></ul><p>Esta nueva atención a la mesa se une a una búsqueda más amplia de presencia y materia en la casa.</p>",
+        "meta_title": "El regreso del arte de la mesa artesanal",
+        "meta_description": "Por qué los objetos de mesa hechos a mano recuperan un lugar fuerte en los interiores contemporáneos."
+      },
+      "it-IT": {
+        "title": "Il ritorno dell'arte della tavola artigianale",
+        "slug": "ritorno-arte-tavola-artigianale",
+        "excerpt": "Gli oggetti da tavola fatti a mano tornano al centro degli usi domestici e dei rituali quotidiani.",
+        "content": "<p>Piatti, ciotole, tazze e brocche non sono più soltanto funzionali. Partecipano all'atmosfera della tavola e al piacere d'uso.</p><h2>Perché questo ritorno è duraturo</h2><ul><li>I pezzi artigianali sostengono meglio un'estetica dell'uso reale.</li><li>Creano una tavola più personale, meno standardizzata.</li><li>Prolungano i gesti lenti: servire, condividere, apparecchiare, ricominciare.</li></ul><p>Questa nuova attenzione alla tavola si inserisce in una ricerca più ampia di presenza e materia nella casa.</p>",
+        "meta_title": "Il ritorno dell'arte della tavola artigianale",
+        "meta_description": "Perché gli oggetti da tavola fatti a mano tornano a occupare un posto centrale negli interni contemporanei."
+      },
+      "pt-PT": {
+        "title": "O regresso da arte da mesa artesanal",
+        "slug": "regresso-arte-mesa-artesanal",
+        "excerpt": "Os objetos de mesa feitos à mão regressam ao centro dos usos domésticos e dos rituais quotidianos.",
+        "content": "<p>Pratos, taças, chávenas e jarros já não são apenas funcionais. Participam na atmosfera da mesa e no prazer de utilização.</p><h2>Porque este regresso é duradouro</h2><ul><li>As peças artesanais suportam melhor uma estética do uso real.</li><li>Criam uma mesa mais pessoal e menos padronizada.</li><li>Prolongam gestos lentos: servir, partilhar, pôr a mesa e recomeçar.</li></ul><p>Esta nova atenção à mesa junta-se a uma procura mais ampla de presença e matéria na casa.</p>",
+        "meta_title": "O regresso da arte da mesa artesanal",
+        "meta_description": "Porque os objetos de mesa feitos à mão recuperam um lugar forte nos interiores contemporâneos."
+      }
+    },
+    "post_calm_interiors": {
+      "en-US": {
+        "title": "Creating calm interiors with natural materials",
+        "slug": "calm-interiors-natural-materials",
+        "excerpt": "Wood, linen, ceramics and natural light are often enough to transform the perception of a room.",
+        "content": "<p>The feeling of calm rarely comes from a spectacular effect. It is built instead through repeated use of the right materials, breathable volumes and moderated contrasts.</p><h2>A useful palette</h2><ul><li>Mineral, low-saturation tones.</li><li>Objects that allow their texture to be read.</li><li>A limited number of decorative elements, but carefully chosen.</li></ul><p>This approach helps both the layout of a space and the coherence of a brand universe.</p>",
+        "meta_title": "Creating calm interiors with natural materials",
+        "meta_description": "Wood, linen, light and ceramics for a calmer and more coherent interior."
+      },
+      "de-DE": {
+        "title": "Ruhige Innenräume mit natürlichen Materialien gestalten",
+        "slug": "ruhige-interieurs-natuerliche-materialien",
+        "excerpt": "Holz, Leinen, Keramik und natürliches Licht reichen oft aus, um die Wahrnehmung eines Raums zu verändern.",
+        "content": "<p>Das Gefühl von Ruhe entsteht selten durch einen spektakulären Effekt. Es baut sich eher durch die Wiederholung stimmiger Materialien, luftiger Volumen und moderater Kontraste auf.</p><h2>Eine nützliche Palette</h2><ul><li>Mineralische, wenig gesättigte Töne.</li><li>Objekte, deren Textur lesbar bleibt.</li><li>Eine begrenzte Zahl dekorativer Elemente, aber gut gewählt.</li></ul><p>Dieser Ansatz erleichtert sowohl die Gestaltung als auch die Kohärenz eines Markenuniversums.</p>",
+        "meta_title": "Ruhige Innenräume mit natürlichen Materialien gestalten",
+        "meta_description": "Holz, Leinen, Licht und Keramik für einen ruhigeren und stimmigeren Innenraum."
+      },
+      "es-ES": {
+        "title": "Crear interiores serenos con materiales naturales",
+        "slug": "interiores-serenos-materiales-naturales",
+        "excerpt": "Madera, lino, cerámica y luz natural suelen bastar para transformar la percepción de una estancia.",
+        "content": "<p>La sensación de calma rara vez nace de un efecto espectacular. Se construye más bien por repetición de materiales justos, volúmenes respirables y contrastes moderados.</p><h2>Una paleta útil</h2><ul><li>Tonos minerales y poco saturados.</li><li>Objetos que dejan leer su textura.</li><li>Un número limitado de elementos decorativos, pero bien elegidos.</li></ul><p>Este enfoque facilita tanto la composición del espacio como la coherencia de un universo de marca.</p>",
+        "meta_title": "Crear interiores serenos con materiales naturales",
+        "meta_description": "Madera, lino, luz y cerámica para un interior más sereno y coherente."
+      },
+      "it-IT": {
+        "title": "Creare interni calmi con materiali naturali",
+        "slug": "interni-calmi-materiali-naturali",
+        "excerpt": "Legno, lino, ceramica e luce naturale bastano spesso a trasformare la percezione di una stanza.",
+        "content": "<p>La sensazione di calma nasce raramente da un effetto spettacolare. Si costruisce piuttosto attraverso la ripetizione di materiali giusti, volumi ariosi e contrasti moderati.</p><h2>Una palette utile</h2><ul><li>Toni minerali e poco saturi.</li><li>Oggetti che lasciano leggere la loro texture.</li><li>Un numero limitato di elementi decorativi, ma ben scelti.</li></ul><p>Questo approccio facilita sia l'allestimento dello spazio sia la coerenza di un universo di marca.</p>",
+        "meta_title": "Creare interni calmi con materiali naturali",
+        "meta_description": "Legno, lino, luce e ceramica per un interno più calmo e coerente."
+      },
+      "pt-PT": {
+        "title": "Criar interiores calmos com materiais naturais",
+        "slug": "interiores-calmos-materiais-naturais",
+        "excerpt": "Madeira, linho, cerâmica e luz natural bastam muitas vezes para transformar a perceção de um espaço.",
+        "content": "<p>A sensação de calma raramente nasce de um efeito espetacular. Constrói-se antes pela repetição de materiais certos, volumes respiráveis e contrastes moderados.</p><h2>Uma paleta útil</h2><ul><li>Tons minerais e pouco saturados.</li><li>Objetos que deixam ler a sua textura.</li><li>Um número limitado de elementos decorativos, mas bem escolhidos.</li></ul><p>Esta abordagem facilita tanto a composição do espaço como a coerência de um universo de marca.</p>",
+        "meta_title": "Criar interiores calmos com materiais naturais",
+        "meta_description": "Madeira, linho, luz e cerâmica para um interior mais calmo e coerente."
+      }
+    },
+    "post_handmade_objects": {
+      "en-US": {
+        "title": "Why handmade objects carry a different presence",
+        "slug": "handmade-objects-different-presence",
+        "excerpt": "Artisanal pieces keep the memory of the gesture and create a more tangible relation to use.",
+        "content": "<p>An artisanal object does not look like a decorative variation from a catalogue. It carries a perceptible density of making, even in the simplest details.</p><h2>Three decisive differences</h2><ol><li>The surface stays alive: you sense variations, traces and matter.</li><li>The rhythm of use changes: the object is handled differently.</li><li>The series does not seek absolute uniformity, but coherence.</li></ol><p>It is often this quiet presence that makes an interior feel more inhabited.</p>",
+        "meta_title": "Why handmade objects carry a different presence",
+        "meta_description": "Understanding what distinguishes an artisanal object from a standardised product."
+      },
+      "de-DE": {
+        "title": "Warum handgemachte Objekte eine andere Präsenz haben",
+        "slug": "handgemachte-objekte-andere-praesenz",
+        "excerpt": "Handwerkliche Stücke bewahren die Erinnerung an die Geste und schaffen eine greifbarere Beziehung zur Nutzung.",
+        "content": "<p>Ein handwerkliches Objekt ähnelt keiner dekorativen Variation aus einem Katalog. Es trägt eine wahrnehmbare Dichte der Herstellung in sich, selbst in den einfachsten Details.</p><h2>Drei entscheidende Unterschiede</h2><ol><li>Die Oberfläche bleibt lebendig: Variationen, Spuren und Materialität sind spürbar.</li><li>Der Gebrauchsrhythmus verändert sich: Man behandelt das Objekt anders.</li><li>Die Serie sucht keine absolute Gleichförmigkeit, sondern Kohärenz.</li></ol><p>Oft ist es diese stille Präsenz, die einen Innenraum bewohnter wirken lässt.</p>",
+        "meta_title": "Warum handgemachte Objekte eine andere Präsenz haben",
+        "meta_description": "Was ein handwerkliches Objekt von einem standardisierten Produkt unterscheidet."
+      },
+      "es-ES": {
+        "title": "Por qué los objetos hechos a mano tienen otra presencia",
+        "slug": "objetos-hechos-a-mano-otra-presencia",
+        "excerpt": "Las piezas artesanales conservan la memoria del gesto y generan una relación más tangible con el uso.",
+        "content": "<p>Un objeto artesanal no se parece a una variación decorativa de catálogo. Lleva una densidad de fabricación perceptible incluso en los detalles más simples.</p><h2>Tres diferencias decisivas</h2><ol><li>La superficie permanece viva: se perciben variaciones, huellas y materia.</li><li>El ritmo de uso cambia: el objeto se manipula de otro modo.</li><li>La serie no busca la uniformidad absoluta, sino la coherencia.</li></ol><p>Es a menudo esa presencia silenciosa la que hace que un interior parezca más habitado.</p>",
+        "meta_title": "Por qué los objetos hechos a mano tienen otra presencia",
+        "meta_description": "Comprender lo que distingue un objeto artesanal de un producto estandarizado."
+      },
+      "it-IT": {
+        "title": "Perché gli oggetti fatti a mano hanno un’altra presenza",
+        "slug": "oggetti-fatti-a-mano-presenza-diversa",
+        "excerpt": "I pezzi artigianali conservano la memoria del gesto e producono una relazione più tangibile con l’uso.",
+        "content": "<p>Un oggetto artigianale non somiglia a una variazione decorativa di catalogo. Porta con sé una densità di lavorazione percepibile anche nei dettagli più semplici.</p><h2>Tre differenze decisive</h2><ol><li>La superficie resta viva: si percepiscono variazioni, tracce e materia.</li><li>Il ritmo d’uso cambia: l’oggetto viene maneggiato diversamente.</li><li>La serie non cerca l’uniformità assoluta, ma la coerenza.</li></ol><p>Spesso è proprio questa presenza silenziosa a rendere un interno più vissuto.</p>",
+        "meta_title": "Perché gli oggetti fatti a mano hanno un’altra presenza",
+        "meta_description": "Capire ciò che distingue un oggetto artigianale da un prodotto standardizzato."
+      },
+      "pt-PT": {
+        "title": "Porque os objetos feitos à mão têm outra presença",
+        "slug": "objetos-feitos-a-mao-presenca-diferente",
+        "excerpt": "As peças artesanais conservam a memória do gesto e produzem uma relação mais tangível com o uso.",
+        "content": "<p>Um objeto artesanal não se parece com uma variação decorativa de catálogo. Traz consigo uma densidade de fabrico percetível mesmo nos detalhes mais simples.</p><h2>Três diferenças decisivas</h2><ol><li>A superfície mantém-se viva: percebem-se variações, marcas e matéria.</li><li>O ritmo de uso muda: o objeto é manipulado de forma diferente.</li><li>A série não procura a uniformidade absoluta, mas a coerência.</li></ol><p>É muitas vezes essa presença silenciosa que torna um interior mais habitado.</p>",
+        "meta_title": "Porque os objetos feitos à mão têm outra presença",
+        "meta_description": "Compreender o que distingue um objeto artesanal de um produto padronizado."
+      }
+    },
+    "post_tea_rituals": {
+      "en-US": {
+        "title": "Tea ritual as a space to breathe",
+        "slug": "tea-ritual-space-to-breathe",
+        "excerpt": "Light steam, slow gestures and tactile ceramics are often enough to create a moment of attention in the day.",
+        "content": "<p>Tea is not only a hot drink. When it is served in pieces designed for the hand, it becomes a breathing space in the daily rhythm.</p><h2>What a true ritual changes</h2><ul><li>The gesture naturally slows down when you have to pour, wait and feel the warmth of a cup.</li><li>Matte, slightly irregular ceramics strengthen the feeling of presence.</li><li>The repetition of the ritual creates a calm marker in the middle of a saturated day.</li></ul><p>In a restrained interior, these micro-rituals matter as much as the major decorative choices: they install an atmosphere that is lived, not merely looked at.</p>",
+        "meta_title": "Tea ritual as a space to breathe",
+        "meta_description": "Why tea, ceramics and slowness create a true breathing space in the home."
+      },
+      "de-DE": {
+        "title": "Das Teeritual als Raum zum Atmen",
+        "slug": "tee-ritual-atemraum",
+        "excerpt": "Leichter Dampf, langsame Gesten und taktile Keramik reichen oft aus, um im Tag einen Moment der Aufmerksamkeit zu schaffen.",
+        "content": "<p>Tee ist nicht nur ein Heißgetränk. Wird er in Stücken serviert, die für die Hand gedacht sind, wird er zu einem Atemraum im Alltag.</p><h2>Was ein echtes Ritual verändert</h2><ul><li>Die Geste verlangsamt sich von selbst, wenn man einschenken, warten und die Wärme einer Tasse spüren muss.</li><li>Matte, leicht unregelmäßige Keramik verstärkt das Gefühl von Präsenz.</li><li>Die Wiederholung des Rituals schafft einen ruhigen Anker inmitten eines übervollen Tages.</li></ul><p>In einem reduzierten Interieur zählen diese Mikrorituale ebenso sehr wie große dekorative Entscheidungen: Sie schaffen eine Atmosphäre, die gelebt und nicht nur betrachtet wird.</p>",
+        "meta_title": "Das Teeritual als Raum zum Atmen",
+        "meta_description": "Warum Tee, Keramik und Langsamkeit im Zuhause einen echten Atemraum schaffen."
+      },
+      "es-ES": {
+        "title": "El ritual del té como espacio de respiración",
+        "slug": "ritual-del-te-espacio-de-respiracion",
+        "excerpt": "Vapor ligero, gestos lentos y cerámica táctil suelen bastar para recrear un momento de atención en el día.",
+        "content": "<p>El té no es solo una bebida caliente. Cuando se sirve en piezas pensadas para la mano, se convierte en un espacio de respiración dentro del ritmo cotidiano.</p><h2>Lo que cambia un verdadero ritual</h2><ul><li>El gesto se ralentiza de forma natural cuando hay que servir, esperar y sentir el calor de una taza.</li><li>La cerámica mate, ligeramente irregular, refuerza la sensación de presencia.</li><li>La repetición del ritual crea un punto de calma en medio de un día saturado.</li></ul><p>En un interior sobrio, estos micro-rituales cuentan tanto como las grandes decisiones decorativas: instalan una atmósfera vivida, no solo contemplada.</p>",
+        "meta_title": "El ritual del té como espacio de respiración",
+        "meta_description": "Por qué el té, la cerámica y la lentitud crean un verdadero espacio de respiración en casa."
+      },
+      "it-IT": {
+        "title": "Il rituale del tè come spazio di respiro",
+        "slug": "rituale-del-te-spazio-di-respiro",
+        "excerpt": "Vapore leggero, gesti lenti e ceramica tattile bastano spesso a ricreare un momento di attenzione nella giornata.",
+        "content": "<p>Il tè non è solo una bevanda calda. Quando viene servito in pezzi pensati per la mano, diventa uno spazio di respiro nel ritmo quotidiano.</p><h2>Che cosa cambia un vero rituale</h2><ul><li>Il gesto rallenta naturalmente quando bisogna versare, attendere e sentire il calore di una tazza.</li><li>La ceramica opaca, leggermente irregolare, rafforza la sensazione di presenza.</li><li>La ripetizione del rituale crea un punto di calma nel mezzo di una giornata satura.</li></ul><p>In un interno sobrio, questi micro-rituali contano quanto le grandi scelte decorative: installano un'atmosfera vissuta, non soltanto osservata.</p>",
+        "meta_title": "Il rituale del tè come spazio di respiro",
+        "meta_description": "Perché tè, ceramica e lentezza creano un vero spazio di respiro nella casa."
+      },
+      "pt-PT": {
+        "title": "O ritual do chá como espaço de respiração",
+        "slug": "ritual-do-cha-espaco-de-respiracao",
+        "excerpt": "Vapor leve, gestos lentos e cerâmica tátil bastam muitas vezes para recriar um momento de atenção no dia.",
+        "content": "<p>O chá não é apenas uma bebida quente. Quando é servido em peças pensadas para a mão, torna-se um espaço de respiração no ritmo quotidiano.</p><h2>O que muda num verdadeiro ritual</h2><ul><li>O gesto abranda naturalmente quando é preciso servir, esperar e sentir o calor de uma chávena.</li><li>A cerâmica mate, ligeiramente irregular, reforça a sensação de presença.</li><li>A repetição do ritual cria um ponto de calma no meio de um dia saturado.</li></ul><p>Num interior sóbrio, estes micro-rituais contam tanto quanto as grandes escolhas decorativas: instalam uma atmosfera vivida, e não apenas observada.</p>",
+        "meta_title": "O ritual do chá como espaço de respiração",
+        "meta_description": "Porque o chá, a cerâmica e a lentidão criam um verdadeiro espaço de respiração em casa."
+      }
+    },
+    "post_wabi_sabi_living": {
+      "en-US": {
+        "title": "The wabi-sabi way of living",
+        "slug": "wabi-sabi-way-of-living",
+        "excerpt": "How natural materials, soft light and imperfect objects create calmer interiors.",
+        "content": "<p>Wabi-sabi does not seek perfection. It seeks a sensitive balance between use, patina, light and silence.</p><h2>What truly changes an interior</h2><ul><li>Natural materials that absorb light more softly.</li><li>Imperfect objects that remain coherent together.</li><li>A calmer visual hierarchy without decorative overload.</li></ul><p>Within this logic, handcrafted ceramics play a discreet but structuring role: they give relief without breaking the atmosphere.</p>",
+        "meta_title": "The wabi-sabi way of living",
+        "meta_description": "Simple cues for introducing wabi-sabi into a contemporary interior."
+      },
+      "de-DE": {
+        "title": "Die Kunst des Wabi-Sabi-Lebens",
+        "slug": "wabi-sabi-lebensart",
+        "excerpt": "Wie natürliche Materialien, weiches Licht und unperfekte Objekte ruhigere Innenräume schaffen.",
+        "content": "<p>Wabi-Sabi sucht nicht nach Perfektion. Es sucht nach einem sensiblen Gleichgewicht zwischen Gebrauch, Patina, Licht und Stille.</p><h2>Was einen Innenraum wirklich verändert</h2><ul><li>Natürliche Materialien, die Licht sanfter aufnehmen.</li><li>Unperfekte Objekte, die dennoch miteinander harmonieren.</li><li>Eine ruhigere visuelle Hierarchie ohne dekorative Überladung.</li></ul><p>In dieser Logik spielt handwerkliche Keramik eine diskrete, aber strukturierende Rolle: Sie verleiht Tiefe, ohne die Atmosphäre zu brechen.</p>",
+        "meta_title": "Die Kunst des Wabi-Sabi-Lebens",
+        "meta_description": "Einfache Orientierungspunkte, um Wabi-Sabi in einen zeitgenössischen Innenraum einzuführen."
+      },
+      "es-ES": {
+        "title": "El arte de vivir wabi-sabi",
+        "slug": "arte-de-vivir-wabi-sabi",
+        "excerpt": "Cómo los materiales naturales, la luz suave y los objetos imperfectos crean interiores más serenos.",
+        "content": "<p>El wabi-sabi no busca la perfección. Busca una forma de equilibrio sensible entre uso, pátina, luz y silencio.</p><h2>Lo que realmente cambia un interior</h2><ul><li>Materiales naturales que absorben mejor la luz.</li><li>Objetos imperfectos pero coherentes entre sí.</li><li>Una jerarquía visual más calmada, sin sobrecarga decorativa.</li></ul><p>En esta lógica, la cerámica artesanal desempeña un papel discreto pero estructurante: aporta relieve sin romper la atmósfera.</p>",
+        "meta_title": "El arte de vivir wabi-sabi",
+        "meta_description": "Claves sencillas para introducir el wabi-sabi en un interior contemporáneo."
+      },
+      "it-IT": {
+        "title": "L’arte di vivere wabi-sabi",
+        "slug": "arte-di-vivere-wabi-sabi",
+        "excerpt": "Come materiali naturali, luce morbida e oggetti imperfetti creano interni più pacati.",
+        "content": "<p>Il wabi-sabi non cerca la perfezione. Cerca una forma di equilibrio sensibile tra uso, patina, luce e silenzio.</p><h2>Ciò che cambia davvero un interno</h2><ul><li>Materiali naturali che assorbono meglio la luce.</li><li>Oggetti imperfetti ma coerenti tra loro.</li><li>Una gerarchia visiva più calma, senza sovraccarico decorativo.</li></ul><p>In questa logica, la ceramica artigianale svolge un ruolo discreto ma strutturante: dà rilievo senza rompere l’atmosfera.</p>",
+        "meta_title": "L’arte di vivere wabi-sabi",
+        "meta_description": "Riferimenti semplici per introdurre il wabi-sabi in un interno contemporaneo."
+      },
+      "pt-PT": {
+        "title": "A arte de viver wabi-sabi",
+        "slug": "arte-de-viver-wabi-sabi",
+        "excerpt": "Como os materiais naturais, a luz suave e os objetos imperfeitos criam interiores mais serenos.",
+        "content": "<p>O wabi-sabi não procura a perfeição. Procura uma forma de equilíbrio sensível entre uso, pátina, luz e silêncio.</p><h2>O que realmente muda um interior</h2><ul><li>Materiais naturais que absorvem melhor a luz.</li><li>Objetos imperfeitos mas coerentes entre si.</li><li>Uma hierarquia visual mais calma, sem sobrecarga decorativa.</li></ul><p>Nesta lógica, a cerâmica artesanal desempenha um papel discreto mas estruturante: dá relevo sem quebrar a atmosfera.</p>",
+        "meta_title": "A arte de viver wabi-sabi",
+        "meta_description": "Pistas simples para introduzir o wabi-sabi num interior contemporâneo."
+      }
+    },
+    "post_workshop_tools": {
+      "en-US": {
+        "title": "The quiet tools that shape the workshop",
+        "slug": "quiet-tools-shaping-workshop",
+        "excerpt": "Loop tools, knives, rollers and brushes carry a memory of gestures that directly influences the finish of each piece.",
+        "content": "<p>In a workshop, tools are never interchangeable. They wear, develop a patina and end up guiding the hand as much as accompanying it.</p><h2>A very expressive toolbox</h2><ul><li>A loop tool does not only open the material: it also draws a tension into the form.</li><li>The roller and ribs determine the softness or sharpness of a surface.</li><li>Small finishing tools leave subtle signs that make each piece feel more inhabited.</li></ul><p>Observing the tools of a workshop already reveals part of its language: the gesture is never abstract, it is always embodied in a material and a precise instrument.</p>",
+        "meta_title": "The quiet tools that shape the workshop",
+        "meta_description": "How ceramics tools influence the gesture, the material and the final presence of each piece."
+      },
+      "de-DE": {
+        "title": "Die stillen Werkzeuge, die das Atelier formen",
+        "slug": "stille-werkzeuge-formen-atelier",
+        "excerpt": "Schlingen, Messer, Rollen und Pinsel tragen eine Erinnerung an Gesten, die das Finish der Stücke direkt beeinflussen.",
+        "content": "<p>In einem Atelier sind Werkzeuge nicht austauschbar. Sie nutzen sich ab, entwickeln eine Patina und beginnen, die Hand ebenso zu führen wie zu begleiten.</p><h2>Ein sehr ausdrucksstarker Werkzeugkasten</h2><ul><li>Eine Schlinge öffnet nicht nur das Material: Sie zeichnet auch eine Spannung in die Form.</li><li>Rolle und Rippen bestimmen die Weichheit oder Schärfe einer Oberfläche.</li><li>Kleine Finish-Werkzeuge hinterlassen subtile Hinweise, die jedes Stück bewohnter wirken lassen.</li></ul><p>Die Werkzeuge eines Ateliers zu beobachten bedeutet bereits, einen Teil seiner Sprache zu verstehen: Die Geste ist nie abstrakt, sondern immer in Material und präzisem Instrument verkörpert.</p>",
+        "meta_title": "Die stillen Werkzeuge, die das Atelier formen",
+        "meta_description": "Wie Keramikwerkzeuge Geste, Material und die endgültige Präsenz der Stücke beeinflussen."
+      },
+      "es-ES": {
+        "title": "Las herramientas silenciosas que modelan el taller",
+        "slug": "herramientas-silenciosas-moldean-taller",
+        "excerpt": "Miretas, cuchillos, rodillos y pinceles guardan una memoria de gestos que influye directamente en el acabado de las piezas.",
+        "content": "<p>En un taller, las herramientas no son intercambiables. Se desgastan, se patinan y terminan guiando la mano tanto como acompañándola.</p><h2>Una caja de herramientas muy expresiva</h2><ul><li>Una mireta no solo abre la materia: también dibuja una tensión en la forma.</li><li>El rodillo y las estecas determinan la suavidad o la nitidez de una superficie.</li><li>Las pequeñas herramientas de acabado dejan indicios sutiles que hacen que cada pieza parezca más habitada.</li></ul><p>Observar las herramientas de un taller ya permite comprender una parte de su lenguaje: el gesto nunca es abstracto, siempre se encarna en una materia y en un instrumento preciso.</p>",
+        "meta_title": "Las herramientas silenciosas que modelan el taller",
+        "meta_description": "Cómo las herramientas de cerámica influyen en el gesto, la materia y la presencia final de las piezas."
+      },
+      "it-IT": {
+        "title": "Gli strumenti silenziosi che plasmano l’atelier",
+        "slug": "strumenti-silenziosi-plasmano-atelier",
+        "excerpt": "Mirette, coltelli, rulli e pennelli portano una memoria di gesti che influenza direttamente la finitura dei pezzi.",
+        "content": "<p>In un atelier, gli strumenti non sono intercambiabili. Si usurano, si patinano e finiscono per guidare la mano tanto quanto accompagnarla.</p><h2>Una cassetta degli attrezzi molto espressiva</h2><ul><li>Una miretta non apre soltanto la materia: disegna anche una tensione nella forma.</li><li>Il rullo e le stecche determinano la morbidezza o la nettezza di una superficie.</li><li>I piccoli strumenti di finitura lasciano indizi sottili che rendono ogni pezzo più abitato.</li></ul><p>Osservare gli strumenti di un atelier significa già comprenderne una parte del linguaggio: il gesto non è mai astratto, si incarna sempre in una materia e in uno strumento preciso.</p>",
+        "meta_title": "Gli strumenti silenziosi che plasmano l’atelier",
+        "meta_description": "Come gli strumenti della ceramica influenzano il gesto, la materia e la presenza finale dei pezzi."
+      },
+      "pt-PT": {
+        "title": "As ferramentas silenciosas que moldam o atelier",
+        "slug": "ferramentas-silenciosas-moldam-atelier",
+        "excerpt": "Miretes, facas, rolos e pincéis transportam uma memória de gestos que influencia diretamente o acabamento das peças.",
+        "content": "<p>Num atelier, as ferramentas não são intercambiáveis. Gastam-se, ganham pátina e acabam por guiar a mão tanto quanto a acompanham.</p><h2>Uma caixa de ferramentas muito expressiva</h2><ul><li>Uma mirete não abre apenas a matéria: também desenha uma tensão na forma.</li><li>O rolo e as estecas determinam a suavidade ou a nitidez de uma superfície.</li><li>As pequenas ferramentas de acabamento deixam sinais subtis que tornam cada peça mais habitada.</li></ul><p>Observar as ferramentas de um atelier já é compreender parte da sua linguagem: o gesto nunca é abstrato, encarna-se sempre numa matéria e num instrumento preciso.</p>",
+        "meta_title": "As ferramentas silenciosas que moldam o atelier",
+        "meta_description": "Como as ferramentas de cerâmica influenciam o gesto, a matéria e a presença final das peças."
+      }
+    }
+  },
+  "categories": {
+    "cat_collections": {
+      "en-US": {
+        "name": "Collections",
+        "slug": "collections-journal",
+        "description": "Pieces, uses and handcrafted series presented in the journal."
+      },
+      "de-DE": {
+        "name": "Kollektionen",
+        "slug": "kollektionen-journal",
+        "description": "Stücke, Anwendungen und handwerkliche Serien, die im Journal vorgestellt werden."
+      },
+      "es-ES": {
+        "name": "Colecciones",
+        "slug": "colecciones-journal",
+        "description": "Piezas, usos y series artesanales presentadas en el diario."
+      },
+      "it-IT": {
+        "name": "Collezioni",
+        "slug": "collezioni-journal",
+        "description": "Pezzi, usi e serie artigianali presentati nel giornale."
+      },
+      "pt-PT": {
+        "name": "Coleções",
+        "slug": "colecoes-journal",
+        "description": "Peças, usos e séries artesanais apresentadas no jornal."
+      }
+    },
+    "cat_inspirations": {
+      "en-US": {
+        "name": "Inspirations",
+        "slug": "inspirations-journal",
+        "description": "References, atmospheres and ways of living around the workshop universe."
+      },
+      "de-DE": {
+        "name": "Inspirationen",
+        "slug": "inspirationen-journal",
+        "description": "Referenzen, Atmosphären und Lebensweisen rund um das Universum des Ateliers."
+      },
+      "es-ES": {
+        "name": "Inspiraciones",
+        "slug": "inspiraciones-journal",
+        "description": "Referencias, atmósferas y formas de habitar en torno al universo del taller."
+      },
+      "it-IT": {
+        "name": "Ispirazioni",
+        "slug": "ispirazioni-journal",
+        "description": "Riferimenti, atmosfere e modi di vivere attorno all’universo dell’atelier."
+      },
+      "pt-PT": {
+        "name": "Inspirações",
+        "slug": "inspiracoes-journal",
+        "description": "Referências, atmosferas e formas de habitar em torno do universo do atelier."
+      }
+    },
+    "cat_materials": {
+      "en-US": {
+        "name": "Materials",
+        "slug": "materials-journal",
+        "description": "Clay, surfaces, textures and material decisions explained through articles."
+      },
+      "de-DE": {
+        "name": "Materialien",
+        "slug": "materialien-journal",
+        "description": "Ton, Oberflächen, Texturen und materielle Entscheidungen, erläutert durch Artikel."
+      },
+      "es-ES": {
+        "name": "Materiales",
+        "slug": "materiales-journal",
+        "description": "Arcilla, superficies, texturas y decisiones materiales explicadas a través de artículos."
+      },
+      "it-IT": {
+        "name": "Materiali",
+        "slug": "materiali-journal",
+        "description": "Argilla, superfici, texture e scelte materiche raccontate negli articoli."
+      },
+      "pt-PT": {
+        "name": "Materiais",
+        "slug": "materiais-journal",
+        "description": "Argila, superfícies, texturas e decisões materiais explicadas através dos artigos."
+      }
+    },
+    "cat_workshop": {
+      "en-US": {
+        "name": "Workshop",
+        "slug": "workshop-journal",
+        "description": "Tools, making processes and behind-the-scenes views from the workshop."
+      },
+      "de-DE": {
+        "name": "Werkstatt",
+        "slug": "werkstatt-journal",
+        "description": "Werkzeuge, Herstellungsprozesse und Einblicke hinter die Kulissen des Ateliers."
+      },
+      "es-ES": {
+        "name": "Taller",
+        "slug": "taller-journal",
+        "description": "Herramientas, procesos de fabricación y vistas entre bastidores del taller."
+      },
+      "it-IT": {
+        "name": "Laboratorio",
+        "slug": "laboratorio-journal",
+        "description": "Strumenti, processi di lavorazione e scorci dietro le quinte dell’atelier."
+      },
+      "pt-PT": {
+        "name": "Oficina",
+        "slug": "oficina-journal",
+        "description": "Ferramentas, processos de fabrico e bastidores do atelier."
+      }
+    }
+  },
+  "comments": {
+    "comment_handmade_1": {
+      "en-US": {
+        "content": "The difference in presence is real. You feel it immediately between an industrial series and a hand-shaped piece."
+      },
+      "de-DE": {
+        "content": "Der Unterschied in der Präsenz ist real. Man spürt ihn sofort zwischen einer industriellen Serie und einem von Hand geformten Stück."
+      },
+      "es-ES": {
+        "content": "La diferencia de presencia es real. Se percibe enseguida entre una serie industrial y una pieza modelada a mano."
+      },
+      "it-IT": {
+        "content": "La differenza di presenza è reale. Si percepisce subito tra una serie industriale e un pezzo modellato a mano."
+      },
+      "pt-PT": {
+        "content": "A diferença de presença é real. Sente-se imediatamente entre uma série industrial e uma peça moldada à mão."
+      }
+    },
+    "comment_tableware_1": {
+      "en-US": {
+        "content": "The return of handcrafted tableware is also visible in the way meals are set and shared."
+      },
+      "de-DE": {
+        "content": "Die Rückkehr handwerklicher Tischobjekte zeigt sich auch in der Art, wie Mahlzeiten angerichtet und geteilt werden."
+      },
+      "es-ES": {
+        "content": "El regreso de los objetos de mesa artesanales también se nota en la manera de servir y compartir las comidas."
+      },
+      "it-IT": {
+        "content": "Il ritorno degli oggetti da tavola artigianali si vede anche nel modo di apparecchiare e condividere i pasti."
+      },
+      "pt-PT": {
+        "content": "O regresso dos objetos de mesa artesanais também se vê na forma de servir e partilhar as refeições."
+      }
+    },
+    "comment_tea_1": {
+      "en-US": {
+        "content": "The link between the slowness of the gesture and the quality of the object feels absolutely right. You can really sense that difference in everyday life."
+      },
+      "de-DE": {
+        "content": "Die Verbindung zwischen der Langsamkeit der Geste und der Qualität des Objekts ist sehr treffend. Im Alltag spürt man diesen Unterschied wirklich."
+      },
+      "es-ES": {
+        "content": "El vínculo entre la lentitud del gesto y la calidad del objeto es muy justo. Esa diferencia se siente de verdad en el día a día."
+      },
+      "it-IT": {
+        "content": "Il legame tra la lentezza del gesto e la qualità dell’oggetto è molto giusto. Questa differenza si percepisce davvero ogni giorno."
+      },
+      "pt-PT": {
+        "content": "A ligação entre a lentidão do gesto e a qualidade do objeto é muito justa. Essa diferença sente-se verdadeiramente no dia a dia."
+      }
+    },
+    "comment_tools_1": {
+      "en-US": {
+        "content": "A beautiful way to explain the role of tools. It helps us understand why two pieces can hold such different energy."
+      },
+      "de-DE": {
+        "content": "Eine schöne Art, die Rolle der Werkzeuge zu erklären. So versteht man besser, warum zwei Stücke eine so unterschiedliche Energie haben können."
+      },
+      "es-ES": {
+        "content": "Una forma muy bella de explicar el papel de las herramientas. Se entiende mejor por qué dos piezas pueden tener una energía tan distinta."
+      },
+      "it-IT": {
+        "content": "Un modo molto bello di spiegare il ruolo degli strumenti. Si capisce meglio perché due pezzi possano avere un’energia così diversa."
+      },
+      "pt-PT": {
+        "content": "Uma forma muito bonita de explicar o papel das ferramentas. Percebe-se melhor porque duas peças podem ter uma energia tão diferente."
+      }
+    },
+    "comment_wabi_sabi_1": {
+      "en-US": {
+        "content": "Very true. The part about materials and light sums up exactly what changes the atmosphere of an interior."
+      },
+      "de-DE": {
+        "content": "Sehr treffend. Der Abschnitt über Materialien und Licht fasst genau zusammen, was die Atmosphäre eines Innenraums verändert."
+      },
+      "es-ES": {
+        "content": "Muy cierto. El pasaje sobre los materiales y la luz resume exactamente lo que cambia la atmósfera de un interior."
+      },
+      "it-IT": {
+        "content": "Molto vero. Il passaggio sui materiali e sulla luce riassume perfettamente ciò che cambia l’atmosfera di un interno."
+      },
+      "pt-PT": {
+        "content": "Muito certo. A passagem sobre os materiais e a luz resume exatamente o que muda a atmosfera de um interior."
+      }
+    }
+  }
+}

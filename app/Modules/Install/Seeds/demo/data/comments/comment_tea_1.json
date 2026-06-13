@@ -1,0 +1,13 @@
+{
+  "id": "comment_tea_1",
+  "post_id": "post_tea_rituals",
+  "post_type": "post",
+  "author_name": "Élise V.",
+  "author_email": "elise@example.test",
+  "content": "Le lien entre la lenteur du geste et la qualité de l'objet est très juste. On ressent vraiment cette différence au quotidien.",
+  "status": "approved",
+  "ip": "127.0.0.1",
+  "user_agent": "FlatCMS Sample Data",
+  "created_at": "2026-05-16 11:20:00",
+  "updated_at": "2026-05-16 11:20:00"
+}

@@ -1,0 +1,16 @@
+{
+    "name": "Install",
+    "version": "1.0.0",
+    "description": "Installer module.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "dependencies": [
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": false,
+    "signature": "QDji8mj3/Ku5BaeGd8shE4akhr4XipBJVe4I84QlARrJDI7O4IlFW5rGGm05eHu4Gptbgyb8CPfobv2toPcqNEtiR3gWD9XZGlLROqDtxKZM7NWWnwpnrwcCQsfiUNltih28Yog1RjpNXAuYX3XvG8ljQMpUpVlonpVHFKuN9iIePJktmrzZFdVMccNXUdRncaxhj0kXu6Mt1DJIOtidMg4IZxaGdxYmCoMdiP6kga2JKton/GORLkapqg0jsn163LkzLM0arCw3iOdyAMstc8vrbHjCE6zDiAeo/AhxoeB7W+5xWm6F2H/e7FDD9k6YsYKszxCXeHB5lEhm1xGu4dmFYI9ACHFuxYZJDpBtr5pAjMysUDg/heAJJjoRpmJdzsMmxb+dIpsiYrsL4DuWxYAuZ2ujvUR+orGb9fLieQRsdXddJL62mcSQ1YlGmhZacUxxa3B9id7FM86WfwBNGAdI40vl2hvajhA2GueIHbQBAOJ1CAbp5j40uIgipzl/29phi2LZISZCHHeWACPagp/0kSMSXLoOoNFBXOsAVXWGxjjAhWSTafzlHQ48NtMtn0ZZhP2DdksULVMLVtwUK8ERdsEQpCZM/Ru3H8Sd6um2rd80OY4AjsyhsKT2QH37zPxAaqOSCiPCJEGinetU6MyGzAQFIbmQubmvlbeI1NE="
+}

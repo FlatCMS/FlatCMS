@@ -1,0 +1,18 @@
+{
+    "name": "Spacer",
+    "key": "spacer",
+    "version": "1.0.0",
+    "description": "Official FlatCMS spacer widget.",
+    "category": "layout",
+    "builders": [
+        "pages",
+        "menu",
+        "footer"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "rHA4hco58a9iotXx1yX+u/uxaBpB7jobJnsPMQSUNh994i9nzvOAxxcmV9/9isttB7xgWIlGzTo7hxUbrThuyns2BjBLOnJR36njlAJ8FPevqUelmepB+xc2FN5WZPKiD3q4R+efv+k9kgUYBFgxO2WEJ7TVXOLGV2QsaFivHi63+H3t/IcR+etemCeHigYm2qUIKYx7E2I02tlTonHS4DQ5BdeowCQbyspyYAZc5IcTlq6jMn1uFtC3fmfNUKqCq82hR6LQ9X9SGKFVddkeZ8Ey4zGI0EYGcj3vNUmh24r5vvt2kR43li03Z9wojcI7pr7MBGReEB9AFww4YsvYysqvMzYvaJqqVFQQpDHkdTnRwbCJP1jvlZOVLuF0wagJKuGOwp5PtOx9odCZl+pJ/LxhwD9RvjOo6YttkGMeKYQiLigujNqsUmCnUavnymrXNfwNkxBOEIkUNCHoe/AsCHfRvDcF38vtB+IvHIj+fwQCSo+KE9+2sBDpMce9mf4L7UbVmZyEibVjLTEQuzUg7ATcQM9D5xJMaeqg93hNqqc1s+aUXk98fV5NXOGmQ5gixDjwOhqLTW9x0i92Dp8s38PhnqtBreTvKYTsubmqqdO29RObECCqX7ju9xoCZ1TKYosDfaoDC3T5TQ5WsF77pnyu64KfBAMBaS5WHnExCJw="
+}

@@ -1,0 +1,17 @@
+{
+    "name": "Menu",
+    "version": "1.0.0",
+    "description": "Standard menu management module.",
+    "type": "content",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": "hgs7pTy1RVVu8ZAKmibEtUMUwGgs/ihbkmwAVZO9bC45KRiVLhfTlvuImpzG9EKhPyLd9sbYIr1+zx5YDVLMY6BhGCYraehjsJt7JgorCD/L6jk47aZAn/KaRPOe7lDxuMmalRZD0a7fDM5e7Ppf12pEHpY2CSMF1a1tmcUkmytuu66wiLl5Qyfs71PUtw95GpHvEOkfiYw4q95Ur+s7GBeCMNxLx3d54xNeaL/B3tTODmsN9L75d7/2nwERgbj1kvipi2PtDX2URASONS+Z6CECQobe84C+L7ID+PtYC7gcVSdNkvcOha+fgKYCBwBC0hBdPAC8WNr2C2nX6Rk9DUDeb58sjsmKmHnqt/sUUUDJLXeHKAmF52NuRP8k3P5UhPaXFd3MjTCGipekF4JQnyUcZ7BUCV9zaj900stvJLlSS8Pszyb3n1mbhElw7PqAZzO2YP4Xm+ryWkmC8ObVmwLs84VDyldyxfKbbbcbCdYRSup7SRACNEkzuYP+rSa8EfXxyLTQD6GSk8cxg2EdgF9S7v/9PM+f8wRqLIhYfCQcwfiUqGyuolRzooeXt8Ebni9Nydl0UbgW6gnXY57Uw7IJmTFVWslT1ogNAFgN9G8dO3gIE4d0GeEGoDmpWLxkErrfarHAmg7wIXeo+EelgIALZUTYsOrHWMmDxsqca5M="
+}

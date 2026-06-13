@@ -1,0 +1,13 @@
+{
+  "id": "cat_collections",
+  "name": "Collections",
+  "slug": "collections-journal",
+  "description": "Pièces, usages et séries artisanales présentées dans le journal.",
+  "module": "blog",
+  "status": "active",
+  "created_at": "2026-05-10 08:45:00",
+  "updated_at": "2026-05-10 08:45:00",
+  "translation_group": "cat_collections",
+  "locale": "fr-FR",
+  "source_locale": "fr-FR"
+}

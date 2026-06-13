@@ -1,0 +1,38 @@
+{
+  "id": "contact_form_main",
+  "name": "Formulaire principal",
+  "slug": "contact-main",
+  "description": "",
+  "form_type": "contact",
+  "recipient_email": "",
+  "submit_label": "Envoyer le message",
+  "success_message": "Merci, votre message a bien été envoyé.",
+  "is_active": true,
+  "is_default": true,
+  "fields": {
+    "name": true,
+    "email": true,
+    "subject": true,
+    "phone": true,
+    "message": true
+  },
+  "custom_fields": [],
+  "attachments": {
+    "enabled": false,
+    "required": false,
+    "max_files": 1,
+    "max_size_mb": 5,
+    "allowed_extensions": [
+      "pdf",
+      "doc",
+      "docx",
+      "jpg",
+      "jpeg",
+      "png",
+      "webp",
+      "zip"
+    ]
+  },
+  "created_at": "2026-01-01 10:00:00",
+  "updated_at": "2026-01-01 10:00:00"
+}

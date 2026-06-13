@@ -1,0 +1,16 @@
+{
+    "name": "FaqAccordion",
+    "key": "faq_accordion",
+    "version": "1.0.0",
+    "description": "Official FlatCMS FAQ accordion widget.",
+    "category": "content",
+    "builders": [
+        "pages"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "F/e+7fGYVw2NFB3PbaXg8Eh6kJZXKl7gjAqaxBtzVLSN+AMaSOEuHRNnlOT1u3bkI7SV0fIMkeW3GTdBecEFR/MAHoPNdU9QMLrgypnD+30vvTI91f1jHWy3wXmCuhCXmUxC/UwmVDa+YeHQ6PX6ydutSi77ZZltGZhn167CDfCd5df3hQLRHxFbtkJ+tGjBlwZIRlb8E6w6Jd3Jwws288948fmQtAU8PV2Cwb98tBxXyyE6LrqeD+cTyV8dx3Z8Aue1qdEFAPiKyKMXJb5m1ioTKftZcmZalZGaDhZG7CqNxIM/YzlIHfLhnLbiw/GtnP7p0/X4MbO7e8868mG2iEjpQMu/wRv4o7+FxWgw26l2rEgr3JB5FX1wj6yQm1BQjw/XpFAZ97UZC/xl2qt4UjNSbR7HuQg9j95dZxXNN4IY1ZQX9bazCLloEWSgce4OtpJ8WOFFyG9E0cdXmHiI1ioNRADmm06m41PY1EfEDqU55ae8GS6MCWvXVVl9mV79as5YNEVl1FBlRnVcwxLk2SVt16mJ8vYJcKyteKmghma+7hlJu3Bd8h4BlAop6xNAxwYnP9AdXalUsUEyLQglVaDia7XLMAgqt4xbdjFMfwJ3OGAHwm3fTalqYtOB8psQnHiaOjG5QCv+72zUMKWN4A7GM3+K4htYA5/2SsKwH3U="
+}

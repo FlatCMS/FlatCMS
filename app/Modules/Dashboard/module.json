@@ -1,0 +1,17 @@
+{
+    "name": "Dashboard",
+    "version": "1.0.0",
+    "description": "Admin dashboard.",
+    "type": "admin",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": "qXoPOL+GsWnmuU+udrqDqKF76m+3YGIA8mF2ei7g55zhk8J3irJh6ilPYuEwtzJPucE+hv/eglwLOaw0ZEy7Xv7JO3ChOvxWWuG0KffqcMa5x76aXosyWQOGFhLHc3/fO3VkEkG4ebsh5QNjYwvNIRf5srSuXKvLO47vUyz57FiSOJ1SIISbj+fxp6yjr7/wPBaNloOBHgSSYL8spLLsEIp38N6ILdMn+AsCK9raBXs+FcRdokhdFVaKP2ea4Txer0O2hr9e8yLRBpx6kinr3zEWwhDWG6WBHG74QnMRpJz9a+TNvbarcHooJ6aC556EL8CEtCIPj8eIV5DExLKmCEthFbaznkIoB0yY514EVo8+CD2wUjhMCIEDsQuvdjt3k0vteSNOkGvvv1Hd3a6k31rRD4mMEVmnnO/NJMKaisZelaY6Jlw0Vyl7EGhjCmhC9nSQCdRgPYNy4jg5LE92nsPKX5n71wT9Ae4nERvaCqPk+IXoITQxXA219sMlYWy83JfHuLOMCad11V9j5fZwOjPH7EvAaJtR4D1b/RmF6nXaCJRdVMVycbb0K9bafhSgGYNO5QmOCuvLogYLVjWW+BnRY3hY0MGeNBIXtr+8bRQEjaY8KpB7EruuxvBy1WD7ijsmAWgajeoV14RWt3zZ03MDfONo9d8pGtw82cuHn6g="
+}

@@ -1,0 +1,21 @@
+{
+  "id": "post_handmade_objects",
+  "title": "Pourquoi les objets faits main ont une autre présence",
+  "slug": "objets-faits-main-presence-differente",
+  "excerpt": "Les pièces artisanales conservent la mémoire du geste et produisent une relation plus tangible à l’usage.",
+  "content": "<p>Un objet artisanal ne ressemble pas à une variation décorative d'un catalogue. Il porte une densité de fabrication perceptible, même dans les détails les plus simples.</p><h2>Trois différences décisives</h2><ol><li>La surface reste vivante : on perçoit les variations, les traces, la matière.</li><li>Le rythme d'usage change : on manipule l'objet autrement.</li><li>La série ne cherche pas l'uniformité absolue, mais la cohérence.</li></ol><p>C'est souvent cette présence silencieuse qui rend un intérieur plus habité.</p>",
+  "featured_image": "/uploads/images/demo-post-handmade.png",
+  "meta_title": "Pourquoi les objets faits main ont une autre présence",
+  "meta_description": "Comprendre ce qui distingue un objet artisanal d’un produit standardisé.",
+  "categories": [
+    "cat_workshop",
+    "cat_collections"
+  ],
+  "author_id": "{{ADMIN_ID}}",
+  "status": "published",
+  "created_at": "2026-05-12 09:15:00",
+  "updated_at": "2026-05-12 09:15:00",
+  "translation_group": "post_handmade_objects",
+  "locale": "fr-FR",
+  "source_locale": "fr-FR"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "comment_wabi_sabi_1",
+  "post_id": "post_wabi_sabi_living",
+  "post_type": "post",
+  "author_name": "Claire M.",
+  "author_email": "claire@example.test",
+  "content": "Très juste. Le passage sur les matières et la lumière résume exactement ce qui change l’ambiance d’un intérieur.",
+  "status": "approved",
+  "ip": "127.0.0.1",
+  "user_agent": "FlatCMS Sample Data",
+  "created_at": "2026-05-15 09:00:00",
+  "updated_at": "2026-05-15 09:00:00"
+}

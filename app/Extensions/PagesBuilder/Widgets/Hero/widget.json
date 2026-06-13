@@ -1,0 +1,16 @@
+{
+    "name": "Hero",
+    "key": "hero",
+    "version": "1.0.0",
+    "description": "Official FlatCMS hero widget.",
+    "category": "content",
+    "builders": [
+        "pages"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "piFj5EgFUlCASCVH417nL+npdbHlqxFTmnKvQ2hufRbs9GsGwONmltl3xlaPQeELpa5j5gDREF6V6lMhNgff7aZO8vsu7Z8MHkPWOq581Ey/lb/I1xHTaEVyq7+YJjOLzc/yWN8C7+cx0YX6IZyRg1c4gXutVQlnFB5kjubw4lRKkEvxrdYFTrt1zApjVow7Lnt2zIEdoFB3Lh1coq6RzoKF/cm0HY1JBYEa2t25t0xktbv0t1EGwB0gO3OmAWX69U9MYIHC48f0axBZyw1219vwdcX0rWs+oqvM2D356uotgcGq6szc+GgBzLQ3zrZQoG10rvJmMIs1I2KWG5yb+VZRG3Sh/imy+6GwT5xsPKEqbCC8x0BnzMzP5IrmQdkpXFtzy6/6RkNDoeavOC5lmpaJlUpedOwcpCp20rLF4hkvHFYkDKZeR21XrpJmzvtDH2iIq250s/6fyvTv9OmI9sS/pR5/IsWCLquWifaIN2MOtwjbhHqT2RuVdHNUVg9tq+VihFKAYhYdN56VxKgVLpPfUbhrOPLFz4uWsjiUNrsv4FbN1Pf2C02KeMCa8wIziwp8MnxD9vr2blNhS+ihFNV537Xa5CJ7/ghOKuMtzz3TTGh5ooHOcjBCN1Sp5/gbpw8NxQhXWxTde/5rMCexsn9KnSdrcjJHtEw0J6T6udI="
+}

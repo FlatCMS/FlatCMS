@@ -1,0 +1,65 @@
+{
+    "name": "Modern Pro",
+    "slug": "modern-pro",
+    "description": "Thème frontend premium avec un design sombre moderne et des effets de dégradés dynamiques. Offre une expérience visuelle immersive et contemporaine pour vos visiteurs avec une ambiance nocturne élégante.",
+    "version": "1.0.0",
+    "author": "Alain BROYE",
+    "screenshot": "screenshot.png",
+    "type": "frontend",
+    "official": true,
+    "origin": "flatcms",
+    "colors": {
+        "primary": "#4F46E5",
+        "primary-dark": "#4338CA",
+        "secondary": "#8B5CF6",
+        "secondary-dark": "#7C3AED",
+        "background": "#0F172A",
+        "surface": "#1E293B",
+        "text": "#F1F5F9",
+        "text-muted": "#94A3B8",
+        "border": "#334155",
+        "success": "#10B981",
+        "danger": "#EF4444",
+        "warning": "#F59E0B",
+        "info": "#3B82F6"
+    },
+    "assets": {
+        "css": "/assets/css/frontend/modern-pro.css",
+        "js": "/assets/js/frontend/modern-pro.js"
+    },
+    "features": [
+        "dark-mode",
+        "animations",
+        "glassmorphism",
+        "responsive",
+        "hero-sections",
+        "blog-layouts"
+    ],
+    "translations": {
+        "fr-FR": {
+            "name": "Modern Pro",
+            "description": "Thème frontend premium avec un design sombre moderne et des effets de dégradés dynamiques. Offre une expérience visuelle immersive et contemporaine pour vos visiteurs avec une ambiance nocturne élégante."
+        },
+        "en-US": {
+            "name": "Modern Pro",
+            "description": "Premium frontend theme with a modern dark design and dynamic gradient effects. It delivers an immersive and contemporary visual experience for your visitors with an elegant night-time atmosphere."
+        },
+        "de-DE": {
+            "name": "Modern Pro",
+            "description": "Premium-Frontend-Theme mit modernem dunklem Design und dynamischen Verlaufseffekten. Es bietet Ihren Besuchern ein immersives und zeitgemäßes visuelles Erlebnis mit einer eleganten Nachtatmosphäre."
+        },
+        "es-ES": {
+            "name": "Modern Pro",
+            "description": "Tema frontend premium con un diseño oscuro moderno y efectos de degradado dinámicos. Ofrece a tus visitantes una experiencia visual inmersiva y contemporánea con una elegante atmósfera nocturna."
+        },
+        "it-IT": {
+            "name": "Modern Pro",
+            "description": "Tema frontend premium con un design scuro moderno ed effetti di gradiente dinamici. Offre ai visitatori un'esperienza visiva immersiva e contemporanea con un'elegante atmosfera notturna."
+        },
+        "pt-PT": {
+            "name": "Modern Pro",
+            "description": "Tema frontend premium com um design escuro moderno e efeitos de gradiente dinâmicos. Oferece aos visitantes uma experiência visual imersiva e contemporânea com uma elegante atmosfera noturna."
+        }
+    },
+    "signature": "MHLCBX6LlzIhKLV1ulM5QQowTCZhGk+ckULK4T4AeL8mSSLRLL2le3Pp74FJuwRlnC+JK+nxh8+NtZgAPyAjUF84K+r26JqHkpMFE5J5Ie2bPEg6lJb/EYifpfLX6MKXLNFEF77SST+Bu/qkFW39SLXYOEDgYEvrM2nxFPAXzLN4yBL7iFGzWhp6qGda9UCrGxibT52DQCY5eIu9iubTmn+xGRTs5QC0CKwvx+A4mMELdLwFXSXJHZRtQYfvlxNNYOxGDzOddm4wGKuKT91xcw3Vf3Xk9XCXPec0yA+gRRkkxptybsgfyBBq+R9O8s4X0cU12EQ9D1VvoPuFtMQbfdZHAM+3JZGzAjD/JP8gxy+QaHWAdyaF6uYEhdKQwH7pqb+VM6ceJ29EpqwY0yuQ3VplkIX9lpHJkZT3j2YogIcUDyZxkM6Q/tw9cz92KMUzAVuDjywbS+GDr6/YjbBb5UhMC3zl8F57bSiiGL9XG117XSHkquJVfmw6EkySm3VyxXttkTQ6At9Vv+TbbPOZU+eefE1Z0gdut9zcYSsAJLnzhIsUk1HXto+ZC/akW3yqDHt4pImS4f0FA/YKwqMadhe5Ni1jpN3rUMCwMtJz+B6vqWGx97EfudoGQtY9J8J0MIh9848z13wHtObqvE+Pp1qhRMVNKIFrqrPpnQ4KEZ4="
+}

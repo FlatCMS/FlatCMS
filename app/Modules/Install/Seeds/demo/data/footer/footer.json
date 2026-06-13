@@ -1,0 +1,43 @@
+{
+  "enabled": true,
+  "brand_text": "Atelier Nova",
+  "copyright_text": "© {year} {site_name}. Pièces façonnées à la main et expédiées depuis l'atelier.",
+  "powered_by": {
+    "enabled": true,
+    "label": "FlatCMS v{{FLATCMS_VERSION}}",
+    "url": "https://flat-cms.fr"
+  },
+  "source_locale": "fr-FR",
+  "translations": {
+    "fr-FR": {
+      "brand_text": "Atelier Nova",
+      "copyright_text": "© {year} {site_name}. Pièces façonnées à la main et expédiées depuis l'atelier.",
+      "powered_by_label": "FlatCMS v{{FLATCMS_VERSION}}"
+    },
+    "en-US": {
+      "brand_text": "Atelier Nova",
+      "copyright_text": "© {year} {site_name}. Hand-shaped pieces shipped from the workshop.",
+      "powered_by_label": "FlatCMS v{{FLATCMS_VERSION}}"
+    },
+    "de-DE": {
+      "brand_text": "Atelier Nova",
+      "copyright_text": "© {year} {site_name}. Von Hand geformte Stücke, versendet aus dem Atelier.",
+      "powered_by_label": "FlatCMS v{{FLATCMS_VERSION}}"
+    },
+    "es-ES": {
+      "brand_text": "Atelier Nova",
+      "copyright_text": "© {year} {site_name}. Piezas modeladas a mano y enviadas desde el taller.",
+      "powered_by_label": "FlatCMS v{{FLATCMS_VERSION}}"
+    },
+    "it-IT": {
+      "brand_text": "Atelier Nova",
+      "copyright_text": "© {year} {site_name}. Pezzi modellati a mano e spediti dall'atelier.",
+      "powered_by_label": "FlatCMS v{{FLATCMS_VERSION}}"
+    },
+    "pt-PT": {
+      "brand_text": "Atelier Nova",
+      "copyright_text": "© {year} {site_name}. Peças moldadas à mão e enviadas a partir do atelier.",
+      "powered_by_label": "FlatCMS v{{FLATCMS_VERSION}}"
+    }
+  }
+}

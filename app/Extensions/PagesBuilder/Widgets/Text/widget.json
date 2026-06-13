@@ -1,0 +1,18 @@
+{
+    "name": "Text",
+    "key": "text",
+    "version": "1.0.0",
+    "description": "Official FlatCMS text widget.",
+    "category": "content",
+    "builders": [
+        "pages",
+        "menu",
+        "footer"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "JHyJNwQO9AA5XJ6HhVqlG5wr31OuvGAwjEWtzQuMwy4KUaYPfXxGOLQoTlFykP5CB1gy+eswa6svswmLlW2djWJbzwBEG6T1HWIcowmm/4OMD4ge26lsD0yHrIv1NzzamR/Eiq9uEd1JZNAywxyfwwS/+bSRJ4HXyKfUIG8nYIdzFJVCk47DdSanfM1XWzIuVMDn1A7HdGyivYGhPCmEzmVuZXGJpLjmR5br4Mu1rRUQvGQ8sBysaTAFuNgsCt8FKngMbJzKTn0YgLQLHD/yBeej+xG/q9/fv4jd2JYtt9m5rs90QqntB3awmfG6WWJMdiK51Yu5+sgGfwrtlL4buokM9b0ntqb/WYUpFP2Sv7z4FRsMbRpiq5MM9fEZHDJMOou5DCfSY2xwmjMn7vJZBws4htxFbC3zb8Ol/6gjowIRuslRh/n6Wg4iTr3tKwjb9is/SpJPs+8RuDWdbYXWxMjgk1w/uBpbB/HPCaZRxwn6Miayl8486GPb9vKfHMF4g2Gkj47gZ+W6INIfRPr5tDnJDtrdv9BGtF7sklGZSlAaAdQHzGZwFjOob/p0Txb9kv+4qGO3W/cs7PCI+SSRzFe3mTjsYBKOU+ZvZs4eNvzNjUyoW+WZWJ1FEhOO34dMNEk18pYUkLBfN7gEtspHcZltkXmE9PoMZiVsgnta+XY="
+}

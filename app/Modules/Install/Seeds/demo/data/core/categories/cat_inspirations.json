@@ -1,0 +1,13 @@
+{
+  "id": "cat_inspirations",
+  "name": "Inspirations",
+  "slug": "inspirations",
+  "description": "Intérieurs, art de vivre et atmosphères liées aux matières naturelles.",
+  "module": "blog",
+  "status": "active",
+  "created_at": "2026-05-10 08:30:00",
+  "updated_at": "2026-05-10 08:30:00",
+  "translation_group": "cat_inspirations",
+  "locale": "fr-FR",
+  "source_locale": "fr-FR"
+}

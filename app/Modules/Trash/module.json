@@ -1,0 +1,19 @@
+{
+    "name": "Trash",
+    "version": "1.0.0",
+    "description": "Archived content bin for Pages.",
+    "type": "content",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "sidebar_visible": false,
+    "dependencies": [
+        "Auth",
+        "Core",
+        "Pages"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": false,
+    "signature": "nlE14I310UoymQ442baRB4bdsT4iiRFAPNFMh7tnff5v7oyF/0uOW6hjZqoTVUyfr64Vi0CoqZpzqdwp3a+XWwR/OorFmAbhQb7whZh9R3LrVhQDDOQctHrrBw4TFy6QB0QRSmPWNiCxKf36KvGU7HUeYwgwnqTpEDeRX6k0giRZWVm5zt4UOucRU2LCi9nUmEb3e4ebGaGTG9xqIPXUW1ywvtufqoAeBlCR2ydgbEjoJd0ThPxbJIVMWiQkUcEuRssH0PjZkWenVrrs2W0OUAUkdxiE94zIFWozBaI/seLoBdHQnTSL3JrNbAIoMhVlEtog8hGGZ+TQnn4JFRoRqZRIU47P4tzRWXokZoWNreClARmzfIDXe2fCSlTjOJ4+Yg1qtxjGvjOEzmt4yvYYmLUJKSDefqqdqXycqiP8T5zaRRjqydNxaojTPOr07IDlRKeXQ+TT6paB4GxvRVO4MqqrVoOinQl3orEI2LYpxAytBOR8kJoSZqswxFyliJjjjjavRh01G/w67/JKYx+WVXTEXiWVPg9hc/KkV8d413LiUOh8VFV87CMf/WmSDlkx7f4hyu5aEHLtV9UJzf/CZIrQWU/dTikNPE1hi+sBqiHhO4lHEaQRMOOIJDQqn6zSeNhQ4tQmDNmyoM1/sf1kKCIvkfGXHoeoR3qNjL3ftM0="
+}

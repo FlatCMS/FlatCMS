@@ -1,0 +1,17 @@
+{
+    "name": "Categories",
+    "version": "1.0.0",
+    "description": "Categories management.",
+    "type": "content",
+    "author": "Alain BROYE",
+    "required": true,
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "STcVkURVC8Jq//shPc++fYXem6QucshxJFqiSuS/02gyabnGZgxOkdi2HHP+l6s4EkDyaChds0+ugyDIDYcSb9owct76Gn0QOwtmOceJ3BFO6KZBIorXgqGij5cIqms5sGMDQH5rWdI+y9/cWPwAsXVORWUOogsNzQAFE6VKy7Dz7jEP5P0H8V5rLwhUyPgo8JBYQMxdSHEpMES9nZJA7nhHltA0DFKgTiDMfshKKg+tcf36DrNLGsLrKREKpPzjhkykkxP+WsOdy6gv7ZYs09414UIc/g5MAsj9sPWUSONWqNjjYCj9POR9BiiYlHIQdqDXi8ZN5gI63pmhlp2ZsleaMv2c7PkM++JLYBx+m4Eu8CjsVBUIQH6BRxEFE97KmIGqRFGv6SKthvGe7ka3tqCXZeL8FBbyoyAl4ZNN24oYBDQuC4D+9Edg+ok5cgysRcZmEaFqQb7iwpJ20GMpyFYnk9Vr5ws78cxAV7vjdirRHGm7QnFAQ0sUjwFlJRB6Uqz7AiqSmWdtA+8tnkEwDj2unIRW6CMy/wjEI7COkoaqlv9gAozymgyep6U8CWcwMXw0jAS25AZCjUV5I2Xf6qP4rqOkhyIeMR2ms88uSb1/NR9tBJo547uBS1qtZ8rJAtJGvl/ECNbgJI5rDMRCNTI9I4jxguCAwqgkuvzOsmA="
+}

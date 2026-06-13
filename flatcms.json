@@ -1,0 +1,11 @@
+{
+  "name": "FlatCMS",
+  "slug": "flatcms",
+  "type": "core",
+  "version": "1.0.0",
+  "channel": "stable",
+  "vendor": "flatcms",
+  "official": true,
+  "signature": "",
+  "requires_php": "8.1"
+}

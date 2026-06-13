@@ -1,0 +1,128 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+.footer-settings-toggle {
+    align-items: center;
+    display: inline-flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.footer-settings-toggle .form-check-input {
+    margin: 0;
+}
+
+.footer-translation-bar {
+    margin-bottom: var(--spacing-4);
+}
+
+.footer-translation-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 var(--spacing-1);
+}
+
+.footer-translation-tab + .footer-translation-tab {
+    margin-left: 2px;
+}
+
+.footer-translation-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    min-height: 38px;
+    padding: 0 var(--spacing-3);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    margin-bottom: -1px;
+    transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+
+.footer-translation-tab:hover {
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+    background: color-mix(in srgb, var(--color-bg-secondary) 82%, var(--color-bg-primary));
+}
+
+.footer-translation-tab.is-active {
+    border-color: var(--color-border);
+    border-bottom-color: var(--color-bg-primary);
+    color: var(--color-primary-light);
+    background: var(--color-bg-primary);
+}
+
+.footer-translation-tab.is-active .footer-translation-tab-icon {
+    background: color-mix(in srgb, var(--color-primary-light) 22%, transparent);
+}
+
+.footer-translation-tab.is-missing {
+    color: var(--color-text-muted);
+}
+
+.footer-translation-tab.is-missing .footer-translation-tab-icon {
+    opacity: 0.78;
+}
+
+.footer-translation-tab-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    color: inherit;
+    background: color-mix(in srgb, var(--color-bg-secondary) 65%, transparent);
+}
+
+.footer-translation-flag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.footer-translation-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-bg-secondary) 72%, transparent);
+    color: inherit;
+    border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.footer-translation-panels {
+    margin-top: var(--spacing-4);
+}
+
+.footer-translation-panel {
+    display: none;
+}
+
+.footer-translation-panel.is-active {
+    display: block;
+}

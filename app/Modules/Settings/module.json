@@ -1,0 +1,17 @@
+{
+    "name": "Settings",
+    "version": "1.0.0",
+    "description": "Global settings.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "required": true,
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "fziLtLptLbdssQTJyq5hdsn2WZTTaz/rswSyvbyK1i/tkNf3PSw422vRXcE71BmLBKyCTTBa6/M2JeqKvUQPDt9wuUPwdLoafiF2mLuHW7GMBixjh87Qrc2T08jJf1ImP00q6CUvZBMDGoerRI6n/9XHGQKPxt+Kw37gpPP14Qn0fENKDO/f85Amizc075xlsJimCraeDZ8bcmELuoSkco0fKgFJZboReAPORrMXIwO+z+OpmS1U/dEWG1t3LK7Vt4GFTy2uq5UUly/4N5Xaan88MuPoWJ3yq94RfHeuvZtmbzcfPi/kT8eIKAURPVgLN9VP/lJaivkz2pVSI7w2SCfGtCNBo8mHvW9hNZJligH8iwAHa3zFAeDqCpV6a+Vn/h8Zp719bLVDMlyIQgRV1/KFIF2DTvwEReeIj6mc7WvHzdvGmdkfwKXrL5/Q8uSCHa/MA74eIjsf76Te94VLU4qXERN18AGTURlHNv/z9o5LtNIoJAlhHCid8WO+Fz6SAlYEOJ9MKI24KdMTpUlK/6L2XZRrIY6XH3DBDXkPCs7C8leWAZqIFdJOzW3opbAUlL+NhxYsj8+ZWSij/Nwi/2aR4gECkcAzoso/6JyrFBo5d+Hf5GWODg9/L0dl9C9MGCW6kyUZKoArUNz+epkX7j5EjhceJ7TOOgSPciwGLPM="
+}

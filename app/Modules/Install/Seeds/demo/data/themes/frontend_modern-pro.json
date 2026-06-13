@@ -1,0 +1,23 @@
+{
+  "colors": {
+    "primary": "#D48C70",
+    "secondary": "#A39284",
+    "accent": "#A39284",
+    "background": "#1E1B18",
+    "surface": "#2A2522",
+    "text": "#F5F2EB",
+    "text_muted": "#A8A29E",
+    "border": "#3D3530"
+  },
+  "light_colors": {
+    "primary": "#C97A63",
+    "secondary": "#8C7A6B",
+    "accent": "#DDB8A6",
+    "background": "#FBF9F6",
+    "surface": "#F3EFE9",
+    "text": "#2C2A29",
+    "text_muted": "#797470",
+    "border": "#E6DFD5"
+  },
+  "custom_css": "h1, h2, h3 {\n    letter-spacing: -0.02em;\n    line-height: 1.25;\n    font-weight: 600;\n}\n\np {\n    letter-spacing: 0.01em;\n    line-height: 1.7;\n}\n\n.text-muted,\n.text-sm {\n    letter-spacing: 0.05em;\n    text-transform: uppercase;\n}\n\nimg {\n    filter: grayscale(10%) contrast(95%) brightness(95%);\n    transition: filter 0.6s ease, transform 0.6s ease;\n}\n\nimg:hover {\n    filter: grayscale(0%) contrast(100%) brightness(100%);\n}\n\nimg,\n.card,\n.btn {\n    border-radius: 4px;\n}\n\na,\nbutton,\n.btn,\n.card {\n    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);\n}\n\n.btn-primary:hover {\n    opacity: 0.9;\n    transform: translateY(-1px);\n    box-shadow: 0 10px 20px color-mix(in srgb, var(--color-primary) 15%, transparent);\n}\n\nbody {\n    position: relative;\n}\n\nbody::before {\n    content: \"\";\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    opacity: 0.02;\n    pointer-events: none;\n    z-index: 9999;\n    background: radial-gradient(circle, #fff 10%, transparent 11%), radial-gradient(circle, #fff 10%, transparent 11%);\n    background-size: 3px 3px;\n    background-position: 0 0, 1.5px 1.5px;\n}\n\n:is(body.light-mode, html.theme-light-init) .site-header {\n    background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface) 92%);\n    border-bottom-color: color-mix(in srgb, var(--color-primary) 16%, var(--color-border) 84%);\n}\n\n:is(body.light-mode, html.theme-light-init) .site-footer {\n    background-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface) 88%);\n    border-top-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border) 82%);\n}\n\n::-webkit-scrollbar {\n    width: 8px;\n}\n\n::-webkit-scrollbar-track {\n    background: var(--color-bg-primary);\n}\n\n::-webkit-scrollbar-thumb {\n    background: var(--color-border);\n    border-radius: 4px;\n}\n\n::-webkit-scrollbar-thumb:hover {\n    background: var(--color-primary);\n}\n\n.post-read-more-btn {\n    color: var(--color-primary) !important;\n    background: transparent !important;\n    border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent) !important;\n    text-transform: uppercase;\n    font-weight: 500;\n    letter-spacing: 0.05em;\n}\n\n.post-read-more-btn:hover {\n    color: var(--btn-primary-color) !important;\n    background: var(--color-primary) !important;\n    border-color: var(--color-primary) !important;\n    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent);\n}\n"
+}

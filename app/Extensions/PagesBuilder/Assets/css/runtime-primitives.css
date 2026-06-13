@@ -1,0 +1,207 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+.pages-builder-runtime {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.pb-page .pb-btn:not(.btn),
+.pages-builder-runtime .pb-btn:not(.btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--fc-btn-gap, 0.55rem);
+    padding: var(--fc-btn-padding-y, 0.78rem) var(--fc-btn-padding-x, 1.3rem);
+    font-family: var(--fc-btn-font-family, inherit);
+    font-size: var(--fc-btn-font-size, 0.95rem);
+    font-weight: var(--fc-btn-font-weight, 600);
+    line-height: 1.1;
+    border: 1px solid transparent;
+    border-radius: var(--fc-btn-radius, 0.5rem);
+    cursor: pointer;
+    transition: var(--fc-btn-transition, all 160ms ease);
+    text-decoration: none;
+}
+
+.pb-page .pb-btn:not(.btn):hover,
+.pb-page .pb-btn:not(.btn):focus-visible,
+.pages-builder-runtime .pb-btn:not(.btn):hover,
+.pages-builder-runtime .pb-btn:not(.btn):focus-visible {
+    text-decoration: none;
+}
+
+.pb-page .pb-btn-primary:not(.btn-primary),
+.pages-builder-runtime .pb-btn-primary:not(.btn-primary) {
+    background: var(--fc-btn-primary-bg, var(--color-primary, #2563eb));
+    border-color: var(--fc-btn-primary-border, var(--color-primary, #2563eb));
+    color: var(--fc-btn-primary-color, #ffffff);
+    box-shadow: var(--fc-btn-primary-shadow, none);
+}
+
+.pb-page .pb-btn-primary:not(.btn-primary):hover,
+.pb-page .pb-btn-primary:not(.btn-primary):focus-visible,
+.pages-builder-runtime .pb-btn-primary:not(.btn-primary):hover,
+.pages-builder-runtime .pb-btn-primary:not(.btn-primary):focus-visible {
+    background: var(--fc-btn-primary-hover-bg, var(--color-primary-dark, var(--color-primary, #1d4ed8)));
+    border-color: var(--fc-btn-primary-hover-border, var(--color-primary-dark, var(--color-primary, #1d4ed8)));
+    color: var(--fc-btn-primary-hover-color, #ffffff);
+    box-shadow: var(--fc-btn-primary-hover-shadow, none);
+    transform: translateY(-1px);
+}
+
+.pb-page .pb-btn-secondary:not(.btn-secondary),
+.pages-builder-runtime .pb-btn-secondary:not(.btn-secondary) {
+    background: var(--fc-btn-secondary-bg, var(--color-bg-secondary, #f9fafb));
+    border-color: var(--fc-btn-secondary-border, var(--color-border, #d1d5db));
+    color: var(--fc-btn-secondary-color, var(--color-text-primary, #1f2937));
+    box-shadow: var(--fc-btn-secondary-shadow, none);
+}
+
+.pb-page .pb-btn-secondary:not(.btn-secondary):hover,
+.pb-page .pb-btn-secondary:not(.btn-secondary):focus-visible,
+.pages-builder-runtime .pb-btn-secondary:not(.btn-secondary):hover,
+.pages-builder-runtime .pb-btn-secondary:not(.btn-secondary):focus-visible {
+    background: var(--fc-btn-secondary-hover-bg, var(--color-bg-hover, #f3f4f6));
+    border-color: var(--fc-btn-secondary-hover-border, var(--color-border, #cbd5e1));
+    color: var(--fc-btn-secondary-hover-color, var(--color-text-primary, #111827));
+    box-shadow: var(--fc-btn-secondary-hover-shadow, none);
+    transform: translateY(-1px);
+}
+
+.pb-page .pb-btn-ghost:not(.btn-ghost),
+.pages-builder-runtime .pb-btn-ghost:not(.btn-ghost) {
+    background: var(--fc-btn-ghost-bg, transparent);
+    border-color: var(--fc-btn-ghost-border, var(--color-border, #d1d5db));
+    color: var(--fc-btn-ghost-color, var(--color-text-secondary, #4b5563));
+    box-shadow: var(--fc-btn-ghost-shadow, none);
+}
+
+.pb-page .pb-btn-ghost:not(.btn-ghost):hover,
+.pb-page .pb-btn-ghost:not(.btn-ghost):focus-visible,
+.pages-builder-runtime .pb-btn-ghost:not(.btn-ghost):hover,
+.pages-builder-runtime .pb-btn-ghost:not(.btn-ghost):focus-visible {
+    background: var(--fc-btn-ghost-hover-bg, var(--color-bg-secondary, #f8fafc));
+    border-color: var(--fc-btn-ghost-hover-border, var(--color-border, #9ca3af));
+    color: var(--fc-btn-ghost-hover-color, var(--color-text-primary, #111827));
+    box-shadow: var(--fc-btn-ghost-hover-shadow, none);
+    transform: translateY(-1px);
+}
+
+.pb-page .pb-btn:not(.btn):active,
+.pages-builder-runtime .pb-btn:not(.btn):active {
+    transform: translateY(0);
+}
+
+.pb-page .pb-btn:not(.btn):focus-visible,
+.pages-builder-runtime .pb-btn:not(.btn):focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--color-bg-primary, #ffffff) 86%, transparent),
+        0 0 0 4px color-mix(in srgb, var(--color-primary, #2563eb) 44%, transparent);
+}
+
+.pb-page .pb-btn.is-static,
+.pages-builder-runtime .pb-btn.is-static {
+    pointer-events: none;
+}
+
+.fc-heading-block,
+.fc-text-block,
+.fc-html-block,
+.fc-image-block,
+.fc-button-block,
+.fc-spacer-block,
+.fc-divider-block {
+    display: block;
+}
+
+.fc-heading-block-title {
+    margin: 0;
+}
+
+.fc-image-block {
+    width: 100%;
+}
+
+.fc-image-block-align-left {
+    text-align: left;
+}
+
+.fc-image-block-align-center {
+    text-align: center;
+}
+
+.fc-image-block-align-right {
+    text-align: right;
+}
+
+.fc-image-block-media {
+    display: inline-block;
+    width: 100%;
+    max-width: 100%;
+}
+
+.fc-image-block-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    border-radius: 0.75rem;
+}
+
+.fc-button-block-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.fc-button-block-align-left .fc-button-block-inner {
+    justify-content: flex-start;
+}
+
+.fc-button-block-align-center .fc-button-block-inner {
+    justify-content: center;
+}
+
+.fc-button-block-align-right .fc-button-block-inner {
+    justify-content: flex-end;
+}
+
+.fc-button-block .btn.is-static {
+    pointer-events: none;
+}
+
+.fc-spacer-block {
+    width: 100%;
+    min-height: 0.5rem;
+}
+
+.fc-divider-block {
+    width: 100%;
+    display: flex;
+}
+
+.fc-divider-block-align-left {
+    justify-content: flex-start;
+}
+
+.fc-divider-block-align-center {
+    justify-content: center;
+}
+
+.fc-divider-block-align-right {
+    justify-content: flex-end;
+}
+
+.fc-divider-block-line {
+    width: min(100%, 12rem);
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--color-border, #d1d5db);
+}

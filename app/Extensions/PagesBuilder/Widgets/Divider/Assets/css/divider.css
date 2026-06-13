@@ -1,0 +1,79 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: LicenseRef-FlatCMS-Commercial
+ *
+ * Premium FlatCMS component. See LICENSING.md, COMMERCIAL_LICENSE.md and TRADEMARK.md.
+ */
+
+.pb-divider {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.pb-divider-line {
+  display: block;
+  width: 100%;
+  border-top-color: color-mix(in srgb, var(--color-border, #cbd5e1) 88%, transparent);
+  border-top-style: var(--pb-divider-style, solid);
+  border-top-width: 1px;
+}
+
+.pb-divider[data-divider-align="left"] .pb-divider-line {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.pb-divider[data-divider-align="center"] .pb-divider-line {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pb-divider[data-divider-align="right"] .pb-divider-line {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.pb-divider[data-divider-mode="solid"] {
+  --pb-divider-style: solid;
+}
+
+.pb-divider[data-divider-mode="dashed"] {
+  --pb-divider-style: dashed;
+}
+
+.pb-divider[data-divider-mode="dotted"] {
+  --pb-divider-style: dotted;
+}
+
+.pb-divider[data-divider-weight="1"] .pb-divider-line { border-top-width: 1px; }
+.pb-divider[data-divider-weight="2"] .pb-divider-line { border-top-width: 2px; }
+.pb-divider[data-divider-weight="3"] .pb-divider-line { border-top-width: 3px; }
+.pb-divider[data-divider-weight="4"] .pb-divider-line { border-top-width: 4px; }
+.pb-divider[data-divider-weight="5"] .pb-divider-line { border-top-width: 5px; }
+.pb-divider[data-divider-weight="6"] .pb-divider-line { border-top-width: 6px; }
+.pb-divider[data-divider-weight="7"] .pb-divider-line { border-top-width: 7px; }
+.pb-divider[data-divider-weight="8"] .pb-divider-line { border-top-width: 8px; }
+
+.pb-divider[data-divider-length="10"] .pb-divider-line { width: 10%; }
+.pb-divider[data-divider-length="15"] .pb-divider-line { width: 15%; }
+.pb-divider[data-divider-length="20"] .pb-divider-line { width: 20%; }
+.pb-divider[data-divider-length="25"] .pb-divider-line { width: 25%; }
+.pb-divider[data-divider-length="30"] .pb-divider-line { width: 30%; }
+.pb-divider[data-divider-length="35"] .pb-divider-line { width: 35%; }
+.pb-divider[data-divider-length="40"] .pb-divider-line { width: 40%; }
+.pb-divider[data-divider-length="45"] .pb-divider-line { width: 45%; }
+.pb-divider[data-divider-length="50"] .pb-divider-line { width: 50%; }
+.pb-divider[data-divider-length="55"] .pb-divider-line { width: 55%; }
+.pb-divider[data-divider-length="60"] .pb-divider-line { width: 60%; }
+.pb-divider[data-divider-length="65"] .pb-divider-line { width: 65%; }
+.pb-divider[data-divider-length="70"] .pb-divider-line { width: 70%; }
+.pb-divider[data-divider-length="75"] .pb-divider-line { width: 75%; }
+.pb-divider[data-divider-length="80"] .pb-divider-line { width: 80%; }
+.pb-divider[data-divider-length="85"] .pb-divider-line { width: 85%; }
+.pb-divider[data-divider-length="90"] .pb-divider-line { width: 90%; }
+.pb-divider[data-divider-length="95"] .pb-divider-line { width: 95%; }
+.pb-divider[data-divider-length="100"] .pb-divider-line { width: 100%; }

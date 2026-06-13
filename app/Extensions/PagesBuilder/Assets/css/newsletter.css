@@ -1,0 +1,77 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: LicenseRef-FlatCMS-Commercial
+ *
+ * Premium FlatCMS component. See LICENSING.md, COMMERCIAL_LICENSE.md and TRADEMARK.md.
+ */
+
+.pb-newsletter-widget {
+    display: flex;
+    width: 100%;
+}
+
+.pb-newsletter-widget--align-left {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.pb-newsletter-widget--align-center {
+    justify-content: center;
+    text-align: center;
+}
+
+.pb-newsletter-widget--align-right {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.pb-newsletter-widget-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: min(100%, 52rem);
+    max-width: 100%;
+}
+
+.pb-newsletter-widget--align-center .pb-newsletter-widget-shell {
+    align-items: center;
+}
+
+.pb-newsletter-widget--align-right .pb-newsletter-widget-shell {
+    align-items: flex-end;
+}
+
+.pb-newsletter-widget-title {
+    display: block;
+    margin: 0;
+}
+
+.pb-newsletter-widget-description {
+    margin: 0;
+}
+
+.pb-newsletter-widget-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    width: 100%;
+}
+
+.pb-newsletter-widget--align-center .pb-newsletter-widget-form {
+    justify-content: center;
+}
+
+.pb-newsletter-widget--align-right .pb-newsletter-widget-form {
+    justify-content: flex-end;
+}
+
+.pb-newsletter-widget-input {
+    flex: 1 1 18rem;
+    min-width: min(18rem, 100%);
+}
+
+.pb-newsletter-widget-button {
+    flex: 0 0 auto;
+}

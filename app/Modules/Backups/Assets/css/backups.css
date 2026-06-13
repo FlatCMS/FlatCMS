@@ -1,0 +1,146 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+.backups-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-5);
+  margin-bottom: var(--spacing-5);
+}
+
+.backups-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+.backups-stat {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+  padding: var(--spacing-4);
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.backups-stat-label {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.backups-stat-value {
+  font-size: 1.15rem;
+  color: var(--color-text-primary);
+}
+
+.backups-path-list {
+  margin: 0 0 var(--spacing-4);
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.backups-path-row {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.backups-path-row dt {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.backups-path-row dd {
+  margin: 0;
+  color: var(--color-text-secondary);
+  word-break: break-word;
+}
+
+.backups-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 55%, var(--color-border));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-secondary));
+  color: var(--color-text-primary);
+}
+
+.backups-warning-danger {
+  border-color: color-mix(in srgb, var(--color-danger) 58%, var(--color-border));
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-bg-secondary));
+}
+
+.backups-table-card .table td {
+  vertical-align: top;
+}
+
+.backups-name,
+.backups-site,
+.backups-files {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.backups-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.backups-empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.backups-actions-cell {
+  white-space: nowrap;
+}
+
+.backups-actions {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.backups-actions form {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 36px;
+  flex: 0 0 auto;
+}
+
+.backups-actions .table-action {
+  width: 36px;
+  height: 36px;
+}
+
+.backups-action-form {
+  margin-top: var(--spacing-2);
+}
+
+@media (max-width: 960px) {
+  .backups-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .backups-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

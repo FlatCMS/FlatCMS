@@ -1,0 +1,14 @@
+{
+    "name": "Core",
+    "version": "1.0.0",
+    "description": "Core services and shared resources.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "required": true,
+    "enabled": true,
+    "dependencies": [],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "K/yWSDtBBQKgHtqQFFcJA8nXz1SyKy0K+ixG2BCBMW995JCa1H1GD/VuuT0iEX328aybzxIBPDgApZZ/1KDzNBZzvCr4MR1vtXjhICwONA3VE7wlhhhYQGE0Mf5KePG4+k7ypB3n7/d174TvucKp/FwV6U87CBrPJw70DJ1XUv3qNSmAhNR8lIcxW7w+9H+Am6BbnX+8XlekP4ofmhniA231DcIxYKD3HeQwbvvFhhbpUnCf5uHVfuRTvBGe3E4+JZQ2RTTbvIBz43O1mWDzyXFcMYjGBExeB9EzW+8f7/hiDUlreuoH2DZ8mIK57p3ZgDGH4ZG8/fDv7sLO2fN+MkV2hzN3WV7fLC9xVYNPbEMBQZ1qwgivSvXkxmZDcVThNLJRPmhS4x7VmP8dEP0nXxf1YaFSMfwjEdYMOHF3IjM8Cz2oNuOqXWG5iNnkPG0rWruVxHC7WHafJcYGi059uNExPMqLo39XJjvgJhVXbxiyiBrtQGTjGAFJUafnDMZV+ueoQra0YLHTo+lNNG9q5MCYX2plYc7ZDc+5EV2Cp3820CWvCbzA3hyGT6W0ubGAwwHpRGikaMApvxEY0h/Mea8n+WVqC5+P1FxoMm/mJJZHkEQeTEZg24ugg+dE9T4/M+lzbqiN1e6cOwwwzy29YF2eVIvk7JAKGcBR91z4v+g="
+}

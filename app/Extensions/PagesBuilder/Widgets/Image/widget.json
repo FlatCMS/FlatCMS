@@ -1,0 +1,15 @@
+{
+    "name": "Image",
+    "key": "image",
+    "version": "1.0.0",
+    "description": "Official FlatCMS image widget.",
+    "category": "media",
+    "builders": [
+        "pages"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms"
+}

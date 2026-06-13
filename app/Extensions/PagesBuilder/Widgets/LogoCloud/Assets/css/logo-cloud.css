@@ -1,0 +1,914 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: LicenseRef-FlatCMS-Commercial
+ *
+ * Premium FlatCMS component. See LICENSING.md, COMMERCIAL_LICENSE.md and TRADEMARK.md.
+ */
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud {
+  display: grid;
+  gap: 1rem;
+  --pb-logo-cloud-gap: 20px;
+  --pb-logo-cloud-motion-duration: 28s;
+  --pb-logo-cloud-logo-height: 72px;
+  --pb-logo-cloud-widget-height: 280px;
+  --pb-logo-cloud-columns: 4;
+  --pb-logo-cloud-orbit-inner-distance: clamp(7.25rem, calc(var(--pb-logo-cloud-logo-height) * 2.35), 10rem);
+  --pb-logo-cloud-orbit-outer-distance: clamp(10.5rem, calc(var(--pb-logo-cloud-logo-height) * 3.35), 14.5rem);
+  --pb-logo-cloud-orbit-third-distance: clamp(13.75rem, calc(var(--pb-logo-cloud-logo-height) * 4.2), 18rem);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-header {
+  display: grid;
+  gap: 0.55rem;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-title {
+  display: block;
+  margin: 0;
+  font-size: var(--fc-heading-h2-size, clamp(1.9rem, 3.8vw, 3rem));
+  line-height: var(--fc-heading-h2-line-height, 1.05);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-subtitle {
+  margin: 0;
+  color: var(--color-text-secondary, #475569);
+  font-size: var(--fc-body-lg-size, 1rem);
+  line-height: var(--fc-body-lg-line-height, 1.7);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-grid,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-columns,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-extras,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-mobile-columns {
+  display: grid;
+  gap: var(--pb-logo-cloud-gap);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-mobile-columns {
+  display: none;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-item,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee-item {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+  border-radius: var(--fc-card-radius, 18px);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-surface-ghost {
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--fc-card-hover-border, var(--color-primary, #2563eb)) 62%, var(--fc-card-border, var(--color-border, #cbd5e1)));
+  box-shadow: none;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-item-shell,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee-shell,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-column-link,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-link,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-core-link {
+  display: grid;
+  gap: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: var(--pb-logo-cloud-logo-height);
+  height: var(--pb-logo-cloud-logo-height);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  background: transparent;
+  object-fit: contain;
+  transition: filter 180ms ease, opacity 180ms ease, transform 180ms ease;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud.is-grayscale .pb-logo-cloud-image {
+  filter: grayscale(1);
+  opacity: 0.86;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud.is-grayscale :is(.pb-logo-cloud-item-shell, .pb-logo-cloud-marquee-shell, .pb-logo-cloud-column-link, .pb-logo-cloud-orbit-link, .pb-logo-cloud-orbit-core-link, .pb-logo-cloud-classic-shell, .pb-logo-cloud-classic-item):is(:hover, :focus-visible) .pb-logo-cloud-image {
+  filter: grayscale(0);
+  opacity: 1;
+}
+
+:where(.pb-page, .pb-block-preview) :is(.pb-logo-cloud-item-shell, .pb-logo-cloud-marquee-shell, .pb-logo-cloud-column-link, .pb-logo-cloud-orbit-link, .pb-logo-cloud-orbit-core-link, .pb-logo-cloud-classic-shell, .pb-logo-cloud-classic-item):is(:hover, :focus-visible) .pb-logo-cloud-image {
+  transform: translateY(-1px);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+  color: var(--color-text-primary, #0f172a);
+  font-size: var(--fc-heading-h5-size, 1rem);
+  font-weight: 700;
+  line-height: var(--fc-heading-h5-line-height, 1.32);
+  text-align: inherit;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-label {
+  margin: 0;
+  color: var(--color-text-secondary, #475569);
+  font-size: var(--fc-body-sm-size, 0.9rem);
+  line-height: var(--fc-body-sm-line-height, 1.55);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-align-left {
+  text-align: left;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-align-left .pb-logo-cloud-media {
+  justify-content: flex-start;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-align-center {
+  text-align: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-align-center .pb-logo-cloud-media {
+  justify-content: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-align-right {
+  text-align: right;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-align-right .pb-logo-cloud-media {
+  justify-content: flex-end;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-variant-ghost :is(.pb-logo-cloud-item-shell, .pb-logo-cloud-marquee-shell, .pb-logo-cloud-column-link, .pb-logo-cloud-orbit-link, .pb-logo-cloud-orbit-core-link):is(:hover, :focus-visible) {
+  text-decoration: none;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-model-classic {
+  overflow: hidden;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-classic-row {
+  overflow: hidden;
+  width: 100%;
+  padding-block: clamp(0.35rem, 1.2vw, 0.75rem);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-classic-track {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pb-logo-cloud-gap) * 1.25);
+  width: max-content;
+  animation: pbLogoCloudMarquee var(--pb-logo-cloud-motion-duration) linear infinite;
+  will-change: transform;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-model-classic:hover .pb-logo-cloud-classic-track {
+  animation-play-state: paused;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-classic-item {
+  flex: 0 0 auto;
+  min-width: clamp(6.25rem, calc(var(--pb-logo-cloud-logo-height) + 2.5rem), 10rem);
+  --pb-logo-cloud-classic-scale: 1;
+  --pb-logo-cloud-classic-z: 1;
+  position: relative;
+  z-index: var(--pb-logo-cloud-classic-z);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-classic-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--pb-logo-cloud-logo-height) + 0.5rem);
+  color: inherit;
+  text-decoration: none;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-media-tape {
+  min-height: var(--pb-logo-cloud-logo-height);
+  height: var(--pb-logo-cloud-logo-height);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-model-classic .pb-logo-cloud-image {
+  transform: scale(var(--pb-logo-cloud-classic-scale));
+  transform-origin: center center;
+  will-change: transform;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-model-classic :is(.pb-logo-cloud-classic-shell, .pb-logo-cloud-classic-item):is(:hover, :focus-visible) .pb-logo-cloud-image {
+  transform: scale(var(--pb-logo-cloud-classic-scale));
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-model-classic:not(.pb-logo-cloud-has-custom-design) :is(.pb-logo-cloud-classic-item, .pb-logo-cloud-classic-shell, .pb-logo-cloud-media-tape) {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-model-cloud4 {
+  overflow: hidden;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee {
+  display: grid;
+  gap: calc(var(--pb-logo-cloud-gap) * 0.85);
+  min-height: var(--pb-logo-cloud-widget-height);
+  align-content: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee-row {
+  overflow: hidden;
+  width: 100%;
+  /*
+    Global .pb-card hover applies translateY(-2px).
+    Keep top border visible in Cloud4 while preserving marquee mask/clipping.
+  */
+  padding-top: 4px;
+  margin-top: -4px;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee-track {
+  display: flex;
+  gap: var(--pb-logo-cloud-gap);
+  width: max-content;
+  animation: pbLogoCloudMarquee var(--pb-logo-cloud-motion-duration) linear infinite;
+  will-change: transform;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee-row.is-reverse .pb-logo-cloud-marquee-track {
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee:hover .pb-logo-cloud-marquee-track {
+  animation-play-state: paused;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee-item {
+  flex: 0 0 clamp(10.5rem, 18vw, 14rem);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee-shell {
+  align-content: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-column {
+  position: relative;
+  overflow: hidden;
+  height: var(--pb-logo-cloud-widget-height);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-vtrack {
+  display: grid;
+  gap: var(--pb-logo-cloud-gap);
+  animation: pbLogoCloudVerticalDown var(--pb-logo-cloud-motion-duration) linear infinite;
+  will-change: transform;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-vtrack.is-up {
+  animation-name: pbLogoCloudVerticalUp;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-column:hover .pb-logo-cloud-vtrack {
+  animation-play-state: paused;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-column-item {
+  display: grid;
+  justify-items: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-column-link {
+  justify-items: center;
+  gap: 0.75rem;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-column-badge {
+  display: grid;
+  place-items: center;
+  width: clamp(6.5rem, calc(var(--pb-logo-cloud-logo-height) + 2.75rem), 10rem);
+  min-height: clamp(6.5rem, calc(var(--pb-logo-cloud-logo-height) + 2.75rem), 10rem);
+  aspect-ratio: 1 / 1;
+  padding: 1rem;
+  border-radius: 999px;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-media-circle,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-media-orbit {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+:where(.pb-page, .pb-block-preview) :is(.pb-logo-cloud-media-circle, .pb-logo-cloud-media-orbit) .pb-logo-cloud-image {
+  max-width: 78%;
+  max-height: 78%;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-column-label {
+  text-align: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-shell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, var(--pb-logo-cloud-widget-height));
+  aspect-ratio: 1 / 1;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 1px dashed color-mix(in srgb, var(--fc-card-hover-border, var(--color-primary, #2563eb)) 62%, var(--fc-card-border, var(--color-border, #cbd5e1)));
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-ring-inner {
+  width: calc(var(--pb-logo-cloud-orbit-inner-distance) * 2);
+  height: calc(var(--pb-logo-cloud-orbit-inner-distance) * 2);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-ring-outer {
+  width: calc(var(--pb-logo-cloud-orbit-outer-distance) * 2);
+  height: calc(var(--pb-logo-cloud-orbit-outer-distance) * 2);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-ring-third {
+  width: calc(var(--pb-logo-cloud-orbit-third-distance) * 2);
+  height: calc(var(--pb-logo-cloud-orbit-third-distance) * 2);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-core,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-core {
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item {
+  animation: pbLogoCloudOrbitLane var(--pb-logo-cloud-motion-duration) linear infinite;
+  transform-origin: 50% 50%;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-core-surface,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-satellite-surface {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  overflow: visible;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-link,
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-core-link {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-core-link {
+  position: static;
+  top: auto;
+  left: auto;
+  transform: none;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-link {
+  animation: pbLogoCloudOrbitLaneCounter var(--pb-logo-cloud-motion-duration) linear infinite;
+  transform: translate(-50%, calc(-50% - var(--pb-logo-cloud-orbit-distance, var(--pb-logo-cloud-orbit-inner-distance)))) rotate(var(--pb-logo-cloud-orbit-counter-angle, 0deg));
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-core-surface {
+  width: clamp(8.25rem, calc(var(--pb-logo-cloud-logo-height) + 3.75rem), 11.75rem);
+  min-height: clamp(8.25rem, calc(var(--pb-logo-cloud-logo-height) + 3.75rem), 11.75rem);
+  aspect-ratio: 1 / 1;
+  padding: 1.1rem;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-satellite-surface {
+  width: clamp(6.15rem, calc(var(--pb-logo-cloud-logo-height) + 2.35rem), 8.65rem);
+  min-height: clamp(6.15rem, calc(var(--pb-logo-cloud-logo-height) + 2.35rem), 8.65rem);
+  aspect-ratio: 1 / 1;
+  padding: 0.95rem;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-label {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  left: 50%;
+  width: max-content;
+  max-width: 8.5rem;
+  margin: 0;
+  font-size: var(--fc-body-xs-size, 0.86rem);
+  line-height: var(--fc-body-xs-line-height, 1.4);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-label-core {
+  font-size: var(--fc-body-xs-size, 0.86rem);
+  max-width: 9rem;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-model-cloud7:not(.pb-logo-cloud-has-custom-design) :is(.pb-logo-cloud-orbit-core-surface, .pb-logo-cloud-orbit-satellite-surface) {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-0 {
+  --pb-logo-cloud-orbit-angle: 0deg;
+  --pb-logo-cloud-orbit-counter-angle: 0deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-inner-distance);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-1 {
+  --pb-logo-cloud-orbit-angle: 90deg;
+  --pb-logo-cloud-orbit-counter-angle: -90deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-inner-distance);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-2 {
+  --pb-logo-cloud-orbit-angle: 180deg;
+  --pb-logo-cloud-orbit-counter-angle: -180deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-inner-distance);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-3 {
+  --pb-logo-cloud-orbit-angle: 270deg;
+  --pb-logo-cloud-orbit-counter-angle: -270deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-inner-distance);
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-4 {
+  --pb-logo-cloud-orbit-angle: 315deg;
+  --pb-logo-cloud-orbit-counter-angle: -315deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-outer-distance);
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-5 {
+  --pb-logo-cloud-orbit-angle: 45deg;
+  --pb-logo-cloud-orbit-counter-angle: -45deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-outer-distance);
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-6 {
+  --pb-logo-cloud-orbit-angle: 135deg;
+  --pb-logo-cloud-orbit-counter-angle: -135deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-outer-distance);
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-7 {
+  --pb-logo-cloud-orbit-angle: 225deg;
+  --pb-logo-cloud-orbit-counter-angle: -225deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-outer-distance);
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-8 {
+  --pb-logo-cloud-orbit-angle: 0deg;
+  --pb-logo-cloud-orbit-counter-angle: 0deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-third-distance);
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-9 {
+  --pb-logo-cloud-orbit-angle: 120deg;
+  --pb-logo-cloud-orbit-counter-angle: -120deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-third-distance);
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-10 {
+  --pb-logo-cloud-orbit-angle: 180deg;
+  --pb-logo-cloud-orbit-counter-angle: -180deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-third-distance);
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item-pos-11 {
+  --pb-logo-cloud-orbit-angle: 270deg;
+  --pb-logo-cloud-orbit-counter-angle: -270deg;
+  --pb-logo-cloud-orbit-distance: var(--pb-logo-cloud-orbit-third-distance);
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) :is(.pb-logo-cloud-orbit-item-pos-4, .pb-logo-cloud-orbit-item-pos-5, .pb-logo-cloud-orbit-item-pos-6, .pb-logo-cloud-orbit-item-pos-7, .pb-logo-cloud-orbit-item-pos-8, .pb-logo-cloud-orbit-item-pos-9, .pb-logo-cloud-orbit-item-pos-10, .pb-logo-cloud-orbit-item-pos-11) :is(.pb-logo-cloud-orbit-link) {
+  animation-direction: reverse;
+}
+
+:where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-extras {
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+@keyframes pbLogoCloudMarquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-50% - (var(--pb-logo-cloud-gap) / 2)));
+  }
+}
+
+@keyframes pbLogoCloudVerticalDown {
+  from {
+    transform: translateY(calc(-50% - (var(--pb-logo-cloud-gap) / 2)));
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pbLogoCloudVerticalUp {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(calc(-50% - (var(--pb-logo-cloud-gap) / 2)));
+  }
+}
+
+@keyframes pbLogoCloudOrbitLane {
+  from {
+    transform: rotate(var(--pb-logo-cloud-orbit-angle, 0deg));
+  }
+
+  to {
+    transform: rotate(calc(var(--pb-logo-cloud-orbit-angle, 0deg) + 360deg));
+  }
+}
+
+@keyframes pbLogoCloudOrbitLaneCounter {
+  from {
+    transform: translate(-50%, calc(-50% - var(--pb-logo-cloud-orbit-distance, var(--pb-logo-cloud-orbit-inner-distance)))) rotate(var(--pb-logo-cloud-orbit-counter-angle, 0deg));
+  }
+
+  to {
+    transform: translate(-50%, calc(-50% - var(--pb-logo-cloud-orbit-distance, var(--pb-logo-cloud-orbit-inner-distance)))) rotate(calc(var(--pb-logo-cloud-orbit-counter-angle, 0deg) - 360deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-item {
+    animation: none;
+    transform: rotate(var(--pb-logo-cloud-orbit-angle, 0deg));
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-link {
+    animation: none;
+    transform: translate(-50%, calc(-50% - var(--pb-logo-cloud-orbit-distance, var(--pb-logo-cloud-orbit-inner-distance)))) rotate(var(--pb-logo-cloud-orbit-counter-angle, 0deg));
+  }
+}
+
+@media (max-width: 960px) {
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-shell {
+    width: min(100%, 34rem);
+  }
+}
+
+@media (max-width: 720px) {
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 {
+    --pb-logo-cloud-gap: 10px;
+    --pb-logo-cloud-logo-height: 58px;
+    --pb-logo-cloud-widget-height: 230px;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column:nth-child(n + 4) {
+    display: none;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-item {
+    width: 100%;
+    justify-items: center;
+    gap: 0.45rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-link {
+    width: 100%;
+    justify-items: center;
+    gap: 0.45rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-badge {
+    width: clamp(5.8rem, calc(var(--pb-logo-cloud-logo-height) + 2.1rem), 6.9rem);
+    max-width: 100%;
+    min-height: clamp(5.8rem, calc(var(--pb-logo-cloud-logo-height) + 2.1rem), 6.9rem);
+    padding: 0.75rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-media-circle {
+    min-height: var(--pb-logo-cloud-logo-height);
+    height: var(--pb-logo-cloud-logo-height);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-media-circle .pb-logo-cloud-image {
+    max-width: 92%;
+    max-height: 92%;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud7 {
+    --pb-logo-cloud-gap: 12px;
+    --pb-logo-cloud-logo-height: 56px;
+    --pb-logo-cloud-orbit-inner-distance: 6rem;
+    --pb-logo-cloud-orbit-outer-distance: 8.2rem;
+    --pb-logo-cloud-orbit-third-distance: 10rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud7 .pb-logo-cloud-orbit-shell {
+    width: min(100%, 19rem);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud7 .pb-logo-cloud-orbit-core-surface {
+    width: 6.5rem;
+    min-height: 6.5rem;
+    padding: 0.9rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud7 .pb-logo-cloud-orbit-satellite-surface {
+    width: 4.9rem;
+    min-height: 4.9rem;
+    padding: 0.72rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-classic-item {
+    min-width: clamp(5.5rem, calc(var(--pb-logo-cloud-logo-height) + 2rem), 8.75rem);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-marquee-item {
+    flex-basis: clamp(9rem, 58vw, 11rem);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-shell {
+    width: min(100%, 28rem);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-ring-inner {
+    width: calc(var(--pb-logo-cloud-orbit-inner-distance) * 2);
+    height: calc(var(--pb-logo-cloud-orbit-inner-distance) * 2);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-ring-outer {
+    width: calc(var(--pb-logo-cloud-orbit-outer-distance) * 2);
+    height: calc(var(--pb-logo-cloud-orbit-outer-distance) * 2);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-ring-third {
+    width: calc(var(--pb-logo-cloud-orbit-third-distance) * 2);
+    height: calc(var(--pb-logo-cloud-orbit-third-distance) * 2);
+  }
+}
+
+@media (max-width: 560px) {
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 {
+    --pb-logo-cloud-gap: 8px;
+    --pb-logo-cloud-logo-height: 52px;
+    --pb-logo-cloud-widget-height: 212px;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column:nth-child(n + 4) {
+    display: none;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-item {
+    width: 100%;
+    justify-items: center;
+    gap: 0.35rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-link {
+    width: 100%;
+    justify-items: center;
+    gap: 0.35rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-badge {
+    width: clamp(5.25rem, calc(var(--pb-logo-cloud-logo-height) + 1.7rem), 6.25rem);
+    max-width: 100%;
+    min-height: clamp(5.25rem, calc(var(--pb-logo-cloud-logo-height) + 1.7rem), 6.25rem);
+    padding: 0.58rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-media-circle {
+    min-height: var(--pb-logo-cloud-logo-height);
+    height: var(--pb-logo-cloud-logo-height);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-media-circle .pb-logo-cloud-image {
+    max-width: 94%;
+    max-height: 94%;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud7 {
+    --pb-logo-cloud-gap: 10px;
+    --pb-logo-cloud-logo-height: 48px;
+    --pb-logo-cloud-orbit-inner-distance: 5.2rem;
+    --pb-logo-cloud-orbit-outer-distance: 7rem;
+    --pb-logo-cloud-orbit-third-distance: 8.5rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud7 .pb-logo-cloud-orbit-shell {
+    width: min(100%, 16.5rem);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud7 .pb-logo-cloud-orbit-core-surface {
+    width: 5.55rem;
+    min-height: 5.55rem;
+    padding: 0.8rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud.pb-logo-cloud-model-cloud7 .pb-logo-cloud-orbit-satellite-surface {
+    width: 4.2rem;
+    min-height: 4.2rem;
+    padding: 0.62rem;
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-extras {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :where(.pb-page, .pb-block-preview) .pb-logo-cloud-orbit-shell {
+    width: min(100%, 23.5rem);
+  }
+}
+
+.pb-canvas.is-tablet .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 {
+  --pb-logo-cloud-gap: 10px;
+  --pb-logo-cloud-logo-height: 58px;
+  --pb-logo-cloud-widget-height: 230px;
+}
+
+.pb-canvas.is-tablet .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column:nth-child(n + 4),
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column:nth-child(n + 4) {
+  display: none;
+}
+
+.pb-canvas.is-tablet .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-item,
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-item {
+  width: 100%;
+  justify-items: center;
+  gap: 0.45rem;
+}
+
+.pb-canvas.is-tablet .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-link,
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-link {
+  width: 100%;
+  justify-items: center;
+  gap: 0.45rem;
+}
+
+.pb-canvas.is-tablet .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-badge,
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-badge {
+  width: clamp(5.8rem, calc(var(--pb-logo-cloud-logo-height) + 2.1rem), 6.9rem);
+  max-width: 100%;
+  min-height: clamp(5.8rem, calc(var(--pb-logo-cloud-logo-height) + 2.1rem), 6.9rem);
+  padding: 0.75rem;
+}
+
+.pb-canvas.is-tablet .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-media,
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-media {
+  min-height: var(--pb-logo-cloud-logo-height);
+  height: var(--pb-logo-cloud-logo-height);
+}
+
+.pb-canvas.is-tablet .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-media-circle .pb-logo-cloud-image,
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-media-circle .pb-logo-cloud-image {
+  max-width: 92%;
+  max-height: 92%;
+}
+
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 {
+  --pb-logo-cloud-gap: 8px;
+  --pb-logo-cloud-logo-height: 52px;
+  --pb-logo-cloud-widget-height: 212px;
+}
+
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud7 {
+  --pb-logo-cloud-gap: 10px;
+  --pb-logo-cloud-logo-height: 48px;
+  --pb-logo-cloud-orbit-inner-distance: 5.2rem;
+  --pb-logo-cloud-orbit-outer-distance: 7rem;
+  --pb-logo-cloud-orbit-third-distance: 8.5rem;
+}
+
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud7 .pb-logo-cloud-orbit-shell {
+  width: min(100%, 16.5rem);
+}
+
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud7 .pb-logo-cloud-orbit-core-surface {
+  width: 5.55rem;
+  min-height: 5.55rem;
+  padding: 0.8rem;
+}
+
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud7 .pb-logo-cloud-orbit-satellite-surface {
+  width: 4.2rem;
+  min-height: 4.2rem;
+  padding: 0.62rem;
+}
+
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-item {
+  width: 100%;
+  justify-items: center;
+  gap: 0.35rem;
+}
+
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-link {
+  width: 100%;
+  justify-items: center;
+  gap: 0.35rem;
+}
+
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-column-badge {
+  width: clamp(5.25rem, calc(var(--pb-logo-cloud-logo-height) + 1.7rem), 6.25rem);
+  max-width: 100%;
+  min-height: clamp(5.25rem, calc(var(--pb-logo-cloud-logo-height) + 1.7rem), 6.25rem);
+  padding: 0.58rem;
+}
+
+.pb-canvas.is-mobile .pb-block-preview .pb-logo-cloud.pb-logo-cloud-model-cloud6 .pb-logo-cloud-media-circle .pb-logo-cloud-image {
+  max-width: 94%;
+  max-height: 94%;
+}

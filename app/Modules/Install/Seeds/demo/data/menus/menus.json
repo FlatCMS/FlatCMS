@@ -1,0 +1,161 @@
+{
+  "main": {
+    "items": [
+      {
+        "id": "menu_home",
+        "label": "Accueil",
+        "url": "",
+        "labelMode": "auto",
+        "refType": "page",
+        "ref": "page_home",
+        "icon": "fa-classic fa-solid fa-house fa-fw",
+        "target": "_self",
+        "autoLabel": "Accueil",
+        "autoUrl": ""
+      },
+      {
+        "id": "menu_collections",
+        "label": "Collections",
+        "url": "/page/collections",
+        "labelMode": "auto",
+        "refType": "page",
+        "ref": "page_collections",
+        "icon": "fa-classic fa-solid fa-mug-hot fa-fw",
+        "target": "_self",
+        "autoLabel": "Collections",
+        "autoUrl": "/page/collections"
+      },
+      {
+        "id": "menu_atelier",
+        "label": "Atelier",
+        "url": "/page/atelier",
+        "labelMode": "auto",
+        "refType": "page",
+        "ref": "page_atelier",
+        "icon": "fa-classic fa-solid fa-hammer fa-fw",
+        "target": "_self",
+        "autoLabel": "Atelier",
+        "autoUrl": "/page/atelier"
+      },
+      {
+        "id": "menu_savoir_faire",
+        "label": "Savoir-faire",
+        "url": "/page/savoir-faire",
+        "labelMode": "auto",
+        "refType": "page",
+        "ref": "page_savoir_faire",
+        "icon": "fa-classic fa-solid fa-gears fa-fw",
+        "target": "_self",
+        "autoLabel": "Savoir-faire",
+        "autoUrl": "/page/savoir-faire"
+      },
+      {
+        "id": "menu_blog",
+        "label": "Journal",
+        "url": "/blog",
+        "icon": "fa-classic fa-solid fa-book-open fa-fw",
+        "target": "_self",
+        "children": [
+          {
+            "id": "menu_62cc6a653f",
+            "label": "Le retour de l'art de la table artisanal",
+            "url": "/blog/retour-art-table-artisanal",
+            "labelMode": "auto",
+            "refType": "post",
+            "ref": "post_artisanal_tableware",
+            "target": "_self",
+            "autoLabel": "Le retour de l'art de la table artisanal",
+            "autoUrl": "/blog/retour-art-table-artisanal"
+          },
+          {
+            "id": "menu_da668ac08d",
+            "label": "Créer des intérieurs calmes avec les matières naturelles",
+            "url": "/blog/interieurs-calmes-matieres-naturelles",
+            "labelMode": "auto",
+            "refType": "post",
+            "ref": "post_calm_interiors",
+            "target": "_self",
+            "autoLabel": "Créer des intérieurs calmes avec les matières naturelles",
+            "autoUrl": "/blog/interieurs-calmes-matieres-naturelles"
+          },
+          {
+            "id": "menu_f99695e498",
+            "label": "Pourquoi les objets faits main ont une autre présence",
+            "url": "/blog/objets-faits-main-presence-differente",
+            "labelMode": "auto",
+            "refType": "post",
+            "ref": "post_handmade_objects",
+            "target": "_self",
+            "autoLabel": "Pourquoi les objets faits main ont une autre présence",
+            "autoUrl": "/blog/objets-faits-main-presence-differente"
+          },
+          {
+            "id": "menu_fa2bf97d4f",
+            "label": "Le rituel du thé comme espace de respiration",
+            "url": "/blog/rituel-the-espace-respiration",
+            "labelMode": "auto",
+            "refType": "post",
+            "ref": "post_tea_rituals",
+            "target": "_self",
+            "autoLabel": "Le rituel du thé comme espace de respiration",
+            "autoUrl": "/blog/rituel-the-espace-respiration"
+          },
+          {
+            "id": "menu_efa07615fd",
+            "label": "L'art de vivre wabi-sabi",
+            "url": "/blog/art-vivre-wabi-sabi",
+            "labelMode": "auto",
+            "refType": "post",
+            "ref": "post_wabi_sabi_living",
+            "target": "_self",
+            "autoLabel": "L'art de vivre wabi-sabi",
+            "autoUrl": "/blog/art-vivre-wabi-sabi"
+          },
+          {
+            "id": "menu_7d6b2e0af1",
+            "label": "Les outils silencieux qui façonnent l'atelier",
+            "url": "/blog/outils-silencieux-faconnent-atelier",
+            "labelMode": "auto",
+            "refType": "post",
+            "ref": "post_workshop_tools",
+            "target": "_self",
+            "autoLabel": "Les outils silencieux qui façonnent l'atelier",
+            "autoUrl": "/blog/outils-silencieux-faconnent-atelier"
+          }
+        ],
+        "translations": {
+          "fr-FR": "Journal",
+          "en-US": "Journal",
+          "de-DE": "Zeitung",
+          "es-ES": "Diario",
+          "it-IT": "Giornale",
+          "pt-PT": "Jornal"
+        }
+      },
+      {
+        "id": "menu_about",
+        "label": "À propos",
+        "url": "/page/a-propos",
+        "labelMode": "auto",
+        "refType": "page",
+        "ref": "page_about",
+        "icon": "fa-classic fa-solid fa-circle-info fa-fw",
+        "target": "_self",
+        "autoLabel": "À propos",
+        "autoUrl": "/page/a-propos"
+      },
+      {
+        "id": "menu_contact",
+        "label": "Contact",
+        "url": "/page/contact",
+        "labelMode": "auto",
+        "refType": "page",
+        "ref": "page_contact",
+        "icon": "fa-classic fa-solid fa-envelope fa-fw",
+        "target": "_self",
+        "autoLabel": "Contact",
+        "autoUrl": "/page/contact"
+      }
+    ]
+  }
+}

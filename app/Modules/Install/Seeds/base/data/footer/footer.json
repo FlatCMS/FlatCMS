@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "brand_text": "{{SITE_NAME}}",
+  "copyright_text": "© {year} {site_name}.",
+  "powered_by": {
+    "enabled": true,
+    "label": "FlatCMS",
+    "url": "https://flat-cms.fr"
+  }
+}

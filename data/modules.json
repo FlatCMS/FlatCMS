@@ -1,0 +1,81 @@
+{
+    "Auth": {
+        "enabled": true,
+        "sidebar_visible": false
+    },
+    "Backups": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Core": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Dashboard": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Pages": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Posts": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Categories": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Media": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Menu": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Footer": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Comments": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Contact": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Users": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Settings": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Languages": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Modules": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "HookManager": {
+        "enabled": true,
+        "sidebar_visible": false
+    },
+    "Themes": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
+    "Install": {
+        "enabled": false
+    },
+    "Trash": {
+        "enabled": true,
+        "sidebar_visible": true
+    }
+}

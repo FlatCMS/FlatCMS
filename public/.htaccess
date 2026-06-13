@@ -1,0 +1,49 @@
+# FlatCMS 1.0.0 - Public document root (.htaccess)
+
+RewriteEngine On
+RewriteBase /
+
+# Bloquer les chemins et extensions sensibles
+RewriteCond %{REQUEST_URI} (^|/)(web\.config|nginx\.conf|composer\.(json|lock)|\.env(\..*)?)($|/) [NC,OR]
+RewriteCond %{REQUEST_URI} (^|/).*\.(bak|old|orig|save|swp|dist|example|backup(\..*)?)($|/) [NC,OR]
+RewriteCond %{REQUEST_URI} (^|/)\.(?!well-known(/|$)) [NC]
+RewriteRule ^ - [F,L]
+
+# Si le fichier ou dossier existe, ne rien faire
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Router le reste vers l'application
+RewriteRule ^ index.php [L,QSA]
+
+RewriteRule (^|/).*\.(backup)(\..*)?$ - [F,L,NC]
+
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), interest-cohort=()"
+Header set Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'; object-src 'none'; script-src 'self' https://challenges.cloudflare.com https://static.axept.io https://cdn.tiny.cloud https://*.tiny.cloud; style-src 'self' 'unsafe-inline' https://cdn.tiny.cloud https://*.tiny.cloud; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.tiny.cloud https://*.tiny.cloud; connect-src 'self' blob: https://challenges.cloudflare.com https://static.axept.io https://*.axept.io https://cdn.tiny.cloud https://*.tiny.cloud; frame-src 'self' https://challenges.cloudflare.com https://static.axept.io https://*.axept.io https://www.google.com https://maps.google.com; media-src 'self' data: blob: https:; manifest-src 'self'; worker-src 'self' blob:"
+Header set Cross-Origin-Opener-Policy "same-origin"
+Header set Cross-Origin-Resource-Policy "same-origin"
+Header set X-Permitted-Cross-Domain-Policies "none"
+Header set X-Download-Options "noopen"
+
+# Désactiver le listing des répertoires
+Options -Indexes
+
+# Protéger les fichiers sensibles
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(json|lock|log|md)$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "^(web\.config|nginx\.conf|composer\.(json|lock)|\.env(\..*)?)$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(bak|old|orig|save|swp|dist|example)$">
+    Require all denied
+</FilesMatch>

@@ -1,0 +1,439 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: LicenseRef-FlatCMS-Commercial
+ *
+ * Premium FlatCMS component. See LICENSING.md, COMMERCIAL_LICENSE.md and TRADEMARK.md.
+ */
+
+.fc-carousel-wrapper {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.fc-carousel-title {
+    margin: 0;
+    font-size: var(--fc-heading-h2-size, clamp(1.9rem, 3.8vw, 3rem));
+    line-height: var(--fc-heading-h2-line-height, 1.05);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-text-primary, #0f172a);
+}
+
+.prose .fc-carousel-title {
+    margin: 0;
+    font-size: var(--fc-heading-h2-size, clamp(1.9rem, 3.8vw, 3rem));
+    line-height: var(--fc-heading-h2-line-height, 1.05);
+    color: var(--color-text-primary, #0f172a);
+}
+
+.fc-carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.85rem;
+    background: var(--color-bg-secondary, #f8fafc);
+    border: 1px solid var(--color-border, #cbd5e1);
+    --fc-carousel-height: 420px;
+    --fc-carousel-caption-inline: 1.2rem;
+    --fc-carousel-caption-bottom: 1rem;
+    height: var(--fc-carousel-height);
+}
+
+.fc-carousel.fc-carousel-has-arrows {
+    --fc-carousel-caption-inline: 4.15rem;
+}
+
+.fc-carousel.fc-carousel-has-arrows.fc-carousel-arrows-minimal {
+    --fc-carousel-caption-inline: 3.45rem;
+}
+
+.fc-carousel.fc-carousel-has-indicators {
+    --fc-carousel-caption-bottom: 2.5rem;
+}
+
+.fc-carousel.fc-carousel-has-indicators.fc-carousel-indicators-bars {
+    --fc-carousel-caption-bottom: 2.25rem;
+}
+
+.fc-carousel.fc-carousel-has-indicators.fc-carousel-indicators-numbers {
+    --fc-carousel-caption-bottom: 3rem;
+}
+
+.fc-carousel-track {
+    display: flex;
+    transition: transform 500ms ease;
+    will-change: transform;
+    height: 100%;
+}
+
+.fc-carousel-slide {
+    position: relative;
+    flex: 0 0 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--color-bg-secondary, #f8fafc);
+}
+
+.fc-carousel-slide > .fc-carousel-image,
+.fc-carousel-slide > .fc-carousel-media-placeholder {
+    width: 100%;
+    height: 100%;
+    display: block;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+    max-height: none;
+}
+
+.fc-carousel-slide > .fc-carousel-image {
+    object-fit: contain;
+    object-position: center center;
+}
+
+.fc-carousel.fc-carousel-media-fit-cover .fc-carousel-slide > .fc-carousel-image {
+    object-fit: cover;
+}
+
+.prose .fc-carousel-slide > img.fc-carousel-image {
+    margin: 0;
+    max-width: none;
+    max-height: none;
+}
+
+.fc-carousel-media-placeholder {
+    background: linear-gradient(130deg, rgba(148, 163, 184, 0.25), rgba(100, 116, 139, 0.4));
+}
+
+.fc-carousel-caption {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 1rem var(--fc-carousel-caption-inline) var(--fc-carousel-caption-bottom);
+    display: grid;
+    gap: 0.35rem;
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.78) 100%);
+    color: #f8fafc;
+}
+
+.fc-carousel-caption-title {
+    margin: 0;
+    font-size: var(--fc-heading-h3-size, clamp(1.28rem, 2.2vw, 1.7rem));
+    line-height: var(--fc-heading-h3-line-height, 1.18);
+    color: inherit;
+}
+
+.fc-carousel-caption .fc-carousel-caption-title,
+.prose .fc-carousel-caption .fc-carousel-caption-title {
+    color: inherit;
+}
+
+.fc-carousel-caption-text {
+    font-size: var(--fc-body-sm-size, 0.9rem);
+    line-height: var(--fc-body-sm-line-height, 1.55);
+    color: color-mix(in srgb, #ffffff 88%, transparent);
+}
+
+.fc-carousel-caption-text p {
+    margin: 0;
+}
+
+.fc-carousel-caption-btn {
+    justify-self: start;
+    max-width: max-content;
+}
+
+.fc-carousel-caption .fc-carousel-caption-btn,
+.prose .fc-carousel-caption .fc-carousel-caption-btn {
+    text-decoration: none;
+}
+
+.fc-carousel-caption .fc-carousel-caption-btn:hover,
+.fc-carousel-caption .fc-carousel-caption-btn:focus-visible,
+.prose .fc-carousel-caption .fc-carousel-caption-btn:hover,
+.prose .fc-carousel-caption .fc-carousel-caption-btn:focus-visible {
+    text-decoration: none;
+}
+
+.fc-carousel-caption-btn.is-static {
+    cursor: default;
+    pointer-events: none;
+}
+
+.fc-carousel-caption-btn-align-center {
+    justify-self: center;
+}
+
+.fc-carousel-caption-btn-align-right {
+    justify-self: end;
+}
+
+.fc-carousel-control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    color: #ffffff;
+    font: inherit;
+    font-size: 1.6rem;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.fc-carousel-control-icon {
+    display: inline-block;
+    line-height: 1;
+}
+
+.fc-carousel-control-style-filled,
+.fc-carousel-control-style-outline {
+    width: 2.5rem;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    min-height: 2.5rem;
+    border-radius: 999px;
+}
+
+.fc-carousel-control-style-filled {
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.fc-carousel-control-style-outline {
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: rgba(15, 23, 42, 0.18);
+}
+
+.fc-carousel-control-style-minimal {
+    width: 2.1rem;
+    min-width: 2.1rem;
+    height: 2.1rem;
+    min-height: 2.1rem;
+    border-radius: 0.6rem;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.96);
+}
+
+.fc-carousel-control-style-filled:hover,
+.fc-carousel-control-style-filled:focus-visible {
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.fc-carousel-control-style-outline:hover,
+.fc-carousel-control-style-outline:focus-visible {
+    background: rgba(15, 23, 42, 0.42);
+    border-color: rgba(255, 255, 255, 0.9);
+}
+
+.fc-carousel-control-style-minimal:hover,
+.fc-carousel-control-style-minimal:focus-visible {
+    background: rgba(15, 23, 42, 0.28);
+}
+
+.fc-carousel-control-prev {
+    left: 1rem;
+}
+
+.fc-carousel-control-next {
+    right: 1rem;
+}
+
+.fc-carousel-indicators {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0 0 0.75rem 0;
+    z-index: 2;
+}
+
+.fc-carousel-indicator {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font: inherit;
+    transition: background 150ms ease, transform 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.fc-carousel-indicator-mark {
+    display: none;
+    line-height: 1;
+}
+
+.fc-carousel-indicators-style-dots .fc-carousel-indicator {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.fc-carousel-indicators-style-dots .fc-carousel-indicator.is-active {
+    background: var(--color-primary, #2563eb);
+    transform: scale(1.15);
+}
+
+.fc-carousel-indicators-style-bars {
+    gap: 0.55rem;
+}
+
+.fc-carousel-indicators-style-bars .fc-carousel-indicator {
+    width: 1.75rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.46);
+}
+
+.fc-carousel-indicators-style-bars .fc-carousel-indicator.is-active {
+    background: var(--color-primary, #2563eb);
+}
+
+.fc-carousel-indicators-style-numbers {
+    gap: 0.5rem;
+    padding-bottom: 0.85rem;
+}
+
+.fc-carousel-indicators-style-numbers .fc-carousel-indicator {
+    min-width: 1.7rem;
+    height: 1.7rem;
+    padding: 0 0.45rem;
+    border-radius: 0.45rem;
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    background: rgba(248, 250, 252, 0.92);
+    color: #0f172a;
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+    backdrop-filter: blur(10px);
+}
+
+.fc-carousel-indicators-style-numbers .fc-carousel-indicator-mark {
+    display: inline-block;
+}
+
+.fc-carousel-indicators-style-numbers .fc-carousel-indicator:hover,
+.fc-carousel-indicators-style-numbers .fc-carousel-indicator:focus-visible {
+    background: #ffffff;
+    border-color: rgba(255, 255, 255, 0.72);
+}
+
+.fc-carousel-indicators-style-numbers .fc-carousel-indicator.is-active {
+    background: var(--color-primary, #2563eb);
+    border-color: var(--color-primary, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--color-primary, #2563eb) 30%, transparent);
+}
+
+.fc-carousel-indicator:focus-visible,
+.fc-carousel-control:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.72);
+    outline-offset: 2px;
+}
+
+.fc-carousel-empty {
+    padding: 0;
+    text-align: center;
+    color: var(--color-text-muted, #64748b);
+    background: var(--color-bg-secondary, #f8fafc);
+}
+
+.fc-carousel-transition-fade .fc-carousel-track {
+    position: relative;
+    display: block;
+}
+
+.fc-carousel-transition-fade .fc-carousel-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 500ms ease;
+    flex: 0 0 auto;
+}
+
+.fc-carousel-transition-fade .fc-carousel-slide.is-active {
+    position: relative;
+    opacity: 1;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .fc-carousel {
+        --fc-carousel-height: 320px;
+        --fc-carousel-caption-inline: 0.9rem;
+        --fc-carousel-caption-bottom: 0.85rem;
+    }
+
+    .fc-carousel.fc-carousel-has-arrows {
+        --fc-carousel-caption-inline: 3.25rem;
+    }
+
+    .fc-carousel.fc-carousel-has-arrows.fc-carousel-arrows-minimal {
+        --fc-carousel-caption-inline: 2.8rem;
+    }
+
+    .fc-carousel.fc-carousel-has-indicators {
+        --fc-carousel-caption-bottom: 0.85rem;
+    }
+
+    .fc-carousel-caption {
+        padding: 0.85rem var(--fc-carousel-caption-inline) var(--fc-carousel-caption-bottom);
+    }
+
+    .fc-carousel-control {
+        font-size: 1.3rem;
+    }
+
+    .fc-carousel-control-style-filled,
+    .fc-carousel-control-style-outline {
+        width: 2.1rem;
+        min-width: 2.1rem;
+        height: 2.1rem;
+        min-height: 2.1rem;
+    }
+
+    .fc-carousel-control-style-minimal {
+        width: 1.85rem;
+        min-width: 1.85rem;
+        height: 1.85rem;
+        min-height: 1.85rem;
+    }
+
+    .fc-carousel-indicators-style-numbers .fc-carousel-indicator {
+        min-width: 1.55rem;
+        height: 1.55rem;
+        padding: 0 0.4rem;
+        font-size: 0.72rem;
+    }
+
+    .fc-carousel-indicators {
+        display: none;
+    }
+}
+
+.pb-canvas.is-mobile .pb-block-preview .fc-carousel.fc-carousel-has-indicators {
+    --fc-carousel-caption-bottom: 0.85rem;
+}
+
+.pb-canvas.is-mobile .pb-block-preview .fc-carousel-indicators {
+    display: none;
+}

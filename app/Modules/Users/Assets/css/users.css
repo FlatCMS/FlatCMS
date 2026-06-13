@@ -1,0 +1,125 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+.user-stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.user-stat-card {
+  flex: 1;
+  min-width: 150px;
+  padding: 16px;
+  text-align: center;
+}
+
+.user-stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.user-stat-value.is-total {
+  color: var(--color-primary);
+}
+
+.user-stat-value.is-admins {
+  color: #e74c3c;
+}
+
+.user-stat-value.is-active {
+  color: #27ae60;
+}
+
+.user-stat-label {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-cell-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--color-bg-tertiary, #e2e8f0);
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.2) 75%, rgba(255, 255, 255, 0.2)),
+    linear-gradient(45deg, rgba(0, 0, 0, 0.18) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.18) 75%, rgba(0, 0, 0, 0.18));
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+/* Filters */
+.users-filter-form {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: nowrap;
+}
+
+.users-filter-controls {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.users-filter-form .form-label {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.users-filter-controls .form-select {
+  min-height: 40px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .users-filter-form {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .users-filter-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .users-filter-controls .form-select {
+    flex: 1;
+  }
+
+  .user-stats-row {
+    gap: 12px;
+  }
+
+  .user-stat-card {
+    flex-basis: calc(50% - 6px);
+    flex-grow: 0;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-stats-row {
+    flex-direction: column;
+  }
+
+  .user-stat-card {
+    flex-basis: 100%;
+  }
+}

@@ -1,0 +1,63 @@
+.env
+.env.local
+.DS_Store
+**/.DS_Store
+.codex/
+
+# Excluded legacy or local-only folders
+/Package/
+/flatcms.zip
+/package.zip
+/Extensions FlatCMS/
+/docs/
+CONSTITUTION_PROMPT.md
+FLATCMS_TODO_LIST.md
+/arborescence.txt
+
+# Runtime data generated locally
+data/**/*.json
+!data/modules.json
+data/installed.lock
+
+# Runtime/generated uploads and secrets
+public/uploads/
+storage/uploads/avatars/
+storage/tmp/release_package_extract/
+storage/backups/
+storage/backups/env/
+storage/app/secretbox.key
+resources/uploads/personal/
+resources/uploads/contact/
+resources/licenses/
+/uploads
+/uploads/
+
+# Runtime-generated public artifacts
+public/.user.ini
+public/modules/
+public/widgets/
+public/release/
+
+# Local runtime artifacts
+/test-results/
+
+# Root-level media files
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
+/*.svg
+/*.bmp
+/*.mp4
+/*.mov
+/*.webm
+/*.mkv
+/*.avi
+/*.mp3
+/*.wav
+/*.m4a
+/*.ogg
+
+# Local HTML source snapshots
+/home.html

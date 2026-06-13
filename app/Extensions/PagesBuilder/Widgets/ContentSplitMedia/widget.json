@@ -1,0 +1,16 @@
+{
+    "name": "ContentSplitMedia",
+    "key": "content_split_media",
+    "version": "1.0.0",
+    "description": "Official FlatCMS editorial split content and media widget.",
+    "category": "content",
+    "builders": [
+        "pages"
+    ],
+    "tier": "free",
+    "enabled": true,
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "mJr083Et3r0HxTaQrjJev1eW3vDjgj4DhkRH8g8nTaUL/Teg59EX2TgZDXgjU9UsVoi2YkYUt5Aaz37JlsvqU1hVCrtfeG9NKa+7ARaFN6jMQO9FSQ4WeZV40pbKCWg+3INcciR4c93X0ACCHsG7MUq3sQauDdgmnL0PXLzrjPI30OHDIZSltHa5AFI6BlQ9RXQCqbjbU/QldSWPdrHka3mJKaVBYvqtgKZHIQt14eVhwRbKRKH2QPHTEaEaSycjDsrbKsU6w5ERjfkoG38dfme+uAnE4GS+ftP/uBDmcpZUgQzYPmCwMh5pStyDljFlhz2ncOkbcAUAhruEIO0BjGuQpqTmWmInM2163q5vVaEsXocj52O7ApuOhvVWD185hyuAR735dIQLVbqi0hCEp4FTM37yGWUOwVUEDOINIgWtLB3KAInfbcSC1RLHGjs233CMKNeNJe20ajVwljMjnwg3Qu+OiFYuQHjQsPKPOqkqq6S4w0PkroIcOPj0sh4pE+Ijh/J4yPk5OgjoKHJSQ/rrxJ/tDVNdMjuWXSTOaVQDhtuwQ70Th0Uqv4SIUeiM1gGtyTOkgFP/XGHOk5TsnyWc+qdjuuU/dBB1Io6zGcMOHvm6xnBZ9zgTR1zQgESc4Hpx6owRU1Bn+zXsL6ipkOk6uyoIpa0wTJ6WyjIfpzw="
+}

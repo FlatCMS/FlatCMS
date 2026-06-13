@@ -1,0 +1,17 @@
+{
+    "name": "HookManager",
+    "version": "1.0.0",
+    "description": "Hooks manager and listeners overview.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "required": true,
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "ZbMbPeCvTNTr2TzLv2dU5jEOKxJII+iP2LfbWFTW5x4JSeE7gLwbbVKRahbfPMEUCtGmMoJtkOD0xKalZypfMYzAAzAhWpYVzBJNh1eYxXUOQ88ZcuMZ/CLHitKVvJBhX/YAXpzFNMiV2i+80DosPpNwlafTiRWsJRtRrKq64h5m7OIYoV9SOtAbXdB4pjUqceTduH35wYxS4/L+k9EloOpPVy5IuW2oN4fxIqiLzqSITbOkBGex67sqrQgdiygM1rVKjssh8nX5zCKKkHuhsKQb5FCYjdcsF6p9RP6opDroVqmc6TKxypKLkKh7OQo7wUC7oqICBINcdnYMZRZA0lfs5w7PDOOc3RnbSFoHT3YkkaxHlgmo1mYoy5FS+gRuJGs25+iT/kTXY44x3nQEOGqim1atrNbkUNM115uY2pb7JiKtg9AXrBICxkndhjO0zyhUy58AFJTq6bsyuIldhM18ddDzCRvMMHqr43do2uvC9LtxTx2mRePi1uJSrR0aZyHTF0sE6p+Yy3qBAVlG+R+pyUYxRcL5AygE3elAAaB1I41/vkIq1bISnhFMU1c0DolshPAQ+DjVYpHFmHcFyKHR+E/ot5Tjd/2Irei2Cc6GfpZ0hMoGmOLUQjhpVQArXg4i/W3nckehubp+IRAMHCY8xiKtCKFa8kWpYbOtEdA="
+}

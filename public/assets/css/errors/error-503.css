@@ -1,0 +1,204 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    color: #e2e8f0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+    background-size: 400% 400%;
+    animation: error503-gradient-shift 15s ease infinite;
+}
+
+body::before,
+body::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+body::before {
+    width: 500px;
+    height: 500px;
+    top: -150px;
+    right: -100px;
+    background: radial-gradient(circle, #818cf8, transparent 70%);
+    animation: error503-float 8s ease-in-out infinite;
+}
+
+body::after {
+    width: 400px;
+    height: 400px;
+    bottom: -100px;
+    left: -100px;
+    background: radial-gradient(circle, #a78bfa, transparent 70%);
+    animation: error503-float 10s ease-in-out infinite reverse;
+}
+
+.maintenance-container {
+    width: 100%;
+    max-width: 560px;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.gear-icon {
+    margin-bottom: 2rem;
+    display: inline-block;
+    font-size: 4.5rem;
+    color: #818cf8;
+    filter: drop-shadow(0 0 20px rgba(129, 140, 248, 0.4));
+    animation: error503-gear-spin 6s linear infinite;
+}
+
+.gear-icon svg {
+    width: 1em;
+    height: 1em;
+    display: block;
+}
+
+h1 {
+    margin-bottom: 1rem;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.025em;
+}
+
+.description {
+    margin-bottom: 2.5rem;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #94a3b8;
+}
+
+.progress-container {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 2.5rem;
+}
+
+.progress-label {
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.progress-bar {
+    position: relative;
+    overflow: hidden;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #818cf8, #a78bfa, #818cf8);
+    animation: error503-progress-slide 2s ease-in-out infinite;
+}
+
+.refresh-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.refresh-info svg {
+    width: 16px;
+    height: 16px;
+    animation: error503-pulse 2s ease-in-out infinite;
+}
+
+.footer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2rem;
+    z-index: 1;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.footer .site-name {
+    color: #818cf8;
+    font-weight: 600;
+}
+
+@keyframes error503-gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes error503-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-30px) scale(1.05); }
+}
+
+@keyframes error503-gear-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes error503-progress-slide {
+    0% { left: -40%; }
+    100% { left: 100%; }
+}
+
+@keyframes error503-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+    .maintenance-container {
+        padding: 1.5rem;
+    }
+
+    .gear-icon {
+        font-size: 3.5rem;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    .description {
+        font-size: 1rem;
+    }
+}

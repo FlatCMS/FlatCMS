@@ -1,0 +1,18 @@
+{
+    "name": "AiAgent",
+    "version": "1.0.0",
+    "description": "Contextual admin AI assistant.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "required": false,
+    "enabled": true,
+    "sidebar_visible": false,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "signature": "laE48qK+hm7gws18wBVvGDBr6zLvleWGzcY26HIMg5HZZrJZJLpLVT6BQUd5HM80hhf51tJFRXSQnihNk/M6K5UUVS+LNBIo38FWg0KV6HOF8+BRWrixBtadgr3FuKwS1yUO1s8+165O12oSoyTrsBJ+tWAsvJcdb9HiHtpR+2TSKqeU9Z3o4GXf3s7JPGZ7rjfhda+TbNu9UuhQWrYs35MF4o8k48IZ8C+YXSbKmGPANL7psUpdPTO9ZnP+4h9i2a/vkk6yN0Bf9rZdmHSB62c6rvGNMODGLhOcDaS8siOT1eLvdov8t6EsQWNCCbbcYQ7WaoILjs9MSgMlbEGCXmA5FeKQWSlNPDuvSBpgGqeXifQeP775ydc4s4hL3uv79Ajdsp9AlBRjDT2MkvsJR6hflUUKY64vTcCdqOzwltNRdz9EGLF5U88WMAh3jFJlUeQUS0X21YiycEEk/HeXJetb932s5r81M6b1eCEpwrDqF3y+gFtNNvCBCc7+huTP/CoeEEq4jlvx6aaEDxFk6xWb6mOYnwvs0uR0zacW+j17s/VzjZ60bS4CPXTaWeZiY5fP15QUttdH9JLkIKQmqHuNn9k4KVXAM/Zzn2BaujwqqHhcFU6P+2neatgEU/hhldvGqMCUKowt4jGgHTnlY9AbBt67f5ziZmSxCekOQ0U="
+}

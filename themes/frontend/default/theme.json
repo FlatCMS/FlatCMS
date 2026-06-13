@@ -1,0 +1,50 @@
+{
+    "name": "Default",
+    "slug": "default",
+    "description": "Thème frontend épuré et professionnel avec un design responsive adapté à tous les écrans. Parfait pour les blogs et sites de contenu avec une navigation claire et une typographie soignée.",
+    "version": "1.0.0",
+    "author": "Alain BROYE",
+    "screenshot": "screenshot.png",
+    "type": "frontend",
+    "official": true,
+    "origin": "flatcms",
+    "colors": {
+        "primary": "#2563EB",
+        "secondary": "#3B82F6",
+        "background": "#FFFFFF",
+        "surface": "#F9FAFB",
+        "text": "#111827"
+    },
+    "features": [
+        "responsive",
+        "blog",
+        "pages"
+    ],
+    "translations": {
+        "fr-FR": {
+            "name": "Default",
+            "description": "Thème frontend épuré et professionnel avec un design responsive adapté à tous les écrans. Parfait pour les blogs et sites de contenu avec une navigation claire et une typographie soignée."
+        },
+        "en-US": {
+            "name": "Default",
+            "description": "Clean and professional frontend theme with a responsive design adapted to every screen. Perfect for blogs and content sites with clear navigation and polished typography."
+        },
+        "de-DE": {
+            "name": "Default",
+            "description": "Klares und professionelles Frontend-Theme mit responsivem Design für alle Bildschirmgrößen. Perfekt für Blogs und Content-Websites mit klarer Navigation und sorgfältiger Typografie."
+        },
+        "es-ES": {
+            "name": "Default",
+            "description": "Tema frontend limpio y profesional con un diseño responsive adaptado a todas las pantallas. Perfecto para blogs y sitios de contenido con una navegación clara y una tipografía cuidada."
+        },
+        "it-IT": {
+            "name": "Default",
+            "description": "Tema frontend pulito e professionale con un design responsive adatto a tutti gli schermi. Perfetto per blog e siti di contenuto con una navigazione chiara e una tipografia curata."
+        },
+        "pt-PT": {
+            "name": "Default",
+            "description": "Tema frontend limpo e profissional com um design responsivo adaptado a todos os ecrãs. Perfeito para blogs e sites de conteúdo com navegação clara e tipografia cuidada."
+        }
+    },
+    "signature": "b4ECZpfj6Y7yFDQeAaYgc69V+yMHUFOmdPmdQNcqC12p9ev2nw8Zybqj6z9x8w878Kte3AFhxMngtLn/P5sbbTMakiQhGwjTdBNlbBgPESu/Bjr/QDkjNPWAtLe9XqgcCXtGPjbMHNb8JVA3Mf4lxPmqPLrU/CEbkyiYPePHTYjgRQ+GBSu1jqPgNz2FkK01aUg36CFZmKAoKzWV1on6kBxFmescSSfkB4vi/WKWo/4Vq0bwNtJ1qgzoIpzJoXdAie5R7zw6msYv65yleocETWB7ii4wUh0AyRu7iEYLWoW+wQiFSeIWB3bDOxVl3no07oKTPu/9wU5860ENmegQQ4/CRRmNLLQ7o9Nhe3hGityzxNGaktrQKiTk8weTmEuIvJEvUg+rxlNz3f8Wirku5o05vWvA1/W6i4azEWha8fr58tdnNfuyUYFnwmHWUFxH4gYGzWvhiUStTijluRW90muhX//kCN60nfX45nLemlcTUZYQtD5JNjLNiXhD8Al+0YKcx2o89MUbcYq84BACWlMWIIjyhgrW6vx99VhSPazYT3AGds1nQOaolAgLx6Cv0MhWSo3ZcvflBjkxt5NH+sMc9vBvi5HGCucYHcO9CJIW/BvrKidwTwIvR212V7ZJtTtailXYNqB9fMKhJUyBPpPb6fRp3XqIRG8smrKYqAg="
+}

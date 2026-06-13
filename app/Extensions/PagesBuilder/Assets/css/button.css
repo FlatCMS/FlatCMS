@@ -1,0 +1,40 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: LicenseRef-FlatCMS-Commercial
+ *
+ * Premium FlatCMS component. See LICENSING.md, COMMERCIAL_LICENSE.md and TRADEMARK.md.
+ */
+
+.fc-widget-button {
+    display: flex;
+    width: 100%;
+}
+
+.fc-widget-button--align-left {
+    justify-content: flex-start;
+}
+
+.fc-widget-button--align-center {
+    justify-content: center;
+}
+
+.fc-widget-button--align-right {
+    justify-content: flex-end;
+}
+
+.fc-widget-button__control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.fc-widget-button__control.is-static {
+    cursor: default;
+}
+
+.fc-widget-button__icon {
+    display: inline-flex;
+    line-height: 1;
+}

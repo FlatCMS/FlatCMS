@@ -1,0 +1,49 @@
+{
+    "name": "Default",
+    "slug": "default",
+    "description": "Thème d'administration clair et épuré avec une interface simple et intuitive. Idéal pour une utilisation quotidienne avec des couleurs douces et une excellente lisibilité.",
+    "version": "1.0.0",
+    "author": "Alain BROYE",
+    "screenshot": "screenshot.png",
+    "type": "admin",
+    "official": true,
+    "origin": "flatcms",
+    "colors": {
+        "primary": "#2563EB",
+        "secondary": "#3B82F6",
+        "background": "#F9FAFB",
+        "surface": "#FFFFFF",
+        "text": "#111827"
+    },
+    "features": [
+        "simple",
+        "lightweight"
+    ],
+    "translations": {
+        "fr-FR": {
+            "name": "Default",
+            "description": "Thème d'administration clair et épuré avec une interface simple et intuitive. Idéal pour une utilisation quotidienne avec des couleurs douces et une excellente lisibilité."
+        },
+        "en-US": {
+            "name": "Default",
+            "description": "Clean and light admin theme with a simple and intuitive interface. Ideal for everyday use with soft colors and excellent readability."
+        },
+        "de-DE": {
+            "name": "Default",
+            "description": "Helles und klares Administrations-Theme mit einer einfachen und intuitiven Oberfläche. Ideal für den täglichen Einsatz mit sanften Farben und hervorragender Lesbarkeit."
+        },
+        "es-ES": {
+            "name": "Default",
+            "description": "Tema de administración claro y limpio con una interfaz simple e intuitiva. Ideal para el uso diario, con colores suaves y una excelente legibilidad."
+        },
+        "it-IT": {
+            "name": "Default",
+            "description": "Tema di amministrazione chiaro e pulito con un'interfaccia semplice e intuitiva. Ideale per l'uso quotidiano, con colori morbidi e un'ottima leggibilità."
+        },
+        "pt-PT": {
+            "name": "Default",
+            "description": "Tema de administração claro e limpo com uma interface simples e intuitiva. Ideal para utilização diária, com cores suaves e excelente legibilidade."
+        }
+    },
+    "signature": "CaN/8cAkEKRPvAwOHuv7F3OKK9Sp/JsIEBJAcuCOe3DBe+vTzVJh/f+pelUlCkNYjqrl2bErqFytlXzmqZbUiv1MZPgTk5Uwye1IUb52ATe4R5ath5jLnEGJi025T6NKnuKVBVrYDHaR7hdQDvKJiP+GGOsNmUoJaCSycLsna2HFZ4apnHn/3MnbjUyqnkznyYRCQmQH6+yP/jXkGOtCWkLXp7enLnYvzuAXqGbAyYfWB3SX+Nav7jIE9LLvNlLqk3evVehbqOEEuwc3vMTz/ZB0O7LM4xNWxUsKUmFx8TBJY46LvkEFT5x14nxYAY70IWOQDIl9oFRBNBh9cUFGqciSgr26UCrufBBnccgeLqm+fqjALH61qkNSzZNy3stD3BQNSHMgXtJxoeJdVZDWEwTj0GVBmuizBZzXFODI8GNjFcNyX20uv1aKBfQMYLuSdRcMKRygquIHmuZl4PRLEfzmIQO6J4PKmGC++O64iuHo+J+EZfialUBZW2pTtDBEe6kKwxzPXKrgAvS8OYUWk3AXZEMbxTZZ1psTOWzjBvnhjMa+HqI4hs4dsO1qrGMSU4EDY/W/CMZKS8rfFTovngRSNSgxyhpSRARnWC/t2GsgEjLp6RxvEyCZvyfXELL13RCTOzjyjE3KeaydcmGQN4uwk6x2iJ7/0dbEnDfjuPo="
+}

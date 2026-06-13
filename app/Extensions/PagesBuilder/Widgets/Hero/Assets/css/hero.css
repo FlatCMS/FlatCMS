@@ -1,0 +1,275 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: LicenseRef-FlatCMS-Commercial
+ *
+ * Premium FlatCMS component. See LICENSING.md, COMMERCIAL_LICENSE.md and TRADEMARK.md.
+ */
+
+.fc-hero-wrapper {
+    display: block;
+}
+
+.fc-hero {
+    --fc-hero-height: 420px;
+    --fc-hero-overlay-strength: 0.412;
+    --fc-hero-text-color: #f8fafc;
+    --fc-hero-subtitle-color: color-mix(in srgb, #ffffff 88%, transparent);
+    --fc-hero-base-bg:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--color-primary, #4f46e5) 22%, transparent),
+            color-mix(in srgb, var(--color-bg-primary, #0f172a) 90%, transparent)
+        );
+    --fc-hero-media-bg: color-mix(in srgb, var(--color-bg-secondary, #f8fafc) 92%, transparent);
+    position: relative;
+    display: grid;
+    min-height: var(--fc-hero-height);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: var(--fc-hero-base-bg), var(--color-bg-secondary, #f8fafc);
+}
+
+.fc-hero.fc-hero-has-media {
+    background: var(--fc-hero-media-bg);
+}
+
+.fc-hero-variant-default {
+    --fc-hero-base-bg:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--color-primary, #4f46e5) 28%, transparent),
+            color-mix(in srgb, var(--color-bg-primary, #0f172a) 88%, transparent)
+        );
+    --fc-hero-media-bg: color-mix(in srgb, var(--color-bg-secondary, #f8fafc) 86%, var(--color-primary, #4f46e5));
+}
+
+.fc-hero-variant-soft {
+    --fc-hero-base-bg:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--color-primary, #4f46e5) 14%, transparent),
+            color-mix(in srgb, var(--color-bg-secondary, #f8fafc) 94%, transparent)
+        );
+    --fc-hero-media-bg: color-mix(in srgb, var(--color-bg-secondary, #f8fafc) 94%, transparent);
+}
+
+.fc-hero-variant-dark {
+    --fc-hero-base-bg:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, #020617 92%, transparent),
+            color-mix(in srgb, var(--color-bg-primary, #0f172a) 94%, transparent)
+        );
+    --fc-hero-media-bg: color-mix(in srgb, var(--color-bg-primary, #0f172a) 92%, #020617);
+}
+
+.fc-hero-media,
+.fc-hero-overlay {
+    position: absolute;
+    inset: 0;
+}
+
+.fc-hero-media {
+    z-index: 0;
+}
+
+.fc-hero-media-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
+}
+
+.fc-hero.fc-hero-media-fit-cover .fc-hero-media-image {
+    object-fit: cover;
+}
+
+.fc-hero.fc-hero-media-fit-contain .fc-hero-media-image {
+    object-fit: contain;
+    object-position: center;
+}
+
+.fc-hero-overlay {
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+        180deg,
+        rgb(15 23 42 / calc(var(--fc-hero-overlay-strength, 0.35) * 0.45)),
+        rgb(15 23 42 / calc(var(--fc-hero-overlay-strength, 0.35) * 1.35))
+    );
+}
+
+.fc-hero-variant-default .fc-hero-overlay {
+    background: linear-gradient(
+        180deg,
+        rgb(2 6 23 / calc(var(--fc-hero-overlay-strength, 0.35) * 0.95)),
+        rgb(15 23 42 / calc(var(--fc-hero-overlay-strength, 0.35) * 1.15))
+    );
+}
+
+.fc-hero-variant-soft .fc-hero-overlay {
+    background: linear-gradient(
+        180deg,
+        rgb(15 23 42 / calc(var(--fc-hero-overlay-strength, 0.35) * 0.6)),
+        rgb(15 23 42 / calc(var(--fc-hero-overlay-strength, 0.35) * 0.9))
+    );
+}
+
+.fc-hero-variant-dark .fc-hero-overlay {
+    background: linear-gradient(
+        180deg,
+        rgb(2 6 23 / calc(var(--fc-hero-overlay-strength, 0.35) * 1.05)),
+        rgb(2 6 23 / calc(var(--fc-hero-overlay-strength, 0.35) * 1.15))
+    );
+}
+
+.fc-hero-content {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    align-content: center;
+    gap: 0.6rem;
+    min-height: var(--fc-hero-height);
+    padding: 1.05rem;
+    color: var(--fc-hero-text-color, #f8fafc);
+}
+
+.fc-hero-content-align-left {
+    justify-items: start;
+    text-align: left;
+}
+
+.fc-hero-content-align-center {
+    justify-items: center;
+    text-align: center;
+}
+
+.fc-hero-content-align-right {
+    justify-items: end;
+    text-align: right;
+}
+
+.fc-hero-content-align-left .fc-hero-title,
+.fc-hero-content-align-left .fc-hero-subtitle {
+    justify-self: start;
+}
+
+.fc-hero-content-align-center .fc-hero-title,
+.fc-hero-content-align-center .fc-hero-subtitle {
+    justify-self: center;
+}
+
+.fc-hero-content-align-right .fc-hero-title,
+.fc-hero-content-align-right .fc-hero-subtitle {
+    justify-self: end;
+}
+
+.fc-hero-title {
+    margin: 0;
+    font-size: var(--fc-heading-h2-size, clamp(1.9rem, 3.8vw, 3rem));
+    line-height: var(--fc-heading-h2-line-height, 1.05);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: inherit;
+}
+
+.fc-hero-subtitle {
+    margin: 0;
+    max-width: 64ch;
+    font-size: var(--fc-body-lg-size, 1rem);
+    line-height: var(--fc-body-lg-line-height, 1.7);
+    color: var(--fc-hero-subtitle-color, color-mix(in srgb, #ffffff 88%, transparent));
+}
+
+.fc-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    width: 100%;
+    justify-self: stretch;
+    margin-top: 0.75rem;
+}
+
+.fc-hero-actions-align-left {
+    justify-content: flex-start;
+}
+
+.fc-hero-actions-align-center {
+    justify-content: center;
+}
+
+.fc-hero-actions-align-right {
+    justify-content: flex-end;
+}
+
+.fc-hero .pb-btn {
+    text-decoration: none;
+}
+
+.fc-hero .pb-btn:hover,
+.fc-hero .pb-btn:focus-visible {
+    text-decoration: none;
+}
+
+.fc-hero .pb-btn.is-static {
+    cursor: default;
+}
+
+.pb-block-preview .fc-hero,
+.pb-block-preview .pb-preview-hero-card {
+    --fc-preview-btn-radius: 4px;
+    --fc-btn-radius: 4px;
+}
+
+.pb-block-preview .fc-hero .btn,
+.pb-block-preview .fc-hero .pb-btn,
+.pb-block-preview .pb-preview-hero-card .btn,
+.pb-block-preview .pb-preview-hero-card .pb-btn {
+    border-radius: 4px !important;
+}
+
+.prose .fc-hero-title,
+.prose .fc-hero-subtitle {
+    margin: 0;
+    color: inherit;
+}
+
+.prose .fc-hero-title {
+    font-size: var(--fc-heading-h2-size, clamp(1.9rem, 3.8vw, 3rem));
+    line-height: var(--fc-heading-h2-line-height, 1.05);
+}
+
+.prose .fc-hero-media-image {
+    margin: 0;
+    max-width: none;
+    border-radius: 0;
+}
+
+.prose .fc-hero .pb-btn,
+.prose .fc-hero .pb-btn:hover,
+.prose .fc-hero .pb-btn:focus-visible {
+    text-decoration: none;
+}
+
+@media (max-width: 767px) {
+    .fc-hero {
+        min-height: min(var(--fc-hero-height), 420px);
+    }
+
+    .fc-hero-content {
+        padding: 1rem;
+    }
+
+    .fc-hero-title {
+        font-size: var(--fc-heading-h2-size, clamp(1.9rem, 3.8vw, 3rem));
+    }
+
+    .fc-hero-subtitle {
+        font-size: var(--fc-body-lg-size, 1rem);
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "name": "Contact",
+    "version": "1.0.0",
+    "description": "Native contact form and message inbox.",
+    "type": "content",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": "We22l/jjdLbzQ1ezZAGcSx+vCwMxHXjCWLmB6xud0EvraIox2DrXyPP7l+7epCJdGJfdmk70obUpaCgUZcHF62xvWcww8leejI4YXO1wIubxHB17U8PJW02f6JIPPmb/kY3CRvtP0rKk1++G1wnBR7eYDpyotdvmm5riKbxFnTYZFwCr1GN1eiX+ZB7DMQhUaVnIx7Jw0IlhxVObS/xui5G9Qqj+bxcY+KAqXcwOqH9zI7mWcOnu76nj7bD/a1OnoZ0IfNk3K14f1WKtJRexfrNhUkGQroh70Ia5vMbu7z46RVfXF4Diy1gFR5cJFto7oUa/qE1NS4u0g2a4gn4Hpwejv56MGAKn4mctImJPH8vuPFQa57EGRnBClg3dcQF92hWiOHUrr7PyEUF/PMqp/Fychex3TcbMYnWTuc3H5+1uEyNpB2HEINjG0e8KcBeuthYEeHJ2UXrImq6+0U7jdpoQh2GSCWhAcpsc4dYhRvSvt4RUtVwW2Ey64HD2oqr7h4bkWJVMzmwh8roxKlvzG5N+RlyCREVs6e+GlATqS9AEv17a2Nf1KQcUoo8UT4OykC1A9uaryf60tkwXDtNXAh1H5aeK13LmZeC+5bM7RylR8VytNeTVG3/w5vmZ84F3ITr31kRxHqISYm8y7BANHZ5JOPHy0RXjVc7VW43grF8="
+}

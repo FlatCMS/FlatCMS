@@ -1,0 +1,17 @@
+{
+    "name": "Modules",
+    "version": "1.0.0",
+    "description": "Modules manager.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "dependencies": [
+        "Auth",
+        "Core"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": "k2BLoF7OyoRz8+Hoh/RdPLGj9t5KteHxBovNl6slvPgEq01attNr+qp2jxuH6cGy0GNmtBjJjtqTnAQWz3rCjKpfzmbCx3FpIsLzhhVzvDvApKCcCariVd9XwZZ1crIHkxHhu9juuw6OM7bM4tVnyflT4gsUoGJGpLyzP6QpvYjvJoxAIhAyfKrGDKjvI8zhhsA3IDoGuOYRPbGMzy9VW01ry7p6PCmTH++HwDSktlC2vnuauT/3KMr+yWlTi+ddvfxdn/0O2UBLNCeesHPD4c1xYtTS/k3/krlRKK3bUisR8mlIUu45bt7/TaoNGr37rQsYZe4MZIGpu59/U7lyc32qiCLkpH7ZQlBMKxMtfv1/9oXfQqhTttavlWUH5S0zg+PU+SaVP5RBGKx8z0LThF3hGF8kKngpHHFZ1dbvqYHoG6INfgK+W9xo/S4TnPOsqizKuQ6UthK9ixDyk4/FhucgWIGbmAfQ5Dvq3RZKt1L4pzcK8uNUQa8fYC0MwrqgEAMqt7dyXwgnHlV7ZohtS4JZQstIcDErT8sUZhgJ0ax8yhRUiK+pp/QNOM+b7/mhG7YK6sk0leMdEiGz/akO4klrMUOPdU0ielGSU8I4bbgHIHzskS+d3aO9c20iltjVXx46DZ26wD5FrD3DFrkVp2NCM+mvnIBAOPEtaZGPHHM="
+}
