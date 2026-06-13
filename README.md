@@ -30,8 +30,9 @@ outside this repository.
 
 This repository is a **runtime core repository**.
 
-It excludes packaging automation and operational release tooling. Distribution
-assembly belongs to a separate release lane.
+It excludes internal documentation, packaging automation, operational release
+tooling, and non-public QA suites. Distribution assembly belongs to a separate
+release lane.
 
 ## Installer Contract
 
