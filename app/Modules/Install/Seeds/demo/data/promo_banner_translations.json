@@ -1,11 +1,5 @@
 {
-  "source_locale": "fr-FR",
   "translations": {
-    "fr-FR": {
-      "text": "\"Atelier\" : Découverte de la poterie du 25 au 30 mai 2026",
-      "cta_label": "S'inscrire",
-      "cta_url": "/page/contact"
-    },
     "en-US": {
       "text": "\"Workshop\": Discover pottery from May 25 to 30, 2026",
       "cta_label": "Register",

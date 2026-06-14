@@ -14,9 +14,11 @@ $ctaLabel = trim((string) ($promoBanner['cta_label'] ?? ''));
 $ctaUrl = trim((string) ($promoBanner['cta_url'] ?? ''));
 $ctaVariant = trim((string) ($promoBanner['cta_variant'] ?? 'primary'));
 $alignment = trim((string) ($promoBanner['alignment'] ?? 'left'));
+$position = trim((string) ($promoBanner['position'] ?? 'above_topbar'));
+$slot = trim((string) ($promoBannerSlot ?? 'above_topbar'));
 $hasCta = $ctaLabel !== '' && $ctaUrl !== '';
 
-if (empty($promoBanner['enabled']) || ($bannerText === '' && !$hasCta)) {
+if (empty($promoBanner['enabled']) || ($bannerText === '' && !$hasCta) || $position !== $slot) {
     return;
 }
 

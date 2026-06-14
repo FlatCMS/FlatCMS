@@ -18,6 +18,8 @@
   "promo_banner_cta_url": "/page/contact",
   "promo_banner_cta_variant": "primary",
   "promo_banner_alignment": "center",
+  "promo_banner_position": "above_topbar",
+  "promo_banner_min_height": 52,
   "promo_banner_background_color": "#D48C70",
   "promo_banner_text_color": "#FFFFFF"
 }

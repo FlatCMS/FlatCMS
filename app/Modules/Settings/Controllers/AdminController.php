@@ -263,6 +263,8 @@ class AdminController extends BaseController
             'promo_banner_cta_url',
             'promo_banner_cta_variant',
             'promo_banner_alignment',
+            'promo_banner_position',
+            'promo_banner_min_height',
             'promo_banner_background_color',
             'promo_banner_text_color',
             // Mail
@@ -310,11 +312,9 @@ class AdminController extends BaseController
         );
 
         $brandingState = $brandingService->prepareSavePayload($brandingInput, $merged, $defaultLanguage);
-        $promoBannerSourceLocale = trim((string) $this->request->input('promo_banner_source_locale', ''));
         $promoBannerState = $promoBannerService->prepareTranslationPayload(
             $promoBannerTranslationsInput,
-            $merged,
-            $promoBannerSourceLocale !== '' ? $promoBannerSourceLocale : $defaultLanguage
+            $merged
         );
         $sourceLocale = (string) ($brandingState['source_locale'] ?? $defaultLanguage);
         $sourceTranslation = $brandingState['translations'][$sourceLocale] ?? [];

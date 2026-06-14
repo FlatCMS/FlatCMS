@@ -14,10 +14,14 @@
 <?php include __DIR__ . '/../partials/head.php'; ?>
 <body id="flatcms">
     <!-- Promo Banner -->
+    <?php $promoBannerSlot = 'above_topbar'; ?>
     <?php include __DIR__ . '/../partials/promo-banner.php'; ?>
 
     <!-- Header -->
     <?php include __DIR__ . '/../partials/header.php'; ?>
+
+    <?php $promoBannerSlot = 'below_topbar'; ?>
+    <?php include __DIR__ . '/../partials/promo-banner.php'; ?>
 
     <!-- Flash Messages -->
     <?php if (!empty($flash['success']) || !empty($flash['error']) || !empty($flash['warning']) || !empty($frontendNotice['message'])): ?>
@@ -42,8 +46,14 @@
         <?= $content ?>
     </main>
 
+    <?php $promoBannerSlot = 'above_footer'; ?>
+    <?php include __DIR__ . '/../partials/promo-banner.php'; ?>
+
     <!-- Footer -->
     <?php include __DIR__ . '/../partials/footer.php'; ?>
+
+    <?php $promoBannerSlot = 'below_footer'; ?>
+    <?php include __DIR__ . '/../partials/promo-banner.php'; ?>
 
     <?php include __DIR__ . '/../partials/scripts.php'; ?>
 </body>

@@ -1128,7 +1128,7 @@ span.logo-icon {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 52px;
+  min-height: var(--promo-banner-min-height, 52px);
   padding: 0.75rem 0;
 }
 

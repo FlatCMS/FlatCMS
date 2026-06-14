@@ -20,6 +20,10 @@ final class PromoBannerService
     private const HEX_COLOR_PATTERN = '/^#[0-9A-Fa-f]{6}$/';
     private const CTA_VARIANTS = ['primary', 'secondary', 'outline', 'ghost'];
     private const ALIGNMENTS = ['left', 'center', 'right'];
+    private const POSITIONS = ['above_topbar', 'below_topbar', 'above_footer', 'below_footer'];
+    private const MIN_HEIGHT_DEFAULT = 52;
+    private const MIN_HEIGHT_MIN = 40;
+    private const MIN_HEIGHT_MAX = 160;
     private const TRANSLATABLE_FIELDS = ['text', 'cta_label', 'cta_url'];
 
     public function defaults(): array
@@ -31,6 +35,8 @@ final class PromoBannerService
             'cta_url' => '',
             'cta_variant' => 'primary',
             'alignment' => 'left',
+            'position' => 'above_topbar',
+            'min_height' => self::MIN_HEIGHT_DEFAULT,
             'background_color' => '#111827',
             'text_color' => '#FFFFFF',
         ];
@@ -54,6 +60,8 @@ final class PromoBannerService
             'cta_url' => $this->normalizeUrl((string) ($settings['promo_banner_cta_url'] ?? '')),
             'cta_variant' => $this->normalizeVariant((string) ($settings['promo_banner_cta_variant'] ?? '')),
             'alignment' => $this->normalizeAlignment((string) ($settings['promo_banner_alignment'] ?? '')),
+            'position' => $this->normalizePosition((string) ($settings['promo_banner_position'] ?? '')),
+            'min_height' => $this->normalizeMinHeight($settings['promo_banner_min_height'] ?? $defaults['min_height']),
             'background_color' => $this->normalizeColor((string) ($settings['promo_banner_background_color'] ?? ''), (string) $defaults['background_color']),
             'text_color' => $this->normalizeColor((string) ($settings['promo_banner_text_color'] ?? ''), (string) $defaults['text_color']),
         ];
@@ -128,6 +136,8 @@ final class PromoBannerService
         $settings['promo_banner_cta_url'] = $normalized['cta_url'];
         $settings['promo_banner_cta_variant'] = $normalized['cta_variant'];
         $settings['promo_banner_alignment'] = $normalized['alignment'];
+        $settings['promo_banner_position'] = $normalized['position'];
+        $settings['promo_banner_min_height'] = $normalized['min_height'];
         $settings['promo_banner_background_color'] = $normalized['background_color'];
         $settings['promo_banner_text_color'] = $normalized['text_color'];
 
@@ -148,7 +158,8 @@ final class PromoBannerService
      */
     public function saveTranslations(array $state): bool
     {
-        return FlatFile::saveSettings($this->normalizeTranslationState($state), self::SETTINGS_KEY);
+        $normalizedState = $this->normalizeTranslationState($state);
+        return FlatFile::saveSettings($this->persistTranslationState($normalizedState), self::SETTINGS_KEY);
     }
 
     /**
@@ -156,13 +167,10 @@ final class PromoBannerService
      * @param array<string, mixed> $settings
      * @return array<string, mixed>
      */
-    public function prepareTranslationPayload(array $submitted, array $settings, string $sourceLocale): array
+    public function prepareTranslationPayload(array $submitted, array $settings): array
     {
         $existing = $this->readTranslations($settings);
-        $normalizedSourceLocale = $this->normalizeLocale($sourceLocale);
-        if ($normalizedSourceLocale === '') {
-            $normalizedSourceLocale = (string) ($existing['source_locale'] ?? $this->defaultLocale($settings));
-        }
+        $normalizedSourceLocale = $this->defaultLocale($settings);
 
         $translations = [];
         foreach ($this->supportedLocales() as $locale) {
@@ -267,10 +275,7 @@ final class PromoBannerService
     private function normalizeTranslationState(array $state, ?array $settings = null): array
     {
         $settings = $settings ?? FlatFile::settings();
-        $sourceLocale = $this->normalizeLocale((string) ($state['source_locale'] ?? ''));
-        if ($sourceLocale === '') {
-            $sourceLocale = $this->defaultLocale($settings);
-        }
+        $sourceLocale = $this->defaultLocale($settings);
 
         $rawTranslations = $state['translations'] ?? [];
         if (!is_array($rawTranslations)) {
@@ -304,6 +309,42 @@ final class PromoBannerService
         ];
     }
 
+    /**
+     * Persist only secondary locales.
+     *
+     * The source/default locale remains canonical in settings.json to avoid
+     * storing the same banner copy twice.
+     *
+     * @param array<string, mixed> $state
+     * @return array<string, mixed>
+     */
+    private function persistTranslationState(array $state): array
+    {
+        $sourceLocale = $this->normalizeLocale((string) ($state['source_locale'] ?? ''));
+        $rawTranslations = $state['translations'] ?? [];
+        if (!is_array($rawTranslations)) {
+            $rawTranslations = [];
+        }
+
+        $translations = [];
+        foreach ($rawTranslations as $locale => $entry) {
+            $normalizedLocale = $this->normalizeLocale((string) $locale);
+            if ($normalizedLocale === '' || $normalizedLocale === $sourceLocale || !is_array($entry)) {
+                continue;
+            }
+
+            $normalizedEntry = $this->normalizeTranslation($entry, null);
+            if (!$this->isEmptyTranslation($normalizedEntry)) {
+                $translations[$normalizedLocale] = $normalizedEntry;
+            }
+        }
+
+        return [
+            'updated_at' => trim((string) ($state['updated_at'] ?? '')),
+            'translations' => $translations === [] ? (object) [] : $translations,
+        ];
+    }
+
     private function buildRuntimeCss(array $banner): string
     {
         $backgroundColor = (string) ($banner['background_color'] ?? '');
@@ -316,6 +357,7 @@ final class PromoBannerService
             '.site-promo-banner {',
             '  --promo-banner-bg: ' . $backgroundColor . ';',
             '  --promo-banner-text: ' . $textColor . ';',
+            '  --promo-banner-min-height: ' . (int) ($banner['min_height'] ?? self::MIN_HEIGHT_DEFAULT) . 'px;',
             '}',
         ]);
     }
@@ -388,6 +430,34 @@ final class PromoBannerService
         }
 
         return $value;
+    }
+
+    private function normalizePosition(string $value): string
+    {
+        $value = strtolower(trim($value));
+        if (!in_array($value, self::POSITIONS, true)) {
+            return 'above_topbar';
+        }
+
+        return $value;
+    }
+
+    private function normalizeMinHeight(mixed $value): int
+    {
+        $height = filter_var($value, FILTER_VALIDATE_INT);
+        if ($height === false) {
+            return self::MIN_HEIGHT_DEFAULT;
+        }
+
+        if ($height < self::MIN_HEIGHT_MIN) {
+            return self::MIN_HEIGHT_MIN;
+        }
+
+        if ($height > self::MIN_HEIGHT_MAX) {
+            return self::MIN_HEIGHT_MAX;
+        }
+
+        return $height;
     }
 
     private function normalizeColor(string $value, string $fallback): string

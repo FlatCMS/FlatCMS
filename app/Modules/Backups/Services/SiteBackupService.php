@@ -1045,15 +1045,8 @@ final class SiteBackupService
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
         $files['data/promo_banner_translations.json'] = $this->encodeJson([
-            'source_locale' => $defaultLanguage,
             'updated_at' => date('Y-m-d H:i:s'),
-            'translations' => [
-                $defaultLanguage => [
-                    'text' => '',
-                    'cta_label' => '',
-                    'cta_url' => '',
-                ],
-            ],
+            'translations' => (object) [],
         ]);
         $files['data/menus/menus.json'] = $this->encodeJson($this->buildResetMenusPayload());
         $files['data/footer/footer.json'] = $this->encodeJson($this->buildResetFooterPayload($settings, $defaultLanguage));
@@ -1150,6 +1143,8 @@ final class SiteBackupService
         $settings['promo_banner_text'] = '';
         $settings['promo_banner_cta_label'] = '';
         $settings['promo_banner_cta_url'] = '';
+        $settings['promo_banner_position'] = 'above_topbar';
+        $settings['promo_banner_min_height'] = 52;
 
         return $settings;
     }

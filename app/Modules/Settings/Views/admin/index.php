@@ -204,7 +204,6 @@ $promoBannerConfig = is_array($promoBannerUi['config'] ?? null) ? $promoBannerUi
 $promoBannerTranslationUi = is_array($promoBannerUi['translation_ui'] ?? null) ? $promoBannerUi['translation_ui'] : [];
 $promoBannerTranslationTabs = is_array($promoBannerTranslationUi['tabs'] ?? null) ? $promoBannerTranslationUi['tabs'] : [];
 $promoBannerActiveLocale = (string) ($promoBannerTranslationUi['active_locale'] ?? $selectedDefaultLanguage);
-$promoBannerSourceLocale = (string) ($promoBannerTranslationUi['source_locale'] ?? $selectedDefaultLanguage);
 $promoBannerEnabledValue = (string) old('promo_banner_enabled', !empty($promoBannerConfig['enabled']) ? '1' : '0');
 $promoBannerEnabled = in_array($promoBannerEnabledValue, ['1', 'true', 'on', 'yes'], true);
 $promoBannerCtaVariant = (string) old('promo_banner_cta_variant', (string) ($promoBannerConfig['cta_variant'] ?? 'primary'));
@@ -214,6 +213,18 @@ if (!in_array($promoBannerCtaVariant, ['primary', 'secondary', 'outline', 'ghost
 $promoBannerAlignment = (string) old('promo_banner_alignment', (string) ($promoBannerConfig['alignment'] ?? 'left'));
 if (!in_array($promoBannerAlignment, ['left', 'center', 'right'], true)) {
     $promoBannerAlignment = 'left';
+}
+$promoBannerPosition = (string) old('promo_banner_position', (string) ($promoBannerConfig['position'] ?? 'above_topbar'));
+if (!in_array($promoBannerPosition, ['above_topbar', 'below_topbar', 'above_footer', 'below_footer'], true)) {
+    $promoBannerPosition = 'above_topbar';
+}
+$promoBannerMinHeight = (int) old('promo_banner_min_height', (string) ($promoBannerConfig['min_height'] ?? '52'));
+if ($promoBannerMinHeight <= 0) {
+    $promoBannerMinHeight = 52;
+} elseif ($promoBannerMinHeight < 40) {
+    $promoBannerMinHeight = 40;
+} elseif ($promoBannerMinHeight > 160) {
+    $promoBannerMinHeight = 160;
 }
 $promoBannerBackgroundColor = (string) old('promo_banner_background_color', (string) ($promoBannerConfig['background_color'] ?? '#111827'));
 $promoBannerTextColor = (string) old('promo_banner_text_color', (string) ($promoBannerConfig['text_color'] ?? '#FFFFFF'));
@@ -713,7 +724,6 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                         value="<?= e($promoBannerActiveLocale) ?>"
                         data-promo-banner-active-locale
                     >
-                    <input type="hidden" name="promo_banner_source_locale" value="<?= e($promoBannerSourceLocale) ?>">
 
                     <div class="form-group">
                         <label class="form-inline">
@@ -820,6 +830,34 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                             </div>
                         </section>
                         <?php endforeach; ?>
+                    </div>
+
+                    <div class="settings-promo-banner-grid">
+                        <div class="form-group">
+                            <label for="promo_banner_position" class="form-label"><?= __('promo_banner_position', 'Settings') ?></label>
+                            <select id="promo_banner_position" name="promo_banner_position" class="form-input">
+                                <option value="above_topbar" <?= selected('above_topbar', $promoBannerPosition) ?>><?= __('promo_banner_position_above_topbar', 'Settings') ?></option>
+                                <option value="below_topbar" <?= selected('below_topbar', $promoBannerPosition) ?>><?= __('promo_banner_position_below_topbar', 'Settings') ?></option>
+                                <option value="above_footer" <?= selected('above_footer', $promoBannerPosition) ?>><?= __('promo_banner_position_above_footer', 'Settings') ?></option>
+                                <option value="below_footer" <?= selected('below_footer', $promoBannerPosition) ?>><?= __('promo_banner_position_below_footer', 'Settings') ?></option>
+                            </select>
+                            <div class="form-hint"><?= __('promo_banner_position_hint', 'Settings') ?></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="promo_banner_min_height" class="form-label"><?= __('promo_banner_min_height', 'Settings') ?></label>
+                            <input
+                                type="number"
+                                id="promo_banner_min_height"
+                                name="promo_banner_min_height"
+                                class="form-input"
+                                min="40"
+                                max="160"
+                                step="2"
+                                value="<?= e((string) $promoBannerMinHeight) ?>"
+                            >
+                            <div class="form-hint"><?= __('promo_banner_min_height_hint', 'Settings') ?></div>
+                        </div>
                     </div>
 
                     <div class="settings-promo-banner-grid">

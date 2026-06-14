@@ -58,8 +58,14 @@ $indentHtml = static function (string $html, int $level): string {
 };
 
 ob_start();
+$promoBannerSlot = 'above_topbar';
 include __DIR__ . '/../partials/promo-banner.php';
-$promoBannerHtml = $indentHtml((string) ob_get_clean(), 1);
+$promoBannerAboveTopbarHtml = $indentHtml((string) ob_get_clean(), 1);
+
+ob_start();
+$promoBannerSlot = 'below_topbar';
+include __DIR__ . '/../partials/promo-banner.php';
+$promoBannerBelowTopbarHtml = $indentHtml((string) ob_get_clean(), 1);
 
 ob_start();
 include __DIR__ . '/../partials/header.php';
@@ -74,6 +80,16 @@ $contentHtml = $indentHtml((string) $content, 2);
 ob_start();
 include __DIR__ . '/../partials/footer.php';
 $footerHtml = $indentHtml((string) ob_get_clean(), 1);
+
+ob_start();
+$promoBannerSlot = 'above_footer';
+include __DIR__ . '/../partials/promo-banner.php';
+$promoBannerAboveFooterHtml = $indentHtml((string) ob_get_clean(), 1);
+
+ob_start();
+$promoBannerSlot = 'below_footer';
+include __DIR__ . '/../partials/promo-banner.php';
+$promoBannerBelowFooterHtml = $indentHtml((string) ob_get_clean(), 1);
 
 ob_start();
 include __DIR__ . '/../partials/scripts.php';
@@ -94,8 +110,9 @@ $frontendRuntimeLabels = [
     <div class="bg-gradient"></div>
 
     <!-- Header -->
-<?= $promoBannerHtml !== '' ? $promoBannerHtml . PHP_EOL : '' ?>
+<?= $promoBannerAboveTopbarHtml !== '' ? $promoBannerAboveTopbarHtml . PHP_EOL : '' ?>
 <?= $headerHtml !== '' ? $headerHtml . PHP_EOL : '' ?>
+<?= $promoBannerBelowTopbarHtml !== '' ? $promoBannerBelowTopbarHtml . PHP_EOL : '' ?>
 <?= $flashHtml !== '' ? $flashHtml . PHP_EOL : '' ?>
 
     <!-- Main -->
@@ -104,7 +121,9 @@ $frontendRuntimeLabels = [
     </main>
 
     <!-- Footer -->
+<?= $promoBannerAboveFooterHtml !== '' ? $promoBannerAboveFooterHtml . PHP_EOL : '' ?>
 <?= $footerHtml !== '' ? $footerHtml . PHP_EOL : '' ?>
+<?= $promoBannerBelowFooterHtml !== '' ? $promoBannerBelowFooterHtml . PHP_EOL : '' ?>
 <?= $scriptsHtml !== '' ? $scriptsHtml . PHP_EOL : '' ?>
 </body>
 </html>
