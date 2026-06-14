@@ -170,9 +170,10 @@ final class Renderer extends AbstractWidgetRenderer
                 };
 
                 $renderFallbackField = static function (array $field, int $index) use ($escape, $escapeAttr, $blockDomId, $resolveAutocomplete): string {
-                    $fieldId = $blockDomId . '-' . $index . '-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', (string) ($field['key'] ?? 'field'));
+                    $fieldKey = trim((string) ($field['key'] ?? 'field'));
+                    $fieldId = $blockDomId . '-' . $index . '-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $fieldKey);
                     $fieldId = is_string($fieldId) ? $fieldId : 'pb-contact-widget-field-' . $index;
-                    $fieldName = 'cf[' . (string) ($field['key'] ?? 'field') . ']';
+                    $fieldName = 'cf[' . $fieldKey . ']';
                     $fieldType = strtolower(trim((string) ($field['type'] ?? 'text')));
                     $fieldLabel = trim((string) ($field['label'] ?? ''));
                     $fieldPlaceholder = trim((string) ($field['placeholder'] ?? ''));
