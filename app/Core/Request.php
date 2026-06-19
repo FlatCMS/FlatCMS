@@ -30,6 +30,22 @@ class Request
             $raw = (string) ($_GET['path'] ?? $_GET['route']);
             $raw = rawurldecode($raw);
             $raw = trim($raw);
+
+            if (str_contains($raw, '?')) {
+                [$rawPath, $embeddedQuery] = array_pad(explode('?', $raw, 2), 2, '');
+                $raw = trim($rawPath);
+                if ($embeddedQuery !== '') {
+                    parse_str($embeddedQuery, $embeddedParams);
+                    if (is_array($embeddedParams)) {
+                        foreach ($embeddedParams as $key => $value) {
+                            if (is_string($key) && $key !== '' && !isset($_GET[$key])) {
+                                $_GET[$key] = $value;
+                            }
+                        }
+                    }
+                }
+            }
+
             if ($raw === '' || $raw === '/') {
                 return '/';
             }
@@ -294,6 +310,16 @@ class Request
     {
         $scheme = $this->isSecure() ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $requestUri = trim((string) ($_SERVER['REQUEST_URI'] ?? ''));
+
+        if ($requestUri !== '') {
+            if (!str_starts_with($requestUri, '/')) {
+                $requestUri = '/' . ltrim($requestUri, '/');
+            }
+
+            return $scheme . '://' . $host . $requestUri;
+        }
+
         return $scheme . '://' . $host . $this->originalUri;
     }
 }

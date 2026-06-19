@@ -53,8 +53,10 @@ final class Renderer extends AbstractWidgetRenderer
             $designBorderColor = self::normalizeColor((string) ($settings['designBorderColor'] ?? ''));
             $designRadius = $normalizeDesignInt($settings['designRadius'] ?? 20, 20, 0, 48);
             $designShadow = self::normalizeShadowPreset((string) ($settings['designShadow'] ?? 'inherit'));
-            $sourceUrl = url(app()->request()->uri());
-            $shortcodeContext = ['source_url' => $sourceUrl];
+            $sourceUrl = trim((string) ($context['source_url'] ?? ''));
+            if ($sourceUrl === '') {
+                $sourceUrl = function_exists('url') ? (string) url('/contact') : '/contact';
+            }
             $embeddedForm = '';
             $formCatalog = new PageBuilderContactFormCatalogService();
             $selectedBuilderForm = null;
@@ -87,11 +89,26 @@ final class Renderer extends AbstractWidgetRenderer
                 $formSlug = trim((string) ($selectedBuilderForm['slug'] ?? ''));
             }
 
-            if (function_exists('flatcms_render_shortcode_tag')) {
-                $embeddedForm = trim((string) flatcms_render_shortcode_tag('contact-form', ['slug' => $formSlug], $shortcodeContext));
-                if ($embeddedForm === '' && $formSlug !== '') {
-                    $embeddedForm = trim((string) flatcms_render_shortcode_tag('contact-form', [], $shortcodeContext));
+            $shortcodeSlug = preg_replace('/[^a-zA-Z0-9_-]+/', '', (string) $formSlug);
+            $shortcodeSlug = is_string($shortcodeSlug) && $shortcodeSlug !== '' ? $shortcodeSlug : 'contact-main';
+            $renderContent = is_callable($helpers['render_content'] ?? null)
+                ? $helpers['render_content']
+                : (is_callable($helpers['sanitize_rich_text'] ?? null) ? $helpers['sanitize_rich_text'] : null);
+            if (is_callable($renderContent)) {
+                try {
+                    $embeddedForm = trim((string) $renderContent('[contact-form slug="' . $shortcodeSlug . '"]'));
+                } catch (\Throwable) {
+                    $embeddedForm = '';
                 }
+            } elseif (function_exists('flatcms_render_shortcodes')) {
+                try {
+                    $embeddedForm = trim((string) flatcms_render_shortcodes('[contact-form slug="' . $shortcodeSlug . '"]', ['source_url' => $sourceUrl]));
+                } catch (\Throwable) {
+                    $embeddedForm = '';
+                }
+            }
+            if ($embeddedForm === '[contact-form slug="' . $shortcodeSlug . '"]' || str_contains($embeddedForm, '[contact-form')) {
+                $embeddedForm = '';
             }
 
             $shortcodeUnavailable = $embeddedForm !== '' && (
@@ -170,10 +187,10 @@ final class Renderer extends AbstractWidgetRenderer
                 };
 
                 $renderFallbackField = static function (array $field, int $index) use ($escape, $escapeAttr, $blockDomId, $resolveAutocomplete): string {
-                    $fieldKey = trim((string) ($field['key'] ?? 'field'));
-                    $fieldId = $blockDomId . '-' . $index . '-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $fieldKey);
+                    $fieldId = $blockDomId . '-' . $index . '-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', (string) ($field['key'] ?? 'field'));
                     $fieldId = is_string($fieldId) ? $fieldId : 'pb-contact-widget-field-' . $index;
-                    $fieldName = 'cf[' . $fieldKey . ']';
+                    $fieldKey = trim((string) ($field['key'] ?? 'field'));
+                    $fieldName = 'cf[' . (string) ($field['key'] ?? 'field') . ']';
                     $fieldType = strtolower(trim((string) ($field['type'] ?? 'text')));
                     $fieldLabel = trim((string) ($field['label'] ?? ''));
                     $fieldPlaceholder = trim((string) ($field['placeholder'] ?? ''));

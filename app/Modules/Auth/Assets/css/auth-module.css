@@ -10,6 +10,16 @@
   max-width: 560px;
 }
 
+.auth-page.auth-page-login {
+  align-items: center;
+}
+
+@supports (min-height: 100svh) {
+  .auth-page.auth-page-login {
+    min-height: 100svh;
+  }
+}
+
 .auth-alert-info {
   background: #eef2ff;
   border: 1px solid #c7d2fe;

@@ -232,8 +232,8 @@ $languagesIndexJsVersion = is_file($languagesIndexJsPath) ? (string) filemtime($
                             </form>
                             <form action="<?= url("/admin/languages/{$code}/delete") ?>" method="POST" class="form-inline">
                                 <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-sm btn-danger" data-action="confirm-delete" data-item-name="<?= e($lang['native'] ?? $lang['name'] ?? $code) ?>">
-                                    <i class="fas fa-trash"></i>
+                                <button type="submit" class="btn btn-sm btn-danger" data-action="confirm-delete" data-item-name="<?= e($lang['native'] ?? $lang['name'] ?? $code) ?>" title="<?= e(__('delete', 'Core')) ?>" aria-label="<?= e(__('delete', 'Core')) ?>">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
                                 </button>
                             </form>
                         <?php endif; ?>

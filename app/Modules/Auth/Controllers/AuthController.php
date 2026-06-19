@@ -38,6 +38,124 @@ class AuthController extends BaseController
         I18n::load('Auth');
     }
 
+    private function normalizeIntendedRedirect(string $intended): string
+    {
+        $intended = trim($intended);
+        if ($intended === '' || str_starts_with($intended, '//')) {
+            return url('/admin');
+        }
+
+        $parts = parse_url($intended);
+        if ($parts === false) {
+            return url('/admin');
+        }
+
+        $isAbsolute = isset($parts['scheme']) || isset($parts['host']);
+        if ($isAbsolute && !$this->isSameOriginRedirect($parts)) {
+            return url('/admin');
+        }
+
+        $path = (string) ($parts['path'] ?? '');
+        $query = (string) ($parts['query'] ?? '');
+
+        if ($path === '' && $query === '') {
+            return url('/admin');
+        }
+
+        $isIndexFallback = str_ends_with($path, '/index.php') || $path === 'index.php';
+        if ($isIndexFallback && $query !== '') {
+            parse_str($query, $params);
+            $route = '';
+            if (isset($params['path']) && is_scalar($params['path'])) {
+                $route = trim((string) $params['path']);
+                unset($params['path']);
+            } elseif (isset($params['route']) && is_scalar($params['route'])) {
+                $route = trim((string) $params['route']);
+                unset($params['route']);
+            }
+
+            if ($route !== '') {
+                $normalizedPath = '/' . ltrim($route, '/');
+                $remainingQuery = http_build_query($params);
+                return url($normalizedPath . ($remainingQuery !== '' ? '?' . $remainingQuery : ''));
+            }
+
+            return $intended;
+        }
+
+        if ($path !== '' && str_starts_with($path, '/admin')) {
+            return url($path . ($query !== '' ? '?' . $query : ''));
+        }
+
+        if (!$isAbsolute && str_starts_with($intended, '/')) {
+            return $intended;
+        }
+
+        return $intended;
+    }
+
+    /**
+     * @param array<string, mixed> $parts
+     */
+    private function isSameOriginRedirect(array $parts): bool
+    {
+        $targetHost = strtolower((string) ($parts['host'] ?? ''));
+        if ($targetHost === '') {
+            return false;
+        }
+
+        [$currentHost, $currentPort] = $this->parseHostAndPort((string) ($_SERVER['HTTP_HOST'] ?? ''));
+        $currentHost = strtolower($currentHost);
+        if ($currentHost === '' || $targetHost !== $currentHost) {
+            return false;
+        }
+
+        $targetScheme = strtolower((string) ($parts['scheme'] ?? 'http'));
+        $targetPort = isset($parts['port']) && is_int($parts['port']) ? $parts['port'] : null;
+        $targetEffectivePort = $targetPort ?? ($targetScheme === 'https' ? 443 : 80);
+        $currentEffectivePort = $currentPort ?? (((string) ($_SERVER['HTTPS'] ?? '') !== '' && strtolower((string) ($_SERVER['HTTPS'] ?? '')) !== 'off') ? 443 : 80);
+
+        return $targetEffectivePort === $currentEffectivePort;
+    }
+
+    /**
+     * @return array{0: string, 1: int|null}
+     */
+    private function parseHostAndPort(string $hostHeader): array
+    {
+        $hostHeader = trim($hostHeader);
+        if ($hostHeader === '') {
+            return ['', null];
+        }
+
+        if (str_starts_with($hostHeader, '[')) {
+            $end = strpos($hostHeader, ']');
+            if ($end !== false) {
+                $host = substr($hostHeader, 1, $end - 1);
+                $rest = substr($hostHeader, $end + 1);
+                if (str_starts_with($rest, ':')) {
+                    $portRaw = substr($rest, 1);
+                    if ($portRaw !== '' && ctype_digit($portRaw)) {
+                        return [$host, (int) $portRaw];
+                    }
+                }
+                return [$host, null];
+            }
+        }
+
+        $firstColon = strpos($hostHeader, ':');
+        $lastColon = strrpos($hostHeader, ':');
+        if ($firstColon !== false && $lastColon !== false && $firstColon === $lastColon) {
+            $host = substr($hostHeader, 0, $lastColon);
+            $portRaw = substr($hostHeader, $lastColon + 1);
+            if ($portRaw !== '' && ctype_digit($portRaw)) {
+                return [$host, (int) $portRaw];
+            }
+        }
+
+        return [$hostHeader, null];
+    }
+
     private function frontendRegistrationEnabled(): bool
     {
         return false;
@@ -49,6 +167,22 @@ class AuthController extends BaseController
     {
         if (is_auth()) {
             $role = auth()['role'] ?? RoleService::ROLE_MEMBER;
+            $this->redirect(url(RoleService::getLoginRedirect($role)));
+            return;
+        }
+
+        $rememberedUser = $this->authService->loginWithRememberToken($this->request->ip());
+        if ($rememberedUser) {
+            $this->authService->login($rememberedUser);
+            $intended = $this->session->get('intended_url');
+            $this->session->remove('intended_url');
+
+            if ($intended) {
+                $this->redirect($this->normalizeIntendedRedirect((string) $intended));
+                return;
+            }
+
+            $role = $rememberedUser['role'] ?? RoleService::ROLE_MEMBER;
             $this->redirect(url(RoleService::getLoginRedirect($role)));
             return;
         }
@@ -101,7 +235,7 @@ class AuthController extends BaseController
             $this->tokenRepo->recordLoginAttempt($ip, $email, true);
 
             if ($this->shouldRequireEmail2fa($user)) {
-                $disableRemember = $this->envBool(env('AUTH_2FA_EMAIL_DISABLE_REMEMBER', '1'), true);
+                $disableRemember = $this->authService->shouldDisableRememberWhenEmail2faActive();
                 $rememberForChallenge = $disableRemember ? false : $remember;
 
                 if (!$this->startEmail2faChallenge($user, $rememberForChallenge, $ip)) {
@@ -129,7 +263,7 @@ class AuthController extends BaseController
             $this->session->remove('intended_url');
 
             if ($intended) {
-                $this->redirect($intended);
+                $this->redirect($this->normalizeIntendedRedirect((string) $intended));
             } else {
                 $role = $user['role'] ?? RoleService::ROLE_MEMBER;
                 $this->redirect(url(RoleService::getLoginRedirect($role)));
@@ -266,7 +400,7 @@ class AuthController extends BaseController
         $this->session->remove('intended_url');
 
         if ($intended) {
-            $this->redirect($intended);
+            $this->redirect($this->normalizeIntendedRedirect((string) $intended));
             return;
         }
 
@@ -1033,20 +1167,7 @@ class AuthController extends BaseController
 
     private function shouldRequireEmail2fa(array $user): bool
     {
-        $enabled = (bool) env('AUTH_2FA_EMAIL_ENABLED', false);
-        if (!$enabled) {
-            return false;
-        }
-
-        $role = strtolower(trim((string) ($user['role'] ?? '')));
-        $rolesRaw = strtolower((string) env('AUTH_2FA_EMAIL_ROLES', 'super_admin,admin'));
-        $roles = array_filter(array_map('trim', explode(',', $rolesRaw)));
-
-        if (in_array('all', $roles, true)) {
-            return true;
-        }
-
-        return $role !== '' && in_array($role, $roles, true);
+        return $this->authService->shouldRequireEmail2fa($user);
     }
 
     private function startEmail2faChallenge(array $user, bool $remember, string $ipAddress, bool $isResend = false): bool
@@ -1144,25 +1265,6 @@ class AuthController extends BaseController
         $maskedLocal = $prefix . str_repeat('*', max(3, strlen($local) - strlen($prefix)));
 
         return $maskedLocal . '@' . $domain;
-    }
-
-    private function envBool(mixed $value, bool $default): bool
-    {
-        if (is_bool($value)) {
-            return $value;
-        }
-        if ($value === null) {
-            return $default;
-        }
-
-        $v = strtolower(trim((string) $value));
-        if (in_array($v, ['1', 'true', 'yes', 'on'], true)) {
-            return true;
-        }
-        if (in_array($v, ['0', 'false', 'no', 'off'], true)) {
-            return false;
-        }
-        return $default;
     }
 
     public function changePassword(): void

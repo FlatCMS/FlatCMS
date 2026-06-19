@@ -70,7 +70,7 @@ final class PageBuilderSetupService
             }
 
             $this->states->saveStateForPage($page, [
-                'active' => false,
+                'active' => true,
                 'builder' => $this->states->buildInitialBuilderForPage($page),
             ], $user);
             $converted++;

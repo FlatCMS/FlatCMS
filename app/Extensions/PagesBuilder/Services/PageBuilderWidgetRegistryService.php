@@ -194,7 +194,11 @@ final class PageBuilderWidgetRegistryService
                         'escape_attr' => static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8'),
                         'resolve_image' => static fn(string $value): string => site_media_url($value),
                         'sanitize_rich_text' => static fn(string $value): string => (string) $renderCanonicalContent($value),
+                        'render_content' => static fn(string $value): string => (string) $renderCanonicalContent($value),
                     ],
+                    'source_url' => (string) ($context['source_url'] ?? ''),
+                    'locale' => (string) ($context['locale'] ?? ''),
+                    'render_context' => $context,
                 ]
             );
 

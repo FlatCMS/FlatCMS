@@ -86,6 +86,51 @@ $aiProviderStatus = is_array($aiProviderStatus ?? null) ? $aiProviderStatus : []
 $integrationEnvPath = (string) ($integrationEnvStatus['path'] ?? (BASE_PATH . '/.env.local'));
 $integrationEnvWritable = !empty($integrationEnvStatus['writable']);
 $turnstileEnabledGlobal = ((int) ($integrationValues['TURNSTILE_ENABLED'] ?? 0) === 1);
+$openAiApiKeyConfigured = trim((string) env('OPENAI_API_KEY', '')) !== '';
+$turnstileSecretConfigured = trim((string) env('TURNSTILE_SECRET_KEY', '')) !== '';
+$googleOAuthClientConfigured = trim((string) env('GOOGLE_OAUTH_CLIENT_ID', '')) !== '';
+$googleOAuthSecretConfigured = trim((string) env('GOOGLE_OAUTH_CLIENT_SECRET', '')) !== '';
+$googleOAuthEncryptionConfigured = trim((string) env('GOOGLE_OAUTH_ENCRYPTION_KEY', '')) !== '';
+$googleOAuthConfigured = $googleOAuthClientConfigured && $googleOAuthSecretConfigured && $googleOAuthEncryptionConfigured;
+$auth2faEnvValue = static function (string $key, string $default): string {
+    $value = trim((string) env($key, ''));
+    return $value !== '' ? $value : $default;
+};
+$auth2faEnvBool = static function (string $key, bool $default): bool {
+    $value = trim((string) env($key, $default ? '1' : '0'));
+    return in_array(strtolower($value), ['1', 'true', 'yes', 'on'], true);
+};
+$auth2faEmailEnabled = $auth2faEnvBool('AUTH_2FA_EMAIL_ENABLED', false);
+$auth2faRoles = $auth2faEnvValue('AUTH_2FA_EMAIL_ROLES', 'super_admin,admin');
+$auth2faTtl = max(60, (int) $auth2faEnvValue('AUTH_2FA_EMAIL_TTL', '300'));
+$auth2faResendCooldown = max(10, (int) $auth2faEnvValue('AUTH_2FA_EMAIL_RESEND_COOLDOWN', '60'));
+$auth2faMaxAttempts = max(3, (int) $auth2faEnvValue('AUTH_2FA_EMAIL_MAX_ATTEMPTS', '5'));
+$auth2faDisableRemember = $auth2faEnvBool('AUTH_2FA_EMAIL_DISABLE_REMEMBER', true);
+$auth2faSlowLogThreshold = max(250, (int) $auth2faEnvValue('AUTH_2FA_SLOW_LOG_THRESHOLD_MS', '2000'));
+$secretInputPlaceholder = static function (bool $configured, string $emptyPlaceholder): string {
+    return $configured ? __('integrations_secret_configured_placeholder', 'Settings') : $emptyPlaceholder;
+};
+$googleOAuthRedirectUri = (function (): string {
+    $uri = function_exists('url') ? (string) url('/admin/google-forms/oauth/callback') : '/admin/google-forms/oauth/callback';
+    $uri = trim($uri);
+
+    if ($uri !== '' && preg_match('~^https?://~i', $uri) === 1) {
+        return $uri;
+    }
+
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || ((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $scheme = $isHttps ? 'https' : 'http';
+    $host = trim((string) ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+
+    if ($uri === '') {
+        $uri = '/admin/google-forms/oauth/callback';
+    } elseif ($uri[0] !== '/') {
+        $uri = '/' . $uri;
+    }
+
+    return $scheme . '://' . $host . $uri;
+})();
 $aiProviderName = trim((string) ($aiProviderStatus['provider'] ?? 'openai-responses'));
 $aiProviderLabel = $aiProviderName === 'openai-responses'
     ? __('integrations_ai_provider_openai_responses', 'Settings')
@@ -204,6 +249,7 @@ $promoBannerConfig = is_array($promoBannerUi['config'] ?? null) ? $promoBannerUi
 $promoBannerTranslationUi = is_array($promoBannerUi['translation_ui'] ?? null) ? $promoBannerUi['translation_ui'] : [];
 $promoBannerTranslationTabs = is_array($promoBannerTranslationUi['tabs'] ?? null) ? $promoBannerTranslationUi['tabs'] : [];
 $promoBannerActiveLocale = (string) ($promoBannerTranslationUi['active_locale'] ?? $selectedDefaultLanguage);
+$promoBannerSourceLocale = (string) ($promoBannerTranslationUi['source_locale'] ?? $selectedDefaultLanguage);
 $promoBannerEnabledValue = (string) old('promo_banner_enabled', !empty($promoBannerConfig['enabled']) ? '1' : '0');
 $promoBannerEnabled = in_array($promoBannerEnabledValue, ['1', 'true', 'on', 'yes'], true);
 $promoBannerCtaVariant = (string) old('promo_banner_cta_variant', (string) ($promoBannerConfig['cta_variant'] ?? 'primary'));
@@ -724,6 +770,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                         value="<?= e($promoBannerActiveLocale) ?>"
                         data-promo-banner-active-locale
                     >
+                    <input type="hidden" name="promo_banner_source_locale" value="<?= e($promoBannerSourceLocale) ?>">
 
                     <div class="form-group">
                         <label class="form-inline">
@@ -1203,7 +1250,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                         <label for="env_openai_api_key" class="form-label"><?= __('integrations_openai_api_key', 'Settings') ?></label>
                                         <?= $renderIntegrationHelp('OPENAI_API_KEY') ?>
                                     </div>
-                                    <input type="text" id="env_openai_api_key" name="env[OPENAI_API_KEY]" class="form-input" value="<?= e((string) ($integrationValues['OPENAI_API_KEY'] ?? '')) ?>" placeholder="<?= e(__('integrations_openai_api_key_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                    <input type="text" id="env_openai_api_key" name="env[OPENAI_API_KEY]" class="form-input" value="" placeholder="<?= e($secretInputPlaceholder($openAiApiKeyConfigured, __('integrations_openai_api_key_placeholder', 'Settings'))) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" data-secret-configured="<?= $openAiApiKeyConfigured ? '1' : '0' ?>">
                                     <div class="form-hint"><?= __('integrations_openai_api_key_hint', 'Settings') ?></div>
                                 </div>
 
@@ -1231,7 +1278,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                             <label for="env_openai_timeout" class="form-label"><?= __('integrations_openai_timeout', 'Settings') ?></label>
                                             <?= $renderIntegrationHelp('OPENAI_TIMEOUT') ?>
                                         </div>
-                                        <input type="number" id="env_openai_timeout" name="env[OPENAI_TIMEOUT]" class="form-input" value="<?= e((string) ($integrationValues['OPENAI_TIMEOUT'] ?? '')) ?>" min="5" step="1" autocomplete="on" autocorrect="off" spellcheck="false">
+                                        <input type="number" id="env_openai_timeout" name="env[OPENAI_TIMEOUT]" class="form-input" value="<?= e((string) ($integrationValues['OPENAI_TIMEOUT'] ?? '')) ?>" placeholder="<?= e(__('integrations_openai_timeout_placeholder', 'Settings')) ?>" min="5" step="1" autocomplete="on" autocorrect="off" spellcheck="false">
                                         <div class="form-hint"><?= __('integrations_openai_timeout_hint', 'Settings') ?></div>
                                     </div>
 
@@ -1240,7 +1287,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                             <label for="env_openai_max_output_tokens" class="form-label"><?= __('integrations_openai_max_output_tokens', 'Settings') ?></label>
                                             <?= $renderIntegrationHelp('OPENAI_MAX_OUTPUT_TOKENS') ?>
                                         </div>
-                                        <input type="number" id="env_openai_max_output_tokens" name="env[OPENAI_MAX_OUTPUT_TOKENS]" class="form-input" value="<?= e((string) ($integrationValues['OPENAI_MAX_OUTPUT_TOKENS'] ?? '')) ?>" min="64" step="1" autocomplete="on" autocorrect="off" spellcheck="false">
+                                        <input type="number" id="env_openai_max_output_tokens" name="env[OPENAI_MAX_OUTPUT_TOKENS]" class="form-input" value="<?= e((string) ($integrationValues['OPENAI_MAX_OUTPUT_TOKENS'] ?? '')) ?>" placeholder="<?= e(__('integrations_openai_max_output_tokens_placeholder', 'Settings')) ?>" min="64" step="1" autocomplete="on" autocorrect="off" spellcheck="false">
                                         <div class="form-hint"><?= __('integrations_openai_max_output_tokens_hint', 'Settings') ?></div>
                                     </div>
                                 </div>
@@ -1251,6 +1298,99 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                         <?= __('integrations_ai_test_button', 'Settings') ?>
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="settings-integrations-group module-card" data-settings-integration-card data-settings-google-oauth-card>
+                        <div class="settings-integrations-group-toggle module-card-header" data-settings-integration-toggle>
+                            <div class="module-card-info">
+                                <div class="module-card-icon settings-integrations-group-icon">
+                                    <i class="fab fa-google"></i>
+                                </div>
+                                <div class="module-card-text">
+                                    <h4 class="module-card-title settings-integrations-group-title"><?= __('integrations_group_google_oauth', 'Settings') ?></h4>
+                                </div>
+                            </div>
+                            <div class="module-card-summary">
+                                <i class="fas fa-chevron-down module-card-chevron settings-integrations-group-chevron" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="module-card-content" data-settings-integration-content>
+                            <div class="module-card-body settings-integrations-group-body">
+                                <div class="form-group">
+                                    <div class="form-hint"><?= __('integrations_google_oauth_hint', 'Settings') ?></div>
+                                </div>
+
+                                <div class="settings-system-overview settings-integrations-status-overview">
+                                    <div class="settings-system-stat">
+                                        <span class="settings-system-stat-label"><?= __('integrations_google_oauth_configuration_label', 'Settings') ?></span>
+                                        <div class="settings-system-stat-value">
+                                            <span class="settings-status-badge <?= $googleOAuthConfigured ? 'is-ok' : 'is-warning' ?>">
+                                                <?= $googleOAuthConfigured ? __('status_ok', 'Settings') : __('status_missing', 'Settings') ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="settings-system-stat">
+                                        <span class="settings-system-stat-label"><?= __('integrations_google_oauth_client_id_status', 'Settings') ?></span>
+                                        <div class="settings-system-stat-value">
+                                            <span class="settings-status-badge <?= $googleOAuthClientConfigured ? 'is-ok' : 'is-warning' ?>">
+                                                <?= $googleOAuthClientConfigured ? __('status_ok', 'Settings') : __('status_missing', 'Settings') ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="settings-system-stat">
+                                        <span class="settings-system-stat-label"><?= __('integrations_google_oauth_secret_status', 'Settings') ?></span>
+                                        <div class="settings-system-stat-value">
+                                            <span class="settings-status-badge <?= $googleOAuthSecretConfigured ? 'is-ok' : 'is-warning' ?>">
+                                                <?= $googleOAuthSecretConfigured ? __('status_ok', 'Settings') : __('status_missing', 'Settings') ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="settings-system-stat">
+                                        <span class="settings-system-stat-label"><?= __('integrations_google_oauth_encryption_status', 'Settings') ?></span>
+                                        <div class="settings-system-stat-value">
+                                            <span class="settings-status-badge <?= $googleOAuthEncryptionConfigured ? 'is-ok' : 'is-warning' ?>">
+                                                <?= $googleOAuthEncryptionConfigured ? __('status_ok', 'Settings') : __('status_missing', 'Settings') ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group settings-google-oauth-redirect-group">
+                                    <div class="fc-admin-help-row">
+                                        <label for="env_google_oauth_redirect_uri" class="form-label"><?= __('integrations_google_oauth_redirect_uri', 'Settings') ?></label>
+                                        <?= $renderIntegrationHelp('GOOGLE_OAUTH_REDIRECT_URI') ?>
+                                    </div>
+                                    <div class="settings-google-oauth-redirect-row">
+                                        <input type="text" id="env_google_oauth_redirect_uri" class="form-input settings-google-oauth-redirect-input" value="<?= e($googleOAuthRedirectUri) ?>" readonly autocomplete="on" data-settings-copy-source>
+                                        <button type="button" class="btn btn-primary settings-google-oauth-redirect-copy" data-settings-copy-target="#env_google_oauth_redirect_uri" data-settings-copy-label="<?= e(__('integrations_google_oauth_redirect_uri_copy', 'Settings')) ?>" data-settings-copied-label="<?= e(__('integrations_google_oauth_redirect_uri_copied', 'Settings')) ?>">
+                                            <i class="fas fa-copy" aria-hidden="true"></i>
+                                            <span data-settings-copy-button-label><?= __('integrations_google_oauth_redirect_uri_copy', 'Settings') ?></span>
+                                        </button>
+                                    </div>
+                                    <div class="form-hint"><?= __('integrations_google_oauth_redirect_uri_hint', 'Settings') ?></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="fc-admin-help-row">
+                                        <label for="env_google_oauth_client_id" class="form-label"><?= __('integrations_google_oauth_client_id', 'Settings') ?></label>
+                                        <?= $renderIntegrationHelp('GOOGLE_OAUTH_CLIENT_ID') ?>
+                                    </div>
+                                    <input type="text" id="env_google_oauth_client_id" name="env[GOOGLE_OAUTH_CLIENT_ID]" class="form-input" value="<?= e((string) ($integrationValues['GOOGLE_OAUTH_CLIENT_ID'] ?? '')) ?>" placeholder="<?= e(__('integrations_google_oauth_client_id_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                    <div class="form-hint"><?= __('integrations_google_oauth_client_id_hint', 'Settings') ?></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="fc-admin-help-row">
+                                        <label for="env_google_oauth_client_secret" class="form-label"><?= __('integrations_google_oauth_client_secret', 'Settings') ?></label>
+                                        <?= $renderIntegrationHelp('GOOGLE_OAUTH_CLIENT_SECRET') ?>
+                                    </div>
+                                    <input type="text" id="env_google_oauth_client_secret" name="env[GOOGLE_OAUTH_CLIENT_SECRET]" class="form-input" value="" placeholder="<?= e($secretInputPlaceholder($googleOAuthSecretConfigured, __('integrations_google_oauth_client_secret_placeholder', 'Settings'))) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" data-secret-configured="<?= $googleOAuthSecretConfigured ? '1' : '0' ?>">
+                                    <div class="form-hint"><?= __('integrations_google_oauth_client_secret_hint', 'Settings') ?></div>
+                                </div>
+
+                                <input type="hidden" name="env[GOOGLE_OAUTH_ENCRYPTION_KEY]" value="">
                             </div>
                         </div>
                     </section>
@@ -1300,7 +1440,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     <label for="env_axeptio_client_id" class="form-label"><?= __('integrations_axeptio_client_id', 'Settings') ?></label>
                                     <?= $renderIntegrationHelp('AXEPTIO_CLIENT_ID') ?>
                                 </div>
-                                <input type="text" id="env_axeptio_client_id" name="env[AXEPTIO_CLIENT_ID]" class="form-input" value="<?= e((string) ($integrationValues['AXEPTIO_CLIENT_ID'] ?? '')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <input type="text" id="env_axeptio_client_id" name="env[AXEPTIO_CLIENT_ID]" class="form-input" value="<?= e((string) ($integrationValues['AXEPTIO_CLIENT_ID'] ?? '')) ?>" placeholder="<?= e(__('integrations_axeptio_client_id_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
                                 <div class="form-hint"><?= __('integrations_axeptio_client_id_hint', 'Settings') ?></div>
                             </div>
 
@@ -1309,7 +1449,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     <label for="env_axeptio_cookies_version" class="form-label"><?= __('integrations_axeptio_cookies_version', 'Settings') ?></label>
                                     <?= $renderIntegrationHelp('AXEPTIO_COOKIES_VERSION') ?>
                                 </div>
-                                <input type="text" id="env_axeptio_cookies_version" name="env[AXEPTIO_COOKIES_VERSION]" class="form-input" value="<?= e((string) ($integrationValues['AXEPTIO_COOKIES_VERSION'] ?? '')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <input type="text" id="env_axeptio_cookies_version" name="env[AXEPTIO_COOKIES_VERSION]" class="form-input" value="<?= e((string) ($integrationValues['AXEPTIO_COOKIES_VERSION'] ?? '')) ?>" placeholder="<?= e(__('integrations_axeptio_cookies_version_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
                                 <div class="form-hint"><?= __('integrations_axeptio_cookies_version_hint', 'Settings') ?></div>
                             </div>
                             </div>
@@ -1353,7 +1493,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     <label for="env_matomo_base_url" class="form-label"><?= __('integrations_matomo_base_url', 'Settings') ?></label>
                                     <?= $renderIntegrationHelp('MATOMO_BASE_URL') ?>
                                 </div>
-                                <input type="url" id="env_matomo_base_url" name="env[MATOMO_BASE_URL]" class="form-input" value="<?= e((string) ($integrationValues['MATOMO_BASE_URL'] ?? '')) ?>" placeholder="https://stats.example.com" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <input type="url" id="env_matomo_base_url" name="env[MATOMO_BASE_URL]" class="form-input" value="<?= e((string) ($integrationValues['MATOMO_BASE_URL'] ?? '')) ?>" placeholder="<?= e(__('integrations_matomo_base_url_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
                                 <div class="form-hint"><?= __('integrations_matomo_base_url_hint', 'Settings') ?></div>
                             </div>
 
@@ -1362,7 +1502,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     <label for="env_matomo_site_id" class="form-label"><?= __('integrations_matomo_site_id', 'Settings') ?></label>
                                     <?= $renderIntegrationHelp('MATOMO_SITE_ID') ?>
                                 </div>
-                                <input type="text" id="env_matomo_site_id" name="env[MATOMO_SITE_ID]" class="form-input" value="<?= e((string) ($integrationValues['MATOMO_SITE_ID'] ?? '')) ?>" placeholder="1" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <input type="text" id="env_matomo_site_id" name="env[MATOMO_SITE_ID]" class="form-input" value="<?= e((string) ($integrationValues['MATOMO_SITE_ID'] ?? '')) ?>" placeholder="<?= e(__('integrations_matomo_site_id_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
                                 <div class="form-hint"><?= __('integrations_matomo_site_id_hint', 'Settings') ?></div>
                             </div>
 
@@ -1383,7 +1523,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     <label for="env_google_analytics_measurement_id" class="form-label"><?= __('integrations_google_analytics_measurement_id', 'Settings') ?></label>
                                     <?= $renderIntegrationHelp('GOOGLE_ANALYTICS_MEASUREMENT_ID') ?>
                                 </div>
-                                <input type="text" id="env_google_analytics_measurement_id" name="env[GOOGLE_ANALYTICS_MEASUREMENT_ID]" class="form-input" value="<?= e((string) ($integrationValues['GOOGLE_ANALYTICS_MEASUREMENT_ID'] ?? '')) ?>" placeholder="G-XXXXXXXXXX" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <input type="text" id="env_google_analytics_measurement_id" name="env[GOOGLE_ANALYTICS_MEASUREMENT_ID]" class="form-input" value="<?= e((string) ($integrationValues['GOOGLE_ANALYTICS_MEASUREMENT_ID'] ?? '')) ?>" placeholder="<?= e(__('integrations_google_analytics_measurement_id_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
                                 <div class="form-hint"><?= __('integrations_google_analytics_measurement_id_hint', 'Settings') ?></div>
                             </div>
                             </div>
@@ -1423,7 +1563,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     <label for="env_tinymce_api_key" class="form-label"><?= __('integrations_tinymce_api_key', 'Settings') ?></label>
                                     <?= $renderIntegrationHelp('TINYMCE_API_KEY') ?>
                                 </div>
-                                <input type="text" id="env_tinymce_api_key" name="env[TINYMCE_API_KEY]" class="form-input" value="<?= e((string) ($integrationValues['TINYMCE_API_KEY'] ?? '')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <input type="text" id="env_tinymce_api_key" name="env[TINYMCE_API_KEY]" class="form-input" value="<?= e((string) ($integrationValues['TINYMCE_API_KEY'] ?? '')) ?>" placeholder="<?= e(__('integrations_tinymce_api_key_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
                                 <div class="form-hint"><?= __('integrations_tinymce_api_key_hint', 'Settings') ?></div>
                             </div>
 
@@ -1432,7 +1572,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     <label for="env_fontawesome_kit" class="form-label"><?= __('integrations_fontawesome_kit', 'Settings') ?></label>
                                     <?= $renderIntegrationHelp('FONTAWESOME_KIT') ?>
                                 </div>
-                                <input type="text" id="env_fontawesome_kit" name="env[FONTAWESOME_KIT]" class="form-input" value="<?= e((string) ($integrationValues['FONTAWESOME_KIT'] ?? '')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <input type="text" id="env_fontawesome_kit" name="env[FONTAWESOME_KIT]" class="form-input" value="<?= e((string) ($integrationValues['FONTAWESOME_KIT'] ?? '')) ?>" placeholder="<?= e(__('integrations_fontawesome_kit_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
                                 <div class="form-hint"><?= __('integrations_fontawesome_kit_hint', 'Settings') ?></div>
                             </div>
                             </div>
@@ -1472,7 +1612,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     <label for="env_turnstile_site_key" class="form-label"><?= __('integrations_turnstile_site_key', 'Settings') ?></label>
                                     <?= $renderIntegrationHelp('TURNSTILE_SITE_KEY') ?>
                                 </div>
-                                <input type="text" id="env_turnstile_site_key" name="env[TURNSTILE_SITE_KEY]" class="form-input" value="<?= e((string) ($integrationValues['TURNSTILE_SITE_KEY'] ?? '')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <input type="text" id="env_turnstile_site_key" name="env[TURNSTILE_SITE_KEY]" class="form-input" value="<?= e((string) ($integrationValues['TURNSTILE_SITE_KEY'] ?? '')) ?>" placeholder="<?= e(__('integrations_turnstile_site_key_placeholder', 'Settings')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
                                 <div class="form-hint"><?= __('integrations_turnstile_site_key_hint', 'Settings') ?></div>
                             </div>
 
@@ -1481,7 +1621,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     <label for="env_turnstile_secret_key" class="form-label"><?= __('integrations_turnstile_secret_key', 'Settings') ?></label>
                                     <?= $renderIntegrationHelp('TURNSTILE_SECRET_KEY') ?>
                                 </div>
-                                <input type="text" id="env_turnstile_secret_key" name="env[TURNSTILE_SECRET_KEY]" class="form-input" value="<?= e((string) ($integrationValues['TURNSTILE_SECRET_KEY'] ?? '')) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <input type="text" id="env_turnstile_secret_key" name="env[TURNSTILE_SECRET_KEY]" class="form-input" value="" placeholder="<?= e($secretInputPlaceholder($turnstileSecretConfigured, __('integrations_turnstile_secret_key_placeholder', 'Settings'))) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" data-secret-configured="<?= $turnstileSecretConfigured ? '1' : '0' ?>">
                                 <div class="form-hint"><?= __('integrations_turnstile_secret_key_hint', 'Settings') ?></div>
                             </div>
                             </div>
@@ -1517,6 +1657,89 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                             <?php endif; ?>
                         </div>
                     </div>
+                </div>
+
+                <div class="settings-system-block">
+                    <div class="settings-system-block-title"><?= __('system_admin_security', 'Settings') ?></div>
+
+                    <div class="form-group">
+                        <label class="form-inline">
+                            <input type="hidden" name="env[AUTH_2FA_EMAIL_ENABLED]" value="0">
+                            <input
+                                type="checkbox"
+                                id="env_auth_2fa_email_enabled"
+                                class="form-check-input"
+                                name="env[AUTH_2FA_EMAIL_ENABLED]"
+                                value="1"
+                                <?= $auth2faEmailEnabled ? 'checked' : '' ?>
+                            >
+                            <?= __('auth_2fa_email_enabled', 'Settings') ?>
+                        </label>
+                        <div class="form-hint"><?= __('auth_2fa_email_enabled_hint', 'Settings') ?></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="env_auth_2fa_roles" class="form-label"><?= __('auth_2fa_email_roles', 'Settings') ?></label>
+                        <input
+                            type="text"
+                            id="env_auth_2fa_roles"
+                            name="env[AUTH_2FA_EMAIL_ROLES]"
+                            class="form-input"
+                            value="<?= e($auth2faRoles !== '' ? $auth2faRoles : 'super_admin,admin') ?>"
+                            placeholder="super_admin,admin"
+                            autocomplete="on"
+                            autocapitalize="none"
+                            autocorrect="off"
+                            spellcheck="false"
+                        >
+                        <div class="form-hint"><?= __('auth_2fa_email_roles_hint', 'Settings') ?></div>
+                    </div>
+
+                    <div class="settings-system-list">
+                        <div class="settings-system-row">
+                            <dt><label for="env_auth_2fa_ttl"><?= __('auth_2fa_email_ttl', 'Settings') ?></label></dt>
+                            <dd>
+                                <input type="number" id="env_auth_2fa_ttl" name="env[AUTH_2FA_EMAIL_TTL]" class="form-input" value="<?= e((string) $auth2faTtl) ?>" min="60" step="30" autocomplete="on">
+                            </dd>
+                        </div>
+                        <div class="settings-system-row">
+                            <dt><label for="env_auth_2fa_resend_cooldown"><?= __('auth_2fa_email_resend_cooldown', 'Settings') ?></label></dt>
+                            <dd>
+                                <input type="number" id="env_auth_2fa_resend_cooldown" name="env[AUTH_2FA_EMAIL_RESEND_COOLDOWN]" class="form-input" value="<?= e((string) $auth2faResendCooldown) ?>" min="10" step="10" autocomplete="on">
+                            </dd>
+                        </div>
+                        <div class="settings-system-row">
+                            <dt><label for="env_auth_2fa_max_attempts"><?= __('auth_2fa_email_max_attempts', 'Settings') ?></label></dt>
+                            <dd>
+                                <input type="number" id="env_auth_2fa_max_attempts" name="env[AUTH_2FA_EMAIL_MAX_ATTEMPTS]" class="form-input" value="<?= e((string) $auth2faMaxAttempts) ?>" min="3" step="1" autocomplete="on">
+                            </dd>
+                        </div>
+                        <div class="settings-system-row">
+                            <dt><label for="env_auth_2fa_slow_log_threshold"><?= __('auth_2fa_slow_log_threshold', 'Settings') ?></label></dt>
+                            <dd>
+                                <input type="number" id="env_auth_2fa_slow_log_threshold" name="env[AUTH_2FA_SLOW_LOG_THRESHOLD_MS]" class="form-input" value="<?= e((string) $auth2faSlowLogThreshold) ?>" min="250" step="250" autocomplete="on">
+                            </dd>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-inline">
+                            <input type="hidden" name="env[AUTH_2FA_EMAIL_DISABLE_REMEMBER]" value="0">
+                            <input
+                                type="checkbox"
+                                class="form-check-input"
+                                name="env[AUTH_2FA_EMAIL_DISABLE_REMEMBER]"
+                                value="1"
+                                <?= $auth2faDisableRemember ? 'checked' : '' ?>
+                            >
+                            <?= __('auth_2fa_disable_remember', 'Settings') ?>
+                        </label>
+                        <div class="form-hint"><?= __('auth_2fa_disable_remember_hint', 'Settings') ?></div>
+                    </div>
+
+                    <input type="hidden" name="env[DEMO_FORCE_LICENSE_WARNING]" value="0">
+
+                    <div class="form-hint"><?= __('auth_2fa_email_mail_hint', 'Settings') ?></div>
                 </div>
 
                 <div class="settings-system-block">
@@ -1558,9 +1781,20 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                         <?php
                         $extensions = (array) ($systemInfo['extensions'] ?? []);
                         $extensionLabelMap = [
+                            'json' => __('system_extension_json', 'Settings'),
+                            'mbstring' => __('system_extension_mbstring', 'Settings'),
+                            'fileinfo' => __('system_extension_fileinfo', 'Settings'),
                             'openssl' => __('system_extension_openssl', 'Settings'),
                             'curl' => __('system_extension_curl', 'Settings'),
                             'zip' => __('system_extension_zip', 'Settings'),
+                            'gd' => __('system_extension_gd', 'Settings'),
+                            'intl' => __('system_extension_intl', 'Settings'),
+                            'dom' => __('system_extension_dom', 'Settings'),
+                            'xml' => __('system_extension_xml', 'Settings'),
+                            'simplexml' => __('system_extension_simplexml', 'Settings'),
+                            'pdo' => __('system_extension_pdo', 'Settings'),
+                            'session' => __('system_extension_session', 'Settings'),
+                            'opcache' => __('system_extension_opcache', 'Settings'),
                         ];
                         ?>
                         <?php foreach ($extensions as $extKey => $isAvailable): ?>

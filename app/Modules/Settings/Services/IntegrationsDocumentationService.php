@@ -219,6 +219,11 @@ final class IntegrationsDocumentationService
                 'title_key' => 'integrations_group_ai',
                 'intro_key' => 'integrations_docs_group_ai_intro',
             ],
+            'google_oauth' => [
+                'icon' => 'fab fa-google',
+                'title_key' => 'integrations_group_google_oauth',
+                'intro_key' => 'integrations_docs_group_google_oauth_intro',
+            ],
             'cookies' => [
                 'icon' => 'fas fa-cookie-bite',
                 'title_key' => 'integrations_group_cookies',
@@ -288,6 +293,38 @@ final class IntegrationsDocumentationService
                 'label_key' => 'integrations_openai_max_output_tokens',
                 'hint_key' => 'integrations_openai_max_output_tokens_hint',
                 'example' => '4096',
+            ],
+            'GOOGLE_OAUTH_REDIRECT_URI' => [
+                'group' => 'google_oauth',
+                'anchor' => 'google-oauth-redirect-uri',
+                'env_key' => 'GOOGLE_OAUTH_REDIRECT_URI',
+                'label_key' => 'integrations_google_oauth_redirect_uri',
+                'hint_key' => 'integrations_google_oauth_redirect_uri_hint',
+                'example' => 'https://example.com/admin/google-forms/oauth/callback',
+            ],
+            'GOOGLE_OAUTH_CLIENT_ID' => [
+                'group' => 'google_oauth',
+                'anchor' => 'google-oauth-client-id',
+                'env_key' => 'GOOGLE_OAUTH_CLIENT_ID',
+                'label_key' => 'integrations_google_oauth_client_id',
+                'hint_key' => 'integrations_google_oauth_client_id_hint',
+                'placeholder_key' => 'integrations_google_oauth_client_id_placeholder',
+                'official_doc_urls' => [
+                    'fr-FR' => 'https://developers.google.com/identity/protocols/oauth2/web-server?hl=fr',
+                    'en-US' => 'https://developers.google.com/identity/protocols/oauth2/web-server',
+                ],
+            ],
+            'GOOGLE_OAUTH_CLIENT_SECRET' => [
+                'group' => 'google_oauth',
+                'anchor' => 'google-oauth-client-secret',
+                'env_key' => 'GOOGLE_OAUTH_CLIENT_SECRET',
+                'label_key' => 'integrations_google_oauth_client_secret',
+                'hint_key' => 'integrations_google_oauth_client_secret_hint',
+                'placeholder_key' => 'integrations_google_oauth_client_secret_placeholder',
+                'official_doc_urls' => [
+                    'fr-FR' => 'https://developers.google.com/identity/protocols/oauth2/web-server?hl=fr',
+                    'en-US' => 'https://developers.google.com/identity/protocols/oauth2/web-server',
+                ],
             ],
             'COOKIE_BANNER_ENABLED' => [
                 'group' => 'cookies',

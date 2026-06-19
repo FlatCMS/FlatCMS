@@ -920,6 +920,100 @@
             });
         }
 
+        function initSettingsCopyButtons() {
+            const buttons = Array.from(document.querySelectorAll('[data-settings-copy-target]'));
+            if (!buttons.length) {
+                return;
+            }
+
+            function fallbackCopyText(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.setAttribute('readonly', 'readonly');
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '0';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+
+                let copied = false;
+                try {
+                    copied = document.execCommand('copy');
+                } catch (error) {
+                    copied = false;
+                }
+
+                document.body.removeChild(textarea);
+                return copied;
+            }
+
+            function copyText(text) {
+                const value = String(text || '');
+                if (!value) {
+                    return Promise.resolve(false);
+                }
+
+                if (
+                    window.navigator &&
+                    window.navigator.clipboard &&
+                    typeof window.navigator.clipboard.writeText === 'function' &&
+                    window.isSecureContext
+                ) {
+                    return window.navigator.clipboard.writeText(value)
+                        .then(function() { return true; })
+                        .catch(function() { return fallbackCopyText(value); });
+                }
+
+                return Promise.resolve(fallbackCopyText(value));
+            }
+
+            buttons.forEach(function(button) {
+                const targetSelector = String(button.getAttribute('data-settings-copy-target') || '').trim();
+                if (!targetSelector) {
+                    return;
+                }
+
+                const label = button.querySelector('[data-settings-copy-button-label]');
+                const defaultLabel = String(button.getAttribute('data-settings-copy-label') || (label ? label.textContent : '') || '').trim();
+                const copiedLabel = String(button.getAttribute('data-settings-copied-label') || 'OK').trim();
+
+                button.addEventListener('click', function() {
+                    const target = document.querySelector(targetSelector);
+                    if (!target) {
+                        return;
+                    }
+
+                    const value = typeof target.value === 'string'
+                        ? target.value
+                        : String(target.textContent || '');
+
+                    if (typeof target.select === 'function') {
+                        target.focus();
+                        target.select();
+                    }
+
+                    copyText(value).then(function(copied) {
+                        if (!copied) {
+                            return;
+                        }
+
+                        button.classList.add('is-copied');
+                        if (label && copiedLabel) {
+                            label.textContent = copiedLabel;
+                        }
+
+                        window.setTimeout(function() {
+                            button.classList.remove('is-copied');
+                            if (label && defaultLabel) {
+                                label.textContent = defaultLabel;
+                            }
+                        }, 1600);
+                    });
+                });
+            });
+        }
+
         const tabsRoot = document.querySelector('[data-settings-tabs]');
         if (!tabsRoot) {
             initSettingsMediaPicker();
@@ -927,6 +1021,7 @@
             initHomepageRouting();
             initPromoBannerTranslations();
             initAlignControls();
+            initSettingsCopyButtons();
             return;
         }
 
@@ -991,6 +1086,30 @@
             }
         }
 
+        function openGoogleOAuthCardFromHash() {
+            const currentHash = String(window.location.hash || '');
+            if (currentHash !== '#settings-google-oauth') {
+                return;
+            }
+
+            const card = document.querySelector('[data-settings-google-oauth-card]');
+            if (!card) {
+                return;
+            }
+
+            const header = card.querySelector('[data-settings-integration-toggle]');
+            if (header && !header.classList.contains('active')) {
+                header.click();
+            }
+
+            window.requestAnimationFrame(function() {
+                syncIntegrationsAccordions();
+                if (typeof card.scrollIntoView === 'function') {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        }
+
         tabButtons.forEach((button) => {
             button.addEventListener('click', function() {
                 activateTab(button.dataset.tab || '', true);
@@ -1006,7 +1125,9 @@
 
         let initialTab = '';
         const hash = String(window.location.hash || '');
-        if (hash.indexOf('#settings-') === 0) {
+        if (hash === '#settings-google-oauth') {
+            initialTab = 'integrations';
+        } else if (hash.indexOf('#settings-') === 0) {
             initialTab = hash.replace('#settings-', '');
         }
 
@@ -1020,12 +1141,21 @@
 
         syncIntegrationsAccordions = initIntegrationsAccordions();
         activateTab(initialTab, false);
+        window.requestAnimationFrame(openGoogleOAuthCardFromHash);
+        window.addEventListener('hashchange', function() {
+            const currentHash = String(window.location.hash || '');
+            if (currentHash === '#settings-integrations' || currentHash === '#settings-google-oauth') {
+                activateTab('integrations', false);
+                window.requestAnimationFrame(openGoogleOAuthCardFromHash);
+            }
+        });
         initSettingsMediaPicker();
         initSiteBrandingModal();
         initLocalizationDefaults();
         initHomepageRouting();
         initPromoBannerTranslations();
         initAlignControls();
+        initSettingsCopyButtons();
         initContactCaptchaDependency();
 
         const startTourButton = document.querySelector('[data-action="guided-tour-start"]');
@@ -1059,7 +1189,19 @@
                     return;
                 }
 
-                window.FlatCMS.guidedTour.resetSeen();
+                const resetResult = window.FlatCMS.guidedTour.resetSeen();
+                if (resetResult && typeof resetResult.then === 'function') {
+                    resetResult.then(function(success) {
+                        if (!success) {
+                            return;
+                        }
+
+                        const enabledInput = document.getElementById('admin_guided_tour_enabled');
+                        if (enabledInput && enabledInput.type === 'checkbox') {
+                            enabledInput.checked = true;
+                        }
+                    });
+                }
             });
         }
     });

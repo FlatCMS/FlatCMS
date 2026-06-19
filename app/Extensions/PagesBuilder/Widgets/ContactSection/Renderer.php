@@ -388,15 +388,30 @@ final class Renderer extends AbstractWidgetRenderer
             }
 
             $formInnerHtml = '';
-            $sourceUrl = function_exists('url') && function_exists('app')
-                ? (string) url(app()->request()->uri())
-                : (function_exists('url') ? (string) url('/contact') : '/contact');
-            $shortcodeContext = ['source_url' => $sourceUrl];
-            if (function_exists('flatcms_render_shortcode_tag')) {
-                $formInnerHtml = trim((string) flatcms_render_shortcode_tag('contact-form', ['slug' => $contactFormSlug], $shortcodeContext));
-                if ($formInnerHtml === '' && $contactFormSlug !== '') {
-                    $formInnerHtml = trim((string) flatcms_render_shortcode_tag('contact-form', [], $shortcodeContext));
+            $sourceUrl = trim((string) ($context['source_url'] ?? ''));
+            if ($sourceUrl === '') {
+                $sourceUrl = function_exists('url') ? (string) url('/contact') : '/contact';
+            }
+            $shortcodeSlug = preg_replace('/[^a-zA-Z0-9_-]+/', '', (string) $contactFormSlug);
+            $shortcodeSlug = is_string($shortcodeSlug) && $shortcodeSlug !== '' ? $shortcodeSlug : 'contact-main';
+            $renderContent = is_callable($helpers['render_content'] ?? null)
+                ? $helpers['render_content']
+                : (is_callable($helpers['sanitize_rich_text'] ?? null) ? $helpers['sanitize_rich_text'] : null);
+            if (is_callable($renderContent)) {
+                try {
+                    $formInnerHtml = trim((string) $renderContent('[contact-form slug="' . $shortcodeSlug . '"]'));
+                } catch (\Throwable) {
+                    $formInnerHtml = '';
                 }
+            } elseif (function_exists('flatcms_render_shortcodes')) {
+                try {
+                    $formInnerHtml = trim((string) flatcms_render_shortcodes('[contact-form slug="' . $shortcodeSlug . '"]', ['source_url' => $sourceUrl]));
+                } catch (\Throwable) {
+                    $formInnerHtml = '';
+                }
+            }
+            if ($formInnerHtml === '' || $formInnerHtml === '[contact-form slug="' . $shortcodeSlug . '"]' || str_contains($formInnerHtml, '[contact-form')) {
+                $formInnerHtml = '';
             }
 
             if ($formInnerHtml === '' && is_array($selectedBuilderForm)) {

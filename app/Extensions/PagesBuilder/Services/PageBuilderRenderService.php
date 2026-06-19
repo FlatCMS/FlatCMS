@@ -521,15 +521,29 @@ final class PageBuilderRenderService
         $type = strtolower(trim((string) ($block['type'] ?? '')));
         $blockId = trim((string) ($block['id'] ?? ''));
         $settings = is_array($block['settings'] ?? null) ? $block['settings'] : [];
+        $blockContext = $context;
+        if (empty($blockContext['source_url'])) {
+            $sourceUrl = $this->resolveContactSourceUrl($page, $context);
+            if ($sourceUrl !== '') {
+                $blockContext['source_url'] = $sourceUrl;
+            }
+        }
+        if (empty($blockContext['locale']) && !empty($page['locale'])) {
+            $blockContext['locale'] = (string) $page['locale'];
+        }
 
-        $customRendered = $this->widgetRegistry->renderBlock(
-            $blockId,
-            $type,
-            $settings,
-            $page,
-            $context,
-            fn (string $content): string => $this->renderCanonicalContent($content, $context)
-        );
+        if ($type === 'contact') {
+            $customRendered = $this->renderContactShortcodeBlock($settings, $page, $blockContext);
+        } else {
+            $customRendered = $this->widgetRegistry->renderBlock(
+                $blockId,
+                $type,
+                $settings,
+                $page,
+                $blockContext,
+                fn (string $content): string => $this->renderCanonicalContent($content, $blockContext)
+            );
+        }
         if ($customRendered === null) {
             return '';
         }
@@ -546,6 +560,125 @@ final class PageBuilderRenderService
         }
 
         return $this->renderBlockContainer($blockId, $type, $html, $settings);
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     * @param array<string, mixed> $page
+     * @param array<string, mixed> $context
+     * @return array{html: string, css: string, assets: array{css: array<int, string>, js: array<int, string>}}|null
+     */
+    private function renderContactShortcodeBlock(array $settings, array $page, array $context): ?array
+    {
+        $slug = $this->normalizeContactFormSlug((string) ($settings['formSlug'] ?? $settings['slug'] ?? ''));
+        $shortcode = '[contact-form slug="' . $slug . '"]';
+
+        $shortcodeContext = $context;
+        $sourceUrl = $this->resolveContactSourceUrl($page, $context);
+        if ($sourceUrl !== '') {
+            $shortcodeContext['source_url'] = $sourceUrl;
+        }
+        if (empty($shortcodeContext['locale']) && !empty($page['locale'])) {
+            $shortcodeContext['locale'] = (string) $page['locale'];
+        }
+
+        try {
+            $html = trim($this->renderCanonicalContent($shortcode, $shortcodeContext));
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if ($html === '' || trim($html) === $shortcode || str_contains($html, '[contact-form')) {
+            return null;
+        }
+
+        return [
+            'html' => $html,
+            'css' => '',
+            'assets' => [
+                'css' => $this->safeModuleAssetUrls('Contact', ['css/contact-front.css']),
+                'js' => $this->safeModuleAssetUrls('Contact', ['js/contact-front.js']),
+            ],
+        ];
+    }
+
+    private function normalizeContactFormSlug(string $value): string
+    {
+        $slug = trim($value);
+        if ($slug === '') {
+            return 'contact-main';
+        }
+
+        $normalized = preg_replace('/[^a-zA-Z0-9_-]+/', '', $slug);
+        $normalized = is_string($normalized) ? trim($normalized) : '';
+
+        return $normalized !== '' ? $normalized : 'contact-main';
+    }
+
+    /**
+     * @param array<string, mixed> $page
+     * @param array<string, mixed> $context
+     */
+    private function resolveContactSourceUrl(array $page, array $context): string
+    {
+        $sourceUrl = trim((string) ($context['source_url'] ?? ''));
+        if ($sourceUrl !== '') {
+            return $sourceUrl;
+        }
+
+        if (function_exists('flatcms_current_source_url')) {
+            try {
+                $sourceUrl = trim((string) flatcms_current_source_url());
+                if ($sourceUrl !== '') {
+                    return $sourceUrl;
+                }
+            } catch (\Throwable) {
+                // Keep rendering even if the helper is unavailable in this context.
+            }
+        }
+
+        $locale = trim((string) ($page['locale'] ?? ''));
+        $slug = trim((string) ($page['slug'] ?? ''));
+        if ($slug === '') {
+            return '';
+        }
+
+        $path = ($locale !== '' ? '/' . $locale : '') . '/page/' . $slug;
+        if (!function_exists('url')) {
+            return $path;
+        }
+
+        try {
+            return (string) url($path);
+        } catch (\Throwable) {
+            return $path;
+        }
+    }
+
+    /**
+     * @param array<int, string> $paths
+     * @return array<int, string>
+     */
+    private function safeModuleAssetUrls(string $module, array $paths): array
+    {
+        if (!function_exists('module_asset')) {
+            return [];
+        }
+
+        $urls = [];
+        foreach ($paths as $path) {
+            try {
+                $url = trim((string) module_asset($module, $path));
+            } catch (\Throwable) {
+                $url = '';
+            }
+
+            if ($url !== '') {
+                $urls[] = $url;
+            }
+        }
+
+        return array_values(array_unique($urls));
     }
 
     private function buildEqualSectionTemplate(int $columnCount): string
@@ -930,6 +1063,7 @@ final class PageBuilderRenderService
             'builder_version' => (int) ($state['builder_version'] ?? 2),
             'builder' => is_array($state['builder'] ?? null) ? $state['builder'] : [],
             'render_code_version' => self::resolveRenderCodeVersion(),
+            'asset_url_version' => self::resolveAssetUrlVersion(),
         ];
         $encoded = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (!is_string($encoded) || $encoded === '') {
@@ -965,6 +1099,35 @@ final class PageBuilderRenderService
 
         self::$renderCodeVersion = (string) $version;
         return self::$renderCodeVersion;
+    }
+
+    private static function resolveAssetUrlVersion(): string
+    {
+        $parts = [];
+
+        if (function_exists('url')) {
+            try {
+                $parts[] = (string) url('/');
+            } catch (\Throwable) {
+                $parts[] = '';
+            }
+        }
+
+        if (function_exists('module_asset')) {
+            foreach ([
+                ['PagesBuilder', 'css/runtime.css'],
+                ['PagesBuilder', 'css/runtime-primitives.css'],
+                ['PagesBuilder', 'js/runtime-primitives.js'],
+            ] as $asset) {
+                try {
+                    $parts[] = (string) module_asset((string) $asset[0], (string) $asset[1]);
+                } catch (\Throwable) {
+                    $parts[] = '';
+                }
+            }
+        }
+
+        return sha1(implode('|', $parts));
     }
 
     private function purgeStaleRenderCaches(string $pageId, string $currentCachePath): void

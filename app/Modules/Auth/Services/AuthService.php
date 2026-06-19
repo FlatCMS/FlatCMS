@@ -141,6 +141,12 @@ class AuthService
             $this->clearRememberCookie();
             return null;
         }
+
+        if ($this->shouldDisableRememberWhenEmail2faActive() && $this->shouldRequireEmail2fa($user)) {
+            $this->forgetRememberToken((string) $userId);
+            return null;
+        }
+
         $this->touchLastLogin($userId, $ipAddress);
 
         unset($user['password']);
@@ -171,6 +177,29 @@ class AuthService
     public function check(): bool
     {
         return session()->has('user');
+    }
+
+    public function shouldRequireEmail2fa(array $user): bool
+    {
+        $enabled = $this->envBool(env('AUTH_2FA_EMAIL_ENABLED', false), false);
+        if (!$enabled) {
+            return false;
+        }
+
+        $role = strtolower(trim((string) ($user['role'] ?? '')));
+        $rolesRaw = strtolower((string) env('AUTH_2FA_EMAIL_ROLES', 'super_admin,admin'));
+        $roles = array_filter(array_map('trim', explode(',', $rolesRaw)));
+
+        if (in_array('all', $roles, true)) {
+            return true;
+        }
+
+        return $role !== '' && in_array($role, $roles, true);
+    }
+
+    public function shouldDisableRememberWhenEmail2faActive(): bool
+    {
+        return $this->envBool(env('AUTH_2FA_EMAIL_DISABLE_REMEMBER', '1'), true);
     }
 
     public function id(): ?string
@@ -352,6 +381,35 @@ class AuthService
             'samesite' => 'Lax',
             'secure' => isset($_SERVER['HTTPS']),
         ]);
+    }
+
+    private function forgetRememberToken(string $userId): void
+    {
+        $this->clearRememberCookie();
+        $this->users->update($userId, [
+            'remember_token' => '',
+            'remember_expires' => null,
+        ]);
+    }
+
+    private function envBool(mixed $value, bool $default): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if ($value === null) {
+            return $default;
+        }
+
+        $v = strtolower(trim((string) $value));
+        if (in_array($v, ['1', 'true', 'yes', 'on'], true)) {
+            return true;
+        }
+        if (in_array($v, ['0', 'false', 'no', 'off'], true)) {
+            return false;
+        }
+
+        return $default;
     }
 
     private function clearRememberCookie(): void

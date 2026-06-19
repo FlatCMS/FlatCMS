@@ -92,9 +92,20 @@ class AdminController extends BaseController
         }
 
         $extensions = [
+            'json' => extension_loaded('json'),
+            'mbstring' => extension_loaded('mbstring'),
+            'fileinfo' => extension_loaded('fileinfo'),
             'openssl' => extension_loaded('openssl'),
             'curl' => extension_loaded('curl'),
             'zip' => class_exists(\ZipArchive::class),
+            'gd' => extension_loaded('gd'),
+            'intl' => extension_loaded('intl'),
+            'dom' => extension_loaded('dom'),
+            'xml' => extension_loaded('xml'),
+            'simplexml' => extension_loaded('SimpleXML'),
+            'pdo' => extension_loaded('pdo'),
+            'session' => extension_loaded('session'),
+            'opcache' => extension_loaded('Zend OPcache') || extension_loaded('opcache'),
         ];
         $extensionsAvailable = 0;
         foreach ($extensions as $ok) {
@@ -127,6 +138,10 @@ class AdminController extends BaseController
             ];
         }
         $routingInfo = $this->buildRoutingInfo($settings);
+        $configuredEnvironment = strtolower(trim((string) env('APP_ENV', '')));
+        $runtimeEnvironment = function_exists('flatcms_is_dev_runtime') && flatcms_is_dev_runtime()
+            ? 'DEV'
+            : strtoupper($configuredEnvironment !== '' ? $configuredEnvironment : 'production');
 
         $this->render('Settings/Views/admin/index', [
             'pageTitle' => __('settings', 'Settings'),
@@ -150,7 +165,7 @@ class AdminController extends BaseController
             'siteRoutingUi' => $this->buildSiteRoutingUi($siteRoutingService),
             'systemInfo' => [
                 'flatcms_version' => flatcms_version(),
-                'environment' => (string) env('APP_ENV', 'production'),
+                'environment' => $runtimeEnvironment,
                 'php_version' => PHP_VERSION,
                 'timezone' => date_default_timezone_get(),
                 'paths' => $paths,
@@ -312,9 +327,11 @@ class AdminController extends BaseController
         );
 
         $brandingState = $brandingService->prepareSavePayload($brandingInput, $merged, $defaultLanguage);
+        $promoBannerSourceLocale = trim((string) $this->request->input('promo_banner_source_locale', ''));
         $promoBannerState = $promoBannerService->prepareTranslationPayload(
             $promoBannerTranslationsInput,
-            $merged
+            $merged,
+            $promoBannerSourceLocale !== '' ? $promoBannerSourceLocale : $defaultLanguage
         );
         $sourceLocale = (string) ($brandingState['source_locale'] ?? $defaultLanguage);
         $sourceTranslation = $brandingState['translations'][$sourceLocale] ?? [];
@@ -459,7 +476,7 @@ class AdminController extends BaseController
             $activeTab = 'general';
         }
 
-        if ($activeTab === 'integrations') {
+        if ($activeTab === 'integrations' || $activeTab === 'system') {
             $integrationPayload = $this->request->input('env', []);
             if (!is_array($integrationPayload)) {
                 $integrationPayload = [];
@@ -467,7 +484,7 @@ class AdminController extends BaseController
 
             $envManager = new EnvConfigManager();
             try {
-                $envManager->writeValues($integrationPayload);
+                $envManager->writePartialValues($integrationPayload);
             } catch (\Throwable $e) {
                 $reason = $e instanceof \RuntimeException ? (string) $e->getMessage() : '';
                 $status = $envManager->status();
@@ -493,7 +510,7 @@ class AdminController extends BaseController
                 } else {
                     $this->session->flash('error', __('integrations_env_save_failed', 'Settings'));
                 }
-                $this->redirect(url('/admin/settings#settings-integrations'));
+                $this->redirect(url('/admin/settings#settings-' . $activeTab));
                 return;
             }
         }
@@ -804,6 +821,10 @@ class AdminController extends BaseController
             return;
         }
 
+        $settings = FlatFile::settings();
+        $settings['admin_guided_tour_enabled'] = 1;
+        FlatFile::saveSettings($settings);
+
         $this->syncSessionUser($updated);
 
         $this->json([
@@ -871,6 +892,10 @@ class AdminController extends BaseController
 
         $this->json([
             'success' => true,
+            'enabled' => true,
+            'auto_start' => true,
+            'global_seen' => false,
+            'modules' => [],
         ]);
     }
 
