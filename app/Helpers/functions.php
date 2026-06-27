@@ -601,6 +601,74 @@ if (!function_exists('hook_definitions')) {
     }
 }
 
+if (!function_exists('guided_tour_step')) {
+    function guided_tour_step(string $selector, string $title, string $content, string $placement = 'top', array $extra = []): array
+    {
+        $step = [
+            'selector' => $selector,
+            'title' => $title,
+            'content' => $content,
+            'placement' => $placement,
+        ];
+
+        foreach ($extra as $key => $value) {
+            if (!is_string($key) || $key === '') {
+                continue;
+            }
+
+            $step[$key] = $value;
+        }
+
+        return $step;
+    }
+}
+
+if (!function_exists('guided_tour_collect_module_tours')) {
+    function guided_tour_collect_module_tours(array $payload = []): array
+    {
+        $tours = [];
+
+        foreach (hook_run('admin.guided_tour.module_tours', $payload) as $result) {
+            if (!is_array($result) || $result === []) {
+                continue;
+            }
+
+            foreach ($result as $rawKey => $tour) {
+                if (!is_array($tour)) {
+                    continue;
+                }
+
+                $key = strtolower(trim((string) $rawKey));
+                $key = preg_replace('/[^a-z0-9_-]/', '', $key) ?? '';
+                if ($key === '') {
+                    continue;
+                }
+
+                $routes = array_values(array_filter(array_map(static function ($route): string {
+                    return trim((string) $route);
+                }, is_array($tour['routes'] ?? null) ? $tour['routes'] : []), static fn(string $route): bool => $route !== ''));
+                $steps = array_values(array_filter(is_array($tour['steps'] ?? null) ? $tour['steps'] : [], 'is_array'));
+
+                if ($routes === [] || $steps === []) {
+                    continue;
+                }
+
+                if (!isset($tours[$key])) {
+                    $tours[$key] = [
+                        'routes' => [],
+                        'steps' => [],
+                    ];
+                }
+
+                $tours[$key]['routes'] = array_values(array_unique(array_merge($tours[$key]['routes'], $routes)));
+                $tours[$key]['steps'] = array_merge($tours[$key]['steps'], $steps);
+            }
+        }
+
+        return $tours;
+    }
+}
+
 if (!function_exists('copy_module_assets_directory')) {
     function copy_module_assets_directory(string $source, string $destination): bool
     {
@@ -1498,7 +1566,24 @@ if (!function_exists('menu_front_render_icon_html')) {
 if (!function_exists('menu_front_render_menu')) {
     function menu_front_render_menu(array $items, string $locale, array $context = []): string
     {
+        $payload = [
+            'items' => $items,
+            'locale' => $locale,
+            'context' => $context,
+        ];
+
+        foreach (hook_run('menus.render.resolve', $payload) as $result) {
+            if (!is_array($result) || empty($result['handled'])) {
+                continue;
+            }
+
+            return (string) ($result['html'] ?? '');
+        }
+
+        hook_run('menus.before_render', $payload);
+
         if ($items === []) {
+            hook_run('menus.after_render', $payload + ['html' => '']);
             return '';
         }
 
@@ -1570,7 +1655,15 @@ if (!function_exists('menu_front_render_menu')) {
         }
 
         $lines[] = $indent($depth) . '</ul>';
-        return implode(PHP_EOL, $lines);
+        $html = implode(PHP_EOL, $lines);
+
+        foreach (hook_run('menus.after_render', $payload + ['html' => $html]) as $result) {
+            if (is_array($result) && array_key_exists('html', $result) && is_string($result['html'])) {
+                return $result['html'];
+            }
+        }
+
+        return $html;
     }
 }
 

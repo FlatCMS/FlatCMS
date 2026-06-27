@@ -16,7 +16,7 @@
     const availableCard = document.getElementById('menuAvailablePanel');
     const availableCustomCard = availableCard ? availableCard.querySelector('.menu-available-custom') : null;
     const form = document.getElementById('menuForm');
-    const menuBuilderLayout = availableSidebar ? availableSidebar.closest('.menu-builder') : null;
+    const menuEditorLayout = availableSidebar ? availableSidebar.closest('.menu-editor') : null;
     const topHeader = document.querySelector('.top-header');
     const dataField = document.getElementById('menuDataField');
     const libraryField = document.getElementById('menuLibraryField');
@@ -965,7 +965,7 @@
     }
 
     function initAvailableFloatingPanel() {
-        if (!availableSidebar || !availableCard || !menuBuilderLayout) {
+        if (!availableSidebar || !availableCard || !menuEditorLayout) {
             return;
         }
 
@@ -999,7 +999,7 @@
             }
         }
 
-        const computed = window.getComputedStyle(menuBuilderLayout || document.documentElement);
+        const computed = window.getComputedStyle(menuEditorLayout || document.documentElement);
         const rawValue = String(computed.getPropertyValue('--menu-sticky-top') || '').trim();
         if (rawValue === '') {
             return 76;
@@ -1065,10 +1065,10 @@
         availableFloatingState = 'normal';
         availableFloatingMetrics = null;
 
-        menuBuilderLayout.style.removeProperty('--menu-sticky-top');
-        menuBuilderLayout.style.removeProperty('--menu-floating-left');
-        menuBuilderLayout.style.removeProperty('--menu-floating-width');
-        menuBuilderLayout.style.removeProperty('--menu-floating-height');
+        menuEditorLayout.style.removeProperty('--menu-sticky-top');
+        menuEditorLayout.style.removeProperty('--menu-floating-left');
+        menuEditorLayout.style.removeProperty('--menu-floating-width');
+        menuEditorLayout.style.removeProperty('--menu-floating-height');
         clearAvailableAccordionScrollLayout();
         clearAvailableFloatingInlineStyles();
     }
@@ -1091,10 +1091,10 @@
             cardHeight,
         };
 
-        menuBuilderLayout.style.setProperty('--menu-sticky-top', `${topOffset}px`);
-        menuBuilderLayout.style.setProperty('--menu-floating-left', `${sidebarRect.left}px`);
-        menuBuilderLayout.style.setProperty('--menu-floating-width', `${sidebarRect.width}px`);
-        menuBuilderLayout.style.setProperty('--menu-floating-height', `${cardHeight}px`);
+        menuEditorLayout.style.setProperty('--menu-sticky-top', `${topOffset}px`);
+        menuEditorLayout.style.setProperty('--menu-floating-left', `${sidebarRect.left}px`);
+        menuEditorLayout.style.setProperty('--menu-floating-width', `${sidebarRect.width}px`);
+        menuEditorLayout.style.setProperty('--menu-floating-height', `${cardHeight}px`);
 
         if (availableFloatingState === 'fixed') {
             syncAvailableFloatingClasses();
@@ -1128,7 +1128,7 @@
     }
 
     function updateAvailableFloatingPanel() {
-        if (!availableSidebar || !availableCard || !menuBuilderLayout) {
+        if (!availableSidebar || !availableCard || !menuEditorLayout) {
             return;
         }
 

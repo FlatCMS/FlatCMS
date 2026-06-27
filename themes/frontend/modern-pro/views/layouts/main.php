@@ -94,6 +94,19 @@ $promoBannerBelowFooterHtml = $indentHtml((string) ob_get_clean(), 1);
 ob_start();
 include __DIR__ . '/../partials/scripts.php';
 $scriptsHtml = $indentHtml((string) ob_get_clean(), 1);
+
+$frontendBodyStartHtml = $indentHtml(\App\Core\HookSlots::render('frontend.layout.body_start', [
+    'settings' => is_array($settings ?? null) ? $settings : [],
+    'locale' => $locale,
+    'page' => $page ?? null,
+    'post' => $post ?? null,
+]), 1);
+$frontendBodyEndHtml = $indentHtml(\App\Core\HookSlots::render('frontend.layout.body_end', [
+    'settings' => is_array($settings ?? null) ? $settings : [],
+    'locale' => $locale,
+    'page' => $page ?? null,
+    'post' => $post ?? null,
+]), 1);
 $frontendRuntimeLabels = [
     'copy' => __('copy_action', 'Core'),
     'copied' => __('copied_action', 'Core'),
@@ -106,6 +119,7 @@ $frontendRuntimeLabels = [
     data-copy-label="<?= e((string) ($frontendRuntimeLabels['copy'] ?? '')) ?>"
     data-copied-label="<?= e((string) ($frontendRuntimeLabels['copied'] ?? '')) ?>"
     data-sending-label="<?= e((string) ($frontendRuntimeLabels['sending'] ?? '')) ?>">
+<?= $frontendBodyStartHtml !== '' ? $frontendBodyStartHtml . PHP_EOL : '' ?>
     <!-- Animated Background -->
     <div class="bg-gradient"></div>
 
@@ -124,6 +138,7 @@ $frontendRuntimeLabels = [
 <?= $promoBannerAboveFooterHtml !== '' ? $promoBannerAboveFooterHtml . PHP_EOL : '' ?>
 <?= $footerHtml !== '' ? $footerHtml . PHP_EOL : '' ?>
 <?= $promoBannerBelowFooterHtml !== '' ? $promoBannerBelowFooterHtml . PHP_EOL : '' ?>
+<?= $frontendBodyEndHtml !== '' ? $frontendBodyEndHtml . PHP_EOL : '' ?>
 <?= $scriptsHtml !== '' ? $scriptsHtml . PHP_EOL : '' ?>
 </body>
 </html>

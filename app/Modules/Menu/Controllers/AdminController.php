@@ -41,12 +41,15 @@ class AdminController extends BaseController
             return;
         }
 
+        if ($this->redirectToMenusAdminOverride('index')) {
+            return;
+        }
+
         I18n::load('Posts');
 
         $menus = FlatFile::settings('menus');
         $pages = FlatFile::for('core/pages')->all();
         $items = $menus['main']['items'] ?? [];
-        $items = $this->attachOrphanPanelIds(is_array($items) ? $items : [], []);
         $items = $this->ensureItemIds(is_array($items) ? $items : []);
         $library = $menus['main']['library'] ?? [];
         $availableItems = $this->buildAvailableItems($pages);
@@ -129,7 +132,7 @@ class AdminController extends BaseController
 
         $items = $this->sanitizeItems($items);
         if (count($items) > self::ROOT_ITEM_WARNING_THRESHOLD) {
-            $this->session->flash('warning', __('mega_max_items_reached', 'Menu'));
+            $this->session->flash('warning', __('menu_root_items_warning', 'Menu'));
         }
         if (!isset($menus['main']) || !is_array($menus['main'])) {
             $menus['main'] = [];
@@ -905,303 +908,6 @@ class AdminController extends BaseController
         return $sanitized;
     }
 
-    protected function sanitizeMegaPanels(array $panels, array $rootIds): array
-    {
-        $sanitized = [];
-        $rootIndex = array_flip($rootIds);
-
-        foreach ($panels as $id => $panel) {
-            $panelId = trim((string) $id);
-            if ($panelId === '' || !isset($rootIndex[$panelId])) {
-                continue;
-            }
-
-            if (!is_array($panel)) {
-                $panel = [];
-            }
-
-            $enabled = !empty($panel['enabled']);
-            $columns = $panel['columns'] ?? [];
-            if (!is_array($columns)) {
-                $columns = [];
-            }
-            $settings = $panel['settings'] ?? [];
-            if (!is_array($settings)) {
-                $settings = [];
-            }
-
-            $entry = [
-                'enabled' => $enabled,
-                'settings' => $this->sanitizeMegaPanelSettings($settings),
-                'columns' => $this->sanitizeMegaColumns($columns),
-            ];
-
-            $sanitized[$panelId] = $entry;
-        }
-
-        return $sanitized;
-    }
-
-    protected function sanitizeMegaPanelSettings(array $settings): array
-    {
-        $defaults = $this->defaultMegaPanelSettings();
-        $hasExplicitContainerMode = !empty($settings['containerModeExplicit']);
-        $requestedContainerMode = strtolower(trim((string) ($settings['containerMode'] ?? '')));
-        $resolvedContainerMode = $hasExplicitContainerMode
-            ? $this->sanitizeMegaPanelCssKeyword(
-                $requestedContainerMode !== '' ? $requestedContainerMode : (string) $defaults['containerMode'],
-                ['container', 'fluid'],
-                (string) $defaults['containerMode']
-            )
-            : (string) $defaults['containerMode'];
-
-        return [
-            'backgroundColor' => $this->sanitizeMegaPanelCssValue((string) ($settings['backgroundColor'] ?? ''), 120),
-            'backgroundImage' => $this->sanitizeMegaPanelCssValue((string) ($settings['backgroundImage'] ?? ''), 2048),
-            'backgroundSize' => $this->sanitizeMegaPanelCssKeyword(
-                (string) ($settings['backgroundSize'] ?? $defaults['backgroundSize']),
-                ['auto', 'cover', 'contain'],
-                (string) $defaults['backgroundSize']
-            ),
-            'backgroundPosition' => $this->sanitizeMegaPanelCssValue(
-                (string) ($settings['backgroundPosition'] ?? $defaults['backgroundPosition']),
-                80
-            ) ?: (string) $defaults['backgroundPosition'],
-            'backgroundRepeat' => $this->sanitizeMegaPanelCssKeyword(
-                (string) ($settings['backgroundRepeat'] ?? $defaults['backgroundRepeat']),
-                ['no-repeat', 'repeat', 'repeat-x', 'repeat-y'],
-                (string) $defaults['backgroundRepeat']
-            ),
-            'overlayColor' => $this->sanitizeMegaPanelCssValue((string) ($settings['overlayColor'] ?? ''), 120),
-            'overlayOpacity' => $this->sanitizeMegaPanelOpacityValue($settings['overlayOpacity'] ?? 0),
-            'containerMode' => $resolvedContainerMode,
-            'containerModeExplicit' => $hasExplicitContainerMode,
-            'paddingTop' => $this->sanitizeMegaPanelSpacingValue($settings['paddingTop'] ?? 0),
-            'paddingBottom' => $this->sanitizeMegaPanelSpacingValue($settings['paddingBottom'] ?? 0),
-        ];
-    }
-
-    protected function defaultMegaPanelSettings(): array
-    {
-        return [
-            'backgroundColor' => '',
-            'backgroundImage' => '',
-            'backgroundSize' => 'cover',
-            'backgroundPosition' => 'center center',
-            'backgroundRepeat' => 'no-repeat',
-            'overlayColor' => '',
-            'overlayOpacity' => 0,
-            'containerMode' => 'container',
-            'containerModeExplicit' => false,
-            'paddingTop' => 0,
-            'paddingBottom' => 0,
-        ];
-    }
-
-    protected function sanitizeMegaPanelCssValue(string $value, int $maxLength = 160): string
-    {
-        $normalized = trim((string) preg_replace('/\s+/', ' ', $value));
-        if ($normalized === '' || mb_strlen($normalized) > $maxLength) {
-            return '';
-        }
-        return $normalized;
-    }
-
-    protected function sanitizeMegaPanelCssKeyword(string $value, array $allowed, string $fallback): string
-    {
-        $normalized = strtolower(trim($value));
-        return in_array($normalized, $allowed, true) ? $normalized : $fallback;
-    }
-
-    protected function sanitizeMegaPanelSpacingValue($value): int
-    {
-        $raw = is_numeric($value) ? (int) round((float) $value) : 0;
-        return max(0, min(240, $raw));
-    }
-
-    protected function sanitizeMegaPanelOpacityValue($value): int
-    {
-        $raw = is_numeric($value) ? (int) round((float) $value) : 0;
-        return max(0, min(100, $raw));
-    }
-
-    protected function sanitizeMegaColumns(array $columns): array
-    {
-        $sanitized = [];
-        $totalGroups = 0;
-
-        for ($i = 0; $i < 4; $i++) {
-            $col = $columns[$i] ?? [];
-            if (!is_array($col)) {
-                $col = [];
-            }
-
-            $title = trim((string) ($col['title'] ?? ''));
-
-            $entry = [];
-
-            if ($title !== '') {
-                $entry['title'] = $title;
-            }
-
-            $groups = $this->sanitizeMegaGroups($col);
-            if (!empty($groups)) {
-                $entry['groups'] = $groups;
-                $totalGroups += count($groups);
-            }
-
-            if ($i === 3) {
-                $image = $col['image'] ?? [];
-                if (is_array($image)) {
-                    $imagePath = trim((string) ($image['path'] ?? ''));
-                    $imageId = (int) ($image['id'] ?? 0);
-                    $imageAlt = trim((string) ($image['alt'] ?? ''));
-
-                    if ($imagePath !== '' || $imageId > 0) {
-                        $entry['image'] = [
-                            'id' => $imageId,
-                            'path' => $imagePath,
-                        ];
-                        if ($imageAlt !== '') {
-                            $entry['image']['alt'] = $imageAlt;
-                        }
-                    }
-                }
-            }
-
-            $sanitized[] = $entry;
-        }
-
-        // If all flow sections/groups were removed, force-clear the decorative panel image.
-        if ($totalGroups === 0 && isset($sanitized[3]['image'])) {
-            unset($sanitized[3]['image']);
-        }
-
-        return $sanitized;
-    }
-
-    protected function sanitizeMegaGroups(array $col): array
-    {
-        $groups = $col['groups'] ?? null;
-        $legacyItems = $col['items'] ?? null;
-        $sanitized = [];
-
-        if (is_array($groups)) {
-            foreach ($groups as $group) {
-                if (!is_array($group)) {
-                    continue;
-                }
-                $title = trim((string) ($group['title'] ?? ''));
-                $items = $group['items'] ?? [];
-                if (!is_array($items)) {
-                    $items = [];
-                }
-                $items = $this->sanitizeMegaColumnItems($items);
-                if ($title === '' && empty($items)) {
-                    continue;
-                }
-                $entry = [];
-                if ($title !== '') {
-                    $entry['title'] = $title;
-                }
-                if (!empty($items)) {
-                    $entry['items'] = $items;
-                }
-                $sanitized[] = $entry;
-            }
-        }
-
-        if (empty($sanitized) && is_array($legacyItems)) {
-            $items = $this->sanitizeMegaColumnItems($legacyItems);
-            if (!empty($items)) {
-                $sanitized[] = [
-                    'items' => $items,
-                ];
-            }
-        }
-
-        return $sanitized;
-    }
-
-    protected function sanitizeMegaColumnItems(array $items): array
-    {
-        $sanitized = [];
-
-        foreach ($items as $item) {
-            if (!is_array($item)) {
-                continue;
-            }
-
-            $label = trim((string) ($item['label'] ?? ''));
-            $url = trim((string) ($item['url'] ?? ''));
-            $icon = trim((string) ($item['icon'] ?? ''));
-            $target = trim((string) ($item['target'] ?? ''));
-            $displayType = trim((string) ($item['displayType'] ?? ''));
-            $buttonStyle = trim((string) ($item['buttonStyle'] ?? ''));
-            $labelMode = trim((string) ($item['labelMode'] ?? ''));
-            $refType = trim((string) ($item['refType'] ?? ''));
-            $ref = trim((string) ($item['ref'] ?? ''));
-
-            if ($label === '') {
-                continue;
-            }
-
-            if ($icon !== '' && !IconHelper::iconExists($icon)) {
-                $icon = '';
-            }
-
-            if (!in_array($target, ['_self', '_blank'], true)) {
-                $target = '';
-            }
-            $displayType = $this->sanitizeCtaDisplayType($displayType);
-            $buttonStyle = $this->sanitizeCtaButtonStyle($buttonStyle, $displayType);
-
-            $entry = [
-                'label' => $label,
-                'url' => $url,
-            ];
-            if (in_array($labelMode, ['auto', 'custom'], true)) {
-                $entry['labelMode'] = $labelMode;
-            }
-            if ($refType !== '' && $ref !== '') {
-                $entry['refType'] = $refType;
-                $entry['ref'] = $ref;
-            }
-
-            if ($icon !== '') {
-                $entry['icon'] = $icon;
-            }
-
-            if ($target !== '') {
-                $entry['target'] = $target;
-            }
-            if ($displayType !== '') {
-                $entry['displayType'] = $displayType;
-            }
-            if ($buttonStyle !== '') {
-                $entry['buttonStyle'] = $buttonStyle;
-            }
-
-            $sanitized[] = $entry;
-        }
-
-        return $sanitized;
-    }
-
-    protected function sanitizeCtaDisplayType(string $displayType): string
-    {
-        return $displayType === 'button' ? 'button' : '';
-    }
-
-    protected function sanitizeCtaButtonStyle(string $buttonStyle, string $displayType): string
-    {
-        if ($displayType !== 'button') {
-            return '';
-        }
-
-        return in_array($buttonStyle, ['primary', 'secondary', 'ghost'], true) ? $buttonStyle : 'primary';
-    }
-
     protected function syncMenuReferencesWithContent(array &$menus): void
     {
         $catalog = $this->buildReferenceCatalog();
@@ -1586,43 +1292,6 @@ class AdminController extends BaseController
         return $items;
     }
 
-    protected function attachOrphanPanelIds(array $items, array $panels): array
-    {
-        if (empty($items) || empty($panels)) {
-            return $items;
-        }
-
-        $panelIds = array_keys($panels);
-        $existingIds = [];
-        $missingIndexes = [];
-
-        foreach ($items as $idx => $item) {
-            if (!is_array($item)) {
-                continue;
-            }
-            $id = trim((string) ($item['id'] ?? ''));
-            if ($id !== '') {
-                $existingIds[] = $id;
-            } else {
-                $missingIndexes[] = $idx;
-            }
-        }
-
-        $orphanIds = array_values(array_diff($panelIds, $existingIds));
-        if (empty($orphanIds) || empty($missingIndexes)) {
-            return $items;
-        }
-
-        foreach ($missingIndexes as $pos => $idx) {
-            if (!isset($orphanIds[$pos])) {
-                break;
-            }
-            $items[$idx]['id'] = $orphanIds[$pos];
-        }
-
-        return $items;
-    }
-
     protected function generateItemId(): string
     {
         try {
@@ -1632,54 +1301,49 @@ class AdminController extends BaseController
         }
     }
 
-    protected function mapLegacyMegaPanels(array $legacyItems, array $menuItems): array
+    private function sanitizeInternalReturnPath(string $value): string
     {
-        $panels = [];
-        $index = [];
-
-        foreach ($menuItems as $menuItem) {
-            if (!is_array($menuItem)) {
-                continue;
-            }
-            $key = $this->legacyItemKey($menuItem);
-            if ($key === '') {
-                continue;
-            }
-            $id = (string) ($menuItem['id'] ?? '');
-            if ($id !== '') {
-                $index[$key] = $id;
-            }
-        }
-
-        foreach ($legacyItems as $legacy) {
-            if (!is_array($legacy)) {
-                continue;
-            }
-            $key = $this->legacyItemKey($legacy);
-            if ($key === '' || !isset($index[$key])) {
-                continue;
-            }
-            $id = $index[$key];
-            $columns = $legacy['columns'] ?? [];
-            if (!is_array($columns)) {
-                $columns = [];
-            }
-            $panels[$id] = [
-                'enabled' => true,
-                'columns' => $this->sanitizeMegaColumns($columns),
-            ];
-        }
-
-        return $panels;
-    }
-
-    protected function legacyItemKey(array $item): string
-    {
-        $label = trim((string) ($item['label'] ?? ''));
-        $url = trim((string) ($item['url'] ?? ''));
-        if ($label === '' && $url === '') {
+        $path = trim($value);
+        if ($path === '') {
             return '';
         }
-        return mb_strtolower($label . '|' . $url);
+
+        if (preg_match('~^(?:[a-z][a-z0-9+.-]*:)?//~i', $path) === 1) {
+            return '';
+        }
+
+        if (!str_starts_with($path, '/')) {
+            return '';
+        }
+
+        if (preg_match('/[\r\n]/', $path) === 1) {
+            return '';
+        }
+
+        return $path;
+    }
+
+    private function redirectToMenusAdminOverride(string $action): bool
+    {
+        $results = hook_run('menus.admin.route_override', [
+            'action' => $action,
+            'request_uri' => $this->request->uri(),
+        ]);
+
+        foreach ($results as $result) {
+            if (!is_array($result)) {
+                continue;
+            }
+
+            $redirectUrl = $this->sanitizeInternalReturnPath((string) ($result['redirect_url'] ?? ''));
+            if ($redirectUrl === '') {
+                continue;
+            }
+
+            $this->redirect(url($redirectUrl));
+            return true;
+        }
+
+        return false;
     }
 }

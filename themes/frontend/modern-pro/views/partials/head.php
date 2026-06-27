@@ -76,9 +76,15 @@ if ($documentTitle === '') {
 <?php if ($promoBannerAsset !== ''): ?>
     <link rel="stylesheet" href="<?= e($promoBannerAsset) ?>">
 <?php endif; ?>
-<?php if (module_enabled('Contact')): ?>
-    <link rel="stylesheet" href="<?= module_asset('Contact', 'css/contact-front.css') ?>">
-<?php endif; ?>
+<?php
+$frontendHeadAssetsHtml = \App\Core\HookAssets::render('frontend.assets.head', [
+    'settings' => is_array($settings ?? null) ? $settings : [],
+    'locale' => $locale ?? locale(),
+    'page' => $page ?? null,
+    'post' => $post ?? null,
+]);
+?>
+<?= $frontendHeadAssetsHtml !== '' ? $frontendHeadAssetsHtml . PHP_EOL : '' ?>
 <?php
 $toEnvBool = static function (mixed $value): bool {
     $normalized = strtolower(trim((string) $value));

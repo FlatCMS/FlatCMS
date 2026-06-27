@@ -28,6 +28,68 @@ return [
         'params' => ['response'],
     ],
 
+    // UI shell
+    'frontend.assets.head' => [
+        'label' => 'Frontend assets head',
+        'group' => 'ui',
+        'description' => 'Register frontend head assets from modules and extensions.',
+        'params' => ['payload'],
+    ],
+    'frontend.assets.footer' => [
+        'label' => 'Frontend assets footer',
+        'group' => 'ui',
+        'description' => 'Register frontend footer assets from modules and extensions.',
+        'params' => ['payload'],
+    ],
+    'admin.assets.head' => [
+        'label' => 'Admin assets head',
+        'group' => 'ui',
+        'description' => 'Register admin head assets from modules and extensions.',
+        'params' => ['payload'],
+    ],
+    'admin.assets.footer' => [
+        'label' => 'Admin assets footer',
+        'group' => 'ui',
+        'description' => 'Register admin footer assets from modules and extensions.',
+        'params' => ['payload'],
+    ],
+    'frontend.layout.body_start' => [
+        'label' => 'Frontend layout body start',
+        'group' => 'ui',
+        'description' => 'Render frontend fragments immediately after the opening body tag.',
+        'params' => ['payload'],
+    ],
+    'frontend.layout.body_end' => [
+        'label' => 'Frontend layout body end',
+        'group' => 'ui',
+        'description' => 'Render frontend fragments immediately before the closing body area.',
+        'params' => ['payload'],
+    ],
+    'admin.layout.body_start' => [
+        'label' => 'Admin layout body start',
+        'group' => 'ui',
+        'description' => 'Render admin fragments immediately after the opening body tag.',
+        'params' => ['payload'],
+    ],
+    'admin.layout.modals' => [
+        'label' => 'Admin layout modals',
+        'group' => 'ui',
+        'description' => 'Render admin modal or drawer fragments in the shared admin modal area.',
+        'params' => ['payload'],
+    ],
+    'admin.layout.body_end' => [
+        'label' => 'Admin layout body end',
+        'group' => 'ui',
+        'description' => 'Render admin fragments immediately before the closing body area.',
+        'params' => ['payload'],
+    ],
+    'admin.guided_tour.module_tours' => [
+        'label' => 'Admin guided tour module tours',
+        'group' => 'ui',
+        'description' => 'Allow modules and extensions to register guided-tour route maps and steps for the shared admin shell.',
+        'params' => ['payload'],
+    ],
+
     // Auth
     'auth.login' => [
         'label' => 'User login',
@@ -99,6 +161,18 @@ return [
         'description' => 'After a page is saved.',
         'params' => ['page'],
     ],
+    'pages.before_archive' => [
+        'label' => 'Pages before archive',
+        'group' => 'content',
+        'description' => 'Before a page is archived.',
+        'params' => ['page'],
+    ],
+    'pages.after_archive' => [
+        'label' => 'Pages after archive',
+        'group' => 'content',
+        'description' => 'After a page is archived.',
+        'params' => ['page'],
+    ],
     'pages.before_delete' => [
         'label' => 'Pages before delete',
         'group' => 'content',
@@ -161,6 +235,18 @@ return [
         'description' => 'After a post is published.',
         'params' => ['post'],
     ],
+    'posts.before_archive' => [
+        'label' => 'Posts before archive',
+        'group' => 'content',
+        'description' => 'Before a post is archived.',
+        'params' => ['post'],
+    ],
+    'posts.after_archive' => [
+        'label' => 'Posts after archive',
+        'group' => 'content',
+        'description' => 'After a post is archived.',
+        'params' => ['post'],
+    ],
     'posts.before_delete' => [
         'label' => 'Posts before delete',
         'group' => 'content',
@@ -197,6 +283,18 @@ return [
         'label' => 'Categories after save',
         'group' => 'content',
         'description' => 'After a category is saved.',
+        'params' => ['category'],
+    ],
+    'categories.before_archive' => [
+        'label' => 'Categories before archive',
+        'group' => 'content',
+        'description' => 'Before a category is archived.',
+        'params' => ['category'],
+    ],
+    'categories.after_archive' => [
+        'label' => 'Categories after archive',
+        'group' => 'content',
+        'description' => 'After a category is archived.',
         'params' => ['category'],
     ],
     'categories.before_delete' => [
@@ -282,6 +380,40 @@ return [
         'group' => 'menus',
         'description' => 'After menus are rendered.',
         'params' => ['menus'],
+    ],
+    'menus.admin.route_override' => [
+        'label' => 'Menus admin route override',
+        'group' => 'menus',
+        'description' => 'Allow extensions to override admin entry routes for the Menu domain.',
+        'params' => ['payload'],
+    ],
+    'menus.render.resolve' => [
+        'label' => 'Menus render resolve',
+        'group' => 'menus',
+        'description' => 'Allow extensions to resolve a frontend menu renderer before the default fallback output.',
+        'params' => ['payload'],
+    ],
+
+    // Dashboard
+    'dashboard.admin.banners' => [
+        'label' => 'Dashboard admin banners',
+        'group' => 'dashboard',
+        'description' => 'Render dashboard banners contributed by modules and extensions.',
+        'params' => ['payload'],
+    ],
+
+    // Footer
+    'footer.before_save' => [
+        'label' => 'Footer before save',
+        'group' => 'content',
+        'description' => 'Before footer settings are saved.',
+        'params' => ['footer'],
+    ],
+    'footer.after_save' => [
+        'label' => 'Footer after save',
+        'group' => 'content',
+        'description' => 'After footer settings are saved.',
+        'params' => ['footer'],
     ],
 
     // Themes & settings

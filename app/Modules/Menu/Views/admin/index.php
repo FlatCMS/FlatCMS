@@ -67,7 +67,7 @@ $menuConfig = [
     'messages' => [
         'confirmRemove' => __('confirm_delete', 'Core'),
         'labelRequired' => __('label_required', 'Menu'),
-        'maxRootItemsReached' => __('mega_max_items_reached', 'Menu'),
+        'maxRootItemsReached' => __('menu_root_items_warning', 'Menu'),
         'menuEmpty' => __('menu_empty', 'Menu'),
         'iconsLoading' => __('icon_loading', 'Menu'),
         'iconsError' => __('icon_error', 'Menu'),
@@ -276,12 +276,12 @@ if (!function_exists('menu_render_item')) {
     </div>
 </div>
 
-<form method="POST" action="<?= url('/admin/menus') ?>" id="menuForm" class="menu-builder-form">
+<form method="POST" action="<?= url('/admin/menus') ?>" id="menuForm" class="menu-editor-form">
     <?= csrf_field() ?>
     <input type="hidden" name="menu_data" id="menuDataField" value="">
     <input type="hidden" name="menu_library" id="menuLibraryField" value="">
 
-        <div class="menu-builder">
+        <div class="menu-editor">
             <section class="menu-panel" id="menuActivePanel">
                 <div class="menu-panel-header">
                     <div>
@@ -348,7 +348,7 @@ if (!function_exists('menu_render_item')) {
                         <div id="menuAvailable" class="menu-available-accordion">
                             <section class="menu-accordion-group" data-group="pages">
                                 <button type="button" class="menu-accordion-toggle" data-action="menu-available-toggle" aria-expanded="false" aria-controls="menuAvailablePages">
-                                    <span class="menu-accordion-label"><?= __('mega_tab_pages', 'Menu') ?></span>
+                                    <span class="menu-accordion-label"><?= __('menu_group_pages', 'Menu') ?></span>
                                     <span class="menu-accordion-meta">
                                         <span class="menu-accordion-count" data-role="available-group-count"><?= count($availableGroups['pages']) ?></span>
                                         <i class="fas fa-chevron-down menu-accordion-chevron" aria-hidden="true"></i>
@@ -367,7 +367,7 @@ if (!function_exists('menu_render_item')) {
 
                             <section class="menu-accordion-group" data-group="posts">
                                 <button type="button" class="menu-accordion-toggle" data-action="menu-available-toggle" aria-expanded="false" aria-controls="menuAvailablePosts">
-                                    <span class="menu-accordion-label"><?= __('mega_tab_posts', 'Menu') ?></span>
+                                    <span class="menu-accordion-label"><?= __('menu_group_posts', 'Menu') ?></span>
                                     <span class="menu-accordion-meta">
                                         <span class="menu-accordion-count" data-role="available-group-count"><?= count($availableGroups['posts']) ?></span>
                                         <i class="fas fa-chevron-down menu-accordion-chevron" aria-hidden="true"></i>
@@ -386,7 +386,7 @@ if (!function_exists('menu_render_item')) {
 
                             <section class="menu-accordion-group" data-group="categories">
                                 <button type="button" class="menu-accordion-toggle" data-action="menu-available-toggle" aria-expanded="false" aria-controls="menuAvailableCategories">
-                                    <span class="menu-accordion-label"><?= __('mega_tab_categories', 'Menu') ?></span>
+                                    <span class="menu-accordion-label"><?= __('menu_group_categories', 'Menu') ?></span>
                                     <span class="menu-accordion-meta">
                                         <span class="menu-accordion-count" data-role="available-group-count"><?= count($availableGroups['categories']) ?></span>
                                         <i class="fas fa-chevron-down menu-accordion-chevron" aria-hidden="true"></i>
@@ -405,7 +405,7 @@ if (!function_exists('menu_render_item')) {
 
                             <section class="menu-accordion-group" data-group="cta">
                                 <button type="button" class="menu-accordion-toggle" data-action="menu-available-toggle" aria-expanded="false" aria-controls="menuAvailableCta">
-                                    <span class="menu-accordion-label"><?= __('mega_tab_cta', 'Menu') ?></span>
+                                    <span class="menu-accordion-label"><?= __('menu_group_custom_links', 'Menu') ?></span>
                                     <span class="menu-accordion-meta">
                                         <span class="menu-accordion-count" data-role="available-group-count"><?= count($availableGroups['cta']) ?></span>
                                         <i class="fas fa-chevron-down menu-accordion-chevron" aria-hidden="true"></i>

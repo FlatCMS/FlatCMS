@@ -16,7 +16,7 @@
   margin-top: var(--spacing-1);
 }
 
-.menu-builder {
+.menu-editor {
   --menu-sticky-top: calc(var(--navbar-height, 64px) + 1rem);
   --menu-floating-left: 0px;
   --menu-floating-width: 320px;
@@ -120,12 +120,12 @@
   padding-right: 0;
 }
 
-/* Reduce vertical density on the menu builder page (mega + standard). */
-.menu-builder-form .form-group {
+/* Reduce vertical density on the menu editor page. */
+.menu-editor-form .form-group {
   margin-bottom: 10px;
 }
 
-.menu-builder-form .form-label {
+.menu-editor-form .form-label {
   margin-bottom: 6px;
 }
 
@@ -1018,7 +1018,7 @@
     padding-right: 0;
   }
 
-  .menu-standard-section .menu-builder {
+  .menu-standard-section .menu-editor {
     grid-template-columns: 1fr;
     gap: var(--spacing-4);
   }
@@ -1085,7 +1085,7 @@
     display: none;
   }
 
-  .menu-builder {
+  .menu-editor {
     grid-template-columns: 1fr;
   }
 
@@ -1198,8 +1198,4 @@
     padding-left: 24px;
   }
 
-  /* Extra safety: never show the mega builder on mobile */
-  .mega-builder {
-    display: none !important;
-  }
 }

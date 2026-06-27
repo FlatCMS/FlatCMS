@@ -9,6 +9,12 @@
 
 ?>
 <script src="<?= theme_asset('js/main.js', 'frontend') ?>"></script>
-<?php if (module_enabled('Contact')): ?>
-    <script src="<?= module_asset('Contact', 'js/contact-front.js') ?>"></script>
-<?php endif; ?>
+<?php
+$frontendFooterAssetsHtml = \App\Core\HookAssets::render('frontend.assets.footer', [
+    'settings' => is_array($settings ?? null) ? $settings : [],
+    'locale' => $locale ?? locale(),
+    'page' => $page ?? null,
+    'post' => $post ?? null,
+]);
+?>
+<?= $frontendFooterAssetsHtml !== '' ? $frontendFooterAssetsHtml . PHP_EOL : '' ?>

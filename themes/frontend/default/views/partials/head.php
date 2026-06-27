@@ -73,15 +73,21 @@
     <?php if ($themeCustomizationAsset !== ''): ?>
         <link rel="stylesheet" href="<?= e($themeCustomizationAsset) ?>">
     <?php endif; ?>
-    <?php if ($promoBannerAsset !== ''): ?>
+<?php if ($promoBannerAsset !== ''): ?>
         <link rel="stylesheet" href="<?= e($promoBannerAsset) ?>">
-    <?php endif; ?>
-    <?php if (module_enabled('Contact')): ?>
-        <link rel="stylesheet" href="<?= module_asset('Contact', 'css/contact-front.css') ?>">
-    <?php endif; ?>
-    <?php
-    $toEnvBool = static function (mixed $value): bool {
-        $normalized = strtolower(trim((string) $value));
+<?php endif; ?>
+<?php
+$frontendHeadAssetsHtml = \App\Core\HookAssets::render('frontend.assets.head', [
+    'settings' => is_array($settings ?? null) ? $settings : [],
+    'locale' => $locale ?? locale(),
+    'page' => $page ?? null,
+    'post' => $post ?? null,
+]);
+?>
+<?= $frontendHeadAssetsHtml !== '' ? $frontendHeadAssetsHtml . PHP_EOL : '' ?>
+<?php
+$toEnvBool = static function (mixed $value): bool {
+    $normalized = strtolower(trim((string) $value));
         return in_array($normalized, ['1', 'true', 'on', 'yes'], true);
     };
     $cookieBannerEnabled = $toEnvBool(env('COOKIE_BANNER_ENABLED', 0));

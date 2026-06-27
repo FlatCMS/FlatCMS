@@ -72,6 +72,11 @@
         </div>
     </div>
 
-    <?php if (module_enabled('AiAgent')): ?>
-        <?php include BASE_PATH . '/app/Modules/AiAgent/Views/admin/partials/drawer.php'; ?>
-    <?php endif; ?>
+<?php
+$adminModalSlotsHtml = \App\Core\HookSlots::render('admin.layout.modals', [
+    'settings' => \App\Core\FlatFile::settings(),
+    'locale' => $locale ?? locale(),
+    'auth_user' => $auth_user ?? null,
+]);
+?>
+<?= $adminModalSlotsHtml !== '' ? $adminModalSlotsHtml . PHP_EOL : '' ?>

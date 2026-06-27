@@ -36,7 +36,12 @@
     <link rel="stylesheet" href="<?= asset('css/admin/suneditor.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/core/components-password-toggle.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/admin/guided-tour.css') ?>">
-    <?php if (module_enabled('AiAgent')): ?>
-        <link rel="stylesheet" href="<?= module_asset('AiAgent', 'css/ai-agent.css') ?>">
-    <?php endif; ?>
+<?php
+$adminHeadAssetsHtml = \App\Core\HookAssets::render('admin.assets.head', [
+    'settings' => $headSettings,
+    'locale' => $locale ?? locale(),
+    'auth_user' => $auth_user ?? null,
+]);
+?>
+<?= $adminHeadAssetsHtml !== '' ? $adminHeadAssetsHtml . PHP_EOL : '' ?>
 </head>

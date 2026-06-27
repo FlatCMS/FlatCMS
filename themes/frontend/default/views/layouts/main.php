@@ -13,6 +13,15 @@
 <html lang="<?= $locale ?>" dir="<?= text_direction() ?>">
 <?php include __DIR__ . '/../partials/head.php'; ?>
 <body id="flatcms">
+<?php
+$frontendBodyStartHtml = \App\Core\HookSlots::render('frontend.layout.body_start', [
+    'settings' => is_array($settings ?? null) ? $settings : [],
+    'locale' => $locale,
+    'page' => $page ?? null,
+    'post' => $post ?? null,
+]);
+?>
+<?= $frontendBodyStartHtml !== '' ? $frontendBodyStartHtml . PHP_EOL : '' ?>
     <!-- Promo Banner -->
     <?php $promoBannerSlot = 'above_topbar'; ?>
     <?php include __DIR__ . '/../partials/promo-banner.php'; ?>
@@ -55,6 +64,15 @@
     <?php $promoBannerSlot = 'below_footer'; ?>
     <?php include __DIR__ . '/../partials/promo-banner.php'; ?>
 
+<?php
+$frontendBodyEndHtml = \App\Core\HookSlots::render('frontend.layout.body_end', [
+    'settings' => is_array($settings ?? null) ? $settings : [],
+    'locale' => $locale,
+    'page' => $page ?? null,
+    'post' => $post ?? null,
+]);
+?>
+<?= $frontendBodyEndHtml !== '' ? $frontendBodyEndHtml . PHP_EOL : '' ?>
     <?php include __DIR__ . '/../partials/scripts.php'; ?>
 </body>
 </html>
