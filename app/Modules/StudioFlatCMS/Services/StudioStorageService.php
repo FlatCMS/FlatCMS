@@ -125,7 +125,12 @@ final class StudioStorageService
             return false;
         }
 
-        return trim((string) ($source['import_version'] ?? '')) === '';
+        $storedVersion = trim((string) ($source['import_version'] ?? ''));
+        if ($storedVersion === '') {
+            return true;
+        }
+
+        return $storedVersion !== $this->schema->currentImportVersion();
     }
 
     private function documentPath(string $documentId): string

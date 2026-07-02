@@ -156,9 +156,9 @@ final class StudioSchemaService
      */
     private function buildMainRegionChildren(string $heroTitle, string $heroBody, array $sourcePage): array
     {
-        $importedSection = $this->buildImportedHeroSection($sourcePage, $heroTitle);
-        if ($importedSection !== null) {
-            return [$importedSection];
+        $importedSections = $this->buildImportedSections($sourcePage, $heroTitle);
+        if ($importedSections !== []) {
+            return $importedSections;
         }
 
         return [$this->defaultHeroSection($heroTitle, $heroBody)];
@@ -166,27 +166,22 @@ final class StudioSchemaService
 
     /**
      * @param array<string, mixed> $sourcePage
-     * @return array<string, mixed>|null
+     * @return array<int, array<string, mixed>>
      */
-    private function buildImportedHeroSection(array $sourcePage, string $heroTitle): ?array
+    private function buildImportedSections(array $sourcePage, string $heroTitle): array
     {
         if (!is_array($sourcePage) || $sourcePage === []) {
-            return null;
+            return [];
         }
 
-        $children = [];
+        $sections = [];
         if ($heroTitle !== '') {
-            $children[] = $this->text('hero-title', '<h1>' . $this->escapeHtml($heroTitle) . '</h1>');
+            $sections[] = $this->section('section-title-0', $heroTitle, 'none', [
+                $this->title('hero-title', $heroTitle, 'h1'),
+            ]);
         }
 
-        $children = array_merge($children, $this->importedContentNodes($sourcePage));
-        if ($children === []) {
-            return null;
-        }
-
-        return $this->section('hero-section', __('studio_flatcms_default_hero_label', 'StudioFlatCMS'), 'soft', [
-            $this->stack('hero-copy', __('studio_flatcms_default_copy_label', 'StudioFlatCMS'), 'vertical', $children),
-        ]);
+        return array_merge($sections, $this->importedContentSections($sourcePage, $heroTitle !== ''));
     }
 
     /**
@@ -196,7 +191,7 @@ final class StudioSchemaService
     {
         return $this->section('hero-section', __('studio_flatcms_default_hero_label', 'StudioFlatCMS'), 'soft', [
             $this->stack('hero-copy', __('studio_flatcms_default_copy_label', 'StudioFlatCMS'), 'vertical', [
-                $this->text('hero-title', $heroTitle),
+                $this->title('hero-title', $heroTitle, 'h1'),
                 $this->text('hero-body', $heroBody),
                 $this->stack('hero-actions', __('studio_flatcms_default_actions_label', 'StudioFlatCMS'), 'horizontal', [
                     $this->button('hero-primary', __('studio_flatcms_default_primary_cta', 'StudioFlatCMS'), '/contact', 'primary'),
@@ -210,7 +205,7 @@ final class StudioSchemaService
      * @param array<string, mixed> $sourcePage
      * @return array<int, array<string, mixed>>
      */
-    private function importedContentNodes(array $sourcePage): array
+    private function importedContentSections(array $sourcePage, bool $hasPrimaryTitle = false): array
     {
         $content = trim((string) ($sourcePage['content'] ?? ''));
         if ($content === '') {
@@ -219,7 +214,15 @@ final class StudioSchemaService
 
         if (!class_exists(\DOMDocument::class)) {
             $fallback = $this->sanitizeRichText($content, 12000, '');
-            return $fallback !== '' ? [$this->text('hero-body', $fallback)] : [];
+            if ($fallback === '') {
+                return [];
+            }
+
+            return [
+                $this->section('section-text-0', __('studio_flatcms_default_copy_label', 'StudioFlatCMS'), 'none', [
+                    $this->text('hero-body', $fallback),
+                ]),
+            ];
         }
 
         $internalErrors = libxml_use_internal_errors(true);
@@ -234,38 +237,56 @@ final class StudioSchemaService
 
         if ($loaded === false) {
             $fallback = $this->sanitizeRichText($content, 12000, '');
-            return $fallback !== '' ? [$this->text('hero-body', $fallback)] : [];
+            if ($fallback === '') {
+                return [];
+            }
+
+            return [
+                $this->section('section-text-0', __('studio_flatcms_default_copy_label', 'StudioFlatCMS'), 'none', [
+                    $this->text('hero-body', $fallback),
+                ]),
+            ];
         }
 
         $root = $dom->getElementById('studio-flatcms-import-root');
         if (!$root instanceof \DOMElement) {
             $fallback = $this->sanitizeRichText($content, 12000, '');
-            return $fallback !== '' ? [$this->text('hero-body', $fallback)] : [];
+            if ($fallback === '') {
+                return [];
+            }
+
+            return [
+                $this->section('section-text-0', __('studio_flatcms_default_copy_label', 'StudioFlatCMS'), 'none', [
+                    $this->text('hero-body', $fallback),
+                ]),
+            ];
         }
 
-        $nodes = [];
+        $sections = [];
         $textBuffer = '';
         $sequence = [
+            'section' => 0,
             'text' => 0,
+            'title' => $hasPrimaryTitle ? 1 : 0,
             'image' => 0,
             'actions' => 0,
             'button' => 0,
         ];
 
         foreach ($root->childNodes as $child) {
-            $this->appendImportedContentNode($child, $nodes, $textBuffer, $sequence);
+            $this->appendImportedSectionNode($child, $sections, $textBuffer, $sequence);
         }
 
-        $this->flushImportedTextBuffer($nodes, $textBuffer, $sequence);
+        $this->flushImportedTextSection($sections, $textBuffer, $sequence);
 
-        return $nodes;
+        return $sections;
     }
 
     /**
-     * @param array<int, array<string, mixed>> $nodes
+     * @param array<int, array<string, mixed>> $sections
      * @param array<string, int> $sequence
      */
-    private function appendImportedContentNode(\DOMNode $node, array &$nodes, string &$textBuffer, array &$sequence): void
+    private function appendImportedSectionNode(\DOMNode $node, array &$sections, string &$textBuffer, array &$sequence): void
     {
         if ($node instanceof \DOMText) {
             $text = $this->normalizeImportedText($node->nodeValue ?? '');
@@ -285,20 +306,32 @@ final class StudioSchemaService
         }
 
         if ($this->isButtonLinkGroupElement($node)) {
-            $this->flushImportedTextBuffer($nodes, $textBuffer, $sequence);
+            $this->flushImportedTextSection($sections, $textBuffer, $sequence);
             $stack = $this->makeImportedButtonStack($node, $sequence);
             if ($stack !== null) {
-                $nodes[] = $stack;
+                $sections[] = $this->section('section-actions-' . $sequence['section'], __('studio_flatcms_default_actions_label', 'StudioFlatCMS'), 'none', [$stack]);
+                $sequence['section']++;
+            }
+            return;
+        }
+
+        if (preg_match('/^h[1-6]$/', $tag) === 1) {
+            $this->flushImportedTextSection($sections, $textBuffer, $sequence);
+            $titleNode = $this->makeImportedTitleNode($node, $sequence);
+            if ($titleNode !== null) {
+                $sections[] = $this->section('section-title-' . $sequence['section'], $titleNode['content'], 'none', [$titleNode]);
+                $sequence['section']++;
             }
             return;
         }
 
         $image = $tag === 'img' ? $node : $this->extractStandaloneImageElement($node);
         if ($image instanceof \DOMElement) {
-            $this->flushImportedTextBuffer($nodes, $textBuffer, $sequence);
+            $this->flushImportedTextSection($sections, $textBuffer, $sequence);
             $imageNode = $this->makeImportedImageNode($image, $sequence);
             if ($imageNode !== null) {
-                $nodes[] = $imageNode;
+                $sections[] = $this->section('section-image-' . $sequence['section'], __('studio_flatcms_node_image', 'StudioFlatCMS'), 'none', [$imageNode]);
+                $sequence['section']++;
             }
             return;
         }
@@ -310,10 +343,10 @@ final class StudioSchemaService
     }
 
     /**
-     * @param array<int, array<string, mixed>> $nodes
+     * @param array<int, array<string, mixed>> $sections
      * @param array<string, int> $sequence
      */
-    private function flushImportedTextBuffer(array &$nodes, string &$textBuffer, array &$sequence): void
+    private function flushImportedTextSection(array &$sections, string &$textBuffer, array &$sequence): void
     {
         $html = $this->sanitizeRichText($textBuffer, 12000, '');
         $textBuffer = '';
@@ -323,7 +356,10 @@ final class StudioSchemaService
 
         $id = $sequence['text'] === 0 ? 'hero-body' : 'hero-body-' . $sequence['text'];
         $sequence['text']++;
-        $nodes[] = $this->text($id, $html);
+        $sections[] = $this->section('section-text-' . $sequence['section'], __('studio_flatcms_default_copy_label', 'StudioFlatCMS'), 'none', [
+            $this->text($id, $html),
+        ]);
+        $sequence['section']++;
     }
 
     /**
@@ -345,6 +381,23 @@ final class StudioSchemaService
             $src,
             $this->sanitizeText((string) $image->getAttribute('alt'), 280, '')
         );
+    }
+
+    /**
+     * @param array<string, int> $sequence
+     * @return array<string, mixed>|null
+     */
+    private function makeImportedTitleNode(\DOMElement $element, array &$sequence): ?array
+    {
+        $content = $this->normalizeImportedText($element->textContent ?? '');
+        if ($content === '') {
+            return null;
+        }
+
+        $id = $sequence['title'] === 0 ? 'hero-title' : 'title-' . $sequence['title'];
+        $sequence['title']++;
+
+        return $this->title($id, $content, strtolower($element->tagName));
     }
 
     /**
@@ -465,9 +518,14 @@ final class StudioSchemaService
         return (string) $document->saveHTML($node);
     }
 
+    public function currentImportVersion(): string
+    {
+        return $this->sourceImportVersion();
+    }
+
     private function sourceImportVersion(): string
     {
-        return 'native-source-v2';
+        return 'native-source-v3';
     }
 
     /**
@@ -534,7 +592,7 @@ final class StudioSchemaService
      */
     private function normalizeNode(array $node): array
     {
-        $type = $this->sanitizeEnum((string) ($node['type'] ?? ''), ['section', 'stack', 'text', 'button', 'image', 'menu', 'logo'], 'text');
+        $type = $this->sanitizeEnum((string) ($node['type'] ?? ''), ['section', 'stack', 'text', 'title', 'button', 'image', 'menu', 'logo'], 'text');
         $normalized = [
             'id' => $this->sanitizeNodeId((string) ($node['id'] ?? $type)),
             'type' => $type,
@@ -560,6 +618,11 @@ final class StudioSchemaService
 
         if ($type === 'text') {
             $normalized['content'] = $this->sanitizeRichText((string) ($node['content'] ?? ''), 12000, '');
+        }
+
+        if ($type === 'title') {
+            $normalized['content'] = $this->sanitizeText(strip_tags((string) ($node['content'] ?? '')), 280, '');
+            $normalized['level'] = $this->sanitizeEnum(strtolower((string) ($node['level'] ?? 'h2')), ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'], 'h2');
         }
 
         if ($type === 'logo') {
@@ -659,6 +722,22 @@ final class StudioSchemaService
             'enabled' => true,
             'frame' => $this->defaultFrame(),
             'content' => $content,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function title(string $id, string $content, string $level): array
+    {
+        return [
+            'id' => $id,
+            'type' => 'title',
+            'label' => __('studio_flatcms_node_title', 'StudioFlatCMS'),
+            'enabled' => true,
+            'frame' => $this->defaultFrame(),
+            'content' => $this->sanitizeText(strip_tags($content), 280, ''),
+            'level' => $this->sanitizeEnum(strtolower($level), ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'], 'h2'),
         ];
     }
 

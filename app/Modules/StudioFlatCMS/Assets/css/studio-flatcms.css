@@ -388,6 +388,32 @@ body.sfc-studio-body {
   overflow: visible;
 }
 
+.sfc-studio-snap-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sfc-stage-snap-guide {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+}
+
+.sfc-stage-snap-guide.is-active {
+  display: block;
+}
+
+.sfc-stage-snap-guide-vertical {
+  border-left: 1px dashed #ef4444;
+}
+
+.sfc-stage-snap-guide-horizontal {
+  border-top: 1px dashed #ef4444;
+}
+
 .sfc-studio-inline-editor {
   position: absolute;
   background: transparent;
@@ -568,6 +594,11 @@ body.sfc-studio-body {
   z-index: 1;
 }
 
+.sfc-stage-node.is-snap-target,
+.sfc-stage-region.is-snap-target {
+  box-shadow: inset 0 0 0 9999px rgba(122, 217, 87, 0.15);
+}
+
 .sfc-stage-node.is-selected,
 .sfc-stage-region.is-selected {
   outline: 1px solid var(--sfc-studio-primary);
@@ -658,10 +689,36 @@ body.sfc-studio-body {
   color: inherit;
 }
 
-.sfc-stage-text.is-heading {
-  font-size: 56px;
-  line-height: 1.05;
+.sfc-stage-title {
+  margin: 0;
+  color: inherit;
+  line-height: 1.08;
   letter-spacing: -0.03em;
+}
+
+.sfc-stage-title-h1 {
+  font-size: 56px;
+}
+
+.sfc-stage-title-h2 {
+  font-size: 44px;
+}
+
+.sfc-stage-title-h3 {
+  font-size: 34px;
+}
+
+.sfc-stage-title-h4 {
+  font-size: 28px;
+}
+
+.sfc-stage-title-h5 {
+  font-size: 22px;
+}
+
+.sfc-stage-title-h6 {
+  font-size: 18px;
+  letter-spacing: -0.01em;
 }
 
 .sfc-stage-text > :first-child {
@@ -700,8 +757,31 @@ body.sfc-studio-body {
   user-select: none;
 }
 
+.sfc-stage-page[data-mode="compose"] .sfc-stage-node[data-node-type="title"] > .sfc-stage-title {
+  cursor: inherit;
+  user-select: none;
+}
+
 .sfc-stage-page[data-mode="compose"] .sfc-stage-node[data-node-type="text"].is-richtext-editing > .sfc-stage-text {
   visibility: hidden;
+}
+
+.sfc-stage-page[data-mode="compose"] .sfc-stage-node[data-node-type="title"]:not(.has-frame-width) {
+  display: inline-block;
+  align-self: flex-start;
+  max-width: 100%;
+}
+
+.sfc-stage-page[data-mode="compose"] .sfc-stage-node[data-node-type="title"]:not(.has-frame-width) > .sfc-stage-title {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.sfc-stage-page[data-mode="compose"] .sfc-stage-node[data-node-type="title"] > .sfc-stage-title[contenteditable="true"],
+.sfc-stage-page[data-mode="compose"] .sfc-stage-node[data-node-type="title"] > .sfc-stage-title.is-inline-editing {
+  outline: none;
+  cursor: text;
+  user-select: text;
 }
 
 .sfc-stage-page[data-mode="compose"] .sfc-stage-node[data-node-type="text"]:not(.has-frame-width) {
@@ -720,6 +800,7 @@ body.sfc-studio-body {
 .sfc-stage-node.has-frame-width > .sfc-stage-logo,
 .sfc-stage-node.has-frame-width > .sfc-stage-menu,
 .sfc-stage-node.has-frame-width > .sfc-stage-text,
+.sfc-stage-node.has-frame-width > .sfc-stage-title,
 .sfc-stage-node.has-frame-width > .sfc-stage-image,
 .sfc-stage-node.has-frame-width > .sfc-stage-button {
   width: 100%;
@@ -730,6 +811,7 @@ body.sfc-studio-body {
 .sfc-stage-node.has-frame-height > .sfc-stage-logo,
 .sfc-stage-node.has-frame-height > .sfc-stage-menu,
 .sfc-stage-node.has-frame-height > .sfc-stage-text,
+.sfc-stage-node.has-frame-height > .sfc-stage-title,
 .sfc-stage-node.has-frame-height > .sfc-stage-image,
 .sfc-stage-node.has-frame-height > .sfc-stage-button {
   min-height: 100%;
@@ -844,7 +926,8 @@ body.sfc-studio-body {
   display: none;
 }
 
-.sfc-stage-node-actiontitle {
+.sfc-stage-node-actiontitle,
+.sfc-stage-node-actionlead {
   display: inline-flex;
   align-items: center;
   color: var(--sfc-studio-ink);
@@ -853,6 +936,22 @@ body.sfc-studio-body {
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.sfc-stage-node-actionlead {
+  appearance: none;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sfc-stage-node-actionlead:hover {
+  background: #f8fafc;
+}
+
+.sfc-stage-node-actionlead i {
+  font-size: 12px;
 }
 
 .sfc-stage-node-actions {
@@ -1167,7 +1266,11 @@ body.sfc-studio-body {
     padding: 28px 24px;
   }
 
-  .sfc-stage-text.is-heading {
+  .sfc-stage-title-h1 {
     font-size: 36px;
+  }
+
+  .sfc-stage-title-h2 {
+    font-size: 30px;
   }
 }

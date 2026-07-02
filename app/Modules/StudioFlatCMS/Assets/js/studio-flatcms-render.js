@@ -217,11 +217,29 @@
         var menuOpenClass = ui && ui.nodeMenuId === node.id ? ' is-open' : '';
         var handles = ['n', 'e', 's', 'w'];
         var nodeTitle = String(node.label || node.title || node.type || '');
+        var actionLead = '<span class="sfc-stage-node-actiontitle">' + escapeHtml(nodeTitle) + '</span>';
+        var moveTools = '';
+
+        if (node.type === 'section') {
+            actionLead = ''
+                + '<button type="button" class="sfc-stage-node-actionlead" data-action="duplicate-node" data-node-id="' + escapeHtml(node.id) + '" aria-label="' + escapeHtml(labels.actionDuplicateNode || '') + '">'
+                + '<i class="fa-solid fa-copy" aria-hidden="true"></i>'
+                + '<span>' + escapeHtml(labels.actionDuplicateNode || '') + '</span>'
+                + '</button>';
+            moveTools = ''
+                + '<button type="button" class="sfc-stage-node-tool" data-action="move-node-up" data-node-id="' + escapeHtml(node.id) + '" aria-label="' + escapeHtml(labels.actionMoveNodeUp || '') + '">'
+                + '<i class="fa-solid fa-arrow-up" aria-hidden="true"></i>'
+                + '</button>'
+                + '<button type="button" class="sfc-stage-node-tool" data-action="move-node-down" data-node-id="' + escapeHtml(node.id) + '" aria-label="' + escapeHtml(labels.actionMoveNodeDown || '') + '">'
+                + '<i class="fa-solid fa-arrow-down" aria-hidden="true"></i>'
+                + '</button>';
+        }
 
         return '<div class="sfc-stage-node-chrome' + activeClass + '">'
             + '<div class="sfc-stage-node-actionbar" data-node-actionbar="true">'
-            + '<span class="sfc-stage-node-actiontitle">' + escapeHtml(nodeTitle) + '</span>'
+            + actionLead
             + '<div class="sfc-stage-node-actions">'
+            + moveTools
             + '<button type="button" class="sfc-stage-node-tool sfc-stage-node-menu-toggle" data-action="toggle-node-menu" data-node-id="' + escapeHtml(node.id) + '" aria-label="' + escapeHtml(labels.actionMore || '') + '" aria-expanded="' + (menuOpenClass !== '' ? 'true' : 'false') + '">'
             + '<i class="fa-solid fa-ellipsis" aria-hidden="true"></i>'
             + '</button>'
@@ -285,6 +303,20 @@
                 + '</div>';
         }
 
+        if (node.type === 'title') {
+            var isTitleInlineEditing = ui && ui.inlineEditorNodeId === node.id;
+            var headingTag = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].indexOf(String(node.level || '').toLowerCase()) !== -1
+                ? String(node.level || '').toLowerCase()
+                : 'h2';
+
+            return '<div' + commonAttrs + ' data-node-type="title">'
+                + '<' + headingTag + ' class="sfc-stage-title sfc-stage-title-' + escapeHtml(headingTag) + (isTitleInlineEditing ? ' is-inline-editing' : '') + '" contenteditable="' + (isTitleInlineEditing ? 'true' : 'false') + '" data-inline-content="true" data-node-id="' + escapeHtml(node.id) + '">'
+                + escapeHtml(node.content || '')
+                + '</' + headingTag + '>'
+                + renderNodeChrome(node, selection, mode, labels, ui)
+                + '</div>';
+        }
+
         if (node.type === 'image') {
             return '<div' + commonAttrs + ' data-node-type="image">'
                 + '<figure class="sfc-stage-image">'
@@ -330,6 +362,7 @@
     function drawerCards(labels, drawer) {
         if (drawer === 'elements') {
             return [
+                ['add-title', labels.actionAddTitle, labels.cardAddTitleCopy],
                 ['add-text', labels.actionAddText, labels.cardAddTextCopy],
                 ['add-buttons', labels.actionAddButtons, labels.cardAddButtonsCopy]
             ];
@@ -470,6 +503,19 @@
 
             if (!isDocumentSelection && selectedNode.type === 'text') {
                 contentGroup += renderHelper(labels.textHint || '');
+            }
+
+            if (!isDocumentSelection && selectedNode.type === 'title') {
+                contentGroup += renderHelper(labels.titleHint || '');
+                behaviorGroup += renderField(labels.fieldHeadingLevel,
+                    '<select class="sfc-studio-select" data-action="field-input" data-field="level">'
+                    + '<option value="h1"' + ((selectedNode.level || '') === 'h1' ? ' selected' : '') + '>' + escapeHtml(labels.headingLevelH1 || 'H1') + '</option>'
+                    + '<option value="h2"' + ((selectedNode.level || '') === 'h2' ? ' selected' : '') + '>' + escapeHtml(labels.headingLevelH2 || 'H2') + '</option>'
+                    + '<option value="h3"' + ((selectedNode.level || '') === 'h3' ? ' selected' : '') + '>' + escapeHtml(labels.headingLevelH3 || 'H3') + '</option>'
+                    + '<option value="h4"' + ((selectedNode.level || '') === 'h4' ? ' selected' : '') + '>' + escapeHtml(labels.headingLevelH4 || 'H4') + '</option>'
+                    + '<option value="h5"' + ((selectedNode.level || '') === 'h5' ? ' selected' : '') + '>' + escapeHtml(labels.headingLevelH5 || 'H5') + '</option>'
+                    + '<option value="h6"' + ((selectedNode.level || '') === 'h6' ? ' selected' : '') + '>' + escapeHtml(labels.headingLevelH6 || 'H6') + '</option>'
+                    + '</select>');
             }
 
             if (!isDocumentSelection && selectedNode.type === 'button') {

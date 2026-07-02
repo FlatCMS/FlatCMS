@@ -90,6 +90,66 @@
             return found;
         }
 
+        function findNodePositionInChildren(children, nodeId, parent) {
+            if (!Array.isArray(children)) {
+                return null;
+            }
+
+            for (var index = 0; index < children.length; index += 1) {
+                var child = children[index];
+                if (!child || typeof child !== 'object') {
+                    continue;
+                }
+
+                if (child.id === nodeId) {
+                    return {
+                        parent: parent,
+                        collection: children,
+                        index: index,
+                        node: child
+                    };
+                }
+
+                var nested = findNodePositionInChildren(child.children, nodeId, child);
+                if (nested) {
+                    return nested;
+                }
+            }
+
+            return null;
+        }
+
+        function findNodePosition(nodeId) {
+            var regions = Array.isArray(state.document.regions) ? state.document.regions : [];
+            for (var index = 0; index < regions.length; index += 1) {
+                var region = regions[index];
+                if (!region || typeof region !== 'object') {
+                    continue;
+                }
+
+                if (region.id === nodeId) {
+                    return {
+                        parent: state.document,
+                        collection: regions,
+                        index: index,
+                        node: region
+                    };
+                }
+
+                var nested = findNodePositionInChildren(region.children, nodeId, region);
+                if (nested) {
+                    return nested;
+                }
+            }
+
+            return null;
+        }
+
+        function findParentNode(nodeId) {
+            var position = findNodePosition(nodeId);
+            return position ? position.parent : null;
+        }
+
         function updateDocument(mutator) {
             mutator(state.document);
             state.dirty = true;
@@ -176,44 +236,107 @@
             return true;
         }
 
-        function removeNodeFromChildren(children, nodeId) {
-            if (!Array.isArray(children)) {
+        function insertAfter(nodeId, node) {
+            var position = findNodePosition(nodeId);
+            if (!position || !Array.isArray(position.collection)) {
                 return false;
             }
 
-            for (var index = 0; index < children.length; index += 1) {
-                var child = children[index];
-                if (!child || typeof child !== 'object') {
-                    continue;
-                }
+            position.collection.splice(position.index + 1, 0, node);
+            state.selection.nodeId = node.id;
+            state.dirty = true;
+            emit();
+            return true;
+        }
 
-                if (child.id === nodeId) {
-                    children.splice(index, 1);
-                    return true;
-                }
-
-                if (removeNodeFromChildren(child.children, nodeId)) {
-                    return true;
-                }
+        function refreshNodeIds(node) {
+            if (!node || typeof node !== 'object') {
+                return;
             }
 
-            return false;
+            node.id = createId(String(node.type || 'node'));
+
+            if (!Array.isArray(node.children)) {
+                return;
+            }
+
+            node.children.forEach(function (child) {
+                refreshNodeIds(child);
+            });
+        }
+
+        function offsetDuplicatedNode(node) {
+            if (!node || typeof node !== 'object') {
+                return;
+            }
+
+            if (node.type === 'section' || node.type === 'region') {
+                return;
+            }
+
+            if (!node.frame || typeof node.frame !== 'object') {
+                return;
+            }
+
+            node.frame.offsetX = Number(node.frame.offsetX || 0) + 24;
+            node.frame.offsetY = Number(node.frame.offsetY || 0) + 24;
+        }
+
+        function duplicateNode(nodeId) {
+            var position = findNodePosition(nodeId);
+            if (!position || !Array.isArray(position.collection)) {
+                return false;
+            }
+
+            var duplicated = clone(position.node);
+            refreshNodeIds(duplicated);
+            offsetDuplicatedNode(duplicated);
+            position.collection.splice(position.index + 1, 0, duplicated);
+            state.selection.nodeId = duplicated.id;
+            state.dirty = true;
+            emit();
+            return true;
+        }
+
+        function moveNode(nodeId, direction) {
+            var position = findNodePosition(nodeId);
+            if (!position || !Array.isArray(position.collection)) {
+                return false;
+            }
+
+            var nextIndex = direction === 'up'
+                ? position.index - 1
+                : position.index + 1;
+
+            if (nextIndex < 0 || nextIndex >= position.collection.length) {
+                return false;
+            }
+
+            position.collection.splice(position.index, 1);
+            position.collection.splice(nextIndex, 0, position.node);
+            state.selection.nodeId = nodeId;
+            state.dirty = true;
+            emit();
+            return true;
         }
 
         function removeNode(nodeId) {
-            var removed = false;
-            (state.document.regions || []).forEach(function (region) {
-                if (removed || !region) {
-                    return;
-                }
-                removed = removeNodeFromChildren(region.children, nodeId);
-            });
-
-            if (!removed) {
+            var position = findNodePosition(nodeId);
+            if (!position || !Array.isArray(position.collection) || position.parent === state.document) {
                 return false;
             }
 
-            state.selection.nodeId = state.document.id || '';
+            var fallback = state.document.id || '';
+            if (position.collection[position.index - 1] && position.collection[position.index - 1].id) {
+                fallback = position.collection[position.index - 1].id;
+            } else if (position.collection[position.index + 1] && position.collection[position.index + 1].id) {
+                fallback = position.collection[position.index + 1].id;
+            } else if (position.parent && position.parent.id) {
+                fallback = position.parent.id;
+            }
+
+            position.collection.splice(position.index, 1);
+            state.selection.nodeId = fallback;
             state.dirty = true;
             emit();
             return true;
@@ -224,6 +347,7 @@
             getSnapshot: getSnapshot,
             findNodeById: findNodeById,
             findRegionById: findRegionById,
+            findParentNode: findParentNode,
             updateDocument: updateDocument,
             updateNode: updateNode,
             updateNodeSilently: updateNodeSilently,
@@ -234,6 +358,9 @@
             createId: createId,
             appendToMainSection: appendToMainSection,
             appendChild: appendChild,
+            insertAfter: insertAfter,
+            duplicateNode: duplicateNode,
+            moveNode: moveNode,
             removeNode: removeNode
         };
     }
