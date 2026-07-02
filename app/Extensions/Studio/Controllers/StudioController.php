@@ -42,50 +42,21 @@ final class StudioController extends BaseController
 
     public function index(): void
     {
-        if (!$this->authorize('studio.view')) {
-            return;
+        $query = [];
+        $requestedPage = $this->request->input('page');
+        if (is_scalar($requestedPage)) {
+            $pageValue = trim((string) $requestedPage);
+            if ($pageValue !== '') {
+                $query['page'] = $pageValue;
+            }
         }
 
-        $mediaEnabled = $this->isMediaEnabled();
-        if ($mediaEnabled) {
-            I18n::load('Media');
+        $target = '/admin/studio-flatcms';
+        if ($query !== []) {
+            $target .= '?' . http_build_query($query);
         }
 
-        $sourcePage = $this->resolveActiveSourcePage();
-        $page = $sourcePage !== null
-            ? $this->storage->loadPageForSource($sourcePage)
-            : $this->schema->defaultPage();
-
-        $headStyleUrls = [
-            asset('dists/fontawesome/css/all.min.css'),
-            asset('css/admin/base.css'),
-        ];
-        $scriptUrls = [
-            theme_asset('js/admin.js', 'admin'),
-            asset('js/admin/flatcms-ui-primitives.js'),
-        ];
-        if ($mediaEnabled) {
-            $scriptUrls[] = module_asset('Media', 'js/media-modal.js');
-        }
-
-        $scriptUrls = array_merge($scriptUrls, [
-            module_asset('Studio', 'js/studio-core.js'),
-            module_asset('Studio', 'js/studio-state.js'),
-            module_asset('Studio', 'js/studio-api.js'),
-            module_asset('Studio', 'js/studio-nav.js'),
-            module_asset('Studio', 'js/studio-render.js'),
-            module_asset('Studio', 'js/studio-dnd.js'),
-            module_asset('Studio', 'js/studio-app.js'),
-        ]);
-
-        $this->render('Studio/Views/admin/index', [
-            'pageTitle' => __('studio_title', 'Studio'),
-            'boot' => $this->bootPayload($page, $sourcePage),
-            'stylesUrl' => module_asset('Studio', 'css/studio.css'),
-            'headStyleUrls' => $headStyleUrls,
-            'scriptUrls' => $scriptUrls,
-            'mediaEnabled' => $mediaEnabled,
-        ]);
+        $this->redirect(url($target));
     }
 
     public function data(): void

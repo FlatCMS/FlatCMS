@@ -16,8 +16,8 @@
   "languages": "Languages",
   "public_assets_base": "assets/extensions",
   "public_assets_key": "studio",
-  "sidebar_visible": true,
-  "sidebar_manageable": true,
+  "sidebar_visible": false,
+  "sidebar_manageable": false,
   "license": {
     "required": false,
     "gate": "authoring",

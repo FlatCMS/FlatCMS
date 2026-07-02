@@ -38,22 +38,6 @@ hook_register('auth.permissions.extend', static function (): array {
     ];
 }, ['module' => 'Studio', 'priority' => 20]);
 
-hook_register('auth.menus.extend', static function (): array {
-    $entry = [
-        'url' => '/admin/studio',
-        'icon' => 'fas fa-object-group',
-        'label' => 'studio_menu',
-        'module' => 'Studio',
-        'permission' => 'studio.view',
-    ];
-
-    return [
-        'super_admin' => [$entry],
-        'admin' => [$entry],
-        'editor' => [$entry],
-    ];
-}, ['module' => 'Studio', 'priority' => 20]);
-
 hook_register('content.renderer.resolve', static function ($payload): ?array {
     if (!is_array($payload) || (string) ($payload['domain'] ?? '') !== 'pages') {
         return null;
