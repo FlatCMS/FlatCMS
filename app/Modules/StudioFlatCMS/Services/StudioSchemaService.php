@@ -17,20 +17,27 @@ final class StudioSchemaService
      * @param array<string, mixed> $settings
      * @return array<string, mixed>
      */
-    public function defaultDocument(string $documentId = 'home', array $settings = []): array
+    public function defaultDocument(string $documentId = 'home', array $settings = [], array $sourcePage = []): array
     {
         $brandText = trim((string) ($settings['site_name'] ?? ''));
         if ($brandText === '') {
             $brandText = __('app_name', 'Core');
         }
 
+        $defaultSource = $this->defaultSource($documentId, $sourcePage);
+        $pageTitle = trim((string) ($defaultSource['title'] ?? ''));
+        $heroTitle = $pageTitle !== '' ? $pageTitle : __('studio_flatcms_default_heading', 'StudioFlatCMS');
+        $heroBody = $this->defaultBodyContent($sourcePage);
+        $documentTitle = $pageTitle !== '' ? $pageTitle : __('studio_flatcms_document_title', 'StudioFlatCMS');
+
         return [
             'version' => 1,
             'id' => $this->sanitizeDocumentId($documentId),
-            'title' => __('studio_flatcms_document_title', 'StudioFlatCMS'),
+            'title' => $documentTitle,
             'mode' => 'compose',
             'viewport' => 'desktop',
             'zoom' => 100,
+            'source' => $defaultSource,
             'regions' => [
                 $this->region('header', true, [
                     $this->stack('header-stack', __('studio_flatcms_region_header', 'StudioFlatCMS'), 'horizontal', [
@@ -42,18 +49,7 @@ final class StudioSchemaService
                         ]),
                     ]),
                 ]),
-                $this->region('main', true, [
-                    $this->section('hero-section', __('studio_flatcms_default_hero_label', 'StudioFlatCMS'), 'soft', [
-                        $this->stack('hero-copy', __('studio_flatcms_default_copy_label', 'StudioFlatCMS'), 'vertical', [
-                            $this->text('hero-title', __('studio_flatcms_default_heading', 'StudioFlatCMS')),
-                            $this->text('hero-body', __('studio_flatcms_default_body', 'StudioFlatCMS')),
-                            $this->stack('hero-actions', __('studio_flatcms_default_actions_label', 'StudioFlatCMS'), 'horizontal', [
-                                $this->button('hero-primary', __('studio_flatcms_default_primary_cta', 'StudioFlatCMS'), '/contact', 'primary'),
-                                $this->button('hero-secondary', __('studio_flatcms_default_secondary_cta', 'StudioFlatCMS'), '/page', 'secondary'),
-                            ]),
-                        ]),
-                    ]),
-                ]),
+                $this->region('main', true, $this->buildMainRegionChildren($heroTitle, $heroBody, $sourcePage)),
                 $this->region('aside', false, [
                     $this->section('aside-section', __('studio_flatcms_region_aside', 'StudioFlatCMS'), 'none', [
                         $this->text('aside-note', __('studio_flatcms_default_aside', 'StudioFlatCMS')),
@@ -75,9 +71,9 @@ final class StudioSchemaService
      * @param array<string, mixed> $settings
      * @return array<string, mixed>
      */
-    public function normalizeDocument(array $payload, string $documentId = 'home', array $settings = []): array
+    public function normalizeDocument(array $payload, string $documentId = 'home', array $settings = [], array $sourcePage = []): array
     {
-        $default = $this->defaultDocument($documentId, $settings);
+        $default = $this->defaultDocument($documentId, $settings, $sourcePage);
         $regions = is_array($payload['regions'] ?? null) ? $payload['regions'] : [];
 
         $normalized = [
@@ -87,6 +83,10 @@ final class StudioSchemaService
             'mode' => $this->sanitizeEnum((string) ($payload['mode'] ?? $default['mode']), ['compose', 'theme'], (string) $default['mode']),
             'viewport' => $this->sanitizeEnum((string) ($payload['viewport'] ?? $default['viewport']), ['desktop', 'tablet', 'mobile'], (string) $default['viewport']),
             'zoom' => $this->sanitizeZoom($payload['zoom'] ?? $default['zoom']),
+            'source' => $this->normalizeSource(
+                is_array($payload['source'] ?? null) ? $payload['source'] : [],
+                is_array($default['source'] ?? null) ? $default['source'] : $this->defaultSource($documentId, $sourcePage)
+            ),
             'regions' => [],
         ];
 
@@ -100,6 +100,401 @@ final class StudioSchemaService
         }
 
         return $normalized;
+    }
+
+    /**
+     * @param array<string, mixed> $sourcePage
+     * @return array<string, string>
+     */
+    private function defaultSource(string $documentId, array $sourcePage = []): array
+    {
+        return [
+            'entity_id' => trim((string) ($sourcePage['id'] ?? $documentId)),
+            'title' => trim((string) ($sourcePage['title'] ?? '')),
+            'slug' => trim((string) ($sourcePage['slug'] ?? '')),
+            'locale' => trim((string) ($sourcePage['locale'] ?? '')),
+            'frontend_path' => trim((string) ($sourcePage['frontend_path'] ?? '')),
+            'import_version' => $this->sourceImportVersion(),
+            'content_hash' => $this->sourceContentHash($sourcePage),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $source
+     * @param array<string, string> $default
+     * @return array<string, string>
+     */
+    private function normalizeSource(array $source, array $default): array
+    {
+        return [
+            'entity_id' => $this->sanitizeText((string) ($source['entity_id'] ?? $default['entity_id'] ?? ''), 180, (string) ($default['entity_id'] ?? '')),
+            'title' => $this->sanitizeText((string) ($source['title'] ?? $default['title'] ?? ''), 180, (string) ($default['title'] ?? '')),
+            'slug' => $this->sanitizeText((string) ($source['slug'] ?? $default['slug'] ?? ''), 180, (string) ($default['slug'] ?? '')),
+            'locale' => $this->sanitizeText((string) ($source['locale'] ?? $default['locale'] ?? ''), 24, (string) ($default['locale'] ?? '')),
+            'frontend_path' => $this->sanitizeUrl((string) ($source['frontend_path'] ?? $default['frontend_path'] ?? '')),
+            'import_version' => $this->sanitizeText((string) ($source['import_version'] ?? $default['import_version'] ?? ''), 48, (string) ($default['import_version'] ?? '')),
+            'content_hash' => $this->sanitizeText((string) ($source['content_hash'] ?? $default['content_hash'] ?? ''), 64, (string) ($default['content_hash'] ?? '')),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $sourcePage
+     */
+    private function defaultBodyContent(array $sourcePage): string
+    {
+        $content = $this->sanitizeRichText((string) ($sourcePage['content'] ?? ''), 12000, '');
+        if ($content !== '') {
+            return $content;
+        }
+
+        return __('studio_flatcms_default_body', 'StudioFlatCMS');
+    }
+
+    /**
+     * @param array<string, mixed> $sourcePage
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildMainRegionChildren(string $heroTitle, string $heroBody, array $sourcePage): array
+    {
+        $importedSection = $this->buildImportedHeroSection($sourcePage, $heroTitle);
+        if ($importedSection !== null) {
+            return [$importedSection];
+        }
+
+        return [$this->defaultHeroSection($heroTitle, $heroBody)];
+    }
+
+    /**
+     * @param array<string, mixed> $sourcePage
+     * @return array<string, mixed>|null
+     */
+    private function buildImportedHeroSection(array $sourcePage, string $heroTitle): ?array
+    {
+        if (!is_array($sourcePage) || $sourcePage === []) {
+            return null;
+        }
+
+        $children = [];
+        if ($heroTitle !== '') {
+            $children[] = $this->text('hero-title', '<h1>' . $this->escapeHtml($heroTitle) . '</h1>');
+        }
+
+        $children = array_merge($children, $this->importedContentNodes($sourcePage));
+        if ($children === []) {
+            return null;
+        }
+
+        return $this->section('hero-section', __('studio_flatcms_default_hero_label', 'StudioFlatCMS'), 'soft', [
+            $this->stack('hero-copy', __('studio_flatcms_default_copy_label', 'StudioFlatCMS'), 'vertical', $children),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function defaultHeroSection(string $heroTitle, string $heroBody): array
+    {
+        return $this->section('hero-section', __('studio_flatcms_default_hero_label', 'StudioFlatCMS'), 'soft', [
+            $this->stack('hero-copy', __('studio_flatcms_default_copy_label', 'StudioFlatCMS'), 'vertical', [
+                $this->text('hero-title', $heroTitle),
+                $this->text('hero-body', $heroBody),
+                $this->stack('hero-actions', __('studio_flatcms_default_actions_label', 'StudioFlatCMS'), 'horizontal', [
+                    $this->button('hero-primary', __('studio_flatcms_default_primary_cta', 'StudioFlatCMS'), '/contact', 'primary'),
+                    $this->button('hero-secondary', __('studio_flatcms_default_secondary_cta', 'StudioFlatCMS'), '/page', 'secondary'),
+                ]),
+            ]),
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $sourcePage
+     * @return array<int, array<string, mixed>>
+     */
+    private function importedContentNodes(array $sourcePage): array
+    {
+        $content = trim((string) ($sourcePage['content'] ?? ''));
+        if ($content === '') {
+            return [];
+        }
+
+        if (!class_exists(\DOMDocument::class)) {
+            $fallback = $this->sanitizeRichText($content, 12000, '');
+            return $fallback !== '' ? [$this->text('hero-body', $fallback)] : [];
+        }
+
+        $internalErrors = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $wrapped = '<!DOCTYPE html><html><body><div id="studio-flatcms-import-root">' . $content . '</div></body></html>';
+        $encoded = function_exists('mb_convert_encoding')
+            ? (string) mb_convert_encoding($wrapped, 'HTML-ENTITIES', 'UTF-8')
+            : $wrapped;
+        $loaded = $dom->loadHTML($encoded, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        libxml_use_internal_errors($internalErrors);
+
+        if ($loaded === false) {
+            $fallback = $this->sanitizeRichText($content, 12000, '');
+            return $fallback !== '' ? [$this->text('hero-body', $fallback)] : [];
+        }
+
+        $root = $dom->getElementById('studio-flatcms-import-root');
+        if (!$root instanceof \DOMElement) {
+            $fallback = $this->sanitizeRichText($content, 12000, '');
+            return $fallback !== '' ? [$this->text('hero-body', $fallback)] : [];
+        }
+
+        $nodes = [];
+        $textBuffer = '';
+        $sequence = [
+            'text' => 0,
+            'image' => 0,
+            'actions' => 0,
+            'button' => 0,
+        ];
+
+        foreach ($root->childNodes as $child) {
+            $this->appendImportedContentNode($child, $nodes, $textBuffer, $sequence);
+        }
+
+        $this->flushImportedTextBuffer($nodes, $textBuffer, $sequence);
+
+        return $nodes;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $nodes
+     * @param array<string, int> $sequence
+     */
+    private function appendImportedContentNode(\DOMNode $node, array &$nodes, string &$textBuffer, array &$sequence): void
+    {
+        if ($node instanceof \DOMText) {
+            $text = $this->normalizeImportedText($node->nodeValue ?? '');
+            if ($text !== '') {
+                $textBuffer .= '<p>' . $this->escapeHtml($text) . '</p>';
+            }
+            return;
+        }
+
+        if (!$node instanceof \DOMElement) {
+            return;
+        }
+
+        $tag = strtolower($node->tagName);
+        if (in_array($tag, ['script', 'style'], true)) {
+            return;
+        }
+
+        if ($this->isButtonLinkGroupElement($node)) {
+            $this->flushImportedTextBuffer($nodes, $textBuffer, $sequence);
+            $stack = $this->makeImportedButtonStack($node, $sequence);
+            if ($stack !== null) {
+                $nodes[] = $stack;
+            }
+            return;
+        }
+
+        $image = $tag === 'img' ? $node : $this->extractStandaloneImageElement($node);
+        if ($image instanceof \DOMElement) {
+            $this->flushImportedTextBuffer($nodes, $textBuffer, $sequence);
+            $imageNode = $this->makeImportedImageNode($image, $sequence);
+            if ($imageNode !== null) {
+                $nodes[] = $imageNode;
+            }
+            return;
+        }
+
+        $fragment = $this->sanitizeRichText($this->outerHtml($node), 12000, '');
+        if ($fragment !== '') {
+            $textBuffer .= $fragment;
+        }
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $nodes
+     * @param array<string, int> $sequence
+     */
+    private function flushImportedTextBuffer(array &$nodes, string &$textBuffer, array &$sequence): void
+    {
+        $html = $this->sanitizeRichText($textBuffer, 12000, '');
+        $textBuffer = '';
+        if ($html === '') {
+            return;
+        }
+
+        $id = $sequence['text'] === 0 ? 'hero-body' : 'hero-body-' . $sequence['text'];
+        $sequence['text']++;
+        $nodes[] = $this->text($id, $html);
+    }
+
+    /**
+     * @param array<string, int> $sequence
+     * @return array<string, mixed>|null
+     */
+    private function makeImportedImageNode(\DOMElement $image, array &$sequence): ?array
+    {
+        $src = $this->sanitizeUrl(trim((string) $image->getAttribute('src')));
+        if ($src === '') {
+            return null;
+        }
+
+        $id = $sequence['image'] === 0 ? 'hero-image' : 'hero-image-' . $sequence['image'];
+        $sequence['image']++;
+
+        return $this->image(
+            $id,
+            $src,
+            $this->sanitizeText((string) $image->getAttribute('alt'), 280, '')
+        );
+    }
+
+    /**
+     * @param array<string, int> $sequence
+     * @return array<string, mixed>|null
+     */
+    private function makeImportedButtonStack(\DOMElement $element, array &$sequence): ?array
+    {
+        $children = [];
+        foreach ($element->getElementsByTagName('a') as $anchor) {
+            if (!$anchor instanceof \DOMElement) {
+                continue;
+            }
+
+            $button = $this->makeImportedButtonNode($anchor, $sequence);
+            if ($button !== null) {
+                $children[] = $button;
+            }
+        }
+
+        if ($children === []) {
+            return null;
+        }
+
+        $id = $sequence['actions'] === 0 ? 'hero-actions' : 'hero-actions-' . $sequence['actions'];
+        $sequence['actions']++;
+
+        return $this->stack($id, __('studio_flatcms_default_actions_label', 'StudioFlatCMS'), 'horizontal', $children);
+    }
+
+    /**
+     * @param array<string, int> $sequence
+     * @return array<string, mixed>|null
+     */
+    private function makeImportedButtonNode(\DOMElement $anchor, array &$sequence): ?array
+    {
+        $label = $this->normalizeImportedText($anchor->textContent ?? '');
+        $url = $this->sanitizeUrl(trim((string) $anchor->getAttribute('href')));
+        if ($label === '' || $url === '') {
+            return null;
+        }
+
+        $id = $sequence['button'] === 0 ? 'hero-primary' : 'hero-button-' . $sequence['button'];
+        $sequence['button']++;
+
+        return $this->button($id, $label, $url, $this->buttonVariantFromClasses($anchor));
+    }
+
+    private function extractStandaloneImageElement(\DOMElement $element): ?\DOMElement
+    {
+        $images = $element->getElementsByTagName('img');
+        if ($images->length !== 1) {
+            return null;
+        }
+
+        $image = $images->item(0);
+        if (!$image instanceof \DOMElement) {
+            return null;
+        }
+
+        $text = $this->normalizeImportedText($element->textContent ?? '');
+        return $text === '' ? $image : null;
+    }
+
+    private function isButtonLinkGroupElement(\DOMElement $element): bool
+    {
+        $anchors = $element->getElementsByTagName('a');
+        if ($anchors->length === 0) {
+            return false;
+        }
+
+        foreach ($anchors as $anchor) {
+            if (!$anchor instanceof \DOMElement || !$this->elementHasClass($anchor, 'btn')) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function buttonVariantFromClasses(\DOMElement $anchor): string
+    {
+        if ($this->elementHasClass($anchor, 'btn-link')) {
+            return 'link';
+        }
+
+        if ($this->elementHasClass($anchor, 'btn-secondary')) {
+            return 'secondary';
+        }
+
+        return 'primary';
+    }
+
+    private function elementHasClass(\DOMElement $element, string $className): bool
+    {
+        $classAttribute = trim((string) $element->getAttribute('class'));
+        if ($classAttribute === '') {
+            return false;
+        }
+
+        $classes = preg_split('/\s+/', $classAttribute) ?: [];
+        return in_array($className, $classes, true);
+    }
+
+    private function normalizeImportedText(string $value): string
+    {
+        $normalized = preg_replace('/\s+/u', ' ', trim($value)) ?? '';
+        return trim($normalized);
+    }
+
+    private function outerHtml(\DOMNode $node): string
+    {
+        $document = $node->ownerDocument;
+        if (!$document instanceof \DOMDocument) {
+            return '';
+        }
+
+        return (string) $document->saveHTML($node);
+    }
+
+    private function sourceImportVersion(): string
+    {
+        return 'native-source-v2';
+    }
+
+    /**
+     * @param array<string, mixed> $sourcePage
+     */
+    private function sourceContentHash(array $sourcePage): string
+    {
+        $parts = [
+            (string) ($sourcePage['id'] ?? ''),
+            (string) ($sourcePage['title'] ?? ''),
+            (string) ($sourcePage['slug'] ?? ''),
+            (string) ($sourcePage['locale'] ?? ''),
+            (string) ($sourcePage['content'] ?? ''),
+        ];
+
+        foreach ($parts as $part) {
+            if ($part !== '') {
+                return sha1(implode('|', $parts));
+            }
+        }
+
+        return '';
+    }
+
+    private function escapeHtml(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
     /**
@@ -139,7 +534,7 @@ final class StudioSchemaService
      */
     private function normalizeNode(array $node): array
     {
-        $type = $this->sanitizeEnum((string) ($node['type'] ?? ''), ['section', 'stack', 'text', 'button', 'menu', 'logo'], 'text');
+        $type = $this->sanitizeEnum((string) ($node['type'] ?? ''), ['section', 'stack', 'text', 'button', 'image', 'menu', 'logo'], 'text');
         $normalized = [
             'id' => $this->sanitizeNodeId((string) ($node['id'] ?? $type)),
             'type' => $type,
@@ -175,6 +570,11 @@ final class StudioSchemaService
             $normalized['content'] = $this->sanitizeText((string) ($node['content'] ?? ''), 180, '');
             $normalized['url'] = $this->sanitizeUrl((string) ($node['url'] ?? ''));
             $normalized['variant'] = $this->sanitizeEnum((string) ($node['variant'] ?? 'primary'), ['primary', 'secondary', 'link'], 'primary');
+        }
+
+        if ($type === 'image') {
+            $normalized['src'] = $this->sanitizeUrl((string) ($node['src'] ?? ''));
+            $normalized['alt'] = $this->sanitizeText((string) ($node['alt'] ?? ''), 280, '');
         }
 
         if ($type === 'menu') {
@@ -276,6 +676,22 @@ final class StudioSchemaService
             'content' => $label,
             'url' => $url,
             'variant' => $variant,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function image(string $id, string $src, string $alt): array
+    {
+        return [
+            'id' => $id,
+            'type' => 'image',
+            'label' => __('studio_flatcms_node_image', 'StudioFlatCMS'),
+            'enabled' => true,
+            'frame' => $this->defaultFrame(),
+            'src' => $src,
+            'alt' => $alt,
         ];
     }
 
@@ -554,7 +970,7 @@ final class StudioSchemaService
             return '';
         }
 
-        if (str_starts_with($clean, '/') || filter_var($clean, FILTER_VALIDATE_URL)) {
+        if (str_starts_with($clean, '/') || str_starts_with($clean, '#') || filter_var($clean, FILTER_VALIDATE_URL)) {
             return $clean;
         }
 

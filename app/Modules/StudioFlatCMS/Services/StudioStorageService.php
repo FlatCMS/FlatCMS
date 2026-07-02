@@ -28,17 +28,33 @@ final class StudioStorageService
      */
     public function loadDocument(string $documentId, array $settings = []): array
     {
+        return $this->loadDocumentForSource(null, $settings, $documentId);
+    }
+
+    /**
+     * @param array<string, mixed>|null $sourcePage
+     * @param array<string, mixed> $settings
+     * @return array<string, mixed>
+     */
+    public function loadDocumentForSource(?array $sourcePage, array $settings = [], string $fallbackDocumentId = 'home'): array
+    {
+        $documentId = is_array($sourcePage) ? $this->documentIdForSourcePage($sourcePage) : $fallbackDocumentId;
         $path = $this->documentPath($documentId);
         if (!is_file($path)) {
-            return $this->schema->defaultDocument($documentId, $settings);
+            return $this->schema->defaultDocument($documentId, $settings, is_array($sourcePage) ? $sourcePage : []);
         }
 
         $decoded = json_decode((string) file_get_contents($path), true);
         if (!is_array($decoded)) {
-            return $this->schema->defaultDocument($documentId, $settings);
+            return $this->schema->defaultDocument($documentId, $settings, is_array($sourcePage) ? $sourcePage : []);
         }
 
-        return $this->schema->normalizeDocument($decoded, $documentId, $settings);
+        if ($this->shouldRefreshLegacySourceDocument($decoded, $sourcePage)) {
+            return $this->schema->defaultDocument($documentId, $settings, is_array($sourcePage) ? $sourcePage : []);
+        }
+
+        $document = $this->schema->normalizeDocument($decoded, $documentId, $settings, is_array($sourcePage) ? $sourcePage : []);
+        return $document;
     }
 
     /**
@@ -48,7 +64,19 @@ final class StudioStorageService
      */
     public function saveDocument(string $documentId, array $payload, array $settings = []): array
     {
-        $document = $this->schema->normalizeDocument($payload, $documentId, $settings);
+        return $this->saveDocumentForSource(null, $payload, $settings, $documentId);
+    }
+
+    /**
+     * @param array<string, mixed>|null $sourcePage
+     * @param array<string, mixed> $payload
+     * @param array<string, mixed> $settings
+     * @return array<string, mixed>
+     */
+    public function saveDocumentForSource(?array $sourcePage, array $payload, array $settings = [], string $fallbackDocumentId = 'home'): array
+    {
+        $documentId = is_array($sourcePage) ? $this->documentIdForSourcePage($sourcePage) : $fallbackDocumentId;
+        $document = $this->schema->normalizeDocument($payload, $documentId, $settings, is_array($sourcePage) ? $sourcePage : []);
         $path = $this->documentPath($documentId);
         $directory = dirname($path);
 
@@ -69,6 +97,35 @@ final class StudioStorageService
         }
 
         return $document;
+    }
+
+    /**
+     * @param array<string, mixed> $sourcePage
+     */
+    public function documentIdForSourcePage(array $sourcePage): string
+    {
+        $sourceId = trim((string) ($sourcePage['id'] ?? ''));
+        return $sourceId !== '' ? $sourceId : 'home';
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     * @param array<string, mixed>|null $sourcePage
+     */
+    private function shouldRefreshLegacySourceDocument(array $document, ?array $sourcePage): bool
+    {
+        if (!is_array($sourcePage) || $sourcePage === []) {
+            return false;
+        }
+
+        $source = is_array($document['source'] ?? null) ? $document['source'] : [];
+        $documentSourceId = trim((string) ($source['entity_id'] ?? $document['id'] ?? ''));
+        $requestedSourceId = trim((string) ($sourcePage['id'] ?? ''));
+        if ($documentSourceId === '' || $requestedSourceId === '' || $documentSourceId !== $requestedSourceId) {
+            return false;
+        }
+
+        return trim((string) ($source['import_version'] ?? '')) === '';
     }
 
     private function documentPath(string $documentId): string

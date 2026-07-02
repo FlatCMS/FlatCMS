@@ -47,6 +47,8 @@
         inspectorOpen: false,
         inlineEditorNodeId: '',
         nodeMenuId: '',
+        sources: Array.isArray(boot.sources) ? boot.sources : [],
+        currentSource: boot.currentSource && typeof boot.currentSource === 'object' ? boot.currentSource : null,
         pendingFieldDraft: null,
         pendingInlineDraft: null,
         richTextEditorHandle: null,
@@ -1199,6 +1201,9 @@
         if (action === 'save') {
             namespace.api.saveDocument(boot, snapshot.document).then(function (response) {
                 store.markSaved(response.document || snapshot.document);
+                if (response && response.currentSource && typeof response.currentSource === 'object') {
+                    ui.currentSource = response.currentSource;
+                }
                 namespace.api.showToast((response && response.message) || labels.saveSuccess || '', 'success');
             }).catch(function (error) {
                 namespace.api.showToast((error && error.message) || labels.saveError || '', 'error');
@@ -1350,6 +1355,25 @@
         var action = target.getAttribute('data-action');
         if (action === 'zoom') {
             onAction('zoom', target);
+            return;
+        }
+
+        if (action === 'switch-source-page') {
+            commitActiveEditor();
+            var currentUrl = ui.currentSource && ui.currentSource.studio_url ? String(ui.currentSource.studio_url) : '';
+            var nextUrl = String(target.value || '').trim();
+
+            if (nextUrl === '' || nextUrl === currentUrl) {
+                target.value = currentUrl;
+                return;
+            }
+
+            if (store.getSnapshot().dirty && !window.confirm(labels.actionSwitchSourceConfirm || '')) {
+                target.value = currentUrl;
+                return;
+            }
+
+            window.location.href = nextUrl;
             return;
         }
 

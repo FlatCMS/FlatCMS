@@ -285,6 +285,15 @@
                 + '</div>';
         }
 
+        if (node.type === 'image') {
+            return '<div' + commonAttrs + ' data-node-type="image">'
+                + '<figure class="sfc-stage-image">'
+                + (node.src ? '<img src="' + escapeHtml(node.src || '') + '" alt="' + escapeHtml(node.alt || '') + '">' : '')
+                + '</figure>'
+                + renderNodeChrome(node, selection, mode, labels, ui)
+                + '</div>';
+        }
+
         var textClass = String(node.id || '').indexOf('title') !== -1 ? ' is-heading' : '';
         return '<div' + commonAttrs + ' data-node-type="text"><div class="sfc-stage-text' + textClass + '" data-node-text="true" data-node-id="' + escapeHtml(node.id) + '">' + renderRichTextContent(node.content || '') + '</div>' + renderNodeChrome(node, selection, mode, labels, ui) + '</div>';
     }
@@ -341,19 +350,60 @@
         ];
     }
 
-    function renderDrawer(root, labels, drawer) {
+    function renderSourceDrawer(labels, ui) {
+        var sources = ui && Array.isArray(ui.sources) ? ui.sources : [];
+        var currentSource = ui && ui.currentSource && typeof ui.currentSource === 'object' ? ui.currentSource : null;
+
+        if (sources.length === 0) {
+            return renderGroup(
+                labels.fieldSourcePage || '',
+                renderHelper(labels.pageSourceEmpty || '')
+            );
+        }
+
+        var currentId = currentSource && currentSource.id ? String(currentSource.id) : '';
+        var helper = labels.pageSourceHint || '';
+        if (currentSource && currentSource.frontend_path) {
+            helper += (helper !== '' ? ' · ' : '') + String(currentSource.frontend_path);
+        }
+
+        return renderGroup(
+            labels.fieldSourcePage || '',
+            '<div class="sfc-studio-field">'
+                + '<select class="sfc-studio-select" data-action="switch-source-page">'
+                + sources.map(function (source) {
+                    var optionLabel = [source.title || '', source.locale_label || ''].filter(Boolean).join(' · ');
+                    return '<option value="' + escapeHtml(source.studio_url || '') + '"' + (String(source.id || '') === currentId ? ' selected' : '') + '>'
+                        + escapeHtml(optionLabel)
+                        + '</option>';
+                }).join('')
+                + '</select>'
+            + '</div>'
+            + renderHelper(helper)
+        );
+    }
+
+    function renderDrawer(root, labels, drawer, ui) {
         if (!drawer) {
             root.innerHTML = '';
             return;
         }
 
         var cards = drawerCards(labels, drawer);
-        root.innerHTML = '<div class="sfc-studio-drawer-group">' + cards.map(function (card) {
+        var html = '';
+
+        if (drawer === 'page') {
+            html += renderSourceDrawer(labels, ui);
+        }
+
+        html += '<div class="sfc-studio-drawer-group">' + cards.map(function (card) {
             return '<button type="button" class="sfc-studio-card-action" data-action="' + escapeHtml(card[0]) + '">'
                 + '<span class="sfc-studio-card-action-title">' + escapeHtml(card[1]) + '</span>'
                 + '<span class="sfc-studio-card-action-copy">' + escapeHtml(card[2]) + '</span>'
                 + '</button>';
         }).join('') + '</div>';
+
+        root.innerHTML = html;
     }
 
     function inspectorTabs(labels, activeTab) {
@@ -431,6 +481,11 @@
                     + '<option value="secondary"' + ((selectedNode.variant || '') === 'secondary' ? ' selected' : '') + '>' + escapeHtml(labels.variantSecondary || '') + '</option>'
                     + '<option value="link"' + ((selectedNode.variant || '') === 'link' ? ' selected' : '') + '>' + escapeHtml(labels.variantLink || '') + '</option>'
                     + '</select>');
+            }
+
+            if (!isDocumentSelection && selectedNode.type === 'image') {
+                contentGroup += renderField(labels.fieldImageUrl || '', '<input class="sfc-studio-input" data-action="field-input" data-field="src" value="' + escapeHtml(selectedNode.src || '') + '">');
+                contentGroup += renderField(labels.fieldImageAlt || '', '<input class="sfc-studio-input" data-action="field-input" data-field="alt" value="' + escapeHtml(selectedNode.alt || '') + '">');
             }
 
             if (!isDocumentSelection && selectedNode.type === 'logo') {
@@ -516,7 +571,7 @@
         mount: function (elements, snapshot, ui, labels) {
             renderTopbar(snapshot, labels);
             renderCanvas(elements.stage, snapshot, labels, ui);
-            renderDrawer(elements.drawerBody, labels, ui.drawer);
+            renderDrawer(elements.drawerBody, labels, ui.drawer, ui);
             renderInspector(elements.inspectorBody, elements.inspectorTabs, snapshot, labels, ui.inspectorOpen, ui.selectedNode);
         }
     };

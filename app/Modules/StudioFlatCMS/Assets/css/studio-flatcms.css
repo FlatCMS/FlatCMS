@@ -720,6 +720,7 @@ body.sfc-studio-body {
 .sfc-stage-node.has-frame-width > .sfc-stage-logo,
 .sfc-stage-node.has-frame-width > .sfc-stage-menu,
 .sfc-stage-node.has-frame-width > .sfc-stage-text,
+.sfc-stage-node.has-frame-width > .sfc-stage-image,
 .sfc-stage-node.has-frame-width > .sfc-stage-button {
   width: 100%;
 }
@@ -729,9 +730,36 @@ body.sfc-studio-body {
 .sfc-stage-node.has-frame-height > .sfc-stage-logo,
 .sfc-stage-node.has-frame-height > .sfc-stage-menu,
 .sfc-stage-node.has-frame-height > .sfc-stage-text,
+.sfc-stage-node.has-frame-height > .sfc-stage-image,
 .sfc-stage-node.has-frame-height > .sfc-stage-button {
   min-height: 100%;
   height: 100%;
+}
+
+.sfc-stage-node[data-node-type="image"] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
+.sfc-stage-image {
+  display: block;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.sfc-stage-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sfc-stage-node.has-frame-height > .sfc-stage-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .sfc-stage-button {

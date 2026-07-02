@@ -14,6 +14,7 @@ namespace App\Modules\StudioFlatCMS\Controllers;
 use App\Core\BaseController;
 use App\Core\FlatFile;
 use App\Core\I18n;
+use App\Modules\StudioFlatCMS\Services\StudioPageSourceService;
 use App\Modules\StudioFlatCMS\Services\StudioSchemaService;
 use App\Modules\StudioFlatCMS\Services\StudioStorageService;
 
@@ -23,14 +24,17 @@ final class AdminController extends BaseController
 
     private StudioSchemaService $schema;
     private StudioStorageService $storage;
+    private StudioPageSourceService $sourcePages;
 
     public function __construct()
     {
         parent::__construct();
         I18n::load('StudioFlatCMS');
+        I18n::load('Pages');
 
         $this->schema = new StudioSchemaService();
         $this->storage = new StudioStorageService($this->schema);
+        $this->sourcePages = new StudioPageSourceService();
     }
 
     public function index(): void
@@ -40,7 +44,8 @@ final class AdminController extends BaseController
         }
 
         $settings = FlatFile::settings();
-        $document = $this->storage->loadDocument(self::DOCUMENT_ID, $settings);
+        $sourcePage = $this->resolveActiveSourcePage();
+        $document = $this->storage->loadDocumentForSource($sourcePage, $settings, self::DOCUMENT_ID);
 
         $this->render('StudioFlatCMS/Views/admin/index', [
             'pageTitle' => __('studio_flatcms_title', 'StudioFlatCMS'),
@@ -72,7 +77,7 @@ final class AdminController extends BaseController
                 module_asset('StudioFlatCMS', 'js/studio-flatcms-app.js'),
             ],
             'stylesUrl' => module_asset('StudioFlatCMS', 'css/studio-flatcms.css'),
-            'boot' => $this->bootPayload($document),
+            'boot' => $this->bootPayload($document, $sourcePage),
         ]);
     }
 
@@ -82,9 +87,19 @@ final class AdminController extends BaseController
             return;
         }
 
+        $sourcePage = $this->resolveActiveSourcePage();
+        $settings = FlatFile::settings();
+
         $this->json([
             'ok' => true,
-            'document' => $this->storage->loadDocument(self::DOCUMENT_ID, FlatFile::settings()),
+            'document' => $this->storage->loadDocumentForSource($sourcePage, $settings, self::DOCUMENT_ID),
+            'defaultDocument' => $this->schema->defaultDocument(
+                is_array($sourcePage) ? (string) ($sourcePage['id'] ?? self::DOCUMENT_ID) : self::DOCUMENT_ID,
+                $settings,
+                is_array($sourcePage) ? $sourcePage : []
+            ),
+            'sources' => $this->sourcePages->listPages(),
+            'currentSource' => $this->sourceOptionForPage($sourcePage),
         ]);
     }
 
@@ -120,12 +135,15 @@ final class AdminController extends BaseController
             return;
         }
 
-        $saved = $this->storage->saveDocument(self::DOCUMENT_ID, $document, FlatFile::settings());
+        $settings = FlatFile::settings();
+        $sourcePage = $this->resolveSourcePageForPayload($document);
+        $saved = $this->storage->saveDocumentForSource($sourcePage, $document, $settings, self::DOCUMENT_ID);
 
         $this->json([
             'ok' => true,
             'message' => __('studio_flatcms_save_success', 'StudioFlatCMS'),
             'document' => $saved,
+            'currentSource' => $this->sourceOptionForPage($sourcePage),
         ]);
     }
 
@@ -133,14 +151,23 @@ final class AdminController extends BaseController
      * @param array<string, mixed> $document
      * @return array<string, mixed>
      */
-    private function bootPayload(array $document): array
+    private function bootPayload(array $document, ?array $sourcePage): array
     {
+        $settings = FlatFile::settings();
+        $currentSource = $this->sourceOptionForPage($sourcePage);
+
         return [
             'document' => $document,
-            'defaultDocument' => $this->schema->defaultDocument(self::DOCUMENT_ID, FlatFile::settings()),
+            'defaultDocument' => $this->schema->defaultDocument(
+                is_array($sourcePage) ? (string) ($sourcePage['id'] ?? self::DOCUMENT_ID) : self::DOCUMENT_ID,
+                $settings,
+                is_array($sourcePage) ? $sourcePage : []
+            ),
+            'sources' => $this->sourcePages->listPages(),
+            'currentSource' => $currentSource,
             'routes' => [
-                'data' => url('/admin/studio-flatcms/data'),
-                'save' => url('/admin/studio-flatcms/save'),
+                'data' => $this->routeUrl('/admin/studio-flatcms/data', $currentSource),
+                'save' => $this->routeUrl('/admin/studio-flatcms/save', $currentSource),
             ],
             'config' => [
                 'token' => $this->csrfToken(),
@@ -161,12 +188,15 @@ final class AdminController extends BaseController
                 'tabResponsive' => __('studio_flatcms_inspector_tab_responsive', 'StudioFlatCMS'),
                 'fieldLabel' => __('studio_flatcms_field_label', 'StudioFlatCMS'),
                 'fieldPageTitle' => __('studio_flatcms_field_page_title', 'StudioFlatCMS'),
+                'fieldSourcePage' => __('studio_flatcms_field_source_page', 'StudioFlatCMS'),
                 'fieldContent' => __('studio_flatcms_field_content', 'StudioFlatCMS'),
                 'fieldEnabled' => __('studio_flatcms_field_enabled', 'StudioFlatCMS'),
                 'fieldDirection' => __('studio_flatcms_field_direction', 'StudioFlatCMS'),
                 'fieldSurface' => __('studio_flatcms_field_surface', 'StudioFlatCMS'),
                 'fieldVariant' => __('studio_flatcms_field_variant', 'StudioFlatCMS'),
                 'fieldUrl' => __('studio_flatcms_field_url', 'StudioFlatCMS'),
+                'fieldImageUrl' => __('studio_flatcms_field_image_url', 'StudioFlatCMS'),
+                'fieldImageAlt' => __('studio_flatcms_field_image_alt', 'StudioFlatCMS'),
                 'fieldWidth' => __('studio_flatcms_field_width', 'StudioFlatCMS'),
                 'fieldHeight' => __('studio_flatcms_field_height', 'StudioFlatCMS'),
                 'fieldOffsetX' => __('studio_flatcms_field_offset_x', 'StudioFlatCMS'),
@@ -196,6 +226,8 @@ final class AdminController extends BaseController
                 'viewportMobile' => __('studio_flatcms_viewport_mobile', 'StudioFlatCMS'),
                 'selectionEmpty' => __('studio_flatcms_empty_selection', 'StudioFlatCMS'),
                 'emptyDropzone' => __('studio_flatcms_empty_dropzone', 'StudioFlatCMS'),
+                'pageSourceHint' => __('studio_flatcms_page_source_hint', 'StudioFlatCMS'),
+                'pageSourceEmpty' => __('studio_flatcms_page_source_empty', 'StudioFlatCMS'),
                 'inspectorTitle' => __('studio_flatcms_inspector_title', 'StudioFlatCMS'),
                 'actionAddSection' => __('studio_flatcms_action_add_section', 'StudioFlatCMS'),
                 'actionAddText' => __('studio_flatcms_action_add_text', 'StudioFlatCMS'),
@@ -203,6 +235,7 @@ final class AdminController extends BaseController
                 'actionToggleAside' => __('studio_flatcms_action_toggle_aside', 'StudioFlatCMS'),
                 'actionResetDocument' => __('studio_flatcms_action_reset_document', 'StudioFlatCMS'),
                 'actionResetConfirm' => __('studio_flatcms_action_reset_confirm', 'StudioFlatCMS'),
+                'actionSwitchSourceConfirm' => __('studio_flatcms_action_switch_source_confirm', 'StudioFlatCMS'),
                 'actionDeleteNode' => __('studio_flatcms_action_delete_node', 'StudioFlatCMS'),
                 'actionMoveNode' => __('studio_flatcms_action_move_node', 'StudioFlatCMS'),
                 'actionOpenInspector' => __('studio_flatcms_action_open_inspector', 'StudioFlatCMS'),
@@ -218,6 +251,7 @@ final class AdminController extends BaseController
                 'nodeStack' => __('studio_flatcms_node_stack', 'StudioFlatCMS'),
                 'nodeText' => __('studio_flatcms_node_text', 'StudioFlatCMS'),
                 'nodeButton' => __('studio_flatcms_node_button', 'StudioFlatCMS'),
+                'nodeImage' => __('studio_flatcms_node_image', 'StudioFlatCMS'),
                 'nodeMenu' => __('studio_flatcms_node_menu', 'StudioFlatCMS'),
                 'nodeLogo' => __('studio_flatcms_node_logo', 'StudioFlatCMS'),
                 'pageTitle' => __('studio_flatcms_document_title', 'StudioFlatCMS'),
@@ -232,5 +266,73 @@ final class AdminController extends BaseController
     {
         $token = trim((string) ($this->request->header('X-CSRF-TOKEN', '') ?: ($payload['_token'] ?? '')));
         return $token !== '' && $this->session->verifyToken($token);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveActiveSourcePage(): ?array
+    {
+        $pageId = trim((string) $this->request->input('page', ''));
+        return $this->sourcePages->resolveSelectedPage($pageId);
+    }
+
+    /**
+     * @param array<string, mixed> $documentPayload
+     * @return array<string, mixed>|null
+     */
+    private function resolveSourcePageForPayload(array $documentPayload): ?array
+    {
+        $source = is_array($documentPayload['source'] ?? null) ? $documentPayload['source'] : [];
+        $sourceId = trim((string) ($source['entity_id'] ?? $this->request->input('page', '')));
+
+        return $this->sourcePages->resolveSelectedPage($sourceId);
+    }
+
+    /**
+     * @param array<string, mixed>|null $page
+     * @return array<string, string>|null
+     */
+    private function sourceOptionForPage(?array $page): ?array
+    {
+        if (!is_array($page)) {
+            return null;
+        }
+
+        $pageId = trim((string) ($page['id'] ?? ''));
+        foreach ($this->sourcePages->listPages() as $option) {
+            if ((string) ($option['id'] ?? '') === $pageId) {
+                return $option;
+            }
+        }
+
+        return [
+            'id' => $pageId,
+            'title' => trim((string) ($page['title'] ?? '')),
+            'slug' => trim((string) ($page['slug'] ?? '')),
+            'locale' => trim((string) ($page['locale'] ?? '')),
+            'locale_label' => I18n::getLocalizedLanguageName(
+                trim((string) ($page['locale'] ?? '')),
+                I18n::getLocale()
+            ),
+            'status' => trim((string) ($page['status'] ?? 'draft')),
+            'status_label' => (string) ($page['status'] ?? 'draft') === 'published'
+                ? __('status_published', 'Pages')
+                : __('status_draft', 'Pages'),
+            'studio_url' => $this->sourcePages->studioUrlForPage($page),
+            'frontend_path' => $this->sourcePages->buildFrontendPath($page),
+        ];
+    }
+
+    /**
+     * @param array<string, string>|null $currentSource
+     */
+    private function routeUrl(string $path, ?array $currentSource): string
+    {
+        if (!is_array($currentSource) || trim((string) ($currentSource['id'] ?? '')) === '') {
+            return url($path);
+        }
+
+        return url($path . '?page=' . rawurlencode((string) $currentSource['id']));
     }
 }
