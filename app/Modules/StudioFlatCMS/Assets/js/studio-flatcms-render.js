@@ -318,9 +318,13 @@
         }
 
         if (node.type === 'image') {
+            var imageContent = node.src
+                ? '<img src="' + escapeHtml(node.src || '') + '" alt="' + escapeHtml(node.alt || '') + '">'
+                : '<div class="sfc-stage-image-placeholder">' + escapeHtml(labels.mediaNoMedia || labels.nodeImage || '') + '</div>';
+
             return '<div' + commonAttrs + ' data-node-type="image">'
                 + '<figure class="sfc-stage-image">'
-                + (node.src ? '<img src="' + escapeHtml(node.src || '') + '" alt="' + escapeHtml(node.alt || '') + '">' : '')
+                + imageContent
                 + '</figure>'
                 + renderNodeChrome(node, selection, mode, labels, ui)
                 + '</div>';
@@ -364,6 +368,7 @@
             return [
                 ['add-title', labels.actionAddTitle, labels.cardAddTitleCopy],
                 ['add-text', labels.actionAddText, labels.cardAddTextCopy],
+                ['add-image', labels.actionAddImage, labels.cardAddImageCopy],
                 ['add-buttons', labels.actionAddButtons, labels.cardAddButtonsCopy]
             ];
         }
@@ -475,8 +480,10 @@
             + renderField(labels.fieldOffsetY || '', '<input type="number" class="sfc-studio-input" data-action="field-input" data-field="frameOffsetY" value="' + escapeHtml(numberValue(frame.offsetY)) + '">');
     }
 
-    function renderInspector(root, tabsRoot, snapshot, labels, inspectorOpen, selectedNode) {
+    function renderInspector(root, tabsRoot, snapshot, labels, ui) {
         var tab = snapshot.selection.tab || 'design';
+        var inspectorOpen = !!(ui && ui.inspectorOpen);
+        var selectedNode = ui && ui.selectedNode ? ui.selectedNode : null;
         if (['design', 'effects', 'responsive'].indexOf(tab) === -1) {
             tab = 'design';
         }
@@ -530,7 +537,15 @@
             }
 
             if (!isDocumentSelection && selectedNode.type === 'image') {
-                contentGroup += renderField(labels.fieldImageUrl || '', '<input class="sfc-studio-input" data-action="field-input" data-field="src" value="' + escapeHtml(selectedNode.src || '') + '">');
+                if (ui && ui.mediaEnabled) {
+                    contentGroup += '<div class="sfc-studio-field sfc-studio-field-media">'
+                        + '<span class="sfc-studio-field-label">' + escapeHtml(labels.fieldImageMedia || labels.nodeImage || '') + '</span>'
+                        + '<div class="sfc-studio-media-field-host" data-media-bind="src" data-media-value="' + escapeHtml(selectedNode.src || '') + '"></div>'
+                        + '<input type="hidden" class="sfc-studio-media-source" data-action="field-input" data-field="src" value="' + escapeHtml(selectedNode.src || '') + '">'
+                        + '</div>';
+                } else {
+                    contentGroup += renderField(labels.fieldImageUrl || '', '<input class="sfc-studio-input" data-action="field-input" data-field="src" value="' + escapeHtml(selectedNode.src || '') + '">');
+                }
                 contentGroup += renderField(labels.fieldImageAlt || '', '<input class="sfc-studio-input" data-action="field-input" data-field="alt" value="' + escapeHtml(selectedNode.alt || '') + '">');
             }
 
@@ -618,7 +633,7 @@
             renderTopbar(snapshot, labels);
             renderCanvas(elements.stage, snapshot, labels, ui);
             renderDrawer(elements.drawerBody, labels, ui.drawer, ui);
-            renderInspector(elements.inspectorBody, elements.inspectorTabs, snapshot, labels, ui.inspectorOpen, ui.selectedNode);
+            renderInspector(elements.inspectorBody, elements.inspectorTabs, snapshot, labels, ui);
         }
     };
 }(window, document));

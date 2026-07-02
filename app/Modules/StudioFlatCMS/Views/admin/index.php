@@ -154,6 +154,10 @@ $bootJson = json_encode(
         <noscript><?= e(__('studio_flatcms_noscript', 'StudioFlatCMS')) ?></noscript>
     </div>
 
+    <?php if (!empty($mediaEnabled) && is_file(BASE_PATH . '/app/Modules/Media/Views/admin/partials/media-modal.php')): ?>
+        <?php include BASE_PATH . '/app/Modules/Media/Views/admin/partials/media-modal.php'; ?>
+    <?php endif; ?>
+
     <?php foreach (($scriptUrls ?? []) as $scriptUrl): ?>
         <script src="<?= e($scriptUrl) ?>" defer></script>
     <?php endforeach; ?>

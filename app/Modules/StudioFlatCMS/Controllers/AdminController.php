@@ -14,6 +14,7 @@ namespace App\Modules\StudioFlatCMS\Controllers;
 use App\Core\BaseController;
 use App\Core\FlatFile;
 use App\Core\I18n;
+use App\Core\ModuleManager;
 use App\Modules\StudioFlatCMS\Services\StudioPageSourceService;
 use App\Modules\StudioFlatCMS\Services\StudioSchemaService;
 use App\Modules\StudioFlatCMS\Services\StudioStorageService;
@@ -31,6 +32,7 @@ final class AdminController extends BaseController
         parent::__construct();
         I18n::load('StudioFlatCMS');
         I18n::load('Pages');
+        I18n::load('Media');
 
         $this->schema = new StudioSchemaService();
         $this->storage = new StudioStorageService($this->schema);
@@ -78,6 +80,8 @@ final class AdminController extends BaseController
             ],
             'stylesUrl' => module_asset('StudioFlatCMS', 'css/studio-flatcms.css'),
             'boot' => $this->bootPayload($document, $sourcePage),
+            'mediaEnabled' => $this->isMediaEnabled(),
+            'mediaModalConfig' => $this->mediaConfig(),
         ]);
     }
 
@@ -171,6 +175,7 @@ final class AdminController extends BaseController
             ],
             'config' => [
                 'token' => $this->csrfToken(),
+                'media' => $this->mediaConfig(),
             ],
             'labels' => [
                 'drawerStructureTitle' => __('studio_flatcms_drawer_structure_title', 'StudioFlatCMS'),
@@ -196,6 +201,7 @@ final class AdminController extends BaseController
                 'fieldSurface' => __('studio_flatcms_field_surface', 'StudioFlatCMS'),
                 'fieldVariant' => __('studio_flatcms_field_variant', 'StudioFlatCMS'),
                 'fieldUrl' => __('studio_flatcms_field_url', 'StudioFlatCMS'),
+                'fieldImageMedia' => __('studio_flatcms_field_image_media', 'StudioFlatCMS'),
                 'fieldImageUrl' => __('studio_flatcms_field_image_url', 'StudioFlatCMS'),
                 'fieldImageAlt' => __('studio_flatcms_field_image_alt', 'StudioFlatCMS'),
                 'fieldWidth' => __('studio_flatcms_field_width', 'StudioFlatCMS'),
@@ -232,6 +238,10 @@ final class AdminController extends BaseController
                 'viewportDesktop' => __('studio_flatcms_viewport_desktop', 'StudioFlatCMS'),
                 'viewportTablet' => __('studio_flatcms_viewport_tablet', 'StudioFlatCMS'),
                 'viewportMobile' => __('studio_flatcms_viewport_mobile', 'StudioFlatCMS'),
+                'mediaChooseImage' => __('studio_flatcms_media_choose_image', 'StudioFlatCMS'),
+                'mediaRemoveMedia' => __('studio_flatcms_media_remove_media', 'StudioFlatCMS'),
+                'mediaNoMedia' => __('studio_flatcms_media_no_media', 'StudioFlatCMS'),
+                'mediaUnavailable' => __('studio_flatcms_media_unavailable', 'StudioFlatCMS'),
                 'selectionEmpty' => __('studio_flatcms_empty_selection', 'StudioFlatCMS'),
                 'emptyDropzone' => __('studio_flatcms_empty_dropzone', 'StudioFlatCMS'),
                 'pageSourceHint' => __('studio_flatcms_page_source_hint', 'StudioFlatCMS'),
@@ -240,6 +250,7 @@ final class AdminController extends BaseController
                 'actionAddSection' => __('studio_flatcms_action_add_section', 'StudioFlatCMS'),
                 'actionAddTitle' => __('studio_flatcms_action_add_title', 'StudioFlatCMS'),
                 'actionAddText' => __('studio_flatcms_action_add_text', 'StudioFlatCMS'),
+                'actionAddImage' => __('studio_flatcms_action_add_image', 'StudioFlatCMS'),
                 'actionAddButtons' => __('studio_flatcms_action_add_buttons', 'StudioFlatCMS'),
                 'actionToggleAside' => __('studio_flatcms_action_toggle_aside', 'StudioFlatCMS'),
                 'actionResetDocument' => __('studio_flatcms_action_reset_document', 'StudioFlatCMS'),
@@ -255,6 +266,7 @@ final class AdminController extends BaseController
                 'cardAddSectionCopy' => __('studio_flatcms_card_add_section_copy', 'StudioFlatCMS'),
                 'cardAddTitleCopy' => __('studio_flatcms_card_add_title_copy', 'StudioFlatCMS'),
                 'cardAddTextCopy' => __('studio_flatcms_card_add_text_copy', 'StudioFlatCMS'),
+                'cardAddImageCopy' => __('studio_flatcms_card_add_image_copy', 'StudioFlatCMS'),
                 'cardAddButtonsCopy' => __('studio_flatcms_card_add_buttons_copy', 'StudioFlatCMS'),
                 'cardToggleAsideCopy' => __('studio_flatcms_card_toggle_aside_copy', 'StudioFlatCMS'),
                 'cardResetDocumentCopy' => __('studio_flatcms_card_reset_document_copy', 'StudioFlatCMS'),
@@ -348,5 +360,32 @@ final class AdminController extends BaseController
         }
 
         return url($path . '?page=' . rawurlencode((string) $currentSource['id']));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function mediaConfig(): array
+    {
+        if (!$this->isMediaEnabled()) {
+            return [];
+        }
+
+        $uploadUrl = url('/admin/media/upload');
+        $adminFront = strtok($uploadUrl, '?') ?: $uploadUrl;
+
+        return [
+            'apiImagesUrl' => $adminFront . '?path=admin/media/api/images',
+            'apiFilesUrl' => $adminFront . '?path=admin/media/api/files',
+            'uploadUrl' => $uploadUrl,
+            'scriptUrl' => module_asset('Media', 'js/media-modal.js'),
+            'uploadsBase' => url('/uploads'),
+            'csrfToken' => $this->csrfToken(),
+        ];
+    }
+
+    private function isMediaEnabled(): bool
+    {
+        return (new ModuleManager())->isEnabled('Media');
     }
 }

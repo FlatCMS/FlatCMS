@@ -49,6 +49,7 @@
         drawer: '',
         inspectorOpen: false,
         inlineEditorNodeId: '',
+        mediaEnabled: !!(boot.config && boot.config.media && boot.config.media.uploadUrl),
         nodeMenuId: '',
         sources: Array.isArray(boot.sources) ? boot.sources : [],
         currentSource: boot.currentSource && typeof boot.currentSource === 'object' ? boot.currentSource : null,
@@ -228,6 +229,173 @@
         node[field] = value;
     }
 
+    function mediaConfig() {
+        return boot.config && boot.config.media && typeof boot.config.media === 'object'
+            ? boot.config.media
+            : {};
+    }
+
+    function resolveMediaSource(rawValue) {
+        var src = String(rawValue || '').trim();
+        if (src === '') {
+            return '';
+        }
+
+        if (/^(https?:|data:|blob:)/i.test(src)) {
+            return src;
+        }
+
+        var config = mediaConfig();
+        var uploadsBase = String(config.uploadsBase || '/uploads').replace(/\/$/, '');
+        if (src.indexOf('/public/uploads/') === 0) {
+            return uploadsBase + '/' + src.replace(/^\/public\/uploads\/?/, '');
+        }
+        if (src.indexOf('/uploads/') === 0) {
+            return uploadsBase + '/' + src.replace(/^\/uploads\/?/, '');
+        }
+        if (src.indexOf('uploads/') === 0) {
+            return uploadsBase + '/' + src.replace(/^uploads\/?/, '');
+        }
+        if (src.indexOf('/') === 0) {
+            return src;
+        }
+
+        return uploadsBase + '/' + src.replace(/^\//, '');
+    }
+
+    function normalizeSelectedMediaValue(file) {
+        var rawPath = String((file && file.path) || '').trim().replace(/\\/g, '/');
+        if (rawPath !== '') {
+            rawPath = rawPath.replace(/^\/+/, '');
+            if (rawPath.indexOf('public/uploads/') === 0) {
+                return '/uploads/' + rawPath.replace(/^public\/uploads\/?/, '');
+            }
+            if (rawPath.indexOf('uploads/') === 0) {
+                return '/uploads/' + rawPath.replace(/^uploads\/?/, '');
+            }
+            return '/uploads/' + rawPath;
+        }
+
+        var explicit = String((file && (file.url || file.src)) || '').trim();
+        if (explicit === '') {
+            return '';
+        }
+
+        try {
+            var parsed = new window.URL(explicit, window.location.origin);
+            if (parsed.origin === window.location.origin) {
+                return parsed.pathname + parsed.search + parsed.hash;
+            }
+        } catch (error) {
+            // Keep the original value when URL parsing fails.
+        }
+
+        return explicit;
+    }
+
+    function closeMediaModal() {
+        var modal = document.getElementById('mediaModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+
+    var mediaRuntimePromise = null;
+
+    function mediaScriptUrl() {
+        var config = mediaConfig();
+        var configured = String(config.scriptUrl || '').trim();
+        if (configured !== '') {
+            return configured;
+        }
+
+        var current = document.querySelector('script[src*="/modules/media/js/media-modal.js"]');
+        return current ? String(current.getAttribute('src') || '').trim() : '';
+    }
+
+    function ensureMediaPickerRuntime() {
+        if (typeof window.initMediaModal === 'function') {
+            return Promise.resolve(true);
+        }
+
+        if (mediaRuntimePromise) {
+            return mediaRuntimePromise;
+        }
+
+        var scriptUrl = mediaScriptUrl();
+        if (scriptUrl === '') {
+            return Promise.resolve(false);
+        }
+
+        mediaRuntimePromise = new Promise(function (resolve) {
+            var script = document.createElement('script');
+            script.src = scriptUrl;
+            script.async = true;
+            script.onload = function () {
+                resolve(typeof window.initMediaModal === 'function');
+            };
+            script.onerror = function () {
+                resolve(false);
+            };
+            document.head.appendChild(script);
+        }).finally(function () {
+            mediaRuntimePromise = null;
+        });
+
+        return mediaRuntimePromise;
+    }
+
+    function canUseMediaPicker() {
+        var config = mediaConfig();
+        return !!(config && config.uploadUrl && document.getElementById('mediaModal'));
+    }
+
+    function openMediaPicker(onSelect) {
+        if (!canUseMediaPicker()) {
+            namespace.api.showToast(labels.mediaUnavailable || '', 'warning');
+            return;
+        }
+
+        var modal = document.getElementById('mediaModal');
+        var config = mediaConfig();
+
+        ensureMediaPickerRuntime().then(function (ready) {
+            if (!ready || typeof window.initMediaModal !== 'function') {
+                namespace.api.showToast(labels.mediaUnavailable || '', 'warning');
+                return;
+            }
+
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+
+            window.initMediaModal({
+                apiImagesUrl: config.apiImagesUrl || '',
+                apiFilesUrl: config.apiFilesUrl || '',
+                uploadUrl: config.uploadUrl || '',
+                uploadsBase: config.uploadsBase || '/uploads',
+                csrfToken: config.csrfToken || boot.config.token || '',
+                mode: 'images',
+                folder: 'images',
+                accept: 'image/*',
+                openUploadIfEmpty: true,
+                initialTab: 'library',
+                onSelect: function (file) {
+                    if (typeof onSelect === 'function') {
+                        onSelect(file);
+                    }
+                    closeMediaModal();
+                }
+            });
+
+            if (window.FlatCMS && window.FlatCMS.mediaModal && typeof window.FlatCMS.mediaModal.open === 'function') {
+                window.FlatCMS.mediaModal.open();
+            }
+        });
+    }
+
     function frameChanged(previousFrame, nextFrame) {
         return Number(previousFrame.offsetX || 0) !== Number(nextFrame.offsetX || 0)
             || Number(previousFrame.offsetY || 0) !== Number(nextFrame.offsetY || 0)
@@ -368,6 +536,94 @@
             var targetNode = store.findNodeById(nodeId);
             applyFrameToElement(element, nodeFrame(targetNode));
         });
+    }
+
+    function syncCanvasImages() {
+        if (!stage) {
+            return;
+        }
+
+        stage.querySelectorAll('.sfc-stage-node[data-node-type="image"][data-node-id]').forEach(function (element) {
+            var nodeId = String(element.getAttribute('data-node-id') || '');
+            var node = store.findNodeById(nodeId);
+            var image = element.querySelector('.sfc-stage-image img');
+            var resolved = resolveMediaSource(node && node.src ? node.src : '');
+
+            if (!(image instanceof window.HTMLImageElement)) {
+                return;
+            }
+
+            if (resolved === '') {
+                image.removeAttribute('src');
+                return;
+            }
+
+            if (String(image.getAttribute('src') || '') !== resolved) {
+                image.setAttribute('src', resolved);
+            }
+        });
+    }
+
+    function enhanceInspectorMediaFields() {
+        if (!ui.inspectorOpen || !ui.selectedNode || ui.selectedNode.type !== 'image' || !inspectorBody) {
+            return;
+        }
+
+        var host = inspectorBody.querySelector('[data-media-bind="src"]');
+        if (!(host instanceof HTMLElement)) {
+            return;
+        }
+
+        var primitives = window.FlatCMSUIPrimitives || {};
+        if (typeof primitives.createBuilderMediaFieldControls !== 'function') {
+            return;
+        }
+
+        var mediaField = primitives.createBuilderMediaFieldControls({
+            value: fieldValue(ui.selectedNode, 'src'),
+            disabled: false,
+            previewEnabled: true,
+            mediaOptions: { mode: 'images', preview: 'image' },
+            resolveSrc: function (value) {
+                return resolveMediaSource(value);
+            },
+            noMediaLabel: labels.mediaNoMedia || '',
+            pickButtonClass: 'btn btn-secondary btn-sm',
+            clearButtonClass: 'btn btn-ghost btn-sm',
+            pickButtonText: labels.mediaChooseImage || ''
+        });
+
+        mediaField.clearButton.textContent = String(labels.mediaRemoveMedia || '');
+
+        mediaField.pickButton.addEventListener('click', function () {
+            openMediaPicker(function (file) {
+                var nextValue = normalizeSelectedMediaValue(file);
+                if (nextValue === '') {
+                    return;
+                }
+
+                if (!ui.selectedNode) {
+                    return;
+                }
+
+                store.updateNode(ui.selectedNode.id, function (node) {
+                    applyFieldValue(node, 'src', nextValue);
+                });
+            });
+        });
+
+        mediaField.clearButton.addEventListener('click', function () {
+            if (!ui.selectedNode) {
+                return;
+            }
+
+            store.updateNode(ui.selectedNode.id, function (node) {
+                applyFieldValue(node, 'src', '');
+            });
+        });
+
+        host.innerHTML = '';
+        host.appendChild(mediaField.element);
     }
 
     function collectSnapCandidates(nodeId) {
@@ -973,6 +1229,7 @@
     function render() {
         var snapshot = currentSnapshot();
         ui.selectedNode = store.findNodeById(snapshot.selection.nodeId);
+        ui.mediaEnabled = !!(boot.config && boot.config.media && boot.config.media.uploadUrl);
         root.classList.toggle('has-open-drawer', Boolean(ui.drawer));
         root.classList.toggle('has-open-inspector', ui.inspectorOpen);
         if (selectionName) {
@@ -1001,6 +1258,8 @@
             inspectorTabs: inspectorTabs
         }, snapshot, ui, labels);
         syncCanvasFrames();
+        syncCanvasImages();
+        enhanceInspectorMediaFields();
         if (!interaction) {
             clearSnapFeedback();
         }
@@ -1596,6 +1855,21 @@
         };
     }
 
+    function makeImageNode() {
+        var frame = defaultFrame();
+        frame.height = 240;
+
+        return {
+            id: store.createId('image'),
+            type: 'image',
+            label: labels.nodeImage || '',
+            enabled: true,
+            src: '',
+            alt: '',
+            frame: frame
+        };
+    }
+
     function makeButtonRow() {
         return {
             id: store.createId('actions'),
@@ -1812,6 +2086,11 @@
 
         if (action === 'add-title') {
             insertIntoCurrentFlow(makeTitleNode());
+            return;
+        }
+
+        if (action === 'add-image') {
+            insertIntoCurrentFlow(makeImageNode());
             return;
         }
 

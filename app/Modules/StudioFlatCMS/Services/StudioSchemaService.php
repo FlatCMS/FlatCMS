@@ -368,7 +368,7 @@ final class StudioSchemaService
      */
     private function makeImportedImageNode(\DOMElement $image, array &$sequence): ?array
     {
-        $src = $this->sanitizeUrl(trim((string) $image->getAttribute('src')));
+        $src = $this->sanitizeImageSource(trim((string) $image->getAttribute('src')));
         if ($src === '') {
             return null;
         }
@@ -636,7 +636,7 @@ final class StudioSchemaService
         }
 
         if ($type === 'image') {
-            $normalized['src'] = $this->sanitizeUrl((string) ($node['src'] ?? ''));
+            $normalized['src'] = $this->sanitizeImageSource((string) ($node['src'] ?? ''));
             $normalized['alt'] = $this->sanitizeText((string) ($node['alt'] ?? ''), 280, '');
         }
 
@@ -1050,6 +1050,44 @@ final class StudioSchemaService
         }
 
         if (str_starts_with($clean, '/') || str_starts_with($clean, '#') || filter_var($clean, FILTER_VALIDATE_URL)) {
+            return $clean;
+        }
+
+        return '';
+    }
+
+    private function sanitizeImageSource(string $value): string
+    {
+        $clean = trim(str_replace('\\', '/', $value));
+        if ($clean === '') {
+            return '';
+        }
+
+        if (filter_var($clean, FILTER_VALIDATE_URL)) {
+            return $clean;
+        }
+
+        if (str_starts_with($clean, '/public/uploads/')) {
+            return '/uploads/' . ltrim(substr($clean, strlen('/public/uploads/')), '/');
+        }
+
+        if (str_starts_with($clean, 'public/uploads/')) {
+            return '/uploads/' . ltrim(substr($clean, strlen('public/uploads/')), '/');
+        }
+
+        if (str_starts_with($clean, '/uploads/')) {
+            return '/uploads/' . ltrim(substr($clean, strlen('/uploads/')), '/');
+        }
+
+        if (str_starts_with($clean, 'uploads/')) {
+            return '/uploads/' . ltrim(substr($clean, strlen('uploads/')), '/');
+        }
+
+        if (preg_match('~^(images|videos|audio|documents|archives|sheets|misc)/.+$~i', $clean) === 1) {
+            return '/uploads/' . ltrim($clean, '/');
+        }
+
+        if (str_starts_with($clean, '/')) {
             return $clean;
         }
 

@@ -832,6 +832,18 @@ body.sfc-studio-body {
   background: #f8fafc;
 }
 
+.sfc-stage-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  border: 1px dashed var(--sfc-studio-border);
+  color: var(--sfc-studio-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 18px;
+}
+
 .sfc-stage-image img {
   display: block;
   width: 100%;
@@ -1147,6 +1159,102 @@ body.sfc-studio-body {
 .sfc-studio-field {
   display: grid;
   gap: 6px;
+}
+
+.sfc-studio-field-media {
+  gap: 10px;
+}
+
+.sfc-studio-media-field-host .pb-field-media-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.sfc-studio-media-field-host .pb-field-media-controls {
+  display: grid;
+  gap: 12px;
+}
+
+.sfc-studio-media-field-host .pb-field-row-media {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+body.sfc-studio-body #mediaModal.modal-overlay {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f5f7fb;
+  --color-bg-hover: #eef2f7;
+  --color-text-primary: #101828;
+  --color-text-secondary: #344054;
+  --color-text-muted: #667085;
+  --color-border: #dde3ec;
+  --color-card-bg: #ffffff;
+  --color-card-border: #dde3ec;
+  --color-primary: #2f66f6;
+  --color-primary-light: #2f66f6;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --gradient-primary: linear-gradient(135deg, #2f66f6 0%, #5b84ff 100%);
+  --btn-primary-bg: #2f66f6;
+  --btn-primary-bg-hover: #1f55e3;
+  --btn-primary-bg-active: #1747c6;
+  --btn-primary-color: #ffffff;
+  --btn-primary-shadow: none;
+  --btn-primary-shadow-hover: none;
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-bg-hover: #eef2f7;
+  --btn-secondary-bg-active: #e6ebf3;
+  --btn-secondary-color: #101828;
+  --btn-secondary-border: #dde3ec;
+  --btn-secondary-border-hover: #cbd5e1;
+  --btn-secondary-shadow: none;
+  --btn-secondary-shadow-hover: none;
+  --btn-ghost-bg: transparent;
+  --btn-ghost-bg-hover: #eef2f7;
+  --btn-ghost-color: #101828;
+  --btn-ghost-color-hover: #101828;
+  --btn-ghost-border: #dde3ec;
+  --btn-ghost-border-hover: #cbd5e1;
+  --btn-ghost-shadow: none;
+  --btn-ghost-shadow-hover: none;
+  color-scheme: light;
+  background: rgba(15, 23, 40, 0.24);
+  backdrop-filter: blur(8px);
+}
+
+body.sfc-studio-body #mediaModal .modal-container {
+  background: #ffffff;
+  border-color: var(--sfc-studio-border);
+  box-shadow: 0 24px 64px rgba(15, 23, 40, 0.14);
+}
+
+body.sfc-studio-body #mediaModal .modal-header,
+body.sfc-studio-body #mediaModal .modal-body,
+body.sfc-studio-body #mediaModal .modal-footer {
+  background: #ffffff;
+}
+
+body.sfc-studio-body #mediaModal .modal-footer {
+  background: var(--color-bg-tertiary);
+}
+
+body.sfc-studio-body #mediaModal .media-modal-tab.active {
+  color: var(--sfc-studio-primary);
+  border-bottom-color: var(--sfc-studio-primary);
+}
+
+body.sfc-studio-body #mediaModal .media-library-item.selected {
+  border-color: var(--sfc-studio-primary);
+  box-shadow: 0 0 0 1px var(--sfc-studio-primary);
+}
+
+body.sfc-studio-body #mediaModal .upload-zone:hover,
+body.sfc-studio-body #mediaModal .upload-zone.dragover {
+  border-color: var(--sfc-studio-primary);
+  background-color: rgba(47, 102, 246, 0.05);
 }
 
 .sfc-studio-field-label {
