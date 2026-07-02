@@ -1,0 +1,173 @@
+.content-builder .studio-front {
+  color: var(--studio-ink, inherit);
+}
+
+.content-builder .studio-front > * + * {
+  margin-top: 2rem;
+}
+
+.content-builder .studio-front-section,
+.content-builder .studio-front-region {
+  display: block;
+}
+
+.content-builder .studio-front-section-label {
+  margin-bottom: 0.75rem;
+  color: color-mix(in srgb, var(--studio-ink, #111827) 65%, white);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.content-builder .studio-front-stack > * + *,
+.content-builder .studio-front-hero > * + *,
+.content-builder .studio-front-cta > * + *,
+.content-builder .studio-front-testimonial > * + * {
+  margin-top: 0.9rem;
+}
+
+.content-builder .studio-front-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.content-builder .studio-front-eyebrow {
+  margin: 0;
+  color: var(--studio-primary, currentColor);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.content-builder .studio-front-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.content-builder .studio-front-grid-services,
+.content-builder .studio-front-grid-blog,
+.content-builder .studio-front-grid-cards {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.content-builder .studio-front-card,
+.content-builder .studio-front-cta,
+.content-builder .studio-front-testimonial,
+.content-builder .studio-front-faq-item,
+.content-builder .studio-front-placeholder {
+  border: 1px solid color-mix(in srgb, var(--studio-accent, #111827) 10%, white);
+  background: color-mix(in srgb, var(--studio-soft, #f7f8fa) 70%, white);
+  padding: 1.25rem;
+}
+
+:where(.studio-front-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fc-btn-gap, 0.5rem);
+  max-width: 100%;
+  text-decoration: none;
+}
+
+.content-builder .studio-front-split {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.content-builder .studio-front-split-media {
+  min-height: 220px;
+  border: 1px dashed color-mix(in srgb, var(--studio-accent, #111827) 22%, white);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--studio-soft, #f7f8fa) 80%, white), white);
+}
+
+.content-builder .studio-front-stats {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.content-builder .studio-front-stat {
+  padding: 1rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--studio-accent, #111827) 12%, white);
+}
+
+.content-builder .studio-front-stat strong {
+  display: block;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  line-height: 1.1;
+}
+
+.content-builder .studio-front-stat span {
+  display: block;
+  margin-top: 0.4rem;
+  color: color-mix(in srgb, var(--studio-ink, #111827) 72%, white);
+}
+
+.content-builder .studio-front-faq-item summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.content-builder .studio-front-faq-item div {
+  margin-top: 0.8rem;
+}
+
+.content-builder .studio-front-blocks {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.content-builder .studio-front-image {
+  margin: 0;
+  overflow: hidden;
+}
+
+.content-builder .studio-front-image img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.content-builder .studio-front-image[data-image-height="180"] {
+  height: 180px;
+}
+
+.content-builder .studio-front-image[data-image-height="240"] {
+  height: 240px;
+}
+
+.content-builder .studio-front-image[data-image-height="320"] {
+  height: 320px;
+}
+
+.content-builder .studio-front-image[data-image-height="420"] {
+  height: 420px;
+}
+
+.content-builder .studio-front-image[data-image-height="560"] {
+  height: 560px;
+}
+
+.content-builder .studio-front-image[data-image-height]:not([data-image-height="auto"]) img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.content-builder .studio-front-spacer {
+  min-height: 2rem;
+}
+
+@media (min-width: 900px) {
+  .content-builder .studio-front-split {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr);
+    align-items: center;
+  }
+}

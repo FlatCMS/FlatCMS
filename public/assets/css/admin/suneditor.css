@@ -99,7 +99,7 @@ body.admin-body .sun-editor .fc-ui-native-color {
 
 body.admin-body .sun-editor .fc-ui-color-swatch {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 body.admin-body .sun-editor .fc-ui-color-swatch::before {
@@ -576,11 +576,35 @@ body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-
   flex: 1 1 auto;
   min-width: 0;
   flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   scrollbar-width: thin;
   border-top-left-radius: calc(var(--radius-lg, 12px) - 1px);
   background: var(--color-card-bg);
+}
+
+body.admin-body .sun-editor .se-tooltip {
+  overflow: visible;
+}
+
+body.admin-body .sun-editor .se-tooltip .se-tooltip-inner {
+  z-index: var(--z-tooltip, 1110);
+  overflow: visible;
+}
+
+body.admin-body .sun-editor .se-tooltip .se-tooltip-inner .se-tooltip-text {
+  border-radius: 2px;
+  background-color: #333;
+  color: #fff;
+}
+
+body.admin-body .sun-editor .se-tooltip .se-tooltip-inner .se-tooltip-text::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-bottom-color: #333;
 }
 
 body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-row-secondary {

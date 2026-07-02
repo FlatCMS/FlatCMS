@@ -43,8 +43,7 @@ body.admin-body .sun-editor .se-btn-tray.fc-se-toolbar-accordion .fc-se-toolbar-
   flex: 1 1 auto;
   min-width: 0;
   flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   scrollbar-width: thin;
 }
 
@@ -217,6 +216,31 @@ body.admin-body .sun-editor .se-btn svg {
 body.admin-body[data-theme="modern-pro"]:not(.light-mode) .sun-editor .se-wrapper .se-wrapper-code {
   background: #0f172a;
   color: #e2e8f0;
+}
+
+body.admin-body .sun-editor .se-tooltip {
+  overflow: visible;
+}
+
+body.admin-body .sun-editor .se-tooltip .se-tooltip-inner {
+  z-index: var(--z-tooltip, 1110);
+  overflow: visible;
+}
+
+body.admin-body .sun-editor .se-tooltip .se-tooltip-inner .se-tooltip-text {
+  border-radius: 2px;
+  background-color: #333;
+  color: #fff;
+}
+
+body.admin-body .sun-editor .se-tooltip .se-tooltip-inner .se-tooltip-text::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-bottom-color: #333;
 }
 
 body.admin-body .sun-editor:focus-within {

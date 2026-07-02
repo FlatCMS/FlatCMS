@@ -188,6 +188,8 @@
         var labelText = String(cfg.label || 'Color').trim() || 'Color';
         var emptyLabel = String(cfg.emptyLabel || 'Theme').trim() || 'Theme';
         var clearLabel = String(cfg.clearLabel || 'Clear').trim() || 'Clear';
+        var includeStateInTitle = cfg.includeStateInTitle !== false;
+        var titleScope = String(cfg.titleScope || 'all').trim().toLowerCase() === 'button' ? 'button' : 'all';
         var onUpdate = typeof cfg.onUpdate === 'function' ? cfg.onUpdate : null;
         var normalizeColor = typeof cfg.normalizeColor === 'function'
             ? cfg.normalizeColor
@@ -199,13 +201,23 @@
         clearBtn.title = clearLabel;
         clearBtn.setAttribute('aria-label', clearLabel);
 
+        function clearPassiveTitles() {
+            pickerWrap.removeAttribute('title');
+            pickerWrap.removeAttribute('aria-label');
+            picker.removeAttribute('title');
+            picker.removeAttribute('aria-label');
+        }
+
         function setValue(value) {
             var safe = normalizeColor(value);
             swatch.classList.toggle('is-empty', safe === '');
             swatch.style.setProperty('--pb-textstyle-swatch-color', safe || 'transparent');
             picker.value = normalizeHex(safe) || '#4f46e5';
-            var title = safe !== '' ? labelText + ': ' + safe : labelText + ': ' + emptyLabel;
-            setSharedTitle([swatch, pickerWrap, picker], title);
+            var title = includeStateInTitle
+                ? (safe !== '' ? labelText + ': ' + safe : labelText + ': ' + emptyLabel)
+                : labelText;
+            setSharedTitle(titleScope === 'button' ? [swatch] : [swatch, pickerWrap, picker], title);
+            clearPassiveTitles();
         }
 
         function emit(value, refreshInspector) {

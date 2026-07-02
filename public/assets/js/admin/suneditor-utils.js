@@ -324,6 +324,8 @@
         var labelText = String(cfg.label || '').trim();
         var emptyLabel = String(cfg.emptyLabel || '').trim();
         var clearLabel = String(cfg.clearLabel || '').trim();
+        var includeStateInTitle = cfg.includeStateInTitle !== false;
+        var titleScope = String(cfg.titleScope || 'all').trim().toLowerCase() === 'button' ? 'button' : 'all';
         var onUpdate = typeof cfg.onUpdate === 'function' ? cfg.onUpdate : null;
 
         function setTitle(nodes, title) {
@@ -336,6 +338,13 @@
             });
         }
 
+        function clearPassiveTitles() {
+            pickerWrap.removeAttribute('title');
+            pickerWrap.removeAttribute('aria-label');
+            picker.removeAttribute('title');
+            picker.removeAttribute('aria-label');
+        }
+
         function setValue(value) {
             var safe = normalizeColor(value);
             swatch.classList.toggle('is-empty', safe === '');
@@ -344,13 +353,16 @@
 
             var title = '';
             if (labelText !== '') {
-                title = safe !== ''
-                    ? labelText + ': ' + safe
-                    : (emptyLabel !== '' ? labelText + ': ' + emptyLabel : labelText);
+                title = includeStateInTitle
+                    ? (safe !== ''
+                        ? labelText + ': ' + safe
+                        : (emptyLabel !== '' ? labelText + ': ' + emptyLabel : labelText))
+                    : labelText;
             }
             if (title !== '') {
-                setTitle([swatch, pickerWrap, picker], title);
+                setTitle(titleScope === 'button' ? [swatch] : [swatch, pickerWrap, picker], title);
             }
+            clearPassiveTitles();
         }
 
         function emit(value, refreshInspector) {
@@ -397,7 +409,134 @@
         return createFallbackCompactColorControl(config);
     }
 
-    function enhanceInlineSunEditorColors(editor, labels) {
+    function applySunEditorTooltip(button) {
+        if (!(button instanceof HTMLElement)) {
+            return;
+        }
+
+        var label = String(button.getAttribute('aria-label') || button.getAttribute('title') || '').trim();
+        if (label === '') {
+            return;
+        }
+
+        var existingTooltip = button.querySelector('.se-tooltip-inner');
+        if (existingTooltip) {
+            existingTooltip.remove();
+        }
+
+        button.classList.add('se-tooltip');
+        button.removeAttribute('title');
+        button.setAttribute('aria-label', label);
+
+        var tooltipInner = document.createElement('span');
+        tooltipInner.className = 'se-tooltip-inner';
+
+        var tooltipText = document.createElement('span');
+        tooltipText.className = 'se-tooltip-text';
+        tooltipText.textContent = label;
+
+        tooltipInner.appendChild(tooltipText);
+        button.appendChild(tooltipInner);
+    }
+
+    function refreshSunEditorTooltips(editor) {
+        var toolbar = editor && editor.core && editor.core.context && editor.core.context.element
+            ? editor.core.context.element.toolbar
+            : null;
+        if (!(toolbar instanceof HTMLElement)) {
+            return;
+        }
+
+        toolbar.querySelectorAll('button').forEach(function (button) {
+            if (!(button instanceof HTMLElement)) {
+                return;
+            }
+
+            if (button.querySelector('.se-tooltip-inner')) {
+                button.classList.add('se-tooltip');
+                button.removeAttribute('title');
+                return;
+            }
+
+            applySunEditorTooltip(button);
+        });
+    }
+
+    function createSunEditorColorControl(editor, pluginName, labels, captureRange, getSavedRange, extraClass, config) {
+        var labelKey = pluginName === 'hiliteColor' ? 'highlight' : 'text';
+        var cfg = config && typeof config === 'object' ? config : {};
+        var control = createCompactColorControl({
+            label: String(labels && labels[labelKey] || '').trim(),
+            clearLabel: String(labels && labels.clear || '').trim(),
+            emptyLabel: String(labels && labels.empty || '').trim(),
+            includeStateInTitle: cfg.includeStateInTitle !== false,
+            titleScope: 'button',
+            value: '',
+            normalizeColor: normalizeColor,
+            normalizeHex: normalizeHexColor,
+            onUpdate: function (nextColor) {
+                applyToolbarColor(editor, pluginName, nextColor, getSavedRange());
+            }
+        });
+
+        if (!control || !control.wrapper) {
+            return null;
+        }
+
+        control.wrapper.classList.add('fc-se-color-control');
+        if (extraClass) {
+            control.wrapper.classList.add(extraClass);
+        }
+        control.wrapper.querySelectorAll('button, input').forEach(function (node) {
+            node.addEventListener('mousedown', captureRange, true);
+        });
+        control.wrapper.querySelectorAll('button').forEach(function (button) {
+            applySunEditorTooltip(button);
+        });
+
+        return control.wrapper;
+    }
+
+    function createToolbarColorGroup(command, control) {
+        var listItem = document.createElement('li');
+        listItem.className = 'fc-se-color-item fc-se-color-item-' + command.toLowerCase();
+
+        var colorGroup = document.createElement('div');
+        colorGroup.className = 'fc-se-color-group fc-se-color-group-' + command.toLowerCase();
+        colorGroup.setAttribute('data-flatcms-command', command);
+        colorGroup.appendChild(control);
+        listItem.appendChild(colorGroup);
+
+        return listItem;
+    }
+
+    function insertToolbarNode(toolbar, command, node, fallbackCommand, fallbackPosition, fallbackParent) {
+        var module = findToolbarCommandModule(toolbar, command);
+        if (module && module.parentNode) {
+            module.parentNode.insertBefore(node, module);
+            module.remove();
+            return true;
+        }
+
+        var fallbackModule = fallbackCommand ? findToolbarCommandModule(toolbar, fallbackCommand) : null;
+        if (fallbackModule && fallbackModule.parentNode) {
+            if (fallbackPosition === 'after') {
+                fallbackModule.parentNode.insertBefore(node, fallbackModule.nextSibling);
+            } else {
+                fallbackModule.parentNode.insertBefore(node, fallbackModule);
+            }
+            return true;
+        }
+
+        if (fallbackParent) {
+            fallbackParent.appendChild(node);
+            return true;
+        }
+
+        return false;
+    }
+
+    function enhanceInlineSunEditorColors(editor, labels, config) {
         var core = editor && editor.core;
         var toolbar = core && core.context && core.context.element ? core.context.element.toolbar : null;
         if (!toolbar || toolbar.getAttribute('data-flatcms-inline-colors') === '1') {
@@ -409,54 +548,64 @@
             return;
         }
 
-        var alignModule = findToolbarCommandModule(toolbar, 'align');
         var fontColorModule = findToolbarCommandModule(toolbar, 'fontColor');
         var hiliteColorModule = findToolbarCommandModule(toolbar, 'hiliteColor');
-
-        if (fontColorModule) {
-            fontColorModule.remove();
-        }
-        if (hiliteColorModule) {
-            hiliteColorModule.remove();
-        }
+        var cfg = config && typeof config === 'object' ? config : {};
+        var enableHiliteColor = cfg.enableHiliteColor === true;
+        var includeColorStateInTooltip = cfg.includeColorStateInTooltip !== false;
+        var didEnhance = false;
 
         var savedRange = null;
         var captureRange = function () {
             savedRange = cloneSunEditorRange(core);
+            return savedRange;
+        };
+        var getSavedRange = function () {
+            return savedRange;
         };
 
-        var textColorControl = createCompactColorControl({
-            label: String(labels && labels.text || '').trim(),
-            clearLabel: String(labels && labels.clear || '').trim(),
-            emptyLabel: String(labels && labels.empty || '').trim(),
-            value: '',
-            normalizeColor: normalizeColor,
-            normalizeHex: normalizeHexColor,
-            onUpdate: function (nextColor) {
-                applyToolbarColor(editor, 'fontColor', nextColor, savedRange);
+        if (fontColorModule) {
+            var textColorControl = createSunEditorColorControl(editor, 'fontColor', labels, captureRange, getSavedRange, 'fc-se-font-color-control', {
+                includeStateInTitle: includeColorStateInTooltip
+            });
+            if (textColorControl) {
+                insertToolbarNode(
+                    toolbar,
+                    'fontColor',
+                    createToolbarColorGroup('fontColor', textColorControl),
+                    'align',
+                    'before',
+                    primaryRow
+                );
+                didEnhance = true;
             }
-        });
-
-        if (!textColorControl || !textColorControl.wrapper) {
-            return;
         }
 
-        textColorControl.wrapper.classList.add('fc-se-color-control');
-        textColorControl.wrapper.querySelectorAll('button, input').forEach(function (node) {
-            node.addEventListener('mousedown', captureRange, true);
-        });
-
-        var colorGroup = document.createElement('div');
-        colorGroup.className = 'fc-se-color-group';
-        colorGroup.appendChild(textColorControl.wrapper);
-
-        if (alignModule && alignModule.parentNode === primaryRow) {
-            primaryRow.insertBefore(colorGroup, alignModule);
-        } else {
-            primaryRow.appendChild(colorGroup);
+        if (hiliteColorModule) {
+            if (enableHiliteColor) {
+                var hiliteColorControl = createSunEditorColorControl(editor, 'hiliteColor', labels, captureRange, getSavedRange, 'fc-se-hilite-color-control', {
+                    includeStateInTitle: includeColorStateInTooltip
+                });
+                if (hiliteColorControl) {
+                    insertToolbarNode(
+                        toolbar,
+                        'hiliteColor',
+                        createToolbarColorGroup('hiliteColor', hiliteColorControl),
+                        'horizontalRule',
+                        'after',
+                        primaryRow
+                    );
+                    didEnhance = true;
+                }
+            } else {
+                hiliteColorModule.remove();
+                didEnhance = true;
+            }
         }
 
-        toolbar.setAttribute('data-flatcms-inline-colors', '1');
+        if (didEnhance) {
+            toolbar.setAttribute('data-flatcms-inline-colors', '1');
+        }
     }
 
     function getDefaultButtonList() {
@@ -654,9 +803,14 @@
 
         enhanceInlineSunEditorColors(editor, {
             text: lang && lang.toolbar ? String(lang.toolbar.fontColor || '') : '',
+            highlight: lang && lang.toolbar ? String(lang.toolbar.hiliteColor || '') : '',
             empty: lang && lang.toolbar ? String(lang.toolbar.default || '') : '',
             clear: lang && lang.dialogBox ? String(lang.dialogBox.revertButton || '') : ''
+        }, {
+            enableHiliteColor: cfg.enableHiliteColor === true,
+            includeColorStateInTooltip: cfg.includeColorStateInTooltip !== false
         });
+        refreshSunEditorTooltips(editor);
 
         var onInput = typeof cfg.onInput === 'function' ? cfg.onInput : null;
         var onChange = typeof cfg.onChange === 'function' ? cfg.onChange : null;
