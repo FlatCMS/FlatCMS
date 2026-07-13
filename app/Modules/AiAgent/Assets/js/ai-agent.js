@@ -55,6 +55,15 @@
     return text.charAt(0).toLowerCase() + text.slice(1);
   }
 
+  function upperFirst(value) {
+    var text = String(value || '').trim();
+    if (text === '') {
+      return '';
+    }
+
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
   function uniqueStringList(values) {
     var seen = Object.create(null);
     var items = Array.isArray(values) ? values : [];
@@ -170,6 +179,8 @@
     var iconDark = String(root.getAttribute('data-icon-dark') || '').trim();
     var iconLight = String(root.getAttribute('data-icon-light') || '').trim();
     var greetingSessionKey = 'flatcms.aiAgent.sessionGreetingSeen';
+    var greetingTurnSessionKey = 'flatcms.aiAgent.sessionGreetingTurn';
+    var greetingEntitySessionKey = 'flatcms.aiAgent.sessionGreetingEntities';
     var navigationSessionKey = 'flatcms.aiAgent.sessionNavigation';
     var navigationSessionLimit = 8;
     var pageVisitToken = String(Date.now()) + ':' + Math.random().toString(36).slice(2);
@@ -510,6 +521,7 @@
     }
 
     function resolveActionLabel(action) {
+      var subjectLabel = getAssistantSubjectLabel();
       var keyMap = {
         field_fill: i18n.actionFieldFill,
         field_improve: i18n.actionFieldImprove,
@@ -521,6 +533,26 @@
         block_summary: i18n.actionBlockSummary,
         seo_generate: i18n.actionSeoGenerate
       };
+
+      var contextualKeyMap = {
+        field_fill: i18n.actionFieldFillContext,
+        field_improve: i18n.actionFieldImproveContext,
+        field_translate: i18n.actionFieldTranslateContext,
+        block_generate: i18n.actionBlockGenerateContext,
+        block_improve: i18n.actionBlockImproveContext,
+        block_proofread: i18n.actionBlockProofreadContext,
+        block_translate: i18n.actionBlockTranslateContext,
+        block_summary: i18n.actionBlockSummaryContext,
+        seo_generate: i18n.actionSeoGenerateContext
+      };
+
+      var contextual = template(String(contextualKeyMap[action] || '').trim(), {
+        subject: subjectLabel
+      }).trim();
+
+      if (contextual !== '') {
+        return contextual;
+      }
 
       return String(keyMap[action] || action || '').trim();
     }
@@ -738,6 +770,10 @@
         return '';
       }
 
+      if (state.context.scope === 'field' && state.context.field === 'excerpt') {
+        return lowerFirst(String(i18n.fieldSubjectExcerpt || state.context.label || '').trim());
+      }
+
       if (state.context.scope === 'field' && state.context.label !== '') {
         return lowerFirst(state.context.label);
       }
@@ -767,67 +803,235 @@
       }
     }
 
-    function getAssistantQuestionMessage(navigation) {
+    function consumeGreetingTurn() {
+      try {
+        if (!window.sessionStorage) {
+          return 0;
+        }
+
+        var current = parseInt(String(window.sessionStorage.getItem(greetingTurnSessionKey) || '0'), 10);
+        if (!isFinite(current) || current < 0) {
+          current = 0;
+        }
+
+        window.sessionStorage.setItem(greetingTurnSessionKey, String(current + 1));
+        return current;
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    function readGreetingEntitiesForVisit() {
+      try {
+        if (!window.sessionStorage) {
+          return {
+            visit_token: '',
+            keys: []
+          };
+        }
+
+        var raw = window.sessionStorage.getItem(greetingEntitySessionKey);
+        if (!raw) {
+          return {
+            visit_token: '',
+            keys: []
+          };
+        }
+
+        var parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') {
+          return {
+            visit_token: '',
+            keys: []
+          };
+        }
+
+        return {
+          visit_token: String(parsed.visit_token || ''),
+          keys: Array.isArray(parsed.keys) ? parsed.keys.map(function(item) {
+            return String(item || '').trim();
+          }).filter(function(item) {
+            return item !== '';
+          }) : []
+        };
+      } catch (error) {
+        return {
+          visit_token: '',
+          keys: []
+        };
+      }
+    }
+
+    function hasGreetedEntityInCurrentVisit(entry) {
+      if (!entry || !entry.key) {
+        return false;
+      }
+
+      var stateForVisit = readGreetingEntitiesForVisit();
+      if (stateForVisit.visit_token !== pageVisitToken) {
+        return false;
+      }
+
+      return stateForVisit.keys.indexOf(String(entry.key || '').trim()) !== -1;
+    }
+
+    function markEntityGreetedInCurrentVisit(entry) {
+      if (!entry || !entry.key) {
+        return;
+      }
+
+      try {
+        if (!window.sessionStorage) {
+          return;
+        }
+
+        var stateForVisit = readGreetingEntitiesForVisit();
+        var keys = stateForVisit.visit_token === pageVisitToken ? stateForVisit.keys.slice() : [];
+        var key = String(entry.key || '').trim();
+        if (key === '') {
+          return;
+        }
+
+        if (keys.indexOf(key) === -1) {
+          keys.push(key);
+        }
+
+        window.sessionStorage.setItem(greetingEntitySessionKey, JSON.stringify({
+          visit_token: pageVisitToken,
+          keys: keys
+        }));
+      } catch (error) {
+        return;
+      }
+    }
+
+    function renderGreetingVariant(baseKey, replacements, seed) {
+      var keys = [baseKey, baseKey + 'Alt', baseKey + 'Alt2'];
+      var variants = [];
+
+      keys.forEach(function(key) {
+        var candidate = String(i18n[key] || '').trim();
+        if (candidate !== '') {
+          variants.push(candidate);
+        }
+      });
+
+      if (variants.length === 0) {
+        return '';
+      }
+
+      var index = 0;
+      if (variants.length > 1) {
+        index = Math.abs(Number(seed) || 0) % variants.length;
+      }
+
+      return template(variants[index], replacements || {}).trim();
+    }
+
+    function getAssistantProposalMessage() {
       if (!state.context) {
-        return String(i18n.greetingQuestionGeneric || '').trim();
+        return String(i18n.greetingProposalGeneric || '').trim();
+      }
+
+      var subjectLabel = getAssistantSubjectLabel();
+
+      if (state.context.scope === 'field') {
+        if (state.context.field === 'title') {
+          return String(i18n.greetingProposalFieldTitle || '').trim();
+        }
+
+        if (state.context.field === 'excerpt') {
+          return String(i18n.greetingProposalFieldExcerpt || '').trim();
+        }
+
+        if (state.context.field === 'content') {
+          return String(i18n.greetingProposalFieldContent || '').trim();
+        }
+
+        if (state.context.field === 'slug') {
+          return String(i18n.greetingProposalFieldSlug || '').trim();
+        }
+
+        if (state.context.field === 'meta_title') {
+          return String(i18n.greetingProposalFieldMetaTitle || '').trim();
+        }
+
+        if (state.context.field === 'meta_description') {
+          return String(i18n.greetingProposalFieldMetaDescription || '').trim();
+        }
+
+        if (state.context.field === 'featured_image') {
+          return String(i18n.greetingProposalFieldFeaturedImage || '').trim();
+        }
+
+        return template(i18n.greetingProposalFieldDefault || '', {
+          label: subjectLabel
+        }).trim();
+      }
+
+      if (state.context.block === 'seo') {
+        return String(i18n.greetingProposalBlockSeo || '').trim();
+      }
+
+      if (state.context.block === 'content') {
+        return String(i18n.greetingProposalBlockContent || '').trim();
+      }
+
+      return template(i18n.greetingProposalBlockDefault || '', {
+        label: subjectLabel
+      }).trim();
+    }
+
+    function getAssistantQuestionMessage(navigation, greetingTurn, entityAlreadyIntroduced) {
+      if (!state.context) {
+        return renderGreetingVariant('greetingQuestionGeneric', {}, greetingTurn);
       }
 
       var subjectLabel = getAssistantSubjectLabel();
       var hasField = state.context.scope === 'field' && subjectLabel !== '';
       var hasLabel = subjectLabel !== '';
-      var isReturn = !!(navigation && navigation.seen_before);
-      var isSwitched = !!(navigation && navigation.previous);
+      var isReturn = !!(navigation && navigation.seen_before) || !!entityAlreadyIntroduced;
       var isCreate = isCreationContext();
+      var currentEntity = String((navigation && navigation.current && navigation.current.descriptor) || '').trim();
+      var seed = greetingTurn + subjectLabel.length + currentEntity.length;
 
       if (hasField) {
         if (isReturn) {
-          return template(i18n.greetingQuestionFieldReturn || '', {
+          return renderGreetingVariant('greetingQuestionFieldReturn', {
             label: subjectLabel
-          }).trim();
-        }
-
-        if (isSwitched) {
-          return template(i18n.greetingQuestionFieldSwitched || '', {
-            label: subjectLabel
-          }).trim();
+          }, seed);
         }
 
         if (isCreate) {
-          return template(i18n.greetingQuestionFieldNew || '', {
+          return renderGreetingVariant('greetingQuestionFieldNew', {
             label: subjectLabel
-          }).trim();
+          }, seed);
         }
 
-        return template(i18n.greetingQuestionField || '', {
+        return renderGreetingVariant('greetingQuestionField', {
           label: subjectLabel
-        }).trim();
+        }, seed);
       }
 
       if (hasLabel) {
         if (isReturn) {
-          return template(i18n.greetingQuestionBlockReturn || '', {
+          return renderGreetingVariant('greetingQuestionBlockReturn', {
             label: subjectLabel
-          }).trim();
-        }
-
-        if (isSwitched) {
-          return template(i18n.greetingQuestionBlockSwitched || '', {
-            label: subjectLabel
-          }).trim();
+          }, seed);
         }
 
         if (isCreate) {
-          return template(i18n.greetingQuestionBlockNew || '', {
+          return renderGreetingVariant('greetingQuestionBlockNew', {
             label: subjectLabel
-          }).trim();
+          }, seed);
         }
 
-        return template(i18n.greetingQuestionBlock || '', {
+        return renderGreetingVariant('greetingQuestionBlock', {
           label: subjectLabel
-        }).trim();
+        }, seed);
       }
 
-      return String(i18n.greetingQuestionGeneric || '').trim();
+      return renderGreetingVariant('greetingQuestionGeneric', {}, seed);
     }
 
     function getAssistantGreetingMessage() {
@@ -837,37 +1041,49 @@
 
       var greetingName = String(currentUser.greeting_name || currentUser.display_name || '').trim();
       var isFirstGreeting = !hasSeenGreetingInSession();
+      var greetingTurn = consumeGreetingTurn();
       var navigation = state.navigation || captureNavigationState(state.context);
+      var entityAlreadyIntroduced = hasGreetedEntityInCurrentVisit(navigation.current);
       var currentEntity = String((navigation.current && navigation.current.descriptor) || getAssistantEntityDescriptor()).trim();
-      var previousEntity = String((navigation.previous && navigation.previous.descriptor) || '').trim();
       var parts = [];
 
-      if (isFirstGreeting && greetingName !== '') {
-        parts.push(template(i18n.greetingHello || '', { name: greetingName }).trim());
+      if (isFirstGreeting) {
+        var intro = String(i18n.greetingIntro || '').trim();
+        if (greetingName !== '') {
+          parts.push((template(i18n.greetingHello || '', { name: greetingName }).trim() + ' ' + intro).trim());
+        } else if (intro !== '') {
+          parts.push(upperFirst(intro));
+        }
       }
 
-      if (navigation.seen_before && currentEntity !== '') {
+      if (!entityAlreadyIntroduced && navigation.seen_before && currentEntity !== '') {
         parts.push(template(i18n.greetingStateReturn || '', {
           entity: currentEntity
         }).trim());
-      } else if (previousEntity !== '' && currentEntity !== '') {
-        parts.push(template(i18n.greetingStateSwitched || '', {
-          previous: previousEntity,
-          current: currentEntity
-        }).trim());
-      } else if (isCreationContext() && currentEntity !== '') {
+      } else if (!entityAlreadyIntroduced && isCreationContext() && currentEntity !== '') {
         parts.push(template(i18n.greetingStateNew || '', {
           entity: currentEntity
         }).trim());
-      } else if (currentEntity !== '') {
+      } else if (!entityAlreadyIntroduced && currentEntity !== '') {
         parts.push(template(i18n.greetingStateCurrent || '', {
           entity: currentEntity
         }).trim());
       }
 
-      parts.push(getAssistantQuestionMessage(navigation));
+      var proposalMessage = getAssistantProposalMessage();
+      if (proposalMessage !== '') {
+        parts.push(proposalMessage);
+      }
+
+      var proposalQuestion = renderGreetingVariant('greetingProposalQuestion', {}, greetingTurn + currentEntity.length);
+      if (proposalQuestion !== '') {
+        parts.push(proposalQuestion);
+      } else {
+        parts.push(getAssistantQuestionMessage(navigation, greetingTurn, entityAlreadyIntroduced));
+      }
 
       markGreetingSeenInSession();
+      markEntityGreetedInCurrentVisit(navigation.current);
 
       return parts.filter(function(part) {
         return String(part || '').trim() !== '';
@@ -906,7 +1122,19 @@
     }
 
     function resolveActionMeta(action) {
-      return '';
+      var keyMap = {
+        field_fill: i18n.actionMetaFieldFill,
+        field_improve: i18n.actionMetaFieldImprove,
+        field_translate: i18n.actionMetaFieldTranslate,
+        block_generate: i18n.actionMetaBlockGenerate,
+        block_improve: i18n.actionMetaBlockImprove,
+        block_proofread: i18n.actionMetaBlockProofread,
+        block_translate: i18n.actionMetaBlockTranslate,
+        block_summary: i18n.actionMetaBlockSummary,
+        seo_generate: i18n.actionMetaSeoGenerate
+      };
+
+      return String(keyMap[action] || '').trim();
     }
 
     function syncSuggestionButtons() {

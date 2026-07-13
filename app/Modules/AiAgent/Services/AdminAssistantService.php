@@ -16,6 +16,7 @@ use App\Modules\Categories\Services\CategoryTranslationService;
 use App\Modules\Media\Models\MediaModel;
 use App\Modules\Pages\Services\PageTranslationService;
 use App\Modules\Posts\Services\PostTranslationService;
+use App\Modules\AiAgent\Support\FlattyPersona;
 use App\Services\AI\AIManager;
 use App\Services\AI\DTO\AiRequest;
 use App\Services\AI\EditorialAssistant;
@@ -63,7 +64,7 @@ final class AdminAssistantService
                         'field_label' => $ctx['label'],
                         'variants' => $this->generateFieldVariants($ctx, $message, $intent, $editorialContext),
                     ],
-                    'chips' => $this->fieldFollowUpChips($intent),
+                    'chips' => $this->fieldFollowUpChips($ctx, $intent),
                 ];
 
             case 'block_generate':
@@ -74,7 +75,7 @@ final class AdminAssistantService
                     'proposal' => [
                         'values' => $this->finalizePostContentValues($ctx, $generatedValues),
                     ],
-                    'chips' => $this->contentFollowUpChips(),
+                    'chips' => $this->contentFollowUpChips($intent, $ctx),
                 ];
 
             case 'block_improve':
@@ -85,7 +86,7 @@ final class AdminAssistantService
                     'proposal' => [
                         'values' => $this->finalizePostContentValues($ctx, $improvedValues),
                     ],
-                    'chips' => $this->contentFollowUpChips(),
+                    'chips' => $this->contentFollowUpChips($intent, $ctx),
                 ];
 
             case 'block_proofread':
@@ -96,7 +97,7 @@ final class AdminAssistantService
                     'proposal' => [
                         'values' => $this->finalizePostContentValues($ctx, $proofreadValues),
                     ],
-                    'chips' => $this->contentFollowUpChips(),
+                    'chips' => $this->contentFollowUpChips($intent, $ctx),
                 ];
 
             case 'block_translate':
@@ -114,10 +115,11 @@ final class AdminAssistantService
                             $this->editorial->translate($entityType, $sourceLocale, $locale, $source, $ctx['has_excerpt'], $message, $editorialContext)
                         ),
                     ],
-                    'chips' => $this->contentFollowUpChips(),
+                    'chips' => $this->contentFollowUpChips($intent, $ctx),
                 ];
 
             case 'block_summary':
+                $summaryBudget = ($ctx['module'] ?? '') === 'posts' ? 320 : 520;
                 return [
                     'intent' => $intent,
                     'proposal_type' => 'summary',
@@ -128,12 +130,12 @@ final class AdminAssistantService
                             (string) ($current['title'] ?? ''),
                             (string) ($current['content'] ?? ''),
                             (string) ($current['excerpt'] ?? ''),
-                            260,
+                            $summaryBudget,
                             $message,
                             $editorialContext
                         ),
                     ],
-                    'chips' => ['block_improve', 'block_proofread'],
+                    'chips' => ['seo_generate', 'block_improve'],
                 ];
 
             case 'seo_generate':
@@ -329,7 +331,7 @@ final class AdminAssistantService
         }
 
         $payload = $this->requestJson(
-            instructions: 'You are a contextual CMS writing assistant. Return only valid JSON with a variants array of exactly 3 strings. ' . $modeInstruction . ' ' . $fieldSpecific . ' No commentary, no markdown, no code fences.',
+            instructions: FlattyPersona::promptPreamble() . ' Return only valid JSON with a variants array of exactly 3 strings. ' . $modeInstruction . ' ' . $fieldSpecific . ' Give three genuinely distinct and useful options whenever possible. No commentary, no markdown, no code fences.',
             input: [
                 'task' => 'field_variants',
                 'locale' => $ctx['locale'],
@@ -399,21 +401,47 @@ final class AdminAssistantService
     /**
      * @return array<int, string>
      */
-    private function fieldFollowUpChips(string $intent): array
+    private function fieldFollowUpChips(array $ctx, string $intent): array
     {
         if ($intent === 'field_translate') {
             return ['field_improve', 'field_fill'];
         }
 
-        return ['field_fill', 'field_improve'];
+        if (($ctx['field'] ?? '') === 'excerpt') {
+            return ['field_improve', 'field_fill'];
+        }
+
+        if (($ctx['field'] ?? '') === 'title') {
+            return ['field_improve', 'field_fill'];
+        }
+
+        if (($ctx['field'] ?? '') === 'meta_title' || ($ctx['field'] ?? '') === 'meta_description') {
+            return ['field_improve', 'seo_generate'];
+        }
+
+        return ['field_improve', 'field_fill'];
     }
 
     /**
      * @return array<int, string>
      */
-    private function contentFollowUpChips(): array
+    private function contentFollowUpChips(string $intent, array $ctx): array
     {
-        return ['block_improve', 'block_proofread', 'block_translate'];
+        $chips = match ($intent) {
+            'block_generate' => ['block_improve', 'block_proofread'],
+            'block_improve' => ['block_proofread', 'block_summary'],
+            'block_proofread' => ['block_improve', 'block_summary'],
+            'block_translate' => ['block_improve', 'block_proofread'],
+            default => ['block_improve', 'block_proofread'],
+        };
+
+        if (($ctx['locale'] ?? '') !== '' && ($ctx['source_locale'] ?? '') !== '' && ($ctx['locale'] ?? '') !== ($ctx['source_locale'] ?? '')) {
+            if (!in_array('block_translate', $chips, true) && count($chips) < 2) {
+                $chips[] = 'block_translate';
+            }
+        }
+
+        return array_values(array_slice(array_unique($chips), 0, 2));
     }
 
     /**
@@ -427,6 +455,7 @@ final class AdminAssistantService
             'site_name' => trim((string) ($settings['site_name'] ?? '')),
             'site_description' => trim((string) ($settings['site_description'] ?? '')),
             'site_slogan' => trim((string) ($settings['site_slogan'] ?? '')),
+            'assistant_persona' => FlattyPersona::editorialContext(),
             'selected_categories' => [],
             'available_categories' => [],
         ];

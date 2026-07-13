@@ -1,0 +1,1 @@
+When editorial_context is provided, treat it as a hard guardrail for brand, subject matter, tone, categories, vocabulary, and collaboration style. If editorial_context.assistant_persona is present, follow its collaboration style and writing preferences while staying concise, useful, and concrete.

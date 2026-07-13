@@ -42,7 +42,7 @@ final class EditorialAssistant
         }
 
         $payload = $this->requestJson(
-            instructions: 'You are a senior editorial SEO assistant. Return only a valid JSON object with the keys meta_title and meta_description. Write in the requested locale. The meta_title must stay under 60 characters and the meta_description under 160 characters. Be specific, natural, and faithful to the provided content. When editorial_context is provided, treat it as a hard guardrail for brand, subject matter, and vocabulary. No markdown, no commentary, no code fences.',
+            instructions: 'You are a senior editorial SEO assistant. Return only a valid JSON object with the keys meta_title and meta_description. Write in the requested locale. The meta_title must stay under 60 characters and the meta_description under 160 characters. Be specific, natural, and faithful to the provided content. ' . $this->editorialGuardrailInstruction() . ' No markdown, no commentary, no code fences.',
             input: [
                 'task' => 'generate_seo',
                 'entity_type' => $entityType,
@@ -94,7 +94,7 @@ final class EditorialAssistant
         }
 
         $payload = $this->requestJson(
-            instructions: 'You are a senior editorial writer for a CMS. Return only a valid JSON object with the requested keys. Write in the requested locale. Produce polished editorial content, faithful to the provided brief, with clean body HTML only inside the content field. Use paragraphs, headings, and lists only when useful. When editorial_context is provided, treat it as a hard guardrail for brand, subject matter, tone, categories, and vocabulary. Stay aligned with the site editorial line. If the brief is vague, infer a topic from editorial_context and recent_posts instead of inventing an unrelated business, industry, or marketing niche. For posts, categories must be an array of 1 to 3 exact category names chosen from editorial_context.available_categories whenever that list is provided. If editorial_context.available_images is provided, you may only use image paths from that list. Never invent or rewrite image paths. For posts, set featured_image to one relevant unused image path when possible. For pages, if an unused image is relevant, you may include one <img> block inside content using one of those exact paths. Do not output a full HTML document, markdown, commentary, or code fences.',
+            instructions: 'You are a senior editorial writer for a CMS. Return only a valid JSON object with the requested keys. Write in the requested locale. Produce polished editorial content, faithful to the provided brief, with clean body HTML only inside the content field. Use paragraphs, headings, and lists only when useful. ' . $this->editorialGuardrailInstruction() . ' If the brief is vague, infer a topic from editorial_context and recent_posts instead of inventing an unrelated business, industry, or marketing niche. For posts, categories must be an array of 1 to 3 exact category names chosen from editorial_context.available_categories whenever that list is provided. If editorial_context.available_images is provided, you may only use image paths from that list. Never invent or rewrite image paths. For posts, set featured_image to one relevant unused image path when possible. For pages, if an unused image is relevant, you may include one <img> block inside content using one of those exact paths. Do not output a full HTML document, markdown, commentary, or code fences.',
             input: [
                 'task' => 'generate_content',
                 'entity_type' => $entityType,
@@ -186,7 +186,7 @@ final class EditorialAssistant
             : 'Improve clarity, rhythm, and structure while preserving the core meaning. Keep the editorial tone natural. Preserve existing HTML structure when relevant and add clean HTML structure only when it improves readability.';
 
         $payload = $this->requestJson(
-            instructions: 'You are a careful editorial assistant. Return only a valid JSON object with the requested keys. Write in the requested locale. ' . $modeInstructions . ' When editorial_context is provided, keep the result aligned with the site brand, subject matter, and vocabulary. For posts, if editorial_context.available_categories exists, categories must stay an array of exact category names from that list, and you may adjust them when the user asks for stronger coherence. If the user asks for an image and editorial_context.available_images is provided, choose one exact unused path from that list and set featured_image accordingly. You may also insert one relevant <img> block in content using one of those exact paths, but never invent or rewrite image URLs. Translate nothing unless explicitly requested in the user instruction. Do not output markdown, commentary, or code fences.',
+            instructions: 'You are a careful editorial assistant. Return only a valid JSON object with the requested keys. Write in the requested locale. ' . $modeInstructions . ' ' . $this->editorialGuardrailInstruction() . ' For posts, if editorial_context.available_categories exists, categories must stay an array of exact category names from that list, and you may adjust them when the user asks for stronger coherence. If the user asks for an image and editorial_context.available_images is provided, choose one exact unused path from that list and set featured_image accordingly. You may also insert one relevant <img> block in content using one of those exact paths, but never invent or rewrite image URLs. Translate nothing unless explicitly requested in the user instruction. Do not output markdown, commentary, or code fences.',
             input: [
                 'task' => $mode === 'proofread' ? 'proofread_content' : 'enhance_content',
                 'entity_type' => $entityType,
@@ -257,7 +257,7 @@ final class EditorialAssistant
         }
 
         $payload = $this->requestJson(
-            instructions: 'You are a concise editorial assistant. Return only a valid JSON object with the single key summary. Write in the requested locale. The summary must stay faithful to the source, avoid hype, and stay under the requested character budget. When editorial_context is provided, keep the wording aligned with the site brand and subject matter. No markdown, no commentary, no code fences.',
+            instructions: 'You are a concise editorial assistant. Return only a valid JSON object with the single key summary. Write in the requested locale. The summary must stay faithful to the source, avoid hype, and stay under the requested character budget. ' . $this->editorialGuardrailInstruction() . ' No markdown, no commentary, no code fences.',
             input: [
                 'task' => 'summarize_content',
                 'entity_type' => $entityType,
@@ -305,7 +305,7 @@ final class EditorialAssistant
         }
 
         $payload = $this->requestJson(
-            instructions: 'You are a careful editorial translator. Return only a valid JSON object with the requested keys. Translate into the requested target locale. Preserve HTML structure inside content: keep tags, attributes, and hierarchy stable, and translate only the visible editorial text. When editorial_context is provided, preserve the site brand, craft vocabulary, and tone. Keep empty source fields empty in the output. Do not return markdown, comments, or code fences.',
+            instructions: 'You are a careful editorial translator. Return only a valid JSON object with the requested keys. Translate into the requested target locale. Preserve HTML structure inside content: keep tags, attributes, and hierarchy stable, and translate only the visible editorial text. ' . $this->editorialGuardrailInstruction() . ' Keep empty source fields empty in the output. Do not return markdown, comments, or code fences.',
             input: [
                 'task' => 'translate_content',
                 'entity_type' => $entityType,
@@ -502,6 +502,11 @@ final class EditorialAssistant
         return str_limit($html, max(1200, $limit), '');
     }
 
+    private function editorialGuardrailInstruction(): string
+    {
+        return trim((string) file_get_contents(__DIR__ . '/Resources/editorial-guardrail.txt'));
+    }
+
     /**
      * @param array<string, mixed> $context
      * @return array<string, mixed>
@@ -516,11 +521,25 @@ final class EditorialAssistant
             'site_name' => trim((string) ($context['site_name'] ?? '')),
             'site_description' => $this->plainText((string) ($context['site_description'] ?? ''), 280),
             'site_slogan' => $this->plainText((string) ($context['site_slogan'] ?? ''), 160),
+            'assistant_persona' => [],
             'selected_categories' => [],
             'available_categories' => [],
             'recent_posts' => [],
             'available_images' => [],
         ];
+
+        $assistantPersona = is_array($context['assistant_persona'] ?? null) ? $context['assistant_persona'] : [];
+        if ($assistantPersona !== []) {
+            $normalized['assistant_persona'] = [
+                'assistant_name' => trim((string) ($assistantPersona['assistant_name'] ?? '')),
+                'collaboration_style' => $this->plainText((string) ($assistantPersona['collaboration_style'] ?? ''), 220),
+                'writing_preferences' => array_values(array_slice(array_filter(array_map(static function ($value): string {
+                    return trim((string) $value);
+                }, is_array($assistantPersona['writing_preferences'] ?? null) ? $assistantPersona['writing_preferences'] : []), static function (string $value): bool {
+                    return $value !== '';
+                }), 0, 6)),
+            ];
+        }
 
         foreach (['selected_categories', 'available_categories'] as $key) {
             $values = is_array($context[$key] ?? null) ? $context[$key] : [];
