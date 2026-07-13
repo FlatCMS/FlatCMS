@@ -81,6 +81,7 @@ $guidedTourEnabled = !array_key_exists('admin_guided_tour_enabled', $settings)
     : ((int) ($settings['admin_guided_tour_enabled'] ?? 0) === 1);
 $integrationValues = is_array($integrationValues ?? null) ? $integrationValues : [];
 $integrationEnvStatus = is_array($integrationEnvStatus ?? null) ? $integrationEnvStatus : [];
+$fhseCapabilities = is_array($fhseCapabilities ?? null) ? $fhseCapabilities : [];
 $integrationsFieldHelp = is_array($integrationsFieldHelp ?? null) ? $integrationsFieldHelp : [];
 $aiProviderStatus = is_array($aiProviderStatus ?? null) ? $aiProviderStatus : [];
 $integrationEnvPath = (string) ($integrationEnvStatus['path'] ?? (BASE_PATH . '/.env.local'));
@@ -92,6 +93,63 @@ $googleOAuthClientConfigured = trim((string) env('GOOGLE_OAUTH_CLIENT_ID', '')) 
 $googleOAuthSecretConfigured = trim((string) env('GOOGLE_OAUTH_CLIENT_SECRET', '')) !== '';
 $googleOAuthEncryptionConfigured = trim((string) env('GOOGLE_OAUTH_ENCRYPTION_KEY', '')) !== '';
 $googleOAuthConfigured = $googleOAuthClientConfigured && $googleOAuthSecretConfigured && $googleOAuthEncryptionConfigured;
+$fhseDetected = !empty($fhseCapabilities['detected']);
+$fhseVersion = trim((string) ($fhseCapabilities['version'] ?? ''));
+$fhseCapabilitiesFile = is_array($fhseCapabilities['capabilities_file'] ?? null) ? $fhseCapabilities['capabilities_file'] : [];
+$fhseSentinelFile = is_array($fhseCapabilities['sentinel_file'] ?? null) ? $fhseCapabilities['sentinel_file'] : [];
+$fhseFlatcms = is_array($fhseCapabilities['flatcms'] ?? null) ? $fhseCapabilities['flatcms'] : [];
+$fhseTunnel = is_array($fhseCapabilities['cloudflare_tunnel'] ?? null) ? $fhseCapabilities['cloudflare_tunnel'] : [];
+$fhseCapabilitiesStatus = trim((string) ($fhseCapabilitiesFile['status'] ?? 'missing'));
+$fhseFlatcmsDetected = !empty($fhseFlatcms['detected']);
+$fhseTunnelSupported = !empty($fhseTunnel['supported']);
+$fhseTunnelConfiguredKnown = array_key_exists('configured_known', $fhseTunnel)
+    ? !empty($fhseTunnel['configured_known'])
+    : array_key_exists('configured', $fhseTunnel);
+$fhseTunnelConfigured = $fhseTunnelConfiguredKnown ? !empty($fhseTunnel['configured']) : null;
+$fhseTunnelActiveKnown = array_key_exists('active_known', $fhseTunnel)
+    ? !empty($fhseTunnel['active_known'])
+    : array_key_exists('active', $fhseTunnel);
+$fhseTunnelActive = $fhseTunnelActiveKnown ? !empty($fhseTunnel['active']) : null;
+$fhseTunnelAllowed = !array_key_exists('allowed', $fhseTunnel) || !empty($fhseTunnel['allowed']);
+$fhseTunnelMode = trim((string) ($fhseTunnel['mode'] ?? 'token'));
+$fhseTunnelPublicHostname = trim((string) ($fhseTunnel['public_hostname'] ?? ''));
+$fhseTunnelConfigPath = trim((string) ($fhseTunnel['config_path'] ?? '/etc/fhse/cloudflare/tunnel.env'));
+$fhseTunnelServiceName = trim((string) ($fhseTunnel['service_name'] ?? 'fhse-cloudflared-tunnel.service'));
+$fhseCapabilitiesPath = trim((string) ($fhseCapabilitiesFile['path'] ?? '/etc/fhse/capabilities.json'));
+$fhseSentinelPath = trim((string) ($fhseSentinelFile['path'] ?? (BASE_PATH . '/.fhse-flatcms-instance.json')));
+$fhseTunnelModeLabel = $fhseTunnelMode === 'token'
+    ? __('integrations_cloudflare_tunnel_mode_token', 'Settings')
+    : $fhseTunnelMode;
+$fhseStatusBadge = static function (string $status): array {
+    $normalized = strtolower(trim($status));
+
+    return match ($normalized) {
+        'ok', 'active' => ['class' => 'is-ok', 'label' => $normalized === 'active' ? __('status_active', 'Settings') : __('status_ok', 'Settings')],
+        'inactive' => ['class' => 'is-warning', 'label' => __('status_inactive', 'Settings')],
+        'restricted' => ['class' => 'is-warning', 'label' => __('status_restricted', 'Settings')],
+        'unknown' => ['class' => 'is-warning', 'label' => __('status_unknown', 'Settings')],
+        default => ['class' => 'is-warning', 'label' => __('status_missing', 'Settings')],
+    };
+};
+$fhseCapabilitiesBadge = $fhseStatusBadge($fhseCapabilitiesStatus);
+$fhseTunnelConfigurationBadge = $fhseStatusBadge(
+    $fhseTunnelConfiguredKnown
+        ? ($fhseTunnelConfigured ? 'ok' : 'missing')
+        : 'unknown'
+);
+$fhseTunnelActivityBadge = $fhseStatusBadge(
+    $fhseTunnelActiveKnown
+        ? ($fhseTunnelActive ? 'active' : 'inactive')
+        : 'unknown'
+);
+$fhseCloudflareNote = $fhseCapabilitiesStatus === 'restricted'
+    ? __('integrations_cloudflare_tunnel_capabilities_restricted', 'Settings')
+    : ($fhseTunnelAllowed ? __('integrations_cloudflare_tunnel_next_step', 'Settings') : __('integrations_cloudflare_tunnel_blocked', 'Settings'));
+$fhseCloudflareNoteBadge = $fhseStatusBadge(
+    $fhseCapabilitiesStatus === 'restricted'
+        ? 'restricted'
+        : (($fhseTunnelSupported && $fhseFlatcmsDetected && $fhseTunnelAllowed) ? 'ok' : 'missing')
+);
 $auth2faEnvValue = static function (string $key, string $default): string {
     $value = trim((string) env($key, ''));
     return $value !== '' ? $value : $default;
@@ -166,12 +224,7 @@ $siteLogoLightStoredValue = trim((string) ($siteLogoState['light'] ?? ''));
 $siteLogoDarkStoredValue = trim((string) ($siteLogoState['dark'] ?? ''));
 $siteFaviconStoredValue = trim((string) ($settings['site_favicon'] ?? ''));
 $normalizeSiteMediaFieldValue = static function (string $storedValue): string {
-    $fieldValue = trim($storedValue);
-    if ($fieldValue !== '' && preg_match('~^(https?:)?//~i', $fieldValue) !== 1) {
-        $fieldValue = basename((string) (parse_url('/' . ltrim($fieldValue, '/'), PHP_URL_PATH) ?: $fieldValue));
-    }
-
-    return $fieldValue;
+    return trim($storedValue);
 };
 $siteLogoLightFieldValue = $normalizeSiteMediaFieldValue($siteLogoLightStoredValue);
 $siteLogoDarkFieldValue = $normalizeSiteMediaFieldValue($siteLogoDarkStoredValue);
@@ -1623,6 +1676,155 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                 </div>
                                 <input type="text" id="env_turnstile_secret_key" name="env[TURNSTILE_SECRET_KEY]" class="form-input" value="" placeholder="<?= e($secretInputPlaceholder($turnstileSecretConfigured, __('integrations_turnstile_secret_key_placeholder', 'Settings'))) ?>" autocomplete="on" autocapitalize="none" autocorrect="off" spellcheck="false" data-secret-configured="<?= $turnstileSecretConfigured ? '1' : '0' ?>">
                                 <div class="form-hint"><?= __('integrations_turnstile_secret_key_hint', 'Settings') ?></div>
+                            </div>
+
+                            <div class="settings-system-block settings-integrations-cloudflare">
+                                <div class="settings-system-block-title"><?= __('integrations_cloudflare_tunnel_title', 'Settings') ?></div>
+                                <div class="form-hint"><?= __('integrations_cloudflare_tunnel_intro', 'Settings') ?></div>
+
+                                <?php if ($fhseDetected): ?>
+                                    <div class="settings-system-overview settings-integrations-status-overview">
+                                        <div class="settings-system-stat">
+                                            <span class="settings-system-stat-label"><?= __('integrations_cloudflare_tunnel_capabilities_label', 'Settings') ?></span>
+                                            <div class="settings-system-stat-value">
+                                                <span class="settings-status-badge <?= e($fhseCapabilitiesBadge['class']) ?>">
+                                                    <?= e($fhseCapabilitiesBadge['label']) ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="settings-system-stat">
+                                            <span class="settings-system-stat-label"><?= __('integrations_cloudflare_tunnel_flatcms_label', 'Settings') ?></span>
+                                            <div class="settings-system-stat-value">
+                                                <span class="settings-status-badge <?= $fhseFlatcmsDetected ? 'is-ok' : 'is-warning' ?>">
+                                                    <?= $fhseFlatcmsDetected ? __('status_ok', 'Settings') : __('status_missing', 'Settings') ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="settings-system-stat">
+                                            <span class="settings-system-stat-label"><?= __('integrations_cloudflare_tunnel_support_label', 'Settings') ?></span>
+                                            <div class="settings-system-stat-value">
+                                                <span class="settings-status-badge <?= $fhseTunnelSupported ? 'is-ok' : 'is-warning' ?>">
+                                                    <?= $fhseTunnelSupported ? __('status_ok', 'Settings') : __('status_missing', 'Settings') ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="settings-system-stat">
+                                            <span class="settings-system-stat-label"><?= __('integrations_cloudflare_tunnel_activity_label', 'Settings') ?></span>
+                                            <div class="settings-system-stat-value">
+                                                <span class="settings-status-badge <?= e($fhseTunnelActivityBadge['class']) ?>">
+                                                    <?= e($fhseTunnelActivityBadge['label']) ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <dl class="settings-system-list settings-integrations-cloudflare-list">
+                                        <div class="settings-system-row">
+                                            <dt><?= __('integrations_cloudflare_tunnel_version_label', 'Settings') ?></dt>
+                                            <dd><?= e($fhseVersion !== '' ? $fhseVersion : __('not_available', 'Settings')) ?></dd>
+                                        </div>
+                                        <div class="settings-system-row">
+                                            <dt><?= __('integrations_cloudflare_tunnel_configuration_label', 'Settings') ?></dt>
+                                            <dd>
+                                                <span class="settings-status-badge <?= e($fhseTunnelConfigurationBadge['class']) ?>">
+                                                    <?= e($fhseTunnelConfigurationBadge['label']) ?>
+                                                </span>
+                                            </dd>
+                                        </div>
+                                        <div class="settings-system-row">
+                                            <dt><?= __('integrations_cloudflare_tunnel_mode_label', 'Settings') ?></dt>
+                                            <dd><?= e($fhseTunnelModeLabel) ?></dd>
+                                        </div>
+                                        <div class="settings-system-row">
+                                            <dt><?= __('integrations_cloudflare_tunnel_hostname_label', 'Settings') ?></dt>
+                                            <dd><?= e($fhseTunnelPublicHostname !== '' ? $fhseTunnelPublicHostname : __('not_available', 'Settings')) ?></dd>
+                                        </div>
+                                        <div class="settings-system-row">
+                                            <dt><?= __('integrations_cloudflare_tunnel_service_label', 'Settings') ?></dt>
+                                            <dd><code class="settings-path-code"><?= e($fhseTunnelServiceName) ?></code></dd>
+                                        </div>
+                                        <div class="settings-system-row">
+                                            <dt><?= __('integrations_cloudflare_tunnel_config_path_label', 'Settings') ?></dt>
+                                            <dd><code class="settings-path-code"><?= e($fhseTunnelConfigPath) ?></code></dd>
+                                        </div>
+                                        <div class="settings-system-row">
+                                            <dt><?= __('integrations_cloudflare_tunnel_capabilities_path_label', 'Settings') ?></dt>
+                                            <dd><code class="settings-path-code"><?= e($fhseCapabilitiesPath) ?></code></dd>
+                                        </div>
+                                        <div class="settings-system-row">
+                                            <dt><?= __('integrations_cloudflare_tunnel_sentinel_path_label', 'Settings') ?></dt>
+                                            <dd><code class="settings-path-code"><?= e($fhseSentinelPath) ?></code></dd>
+                                        </div>
+                                    </dl>
+
+                                    <div class="settings-integrations-cloudflare-form">
+                                        <div class="form-group">
+                                            <div class="fc-admin-help-row">
+                                                <label for="fhse_tunnel_public_hostname" class="form-label"><?= __('integrations_cloudflare_tunnel_hostname_label', 'Settings') ?></label>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                id="fhse_tunnel_public_hostname"
+                                                name="fhse_tunnel[public_hostname]"
+                                                class="form-input"
+                                                value="<?= e($fhseTunnelPublicHostname) ?>"
+                                                placeholder="<?= e(__('integrations_cloudflare_tunnel_hostname_placeholder', 'Settings')) ?>"
+                                                autocomplete="on"
+                                                autocapitalize="none"
+                                                autocorrect="off"
+                                                spellcheck="false"
+                                            >
+                                            <div class="form-hint"><?= __('integrations_cloudflare_tunnel_hostname_hint', 'Settings') ?></div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="fc-admin-help-row">
+                                                <label for="fhse_tunnel_token" class="form-label"><?= __('integrations_cloudflare_tunnel_token_label', 'Settings') ?></label>
+                                            </div>
+                                            <input
+                                                type="password"
+                                                id="fhse_tunnel_token"
+                                                name="fhse_tunnel[token]"
+                                                class="form-input"
+                                                value=""
+                                                placeholder="<?= e($secretInputPlaceholder($fhseTunnelConfigured === true, __('integrations_cloudflare_tunnel_token_placeholder', 'Settings'))) ?>"
+                                                autocomplete="off"
+                                                autocapitalize="none"
+                                                autocorrect="off"
+                                                spellcheck="false"
+                                                data-secret-configured="<?= $fhseTunnelConfigured === true ? '1' : '0' ?>"
+                                            >
+                                            <div class="form-hint"><?= __('integrations_cloudflare_tunnel_token_hint', 'Settings') ?></div>
+                                        </div>
+
+                                        <div class="settings-integrations-cloudflare-actions">
+                                            <button type="submit" class="btn btn-secondary" name="fhse_tunnel_action" value="configure" <?= $fhseTunnelAllowed ? '' : 'disabled' ?>>
+                                                <?= __('integrations_cloudflare_tunnel_action_configure', 'Settings') ?>
+                                            </button>
+                                            <button type="submit" class="btn btn-primary" name="fhse_tunnel_action" value="enable" <?= $fhseTunnelAllowed ? '' : 'disabled' ?>>
+                                                <?= __('integrations_cloudflare_tunnel_action_enable', 'Settings') ?>
+                                            </button>
+                                            <button type="submit" class="btn btn-secondary" name="fhse_tunnel_action" value="restart" <?= ($fhseTunnelAllowed && $fhseTunnelConfiguredKnown && $fhseTunnelConfigured) ? '' : 'disabled' ?>>
+                                                <?= __('integrations_cloudflare_tunnel_action_restart', 'Settings') ?>
+                                            </button>
+                                            <button type="submit" class="btn btn-outline" name="fhse_tunnel_action" value="disable" <?= ($fhseTunnelConfiguredKnown && $fhseTunnelConfigured) || ($fhseTunnelActiveKnown && $fhseTunnelActive) ? '' : 'disabled' ?>>
+                                                <?= __('integrations_cloudflare_tunnel_action_disable', 'Settings') ?>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="settings-integrations-cloudflare-note">
+                                        <span class="settings-status-badge <?= e($fhseCloudflareNoteBadge['class']) ?>">
+                                            <?= e($fhseCloudflareNoteBadge['label']) ?>
+                                        </span>
+                                        <div class="form-hint"><?= e($fhseCloudflareNote) ?></div>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="settings-integrations-cloudflare-note is-warning">
+                                        <span class="settings-status-badge is-warning"><?= __('status_missing', 'Settings') ?></span>
+                                        <div class="form-hint"><?= __('integrations_cloudflare_tunnel_fhse_only', 'Settings') ?></div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             </div>
                         </div>

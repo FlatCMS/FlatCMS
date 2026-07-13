@@ -23,6 +23,7 @@ use App\Modules\Auth\Services\LicenseRevealService;
 use App\Modules\Auth\Services\LicenseVaultService;
 use App\Modules\Auth\Services\RoleService;
 use App\Modules\Auth\Services\TokenRepository;
+use App\Modules\Users\Support\UserName;
 use App\Services\Licensing\ExtensionLicenseService;
 
 class AuthController extends BaseController
@@ -256,7 +257,7 @@ class AuthController extends BaseController
             $this->authService->login($user, $remember);
             hook_run('auth.login', $user);
 
-            $this->session->flash('success', __('login_success', 'Auth', ['name' => $user['name']]));
+            $this->session->flash('success', __('login_success', 'Auth', ['name' => UserName::display($user)]));
 
             // Redirect to intended URL or role-based redirect
             $intended = $this->session->get('intended_url');
@@ -394,7 +395,7 @@ class AuthController extends BaseController
         hook_run('auth.login', $user);
 
         $this->session->remove('two_factor_email');
-        $this->session->flash('success', __('login_success', 'Auth', ['name' => $user['name']]));
+        $this->session->flash('success', __('login_success', 'Auth', ['name' => UserName::display($user)]));
 
         $intended = $this->session->get('intended_url');
         $this->session->remove('intended_url');
@@ -499,6 +500,7 @@ class AuthController extends BaseController
 
         if (!$this->verifyTurnstileForAuth()) {
             $this->session->flash('old', [
+                'first_name' => $this->request->input('first_name', ''),
                 'name' => $this->request->input('name', ''),
                 'email' => $this->request->input('email', ''),
                 'phone' => $this->request->input('phone', ''),
@@ -508,10 +510,11 @@ class AuthController extends BaseController
             return;
         }
 
-        $data = $this->request->only(['name', 'email', 'phone', 'password', 'password_confirmation', 'role', 'terms']);
+        $data = $this->request->only(['first_name', 'name', 'email', 'phone', 'password', 'password_confirmation', 'role', 'terms']);
+        $data = UserName::forStorage($data);
 
         // Validate required fields
-        if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
+        if (empty($data['first_name']) || empty($data['name']) || empty($data['email']) || empty($data['password'])) {
             $this->session->flash('error', __('register_required_fields', 'Auth'));
             $this->session->flash('old', $data);
             $this->redirect($registerRedirect);
@@ -569,6 +572,7 @@ class AuthController extends BaseController
 
         // Build user data
         $userData = [
+            'first_name' => $data['first_name'],
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => trim((string) ($data['phone'] ?? '')),
@@ -749,7 +753,8 @@ class AuthController extends BaseController
         
         // Update session with fresh data to keep it in sync
         unset($user['password']);
-        $this->session->set('user', $user);
+        $this->session->set('user', UserName::forSession($user));
+        $user = UserName::forForm($user);
 
         $normalizedRole = RoleService::normalizeRole((string) ($user['role'] ?? RoleService::ROLE_MEMBER));
         $canManageLicenses = RoleService::hasPermission($normalizedRole, 'licenses.manage');
@@ -788,13 +793,20 @@ class AuthController extends BaseController
             $this->redirect(url('/admin/profile'));
             return;
         }
-        $data = $this->request->only(['name', 'email', 'bio', 'phone', 'company', 'admin_language']);
+        $data = $this->request->only(['first_name', 'name', 'email', 'bio', 'phone', 'company', 'admin_language']);
+        $data = UserName::forStorage($data);
         $availableLocales = \App\Core\I18n::getSupportedLocales();
         $selectedLocale = trim((string) ($data['admin_language'] ?? ''));
         if ($selectedLocale !== '' && !in_array($selectedLocale, $availableLocales, true)) {
             $selectedLocale = '';
         }
         $data['admin_language'] = $selectedLocale;
+
+        if (empty($data['first_name']) || empty($data['name']) || empty($data['email'])) {
+            $this->session->flash('error', __('validation.required_fields', 'Users'));
+            $this->redirect(url('/admin/profile'));
+            return;
+        }
 
         // Check email unique
         $existing = $users->findBy('email', $data['email']);
@@ -831,7 +843,7 @@ class AuthController extends BaseController
         // Update session
         $updatedUser = $users->find($userId);
         unset($updatedUser['password']);
-        $this->session->set('user', $updatedUser);
+        $this->session->set('user', UserName::forSession($updatedUser));
 
         $this->session->flash('success', __('profile_updated', 'Users'));
         $this->redirect(url('/admin/profile'));
@@ -1380,7 +1392,7 @@ class AuthController extends BaseController
                     $updatedUser = $users->find($user['id']);
                     if ($updatedUser) {
                         unset($updatedUser['password']);
-                        $this->session->set('user', $updatedUser);
+                        $this->session->set('user', UserName::forSession($updatedUser));
                     }
                 }
                 return $newPath;

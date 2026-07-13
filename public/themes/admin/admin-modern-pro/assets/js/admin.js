@@ -194,6 +194,17 @@
     return 'success';
   }
 
+  function getToastLabels() {
+    const configNode = document.getElementById('flatcms-admin-toast-config');
+
+    return {
+      success: String(configNode && configNode.dataset.titleSuccess ? configNode.dataset.titleSuccess : 'Success').trim() || 'Success',
+      warning: String(configNode && configNode.dataset.titleWarning ? configNode.dataset.titleWarning : 'Information').trim() || 'Information',
+      error: String(configNode && configNode.dataset.titleError ? configNode.dataset.titleError : 'Error').trim() || 'Error',
+      close: String(configNode && configNode.dataset.closeLabel ? configNode.dataset.closeLabel : 'Close').trim() || 'Close'
+    };
+  }
+
   function getToastContainer() {
     let container = document.getElementById('adminToastContainer');
     if (container) return container;
@@ -220,36 +231,64 @@
     const text = String(message || '').trim();
     if (!text) return;
     const toastType = normalizeToastType(type);
+    const labels = getToastLabels();
     const displayDuration = resolveToastDuration(toastType, duration);
     const container = getToastContainer();
     const toast = document.createElement('div');
     toast.className = 'menu-toast menu-toast-' + toastType;
-    toast.setAttribute('role', 'status');
+    toast.setAttribute('role', toastType === 'error' ? 'alert' : 'status');
 
     const iconClass = toastType === 'error'
       ? 'fas fa-circle-exclamation'
       : (toastType === 'warning' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-check');
     const title = toastType === 'error'
-      ? 'Erreur'
-      : (toastType === 'warning' ? 'Info' : 'Succes');
+      ? labels.error
+      : (toastType === 'warning' ? labels.warning : labels.success);
 
     toast.innerHTML = ''
       + '<span class="menu-toast-icon" aria-hidden="true"><i class="' + iconClass + '"></i></span>'
       + '<span class="menu-toast-content">'
       + '<span class="menu-toast-title">' + title + '</span>'
       + '<span class="menu-toast-message">' + escapeHtml(text) + '</span>'
-      + '</span>';
+      + '</span>'
+      + '<button type="button" class="menu-toast-close" aria-label="' + escapeHtml(labels.close) + '" title="' + escapeHtml(labels.close) + '">'
+      + '<i class="fas fa-times" aria-hidden="true"></i>'
+      + '</button>';
 
     container.appendChild(toast);
     window.requestAnimationFrame(function() {
       toast.classList.add('is-visible');
     });
 
-    window.setTimeout(function() {
+    let dismissed = false;
+    let removeTimer = 0;
+    let dismissTimer = 0;
+
+    function dismissToast() {
+      if (dismissed) {
+        return;
+      }
+
+      dismissed = true;
       toast.classList.remove('is-visible');
-      window.setTimeout(function() {
+      window.clearTimeout(dismissTimer);
+      window.clearTimeout(removeTimer);
+      removeTimer = window.setTimeout(function() {
         toast.remove();
       }, 260);
+    }
+
+    const closeButton = toast.querySelector('.menu-toast-close');
+    if (closeButton) {
+      closeButton.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        dismissToast();
+      });
+    }
+
+    dismissTimer = window.setTimeout(function() {
+      dismissToast();
     }, displayDuration);
   }
 
@@ -293,6 +332,97 @@
   });
 
   initAlerts();
+
+  function resolveAutocompleteToken(field) {
+    const fieldName = String(field.getAttribute('name') || '').trim().toLowerCase();
+    const fieldId = String(field.getAttribute('id') || '').trim().toLowerCase();
+    const fingerprint = (fieldName + ' ' + fieldId).trim();
+
+    if (/(^|[^a-z])(email|mail_from_address|recipient_email|contact_notification_email|admin_email|mail_test_to)([^a-z]|$)/.test(fingerprint)) {
+      return 'email';
+    }
+
+    if (/(^|[^a-z])(phone|tel|mobile)([^a-z]|$)/.test(fingerprint)) {
+      return 'tel';
+    }
+
+    if (/(^|[^a-z])(company|organisation|organization)([^a-z]|$)/.test(fingerprint)) {
+      return 'organization';
+    }
+
+    if (/(^|[^a-z])(url|uri|link)([^a-z]|$)/.test(fingerprint)) {
+      return 'url';
+    }
+
+    if (/^(name|admin_name|author_name|recipient_name)$/.test(fieldName) || /^(name|admin_name|author_name|recipient_name)$/.test(fieldId)) {
+      return 'name';
+    }
+
+    return 'on';
+  }
+
+  function isAutocompleteEligibleField(field) {
+    if (!field || field.dataset.adminAutocompleteManaged === '1') {
+      return false;
+    }
+
+    if (field.hasAttribute('autocomplete')) {
+      return false;
+    }
+
+    if (!field.closest('form')) {
+      return false;
+    }
+
+    const tagName = String(field.tagName || '').toLowerCase();
+    if (tagName === 'textarea') {
+      return true;
+    }
+
+    if (tagName !== 'input') {
+      return false;
+    }
+
+    const type = String(field.getAttribute('type') || 'text').trim().toLowerCase();
+    return !['hidden', 'checkbox', 'radio', 'file', 'submit', 'button', 'reset', 'image', 'password'].includes(type);
+  }
+
+  function applyAdminAutocomplete(root) {
+    const scope = root && root.nodeType === 1 ? root : document;
+    const fields = scope.matches && scope.matches('input, textarea')
+      ? [scope]
+      : Array.from(scope.querySelectorAll('input, textarea'));
+
+    fields.forEach(function(field) {
+      if (!isAutocompleteEligibleField(field)) {
+        return;
+      }
+
+      field.setAttribute('autocomplete', resolveAutocompleteToken(field));
+      field.dataset.adminAutocompleteManaged = '1';
+    });
+  }
+
+  applyAdminAutocomplete(document);
+
+  if (document.body && typeof MutationObserver === 'function') {
+    const autocompleteObserver = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        mutation.addedNodes.forEach(function(node) {
+          if (!node || node.nodeType !== 1) {
+            return;
+          }
+
+          applyAdminAutocomplete(node);
+        });
+      });
+    });
+
+    autocompleteObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
 
   // ============================================
   // GLOBAL MODALS (ALERT + CONFIRM)

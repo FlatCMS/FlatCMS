@@ -24,7 +24,7 @@ hook_register('admin.guided_tour.module_tours', static function (): array {
                 guided_tour_step('.user-actions, .table-actions', __('edit_user', 'Users'), __('users_help_step_security', 'Users'), 'left'),
                 guided_tour_step('.pagination', __('users_list', 'Users'), __('users_help_intro', 'Users'), 'top'),
                 guided_tour_step('form[action*="/admin/users"] .form-layout-columns', __('users_form_help_title', 'Users'), __('users_form_help_intro', 'Users'), 'top'),
-                guided_tour_step('#name, #email, #role', __('users_form_help_title', 'Users'), __('users_form_help_step_identity', 'Users'), 'bottom'),
+                guided_tour_step('#first_name, #name, #email, #role', __('users_form_help_title', 'Users'), __('users_form_help_step_identity', 'Users'), 'bottom'),
                 guided_tour_step('.avatar-upload-container', __('avatar', 'Users'), __('users_form_help_step_profile', 'Users'), 'left'),
                 guided_tour_step('form[action*="/admin/users"] .form-actions', __('users_form_help_title', 'Users'), __('users_form_help_step_access', 'Users'), 'top'),
             ],

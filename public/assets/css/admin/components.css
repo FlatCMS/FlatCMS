@@ -1103,6 +1103,7 @@ select.form-input {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .menu-toast-title {
@@ -1120,6 +1121,34 @@ select.form-input {
   color: var(--color-text-primary);
   line-height: 1.2;
   word-break: break-word;
+}
+
+.menu-toast-close {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.menu-toast-close:hover,
+.menu-toast-close:focus-visible {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.menu-toast-close:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .menu-toast-success .menu-toast-icon {

@@ -137,6 +137,17 @@
     return 'success';
   }
 
+  function getToastLabels() {
+    const configNode = document.getElementById('flatcms-admin-toast-config');
+
+    return {
+      success: String(configNode && configNode.dataset.titleSuccess ? configNode.dataset.titleSuccess : 'Success').trim() || 'Success',
+      warning: String(configNode && configNode.dataset.titleWarning ? configNode.dataset.titleWarning : 'Information').trim() || 'Information',
+      error: String(configNode && configNode.dataset.titleError ? configNode.dataset.titleError : 'Error').trim() || 'Error',
+      close: String(configNode && configNode.dataset.closeLabel ? configNode.dataset.closeLabel : 'Close').trim() || 'Close'
+    };
+  }
+
   function getToastContainer() {
     let container = document.getElementById('adminToastContainer');
     if (container) return container;
@@ -163,36 +174,64 @@
     const text = String(message || '').trim();
     if (!text) return;
     const toastType = normalizeToastType(type);
+    const labels = getToastLabels();
     const displayDuration = resolveToastDuration(toastType, duration);
     const container = getToastContainer();
     const toast = document.createElement('div');
     toast.className = 'menu-toast menu-toast-' + toastType;
-    toast.setAttribute('role', 'status');
+    toast.setAttribute('role', toastType === 'error' ? 'alert' : 'status');
 
     const iconClass = toastType === 'error'
       ? 'fas fa-circle-exclamation'
       : (toastType === 'warning' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-check');
     const title = toastType === 'error'
-      ? 'Erreur'
-      : (toastType === 'warning' ? 'Info' : 'Succes');
+      ? labels.error
+      : (toastType === 'warning' ? labels.warning : labels.success);
 
     toast.innerHTML = ''
       + '<span class="menu-toast-icon" aria-hidden="true"><i class="' + iconClass + '"></i></span>'
       + '<span class="menu-toast-content">'
       + '<span class="menu-toast-title">' + title + '</span>'
       + '<span class="menu-toast-message">' + escapeHtml(text) + '</span>'
-      + '</span>';
+      + '</span>'
+      + '<button type="button" class="menu-toast-close" aria-label="' + escapeHtml(labels.close) + '" title="' + escapeHtml(labels.close) + '">'
+      + '<i class="fas fa-times" aria-hidden="true"></i>'
+      + '</button>';
 
     container.appendChild(toast);
     window.requestAnimationFrame(function() {
       toast.classList.add('is-visible');
     });
 
-    window.setTimeout(function() {
+    let dismissed = false;
+    let removeTimer = 0;
+    let dismissTimer = 0;
+
+    function dismissToast() {
+      if (dismissed) {
+        return;
+      }
+
+      dismissed = true;
       toast.classList.remove('is-visible');
-      window.setTimeout(function() {
+      window.clearTimeout(dismissTimer);
+      window.clearTimeout(removeTimer);
+      removeTimer = window.setTimeout(function() {
         toast.remove();
       }, 260);
+    }
+
+    const closeButton = toast.querySelector('.menu-toast-close');
+    if (closeButton) {
+      closeButton.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        dismissToast();
+      });
+    }
+
+    dismissTimer = window.setTimeout(function() {
+      dismissToast();
     }, displayDuration);
   }
 

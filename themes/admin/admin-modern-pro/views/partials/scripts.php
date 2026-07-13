@@ -7,7 +7,21 @@
  * See LICENSE, LICENSING.md and TRADEMARK.md.
  */
 
+$adminToastConfig = [
+    'title_success' => __('success', 'Core'),
+    'title_warning' => __('info', 'Core'),
+    'title_error' => __('toast_error_title', 'Core'),
+    'close_label' => __('close', 'Core'),
+];
 ?>
+<div
+    id="flatcms-admin-toast-config"
+    data-title-success="<?= e((string) $adminToastConfig['title_success']) ?>"
+    data-title-warning="<?= e((string) $adminToastConfig['title_warning']) ?>"
+    data-title-error="<?= e((string) $adminToastConfig['title_error']) ?>"
+    data-close-label="<?= e((string) $adminToastConfig['close_label']) ?>"
+    hidden
+></div>
 <script src="<?= theme_asset('js/admin.js', 'admin') ?>"></script>
 <script src="<?= asset('js/core/components-password-toggle.js') ?>" defer></script>
 <script src="<?= asset('dists/jquery/jquery.min.js') ?>"></script>

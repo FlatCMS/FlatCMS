@@ -46,6 +46,15 @@
     return rendered;
   }
 
+  function lowerFirst(value) {
+    var text = String(value || '').trim();
+    if (text === '') {
+      return '';
+    }
+
+    return text.charAt(0).toLowerCase() + text.slice(1);
+  }
+
   function uniqueStringList(values) {
     var seen = Object.create(null);
     var items = Array.isArray(values) ? values : [];
@@ -160,6 +169,11 @@
     var endpoint = String(root.getAttribute('data-endpoint') || '').trim();
     var iconDark = String(root.getAttribute('data-icon-dark') || '').trim();
     var iconLight = String(root.getAttribute('data-icon-light') || '').trim();
+    var greetingSessionKey = 'flatcms.aiAgent.sessionGreetingSeen';
+    var navigationSessionKey = 'flatcms.aiAgent.sessionNavigation';
+    var navigationSessionLimit = 8;
+    var pageVisitToken = String(Date.now()) + ':' + Math.random().toString(36).slice(2);
+    var currentUser = parseJsonAttribute(root, 'data-user');
     var drawer = root.querySelector('[data-ai-agent-drawer]');
     var backdrop = root.querySelector('.ai-agent-backdrop');
     var thread = root.querySelector('[data-ai-agent-thread]');
@@ -181,10 +195,13 @@
       open: false,
       context: null,
       snapshot: null,
+      navigation: null,
       liveDirty: false,
       selectedVariant: -1,
       currentProposalType: '',
-      currentProposal: null
+      currentProposal: null,
+      selectedSuggestionAction: '',
+      selectedSuggestionLabel: ''
     };
 
     function getPageFieldId(locale, key) {
@@ -299,13 +316,17 @@
       if (context.module === 'pages') {
         var activeLocaleInput = context.form.querySelector('[data-pages-active-locale]');
         var sourceLocaleInput = context.form.querySelector('input[name="source_locale"]');
-        var currentLocale = String(activeLocaleInput && activeLocaleInput.value || context.locale || '').trim();
+        var targetLocale = String(context.target_locale || '').trim();
+        var currentLocale = targetLocale !== ''
+          ? targetLocale
+          : String(activeLocaleInput && activeLocaleInput.value || context.locale || '').trim();
         var currentSourceLocale = String(sourceLocaleInput && sourceLocaleInput.value || context.source_locale || currentLocale).trim();
         if (currentLocale === '') {
           currentLocale = currentSourceLocale;
         }
 
         context.locale = currentLocale;
+        context.target_locale = currentLocale;
         context.source_locale = currentSourceLocale;
         context.current = collectPageValues(currentLocale);
         context.source = collectPageValues(currentSourceLocale);
@@ -329,6 +350,7 @@
 
     function getContextFromTarget(target) {
       var form = target.closest('form');
+      var targetPanel = target.closest('[data-pages-panel]');
       var context = {
         target: target,
         form: form,
@@ -336,6 +358,7 @@
         entity: String(target.getAttribute('data-ai-agent-entity') || '').trim(),
         entity_id: String(target.getAttribute('data-ai-agent-entity-id') || '').trim(),
         source_id: '',
+        target_locale: String(targetPanel && targetPanel.getAttribute('data-pages-panel') || '').trim(),
         scope: String(target.getAttribute('data-ai-agent-scope') || '').trim() || 'field',
         block: String(target.getAttribute('data-ai-agent-block') || '').trim(),
         block_label: String(target.getAttribute('data-ai-agent-block-label') || '').trim(),
@@ -535,18 +558,459 @@
       return contentActions;
     }
 
+    function getEntityTitleFromContext(context) {
+      if (!context) {
+        return '';
+      }
+
+      var currentTitle = String((context.current && context.current.title) || '').replace(/\s+/g, ' ').trim();
+      if (currentTitle !== '') {
+        return currentTitle;
+      }
+
+      return String((context.source && context.source.title) || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function getAssistantEntityTitle() {
+      return getEntityTitleFromContext(state.context);
+    }
+
+    function isCreationContextValue(context) {
+      if (!context || !(context.form instanceof HTMLFormElement)) {
+        return false;
+      }
+
+      var formState = String(context.form.getAttribute('data-tour-state') || '').trim();
+      if (formState === 'edit') {
+        return false;
+      }
+
+      if (formState === 'create') {
+        return true;
+      }
+
+      return String(context.entity_id || '').trim() === '';
+    }
+
+    function isCreationContext() {
+      return isCreationContextValue(state.context);
+    }
+
+    function getEntityDescriptorFromContext(context) {
+      if (!context) {
+        return '';
+      }
+
+      var entityTitle = getEntityTitleFromContext(context);
+      var isCreate = isCreationContextValue(context);
+
+      if (context.module === 'posts') {
+        if (entityTitle !== '' && !isCreate) {
+          return template(i18n.entityPostExisting || '', { title: entityTitle }).trim();
+        }
+
+        if (!isCreate) {
+          return String(i18n.entityPostCurrent || '').trim();
+        }
+
+        return String(i18n.entityPostNew || '').trim();
+      }
+
+      if (entityTitle !== '' && !isCreate) {
+        return template(i18n.entityPageExisting || '', { title: entityTitle }).trim();
+      }
+
+      if (!isCreate) {
+        return String(i18n.entityPageCurrent || '').trim();
+      }
+
+      return String(i18n.entityPageNew || '').trim();
+    }
+
+    function getAssistantEntityDescriptor() {
+      return getEntityDescriptorFromContext(state.context);
+    }
+
+    function readNavigationHistory() {
+      try {
+        var raw = window.sessionStorage ? window.sessionStorage.getItem(navigationSessionKey) : '';
+        if (!raw) {
+          return [];
+        }
+
+        var parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed.filter(function(item) {
+          return item && typeof item === 'object';
+        }) : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function writeNavigationHistory(entries) {
+      try {
+        if (!window.sessionStorage) {
+          return;
+        }
+
+        window.sessionStorage.setItem(
+          navigationSessionKey,
+          JSON.stringify((Array.isArray(entries) ? entries : []).slice(0, navigationSessionLimit))
+        );
+      } catch (error) {
+        return;
+      }
+    }
+
+    function buildNavigationEntry(context) {
+      if (!context) {
+        return null;
+      }
+
+      var module = String(context.module || '').trim() || 'unknown';
+      var locale = String(context.target_locale || context.locale || '').trim();
+      var entityId = String(context.entity_id || '').trim();
+      var sourceId = String(context.source_id || '').trim();
+      var title = getEntityTitleFromContext(context);
+      var isCreate = isCreationContextValue(context);
+      var key = '';
+
+      if (!isCreate && entityId !== '') {
+        key = module + ':id:' + entityId;
+      } else if (!isCreate && sourceId !== '') {
+        key = module + ':source:' + sourceId + ':' + locale;
+      } else if (title !== '') {
+        key = module + ':title:' + title.toLowerCase() + ':' + locale;
+      } else {
+        key = module + ':path:' + String(window.location.pathname || '') + ':' + locale;
+      }
+
+      return {
+        key: key,
+        visit_token: pageVisitToken,
+        module: module,
+        locale: locale,
+        descriptor: getEntityDescriptorFromContext(context),
+        title: title,
+        is_create: isCreate
+      };
+    }
+
+    function captureNavigationState(context) {
+      var currentEntry = buildNavigationEntry(context);
+      var history = readNavigationHistory();
+
+      if (!currentEntry) {
+        return {
+          current: null,
+          previous: null,
+          seen_before: false
+        };
+      }
+
+      return {
+        current: currentEntry,
+        previous: history.find(function(item) {
+          return item.key !== currentEntry.key && item.visit_token !== pageVisitToken;
+        }) || null,
+        seen_before: history.some(function(item) {
+          return item.key === currentEntry.key && item.visit_token !== pageVisitToken;
+        })
+      };
+    }
+
+    function rememberContextNavigation(context) {
+      var entry = buildNavigationEntry(context);
+      if (!entry) {
+        return;
+      }
+
+      var history = readNavigationHistory().filter(function(item) {
+        return item.key !== entry.key;
+      });
+
+      history.unshift(entry);
+      writeNavigationHistory(history);
+    }
+
+    function getAssistantSubjectLabel() {
+      if (!state.context) {
+        return '';
+      }
+
+      if (state.context.scope === 'field' && state.context.label !== '') {
+        return lowerFirst(state.context.label);
+      }
+
+      if (state.context.block_label !== '') {
+        return lowerFirst(state.context.block_label);
+      }
+
+      return lowerFirst(String(state.context.block || '').trim());
+    }
+
+    function hasSeenGreetingInSession() {
+      try {
+        return !!(window.sessionStorage && window.sessionStorage.getItem(greetingSessionKey) === '1');
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function markGreetingSeenInSession() {
+      try {
+        if (window.sessionStorage) {
+          window.sessionStorage.setItem(greetingSessionKey, '1');
+        }
+      } catch (error) {
+        return;
+      }
+    }
+
+    function getAssistantQuestionMessage(navigation) {
+      if (!state.context) {
+        return String(i18n.greetingQuestionGeneric || '').trim();
+      }
+
+      var subjectLabel = getAssistantSubjectLabel();
+      var hasField = state.context.scope === 'field' && subjectLabel !== '';
+      var hasLabel = subjectLabel !== '';
+      var isReturn = !!(navigation && navigation.seen_before);
+      var isSwitched = !!(navigation && navigation.previous);
+      var isCreate = isCreationContext();
+
+      if (hasField) {
+        if (isReturn) {
+          return template(i18n.greetingQuestionFieldReturn || '', {
+            label: subjectLabel
+          }).trim();
+        }
+
+        if (isSwitched) {
+          return template(i18n.greetingQuestionFieldSwitched || '', {
+            label: subjectLabel
+          }).trim();
+        }
+
+        if (isCreate) {
+          return template(i18n.greetingQuestionFieldNew || '', {
+            label: subjectLabel
+          }).trim();
+        }
+
+        return template(i18n.greetingQuestionField || '', {
+          label: subjectLabel
+        }).trim();
+      }
+
+      if (hasLabel) {
+        if (isReturn) {
+          return template(i18n.greetingQuestionBlockReturn || '', {
+            label: subjectLabel
+          }).trim();
+        }
+
+        if (isSwitched) {
+          return template(i18n.greetingQuestionBlockSwitched || '', {
+            label: subjectLabel
+          }).trim();
+        }
+
+        if (isCreate) {
+          return template(i18n.greetingQuestionBlockNew || '', {
+            label: subjectLabel
+          }).trim();
+        }
+
+        return template(i18n.greetingQuestionBlock || '', {
+          label: subjectLabel
+        }).trim();
+      }
+
+      return String(i18n.greetingQuestionGeneric || '').trim();
+    }
+
+    function getAssistantGreetingMessage() {
+      if (!state.context) {
+        return '';
+      }
+
+      var greetingName = String(currentUser.greeting_name || currentUser.display_name || '').trim();
+      var isFirstGreeting = !hasSeenGreetingInSession();
+      var navigation = state.navigation || captureNavigationState(state.context);
+      var currentEntity = String((navigation.current && navigation.current.descriptor) || getAssistantEntityDescriptor()).trim();
+      var previousEntity = String((navigation.previous && navigation.previous.descriptor) || '').trim();
+      var parts = [];
+
+      if (isFirstGreeting && greetingName !== '') {
+        parts.push(template(i18n.greetingHello || '', { name: greetingName }).trim());
+      }
+
+      if (navigation.seen_before && currentEntity !== '') {
+        parts.push(template(i18n.greetingStateReturn || '', {
+          entity: currentEntity
+        }).trim());
+      } else if (previousEntity !== '' && currentEntity !== '') {
+        parts.push(template(i18n.greetingStateSwitched || '', {
+          previous: previousEntity,
+          current: currentEntity
+        }).trim());
+      } else if (isCreationContext() && currentEntity !== '') {
+        parts.push(template(i18n.greetingStateNew || '', {
+          entity: currentEntity
+        }).trim());
+      } else if (currentEntity !== '') {
+        parts.push(template(i18n.greetingStateCurrent || '', {
+          entity: currentEntity
+        }).trim());
+      }
+
+      parts.push(getAssistantQuestionMessage(navigation));
+
+      markGreetingSeenInSession();
+
+      return parts.filter(function(part) {
+        return String(part || '').trim() !== '';
+      }).join(' ');
+    }
+
+    function getAssistantContextLabel() {
+      if (!state.context) {
+        return '';
+      }
+
+      var blockLabel = String(state.context.block_label || state.context.block || '').replace(/\s+/g, ' ').trim();
+      var entityTitle = getAssistantEntityTitle();
+
+      if (blockLabel === '') {
+        return entityTitle;
+      }
+
+      if (entityTitle !== '') {
+        if (state.context.module === 'posts') {
+          return template(i18n.contextBlockPost || '', {
+            block: blockLabel,
+            title: entityTitle
+          }).trim();
+        }
+
+        return template(i18n.contextBlockPage || '', {
+          block: blockLabel,
+          title: entityTitle
+        }).trim();
+      }
+
+      return template(i18n.contextBlockGeneric || '', {
+        block: blockLabel
+      }).trim();
+    }
+
+    function resolveActionMeta(action) {
+      return '';
+    }
+
+    function syncSuggestionButtons() {
+      Array.prototype.forEach.call(suggestions.querySelectorAll('.ai-agent-suggestion'), function(button) {
+        if (!(button instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        var action = String(button.getAttribute('data-ai-agent-suggestion-action') || '').trim();
+        var isSelected = action !== '' && action === state.selectedSuggestionAction;
+        button.classList.toggle('is-selected', isSelected);
+        button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+      });
+    }
+
+    function clearSuggestionSelection(options) {
+      var preserveInput = !!(options && options.preserveInput);
+      if (!preserveInput && input.value === state.selectedSuggestionLabel) {
+        input.value = '';
+      }
+
+      state.selectedSuggestionAction = '';
+      state.selectedSuggestionLabel = '';
+      syncSuggestionButtons();
+    }
+
+    function selectSuggestion(action, options) {
+      var actionValue = String(action || '').trim();
+      if (actionValue === '') {
+        clearSuggestionSelection({ preserveInput: true });
+        return;
+      }
+
+      if (state.selectedSuggestionAction === actionValue) {
+        clearSuggestionSelection();
+        input.focus();
+        return;
+      }
+
+      state.selectedSuggestionAction = actionValue;
+      state.selectedSuggestionLabel = resolveActionLabel(actionValue);
+
+      if (!options || options.populateInput !== false) {
+        input.value = state.selectedSuggestionLabel;
+      }
+
+      syncSuggestionButtons();
+      input.focus();
+      if (typeof input.setSelectionRange === 'function') {
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    }
+
     function setSuggestions(actions) {
       suggestions.innerHTML = '';
-      (actions || []).forEach(function(action) {
+      var normalizedActions = Array.isArray(actions) ? actions : [];
+      suggestions.hidden = normalizedActions.length === 0;
+      var hasSelectedAction = false;
+
+      normalizedActions.forEach(function(action) {
         var button = document.createElement('button');
         button.type = 'button';
         button.className = 'ai-agent-suggestion';
-        button.textContent = resolveActionLabel(action);
+        button.setAttribute('data-ai-agent-suggestion-action', String(action || '').trim());
+        button.setAttribute('aria-pressed', 'false');
+
+        var marker = document.createElement('span');
+        marker.className = 'ai-agent-suggestion-marker';
+        marker.setAttribute('aria-hidden', 'true');
+        button.appendChild(marker);
+
+        var body = document.createElement('span');
+        body.className = 'ai-agent-suggestion-body';
+
+        var label = document.createElement('span');
+        label.className = 'ai-agent-suggestion-label';
+        label.textContent = resolveActionLabel(action);
+        body.appendChild(label);
+
+        var metaText = resolveActionMeta(String(action || '').trim());
+        if (metaText !== '') {
+          var meta = document.createElement('span');
+          meta.className = 'ai-agent-suggestion-meta';
+          meta.textContent = metaText;
+          body.appendChild(meta);
+        }
+
+        button.appendChild(body);
         button.addEventListener('click', function() {
-          sendMessage('', action);
+          selectSuggestion(action, { populateInput: true });
         });
         suggestions.appendChild(button);
+
+        if (String(action || '').trim() === state.selectedSuggestionAction) {
+          hasSelectedAction = true;
+        }
       });
+
+      if (!hasSelectedAction) {
+        state.selectedSuggestionAction = '';
+        state.selectedSuggestionLabel = '';
+      }
+
+      syncSuggestionButtons();
     }
 
     function renderContextLabel() {
@@ -1113,6 +1577,15 @@
 
       var actionValue = String(action || '').trim();
       var messageValue = String(message || input.value || '').trim();
+      var selectedAction = String(state.selectedSuggestionAction || '').trim();
+      var selectedLabel = String(state.selectedSuggestionLabel || '').trim();
+
+      if (actionValue === '' && selectedAction !== '') {
+        if (messageValue === '' || messageValue === selectedLabel || messageValue.indexOf(selectedLabel) === 0) {
+          actionValue = selectedAction;
+        }
+      }
+
       if (messageValue === '' && actionValue === '') {
         showToast(i18n.errorEmpty || '', 'warning');
         return;
@@ -1121,6 +1594,7 @@
       var userText = messageValue !== '' ? messageValue : resolveActionLabel(actionValue);
       appendMessage('user', userText);
       input.value = '';
+      clearSuggestionSelection({ preserveInput: true });
       setSuggestions([]);
 
       var thinkingBubble = appendMessage('assistant', i18n.thinking || '');
@@ -1182,28 +1656,22 @@
       }
 
       state.context = getContextFromTarget(target);
+      state.navigation = captureNavigationState(state.context);
+      rememberContextNavigation(state.context);
       state.snapshot = captureSnapshot(state.context);
       state.liveDirty = false;
       state.selectedVariant = -1;
       state.currentProposalType = '';
       state.currentProposal = null;
+      state.selectedSuggestionAction = '';
+      state.selectedSuggestionLabel = '';
 
       clearThread();
       input.value = '';
       renderContextLabel();
       renderCurrentWorkspace();
       setSuggestions(getDefaultActions(state.context));
-
-      if (state.context.scope === 'field' && state.context.label !== '') {
-        appendMessage('assistant', template(i18n.greetingField || '', {
-          label: state.context.label,
-          block: state.context.block_label || state.context.block
-        }));
-      } else {
-        appendMessage('assistant', template(i18n.greetingBlock || '', {
-          block: state.context.block_label || state.context.block
-        }));
-      }
+      appendMessage('assistant', getAssistantGreetingMessage());
 
       updateOpenState(true);
       window.setTimeout(function() {
@@ -1240,6 +1708,11 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-ai-agent-target]'), function(target) {
       createTargetButton(target);
     });
+
+    var initialTarget = document.querySelector('[data-ai-agent-target]');
+    if (initialTarget instanceof HTMLElement) {
+      rememberContextNavigation(getContextFromTarget(initialTarget));
+    }
 
     sendButton.addEventListener('click', function() {
       sendMessage('', '');
@@ -1293,6 +1766,14 @@
       }
 
       if (target instanceof Element && target.closest('[data-ai-agent-trigger-button]')) {
+        return;
+      }
+
+      closeDrawer();
+    });
+
+    document.addEventListener('pages:locale-changed', function() {
+      if (!state.open || !state.context || state.context.module !== 'pages') {
         return;
       }
 

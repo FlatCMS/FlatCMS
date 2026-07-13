@@ -21,11 +21,14 @@ use App\Services\AI\DTO\AiRequest;
 use App\Services\AI\Exceptions\AiConfigurationException;
 use App\Modules\Settings\Services\CacheManager;
 use App\Modules\Settings\Services\EnvConfigManager;
+use App\Modules\Settings\Services\FhseApiClient;
+use App\Modules\Settings\Services\FhseCapabilityService;
 use App\Modules\Settings\Services\IntegrationsDocumentationService;
 use App\Modules\Settings\Services\PromoBannerService;
 use App\Modules\Settings\Services\SiteBrandingTranslationService;
 use App\Modules\Settings\Services\SiteLogoService;
 use App\Modules\Settings\Services\SiteRoutingService;
+use App\Modules\Users\Support\UserName;
 
 class AdminController extends BaseController
 {
@@ -115,9 +118,11 @@ class AdminController extends BaseController
         }
 
         $envManager = new EnvConfigManager();
+        $fhseCapabilityService = new FhseCapabilityService();
         $documentationService = new IntegrationsDocumentationService();
         $integrationValues = $envManager->readCurrentValues();
         $integrationEnvStatus = $envManager->status();
+        $fhseCapabilities = $fhseCapabilityService->read();
         $aiProviderStatus = [];
         try {
             $aiProviderStatus = (new AIManager())->configurationStatus();
@@ -154,6 +159,7 @@ class AdminController extends BaseController
             'fallbackTimezone' => $fallbackTimezone,
             'integrationValues' => $integrationValues,
             'integrationEnvStatus' => $integrationEnvStatus,
+            'fhseCapabilities' => $fhseCapabilities,
             'integrationsFieldHelp' => $documentationService->buildFieldHelpIndex(I18n::getLocale()),
             'aiProviderStatus' => $aiProviderStatus,
             'routingInfo' => $routingInfo,
@@ -474,6 +480,12 @@ class AdminController extends BaseController
         $allowedTabs = ['general', 'routing', 'localization', 'appearance', 'content', 'seo', 'mail', 'integrations', 'system'];
         if (!in_array($activeTab, $allowedTabs, true)) {
             $activeTab = 'general';
+        }
+
+        $fhseTunnelAction = strtolower(trim((string) $this->request->input('fhse_tunnel_action', '')));
+        if (($activeTab === 'integrations' || $activeTab === 'system') && $fhseTunnelAction !== '') {
+            $this->handleFhseTunnelAction($fhseTunnelAction, $activeTab);
+            return;
         }
 
         if ($activeTab === 'integrations' || $activeTab === 'system') {
@@ -925,7 +937,7 @@ class AdminController extends BaseController
             unset($user['password']);
         }
 
-        $this->session->set('user', $user);
+        $this->session->set('user', UserName::forSession($user));
     }
 
     /**
@@ -1984,5 +1996,85 @@ class AdminController extends BaseController
             'uploaded_by' => (int) ($this->session->get('user_id') ?? 0),
             'created_at' => date('Y-m-d H:i:s', (int) (filemtime($filePath) ?: time())),
         ];
+    }
+
+    private function handleFhseTunnelAction(string $action, string $activeTab): void
+    {
+        $allowedActions = ['configure', 'enable', 'disable', 'restart'];
+        if (!in_array($action, $allowedActions, true)) {
+            $this->session->flash('error', __('integrations_cloudflare_tunnel_error_unknown', 'Settings'));
+            $this->redirect(url('/admin/settings#settings-' . $activeTab));
+            return;
+        }
+
+        $payload = $this->normalizeFhseTunnelPayload();
+        $client = new FhseApiClient();
+
+        $result = match ($action) {
+            'configure' => $client->configureTunnel($payload),
+            'enable' => $client->enableTunnel($payload),
+            'disable' => $client->disableTunnel(),
+            'restart' => $client->restartTunnel($payload),
+        };
+
+        if (!empty($result['ok'])) {
+            $this->session->flash('success', $this->fhseTunnelSuccessMessage($action));
+        } else {
+            $message = $this->fhseTunnelErrorMessage((string) ($result['error'] ?? 'fhse_request_failed'));
+            $details = trim((string) ($result['details'] ?? ''));
+            if ($details !== '') {
+                $message .= ' ' . $details;
+            }
+            $this->session->flash('error', $message);
+        }
+
+        $this->redirect(url('/admin/settings#settings-' . $activeTab));
+    }
+
+    /**
+     * @return array<string,string>
+     */
+    private function normalizeFhseTunnelPayload(): array
+    {
+        $raw = $this->request->input('fhse_tunnel', []);
+        if (!is_array($raw)) {
+            $raw = [];
+        }
+
+        return [
+            'public_hostname' => trim((string) ($raw['public_hostname'] ?? '')),
+            'token' => trim((string) ($raw['token'] ?? '')),
+        ];
+    }
+
+    private function fhseTunnelSuccessMessage(string $action): string
+    {
+        return match ($action) {
+            'configure' => __('integrations_cloudflare_tunnel_flash_configure_success', 'Settings'),
+            'enable' => __('integrations_cloudflare_tunnel_flash_enable_success', 'Settings'),
+            'disable' => __('integrations_cloudflare_tunnel_flash_disable_success', 'Settings'),
+            'restart' => __('integrations_cloudflare_tunnel_flash_restart_success', 'Settings'),
+            default => __('integrations_cloudflare_tunnel_flash_success', 'Settings'),
+        };
+    }
+
+    private function fhseTunnelErrorMessage(string $code): string
+    {
+        $normalized = strtolower(trim($code));
+
+        return match ($normalized) {
+            'fhse_api_unreachable', 'fhse_transport_unavailable' => __('integrations_cloudflare_tunnel_error_unreachable', 'Settings'),
+            'fhse_invalid_response' => __('integrations_cloudflare_tunnel_error_invalid_response', 'Settings'),
+            'fhse_api_loopback_only' => __('integrations_cloudflare_tunnel_error_loopback_only', 'Settings'),
+            'flatcms_publication_not_allowed' => __('integrations_cloudflare_tunnel_error_flatcms_not_allowed', 'Settings'),
+            'tunnel_token_missing' => __('integrations_cloudflare_tunnel_error_token_missing', 'Settings'),
+            'tunnel_hostname_invalid' => __('integrations_cloudflare_tunnel_error_hostname_invalid', 'Settings'),
+            'cloudflared_install_failed' => __('integrations_cloudflare_tunnel_error_install_failed', 'Settings'),
+            'cloudflared_enable_failed' => __('integrations_cloudflare_tunnel_error_enable_failed', 'Settings'),
+            'cloudflared_disable_failed' => __('integrations_cloudflare_tunnel_error_disable_failed', 'Settings'),
+            'cloudflared_restart_failed' => __('integrations_cloudflare_tunnel_error_restart_failed', 'Settings'),
+            'cloudflared_not_configured' => __('integrations_cloudflare_tunnel_error_not_configured', 'Settings'),
+            default => __('integrations_cloudflare_tunnel_error_unknown', 'Settings'),
+        };
     }
 }

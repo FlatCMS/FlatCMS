@@ -9,6 +9,7 @@
 
 declare(strict_types=1);
 
+$aiAgentUser = \App\Modules\Users\Support\UserName::forSession(is_array(auth()) ? auth() : []);
 $aiAgentI18n = [
     'title' => __('assistant_title', 'AiAgent'),
     'subtitle' => __('assistant_subtitle', 'AiAgent'),
@@ -26,6 +27,29 @@ $aiAgentI18n = [
     'variantsTitle' => __('assistant_variants_title', 'AiAgent'),
     'summaryTitle' => __('assistant_summary_title', 'AiAgent'),
     'contextWaiting' => __('assistant_context_waiting', 'AiAgent'),
+    'contextBlockGeneric' => __('assistant_context_block_generic', 'AiAgent'),
+    'contextBlockPage' => __('assistant_context_block_page', 'AiAgent'),
+    'contextBlockPost' => __('assistant_context_block_post', 'AiAgent'),
+    'greetingHello' => __('assistant_greeting_hello', 'AiAgent'),
+    'greetingStateCurrent' => __('assistant_greeting_state_current', 'AiAgent'),
+    'greetingStateSwitched' => __('assistant_greeting_state_switched', 'AiAgent'),
+    'greetingStateReturn' => __('assistant_greeting_state_return', 'AiAgent'),
+    'greetingStateNew' => __('assistant_greeting_state_new', 'AiAgent'),
+    'greetingQuestionGeneric' => __('assistant_greeting_question_generic', 'AiAgent'),
+    'greetingQuestionField' => __('assistant_greeting_question_field', 'AiAgent'),
+    'greetingQuestionFieldReturn' => __('assistant_greeting_question_field_return', 'AiAgent'),
+    'greetingQuestionFieldSwitched' => __('assistant_greeting_question_field_switched', 'AiAgent'),
+    'greetingQuestionFieldNew' => __('assistant_greeting_question_field_new', 'AiAgent'),
+    'greetingQuestionBlock' => __('assistant_greeting_question_block', 'AiAgent'),
+    'greetingQuestionBlockReturn' => __('assistant_greeting_question_block_return', 'AiAgent'),
+    'greetingQuestionBlockSwitched' => __('assistant_greeting_question_block_switched', 'AiAgent'),
+    'greetingQuestionBlockNew' => __('assistant_greeting_question_block_new', 'AiAgent'),
+    'entityPageExisting' => __('assistant_entity_page_existing', 'AiAgent'),
+    'entityPageCurrent' => __('assistant_entity_page_current', 'AiAgent'),
+    'entityPageNew' => __('assistant_entity_page_new', 'AiAgent'),
+    'entityPostExisting' => __('assistant_entity_post_existing', 'AiAgent'),
+    'entityPostCurrent' => __('assistant_entity_post_current', 'AiAgent'),
+    'entityPostNew' => __('assistant_entity_post_new', 'AiAgent'),
     'greetingField' => __('assistant_greeting_field', 'AiAgent'),
     'greetingBlock' => __('assistant_greeting_block', 'AiAgent'),
     'replyField' => __('assistant_reply_field_ready', 'AiAgent'),
@@ -58,6 +82,10 @@ $aiAgentI18n = [
     data-ai-agent-root
     data-endpoint="<?= e(url('/admin/ai-agent/chat')) ?>"
     data-i18n="<?= e((string) json_encode($aiAgentI18n, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>"
+    data-user="<?= e((string) json_encode([
+        'greeting_name' => (string) ($aiAgentUser['greeting_name'] ?? ''),
+        'display_name' => (string) ($aiAgentUser['display_name'] ?? ''),
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>"
     data-icon-dark="<?= e(asset('images/admin/ai-agent/icon-dark.png')) ?>"
     data-icon-light="<?= e(asset('images/admin/ai-agent/icon-light.png')) ?>"
 >

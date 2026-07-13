@@ -15,6 +15,7 @@ use App\Core\BaseController;
 use App\Core\I18n;
 use App\Core\FlatFile;
 use App\Modules\Auth\Services\RoleService;
+use App\Modules\Users\Support\UserName;
 
 class AdminController extends BaseController
 {
@@ -118,11 +119,12 @@ class AdminController extends BaseController
 
         if (!$this->verifyCsrf()) return;
 
-        $data = $this->request->only(['name', 'email', 'password', 'role', 'bio', 'phone', 'company', 'status']);
+        $data = $this->request->only(['first_name', 'name', 'email', 'password', 'role', 'bio', 'phone', 'company', 'status']);
+        $data = UserName::forStorage($data);
         $data['role'] = RoleService::normalizeRole((string) ($data['role'] ?? RoleService::ROLE_MEMBER));
 
         // Validate
-        if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
+        if (empty($data['first_name']) || empty($data['name']) || empty($data['email']) || empty($data['password'])) {
             $this->session->flash('error', __('validation.required_fields', 'Users'));
             $this->session->flash('old', $data);
             $this->redirect(url('/admin/users/create'));
@@ -226,9 +228,16 @@ class AdminController extends BaseController
             return;
         }
 
-        $data = $this->request->only(['name', 'email', 'role', 'status', 'bio', 'phone', 'company']);
+        $data = $this->request->only(['first_name', 'name', 'email', 'role', 'status', 'bio', 'phone', 'company']);
+        $data = UserName::forStorage($data);
         $data['role'] = RoleService::normalizeRole((string) ($data['role'] ?? $user['role'] ?? RoleService::ROLE_MEMBER));
         $data['status'] = $data['status'] ?? 'inactive';
+
+        if (empty($data['first_name']) || empty($data['name']) || empty($data['email'])) {
+            $this->session->flash('error', __('validation.required_fields', 'Users'));
+            $this->redirect(url('/admin/users/' . $id . '/edit'));
+            return;
+        }
 
         // Check email unique (exclude current user)
         $existing = $this->users->findBy('email', $data['email']);
@@ -291,7 +300,7 @@ class AdminController extends BaseController
             $updatedUser = $this->users->find($id);
             $updatedUser = $this->normalizeUser($updatedUser ?: []);
             unset($updatedUser['password']);
-            $this->session->set('user', $updatedUser);
+            $this->session->set('user', UserName::forSession($updatedUser));
         }
 
         $this->session->flash('success', __('user_updated', 'Users'));
@@ -364,6 +373,7 @@ class AdminController extends BaseController
             return $user;
         }
 
+        $user = UserName::forForm($user);
         $user['role'] = RoleService::normalizeRole((string) ($user['role'] ?? RoleService::ROLE_MEMBER));
         return $user;
     }

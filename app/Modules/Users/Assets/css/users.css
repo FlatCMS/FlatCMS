@@ -87,8 +87,19 @@
   min-height: 40px;
 }
 
+.users-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .users-form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
   .users-filter-form {
     width: 100%;
     flex-wrap: wrap;

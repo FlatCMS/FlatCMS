@@ -96,7 +96,7 @@ $filterStatus = $filterStatus ?? 'all';
         <table class="table">
             <thead>
                 <tr>
-                    <th><?= __('name', 'Users') ?></th>
+                    <th><?= __('full_name', 'Users') ?></th>
                     <th><?= __('email', 'Users') ?></th>
                     <th><?= __('role', 'Users') ?></th>
                     <th><?= __('status', 'Users') ?></th>
@@ -123,18 +123,22 @@ $filterStatus = $filterStatus ?? 'all';
                     </tr>
                 <?php else: ?>
                     <?php foreach ($users['data'] as $u): ?>
+                        <?php
+                            $displayName = \App\Modules\Users\Support\UserName::display($u);
+                            $userInitial = \App\Modules\Users\Support\UserName::initial($u);
+                        ?>
                         <tr>
-                            <td data-label="<?= __('name', 'Users') ?>">
+                            <td data-label="<?= __('full_name', 'Users') ?>">
                                 <div class="user-cell">
                                     <?php $avatarUrl = avatar_url($u); ?>
                                     <?php if (!empty($avatarUrl)): ?>
                                         <img src="<?= $avatarUrl ?>" alt="" class="user-cell-avatar">
                                     <?php else: ?>
                                         <span class="user-avatar user-cell-avatar slug-code">
-                                            <?= strtoupper(substr($u['name'], 0, 1)) ?>
+                                            <?= e($userInitial) ?>
                                         </span>
                                     <?php endif; ?>
-                                    <?= e($u['name']) ?>
+                                    <?= e($displayName) ?>
                                 </div>
                             </td>
                             <td data-label="<?= __('email', 'Users') ?>"><?= e($u['email']) ?></td>
@@ -181,7 +185,7 @@ $filterStatus = $filterStatus ?? 'all';
                                                 class="table-action table-action-delete"
                                                 data-action="confirm-delete"
                                                 data-message="<?= __('confirm_delete_user', 'Users') ?>"
-                                                data-item-name="<?= e($u['name']) ?>"
+                                                data-item-name="<?= e($displayName) ?>"
                                                 title="<?= e(__('delete', 'Core')) ?>"
                                                 aria-label="<?= e(__('delete', 'Core')) ?>"
                                             >

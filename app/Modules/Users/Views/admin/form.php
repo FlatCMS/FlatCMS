@@ -53,11 +53,20 @@
         <div class="form-layout-columns">
             <!-- Left column -->
             <div class="form-column">
-                <div class="form-group">
-                    <label for="name" class="form-label"><?= __('name', 'Users') ?> *</label>
-                    <input type="text" id="name" name="name"
-                        class="form-input <?= has_error('name') ? 'is-invalid' : '' ?>"
-                        value="<?= e(old('name', $user['name'] ?? '')) ?>" required>
+                <div class="users-form-row">
+                    <div class="form-group">
+                        <label for="first_name" class="form-label"><?= __('first_name', 'Users') ?> *</label>
+                        <input type="text" id="first_name" name="first_name"
+                            class="form-input <?= has_error('first_name') ? 'is-invalid' : '' ?>"
+                            value="<?= e(old('first_name', $user['first_name'] ?? '')) ?>" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name" class="form-label"><?= __('last_name', 'Users') ?> *</label>
+                        <input type="text" id="name" name="name"
+                            class="form-input <?= has_error('name') ? 'is-invalid' : '' ?>"
+                            value="<?= e(old('name', $user['name'] ?? '')) ?>" required>
+                    </div>
                 </div>
 
                 <div class="form-group">

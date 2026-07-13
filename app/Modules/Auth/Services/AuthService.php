@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace App\Modules\Auth\Services;
 
 use App\Core\FlatFile;
+use App\Modules\Users\Support\UserName;
 
 class AuthService
 {
@@ -56,7 +57,7 @@ class AuthService
 
         unset($user['password']);
 
-        return $user;
+        return UserName::forSession($user);
     }
 
     public function touchLastLogin(string $userId, string $ipAddress = ''): void
@@ -88,7 +89,7 @@ class AuthService
             $sessionUser['admin_tour_force_next_login'] = 0;
         }
 
-        session()->set('user', $sessionUser);
+        session()->set('user', UserName::forSession($sessionUser));
         session()->regenerate();
 
         if ($forceNextLogin) {
@@ -150,7 +151,7 @@ class AuthService
         $this->touchLastLogin($userId, $ipAddress);
 
         unset($user['password']);
-        return $user;
+        return UserName::forSession($user);
     }
 
     public function logout(): void
@@ -221,6 +222,7 @@ class AuthService
         }
 
         unset($user['password']);
+        $user = UserName::forSession($user);
         session()->set('user', $user);
         return $user;
     }
@@ -229,6 +231,7 @@ class AuthService
 
     public function register(array $data): array
     {
+        $data = UserName::forStorage($data);
         $data['password'] = password_hash($data['password'], PASSWORD_ARGON2ID);
         $data['status'] = $data['status'] ?? 'active';
         $data['role'] = $data['role'] ?? RoleService::ROLE_MEMBER;
@@ -247,11 +250,12 @@ class AuthService
             ? array_values($data['admin_tour_seen_modules'])
             : [];
 
-        return $this->users->create($data);
+        return UserName::forSession($this->users->create($data));
     }
 
     public function createUser(array $data): array
     {
+        $data = UserName::forStorage($data);
         $data['password'] = password_hash($data['password'], PASSWORD_ARGON2ID);
         $data['status'] = $data['status'] ?? 'active';
         $data['role'] = $data['role'] ?? RoleService::ROLE_MEMBER;
@@ -270,7 +274,7 @@ class AuthService
             ? array_values($data['admin_tour_seen_modules'])
             : [];
 
-        return $this->users->create($data);
+        return UserName::forSession($this->users->create($data));
     }
 
     public function updatePassword(string $userId, string $newPassword): bool

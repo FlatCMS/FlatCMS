@@ -1,7 +1,9 @@
 {
   "email": "Endereço de email",
+  "first_name": "Primeiro nome",
+  "last_name": "Apelido",
   "password": "Password",
-  "name": "Full name",
+  "name": "Apelido",
   "forgot_password": "Esqueceu sua senha?",
   "hide_password": "Ocultar senha",
   "login_button": "Entrar",

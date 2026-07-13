@@ -97,13 +97,24 @@
                 <?= csrf_field() ?>
                 <input type="hidden" name="role" value="<?= e($selectedRole ?? \App\Modules\Auth\Services\RoleService::ROLE_MEMBER) ?>">
 
-                <!-- Name -->
-                <div class="form-group">
-                    <label for="name" class="form-label"><?= __('name', 'Auth') ?> <span class="required-star">*</span></label>
-                    <div class="input-icon-wrapper">
-                        <span class="input-icon"><i class="fas fa-user"></i></span>
-                        <input type="text" id="name" name="name" class="form-input" autocomplete="name"
-                            value="<?= e($old['name'] ?? '') ?>" required autofocus>
+                <!-- Identity -->
+                <div class="auth-form-row auth-form-row-2">
+                    <div class="form-group">
+                        <label for="first_name" class="form-label"><?= __('first_name', 'Auth') ?> <span class="required-star">*</span></label>
+                        <div class="input-icon-wrapper">
+                            <span class="input-icon"><i class="fas fa-user"></i></span>
+                            <input type="text" id="first_name" name="first_name" class="form-input" autocomplete="given-name"
+                                value="<?= e($old['first_name'] ?? '') ?>" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name" class="form-label"><?= __('last_name', 'Auth') ?> <span class="required-star">*</span></label>
+                        <div class="input-icon-wrapper">
+                            <span class="input-icon"><i class="fas fa-user"></i></span>
+                            <input type="text" id="name" name="name" class="form-input" autocomplete="family-name"
+                                value="<?= e($old['name'] ?? '') ?>" required>
+                        </div>
                     </div>
                 </div>
 

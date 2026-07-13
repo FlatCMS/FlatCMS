@@ -32,8 +32,14 @@
         var buttons = Array.prototype.slice.call(root.querySelectorAll('[data-pages-tab-btn]'));
         var panels = Array.prototype.slice.call(root.querySelectorAll('[data-pages-panel]'));
         var activeLocaleInput = root.querySelector('[data-pages-active-locale]');
+        var documentTitleSuffix = '';
         if (!buttons.length || !panels.length || !(activeLocaleInput instanceof HTMLInputElement)) {
             return;
+        }
+
+        if (typeof document.title === 'string') {
+            var suffixMatch = document.title.match(/\s+-\s+.+$/);
+            documentTitleSuffix = suffixMatch ? String(suffixMatch[0] || '') : '';
         }
 
         function updateBadgeLabels(activeButton) {
@@ -75,6 +81,10 @@
             var statusDraftLabel = String(activeButton.getAttribute('data-pages-status-draft-label') || '').trim();
             var statusPublishedLabel = String(activeButton.getAttribute('data-pages-status-published-label') || '').trim();
             var saveLabel = String(activeButton.getAttribute('data-pages-save-label') || '').trim();
+
+            if (pageTitle !== '') {
+                document.title = pageTitle + documentTitleSuffix;
+            }
 
             var pageTitleNode = document.querySelector('[data-pages-dynamic-page-title]');
             if (pageTitleNode && pageTitle !== '') {
@@ -141,6 +151,12 @@
             if (pagesSunEditor && typeof pagesSunEditor.init === 'function') {
                 pagesSunEditor.init();
             }
+
+            document.dispatchEvent(new CustomEvent('pages:locale-changed', {
+                detail: {
+                    locale: targetLocale
+                }
+            }));
         }
 
         buttons.forEach(function(button) {

@@ -37,12 +37,19 @@ $onboardingTotalCount = max(0, (int) ($onboardingTotalCount ?? count($onboarding
 $onboardingNextItem = is_array($onboardingNextItem ?? null) ? $onboardingNextItem : null;
 ?>
 
+<?php
+$authGreetingName = \App\Modules\Users\Support\UserName::greeting(is_array($auth_user ?? null) ? $auth_user : []);
+if ($authGreetingName === '') {
+    $authGreetingName = __('admin_user_fallback', 'Core');
+}
+?>
+
 <link rel="stylesheet" href="<?= module_asset('Dashboard', 'css/dashboard.css') ?>">
 
 <!-- Welcome Banner -->
 <div class="welcome-banner">
     <div class="welcome-content">
-        <h1 class="welcome-title"><?= __('welcome_back', 'Dashboard') ?>, <?= e($auth_user['name'] ?? __('admin_user_fallback', 'Core')) ?> ! 👋</h1>
+        <h1 class="welcome-title"><?= __('welcome_back', 'Dashboard') ?>, <?= e($authGreetingName) ?> ! 👋</h1>
         <p class="welcome-text"><?= __('dashboard_subtitle', 'Dashboard') ?></p>
     </div>
     <div class="welcome-meta">

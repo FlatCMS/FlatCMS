@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace App\Modules\Install\Controllers;
 
 use App\Modules\Install\Support\Lang;
+use App\Modules\Users\Support\UserName;
 
 final class InstallController
 {
@@ -432,13 +433,14 @@ final class InstallController
 
     private function processAdmin(): void
     {
+        $firstName = trim($_POST['admin_first_name'] ?? '');
         $name = trim($_POST['admin_name'] ?? '');
         $email = trim($_POST['admin_email'] ?? '');
         $password = $_POST['admin_password'] ?? '';
         $passwordConfirm = $_POST['admin_password_confirm'] ?? '';
 
         // Validation
-        if (empty($name) || empty($email) || empty($password)) {
+        if (empty($firstName) || empty($name) || empty($email) || empty($password)) {
             $this->pushError(Lang::get('admin.error_all_required'));
             $this->redirectToStep(6);
             return;
@@ -472,6 +474,7 @@ final class InstallController
         }
 
         $_SESSION['install_admin'] = [
+            'first_name' => $firstName,
             'name' => $name,
             'email' => $email,
             'password' => $passwordHash,
@@ -632,7 +635,7 @@ final class InstallController
                     @session_regenerate_id(true);
                 }
                 unset($adminUser['password']);
-                $_SESSION['user'] = $adminUser;
+                $_SESSION['user'] = UserName::forSession($adminUser);
             }
 
             $this->render('complete', [
@@ -779,6 +782,7 @@ final class InstallController
 
         $userData = [
             'id' => $id,
+            'first_name' => $admin['first_name'],
             'name' => $admin['name'],
             'email' => $admin['email'],
             'password' => $admin['password'],

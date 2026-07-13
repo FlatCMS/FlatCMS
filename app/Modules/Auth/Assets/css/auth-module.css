@@ -124,6 +124,15 @@
   min-width: 0;
 }
 
+.auth-form-row {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-form-row-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .auth-captcha {
   display: flex;
   justify-content: center;
@@ -774,6 +783,10 @@
   }
 
   .social-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-form-row-2 {
     grid-template-columns: 1fr;
   }
 

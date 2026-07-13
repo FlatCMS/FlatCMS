@@ -8,6 +8,14 @@
  */
 
 ?>
+
+<?php
+$authDisplayName = \App\Modules\Users\Support\UserName::display(is_array($auth_user ?? null) ? $auth_user : []);
+$authInitial = \App\Modules\Users\Support\UserName::initial(is_array($auth_user ?? null) ? $auth_user : []);
+if ($authDisplayName === '') {
+    $authDisplayName = __('admin_user_fallback', 'Core');
+}
+?>
 <header class="top-header sticky-top">
                 <button
                     type="button"
@@ -48,9 +56,9 @@
                             <?php if (!empty($avatarUrl)): ?>
                                 <img src="<?= $avatarUrl ?>" alt="" class="user-avatar-img">
                             <?php else: ?>
-                                <span class="user-avatar"><?= strtoupper(substr($auth_user['name'] ?? __('admin_user_fallback', 'Core'), 0, 1)) ?></span>
+                                <span class="user-avatar"><?= e($authInitial) ?></span>
                             <?php endif; ?>
-                            <span class="user-name"><?= e($auth_user['name'] ?? __('admin_user_fallback', 'Core')) ?></span>
+                            <span class="user-name"><?= e($authDisplayName) ?></span>
                         </button>
                         <div class="dropdown-menu">
                             <?php if (can('dashboard.view')): ?>

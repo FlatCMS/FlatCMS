@@ -284,14 +284,14 @@
                 const mediaKind = String(file.__mediaKind || '').trim().toLowerCase();
                 const pathValue = normalizeUploadPath(String(file.path || ''), mediaKind);
                 if (pathValue !== '') {
-                    return pathValue.split('/').filter(Boolean).pop() || pathValue;
+                    return pathValue;
                 }
 
                 const explicitUrl = String(file.url || '').trim();
                 if (explicitUrl !== '') {
                     const extractedPath = extractUploadPathFromUrl(explicitUrl, mediaKind);
                     if (extractedPath !== '') {
-                        return extractedPath.split('/').filter(Boolean).pop() || extractedPath;
+                        return extractedPath;
                     }
                     return explicitUrl;
                 }

@@ -39,19 +39,36 @@
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken ?? '') ?>">
 
         <div class="space-y-5">
-            <!-- Nom -->
-            <div>
-                <label for="admin_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
-                    <?= \App\Modules\Install\Support\Lang::get('admin.field_name') ?> <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i class="fas fa-user text-slate-400 dark:text-slate-500" aria-hidden="true"></i>
+            <!-- Identité -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="admin_first_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                        <?= \App\Modules\Install\Support\Lang::get('admin.field_first_name') ?> <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-slate-400 dark:text-slate-500" aria-hidden="true"></i>
+                        </div>
+                        <input type="text" id="admin_first_name" name="admin_first_name" required
+                               class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                               placeholder="<?= \App\Modules\Install\Support\Lang::get('admin.field_first_name_placeholder') ?>"
+                               value="<?= htmlspecialchars($_POST['admin_first_name'] ?? '') ?>">
                     </div>
-                    <input type="text" id="admin_name" name="admin_name" required
-                           class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
-                           placeholder="<?= \App\Modules\Install\Support\Lang::get('admin.field_name_placeholder') ?>"
-                           value="<?= htmlspecialchars($_POST['admin_name'] ?? '') ?>">
+                </div>
+
+                <div>
+                    <label for="admin_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                        <?= \App\Modules\Install\Support\Lang::get('admin.field_last_name') ?> <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-slate-400 dark:text-slate-500" aria-hidden="true"></i>
+                        </div>
+                        <input type="text" id="admin_name" name="admin_name" required
+                               class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
+                               placeholder="<?= \App\Modules\Install\Support\Lang::get('admin.field_last_name_placeholder') ?>"
+                               value="<?= htmlspecialchars($_POST['admin_name'] ?? '') ?>">
+                    </div>
                 </div>
             </div>
 
