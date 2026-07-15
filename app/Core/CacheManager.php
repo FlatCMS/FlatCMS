@@ -61,6 +61,7 @@ class CacheManager
 
         if (isset($data['expires_at']) && $data['expires_at'] < time()) {
             $this->forget($key);
+            error_log(sprintf('[FlatCMS][Cache] expired: %s', $key));
             return $default;
         }
 
