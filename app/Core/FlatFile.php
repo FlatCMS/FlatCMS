@@ -53,6 +53,67 @@ class FlatFile
         return $this->readFile($path);
     }
 
+    public function findVerified(string $id): ?array
+    {
+        $data = $this->find($id);
+        if ($data === null) {
+            return null;
+        }
+
+        if (!IntegrityManager::instance()->verifyEntity($this->entity, $id)) {
+            return null;
+        }
+
+        return $data;
+    }
+
+    public function integrityCheck(string $id): array
+    {
+        $path = $this->getFilePath($id);
+
+        if (!file_exists($path)) {
+            return ['status' => 'missing', 'entity' => $this->entity, 'id' => $id];
+        }
+
+        $valid = IntegrityManager::instance()->verifyEntity($this->entity, $id);
+
+        return [
+            'status' => $valid ? 'valid' : 'corrupted',
+            'entity' => $this->entity,
+            'id' => $id,
+        ];
+    }
+
+    public function allIntegrityCheck(): array
+    {
+        $results = [
+            'total' => 0,
+            'valid' => 0,
+            'corrupted' => 0,
+            'missing' => 0,
+            'details' => [],
+        ];
+
+        $files = glob($this->basePath . '/*.json');
+        foreach ($files as $file) {
+            $id = basename($file, '.json');
+            $results['total']++;
+            $check = $this->integrityCheck($id);
+
+            if ($check['status'] === 'valid') {
+                $results['valid']++;
+            } elseif ($check['status'] === 'corrupted') {
+                $results['corrupted']++;
+                $results['details'][] = $check;
+            } else {
+                $results['missing']++;
+                $results['details'][] = $check;
+            }
+        }
+
+        return $results;
+    }
+
     public function findBy(string $field, mixed $value): ?array
     {
         foreach ($this->all() as $item) {

@@ -68,7 +68,9 @@ public/release/
 
 # Dev-only (tests, not shipped in production)
 /vendor/
+composer.json
 composer.lock
 phpunit.xml
 /tests/
 /flatcms
+.phpunit.result.cache
