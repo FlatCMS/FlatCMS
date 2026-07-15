@@ -296,11 +296,32 @@ function flatcms_csp_directive(string $name, array $sources): string
 }
 
 /**
- * Retourne la CSP runtime compatible admin/frontend tout en restant plus stricte qu'un socle minimal.
+ * Génère et retourne un nonce CSP unique pour la requête en cours.
+ */
+function flatcms_csp_nonce(): string
+{
+    static $nonce = null;
+    if ($nonce === null) {
+        $nonce = bin2hex(random_bytes(32));
+    }
+    return $nonce;
+}
+
+/**
+ * Retourne l'attribut nonce pour les balises <script>.
+ */
+function flatcms_nonce_attr(): string
+{
+    return ' nonce="' . e(flatcms_csp_nonce()) . '"';
+}
+
+/**
+ * Retourne la CSP runtime compatible admin/frontend avec nonce + strict-dynamic.
  */
 function flatcms_content_security_policy(): string
 {
     $analyticsSources = flatcms_csp_analytics_sources();
+    $nonce = flatcms_csp_nonce();
 
     return implode('; ', [
         flatcms_csp_directive('default-src', ["'self'"]),
@@ -309,12 +330,11 @@ function flatcms_content_security_policy(): string
         flatcms_csp_directive('form-action', ["'self'"]),
         flatcms_csp_directive('object-src', ["'none'"]),
         flatcms_csp_directive('script-src', array_merge([
-            "'self'",
-            'https://challenges.cloudflare.com',
-            'https://static.axept.io',
-            'https://cdn.tiny.cloud',
-            'https://*.tiny.cloud',
-        ], $analyticsSources['script'], flatcms_csp_env_sources('FLATCMS_CSP_SCRIPT_EXTRA'))),
+            "'nonce-" . $nonce . "'",
+            "'strict-dynamic'",
+            "'unsafe-inline'",
+            'https:',
+        ], flatcms_csp_env_sources('FLATCMS_CSP_SCRIPT_EXTRA'))),
         flatcms_csp_directive('style-src', array_merge([
             "'self'",
             "'unsafe-inline'",
@@ -434,6 +454,20 @@ function flatcms_bootstrap_security(): void
 
 flatcms_block_sensitive_paths();
 flatcms_bootstrap_security();
+
+// Démarrer le buffer de sortie pour injecter le nonce CSP dans tous les <script>
+$flatcmsNonce = flatcms_csp_nonce();
+ob_start(static function (string $output) use ($flatcmsNonce): string {
+    if ($flatcmsNonce === '' || !str_contains($output, '<script')) {
+        return $output;
+    }
+    $escaped = htmlspecialchars($flatcmsNonce, ENT_QUOTES, 'UTF-8');
+    return preg_replace(
+        '/<script(?=[\s>])(?!.*nonce=)/i',
+        '<script nonce="' . $escaped . '"',
+        $output
+    );
+});
 
 // Démarrer la session
 session_start();
