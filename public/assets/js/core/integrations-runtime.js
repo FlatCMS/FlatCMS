@@ -626,7 +626,8 @@
 
             const inlineScript = document.createElement('script');
             inlineScript.setAttribute('data-flatcms-consent-loaded', '1');
-            inlineScript.textContent = code;
+            const blob = new Blob([code], { type: 'text/javascript' });
+            inlineScript.src = URL.createObjectURL(blob);
 
             state.executedInline[inlineId] = true;
             node.setAttribute('data-flatcms-consent-status', 'loaded');
