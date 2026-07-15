@@ -16,7 +16,7 @@ use App\Core\CoreManifest;
 final class UpdateCatalogService
 {
     private const API_VERSION = '1.0';
-    private const CATALOGS = ['core', 'modules'];
+    private const CATALOGS = ['core', 'modules', 'extensions', 'appliances'];
 
     public function __construct(private ?UpdateArtifactService $artifacts = null)
     {

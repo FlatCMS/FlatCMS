@@ -74,6 +74,167 @@ body.light-mode .ai-agent-trigger-icon.is-light {
   z-index: 1300;
 }
 
+.ai-agent-floating {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1295;
+  pointer-events: none;
+}
+
+.ai-agent-floating[hidden] {
+  display: none !important;
+}
+
+.ai-agent-floating > * {
+  pointer-events: auto;
+}
+
+.ai-agent-floating-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  cursor: grab;
+}
+
+body.light-mode .ai-agent-floating-button {
+  color: inherit;
+}
+
+.ai-agent-floating.is-dragging .ai-agent-floating-button,
+.ai-agent-floating-button:active {
+  cursor: grabbing;
+}
+
+.ai-agent-floating-avatar {
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
+.ai-agent-floating-card {
+  position: absolute;
+  top: calc(100% - 8px);
+  right: 12px;
+  width: min(336px, calc(100vw - 32px));
+  padding: 18px 18px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(20, 24, 35, 0.98);
+  color: #f4f0ea;
+  border-radius: 24px;
+  box-shadow: 0 24px 54px rgba(12, 18, 28, 0.28);
+}
+
+body.light-mode .ai-agent-floating-card {
+  border-color: rgba(44, 42, 41, 0.1);
+  background: rgba(255, 251, 247, 0.98);
+  color: #2c2a29;
+  box-shadow: 0 24px 54px rgba(201, 122, 99, 0.18);
+}
+
+.ai-agent-floating.is-open-right .ai-agent-floating-card {
+  left: 12px;
+  right: auto;
+}
+
+.ai-agent-floating.is-above .ai-agent-floating-card {
+  bottom: calc(100% - 8px);
+  top: auto;
+}
+
+.ai-agent-floating-card[hidden] {
+  display: none !important;
+}
+
+.ai-agent-floating-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.ai-agent-floating-context {
+  margin: 0;
+  padding-right: 34px;
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+body.light-mode .ai-agent-floating-context {
+  color: rgba(44, 42, 41, 0.68);
+}
+
+.ai-agent-floating-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ai-agent-floating-action {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  text-align: left;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+body.light-mode .ai-agent-floating-action {
+  border-color: rgba(44, 42, 41, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.ai-agent-floating-action:hover,
+.ai-agent-floating-action:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(96, 165, 250, 0.24);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+body.light-mode .ai-agent-floating-action:hover,
+body.light-mode .ai-agent-floating-action:focus-visible {
+  background: rgba(44, 42, 41, 0.03);
+  border-color: rgba(201, 122, 99, 0.3);
+}
+
+.ai-agent-floating-action-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-agent-floating-action-meta {
+  display: none;
+}
+
 .ai-agent-backdrop {
   position: fixed;
   inset: 0;
@@ -142,8 +303,7 @@ body.light-mode .ai-agent-drawer-hero {
 .ai-agent-drawer-hero-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 18px;
+  object-fit: contain;
 }
 
 .ai-agent-eyebrow {

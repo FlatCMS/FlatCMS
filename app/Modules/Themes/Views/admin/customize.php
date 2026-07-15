@@ -572,9 +572,15 @@ $previewBoxAttributes = sprintf(
                                         <h4 class="fc-inspector-section-title"><?= __('preview', 'Themes') ?></h4>
                                     </div>
                                     <div class="fc-inspector-section-body">
-                                        <input type="hidden" id="themePreviewHeadingInput" data-theme-preview-heading-input value="<?= e($defaultPreviewHeadline) ?>">
-                                        <textarea id="themePreviewBodyInput" class="theme-typography-preview-hidden" data-theme-preview-body-input hidden><?= e($defaultPreviewText) ?></textarea>
-                                        <div class="theme-typography-textstyle-host" data-theme-typography-textstyle-host></div>
+                                        <div class="theme-component-preview-block">
+                                            <div class="theme-preview-box theme-preview-box--typography" data-theme-preview-box <?= $previewBoxAttributes ?>>
+                                                <div class="theme-preview-surface theme-preview-surface--typography">
+                                                    <span class="theme-preview-badge"><?= __('preview_badge_primary', 'Themes') ?></span>
+                                                    <h4 class="theme-preview-headline" data-theme-preview-heading><?= e($defaultPreviewHeadline) ?></h4>
+                                                    <div class="theme-preview-text" data-theme-preview-body><?= nl2br(e($defaultPreviewText)) ?></div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </section>
                             </div>

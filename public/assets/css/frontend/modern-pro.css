@@ -87,16 +87,14 @@ body.frontend-body {
   transform: translateY(0);
 }
 
-.btn-ghost,
-.btn-outline {
+.btn-ghost {
   background: rgba(217, 70, 239, 0.06);
   color: #f0abfc;
   border: 1px solid rgba(217, 70, 239, 0.46);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.btn-ghost:hover,
-.btn-outline:hover {
+.btn-ghost:hover {
   background: linear-gradient(180deg, #4a044e 0%, #701a75 100%);
   border-color: #f0abfc;
   color: #ffffff;
@@ -104,8 +102,34 @@ body.frontend-body {
   transform: translateY(-1px);
 }
 
-.btn-ghost:active,
+.btn-ghost:active {
+  background: linear-gradient(180deg, #4a044e 0%, #701a75 100%);
+  border-color: #f0abfc;
+  color: #ffffff;
+  box-shadow: 0 14px 26px -12px rgba(217, 70, 239, 0.54), inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 0 2px rgba(217, 70, 239, 0.24);
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.54);
+  box-shadow: 0 10px 22px -14px rgba(99, 102, 241, 0.42);
+}
+
+.btn-outline:hover {
+  background: linear-gradient(180deg, #3730a3 0%, #312e81 100%);
+  border-color: #a5b4fc;
+  color: #ffffff;
+  box-shadow: 0 14px 26px -10px rgba(99, 102, 241, 0.42), 0 0 0 2px rgba(99, 102, 241, 0.22);
+  transform: translateY(-1px);
+}
+
 .btn-outline:active {
+  background: linear-gradient(180deg, #3730a3 0%, #312e81 100%);
+  border-color: #a5b4fc;
+  color: #ffffff;
+  box-shadow: 0 14px 26px -10px rgba(99, 102, 241, 0.42), 0 0 0 2px rgba(99, 102, 241, 0.22);
   transform: translateY(0);
 }
 

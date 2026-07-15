@@ -118,6 +118,11 @@ $aiAgentI18n = [
     'thinking' => __('assistant_thinking', 'AiAgent'),
     'summaryPagesNote' => __('assistant_summary_pages_note', 'AiAgent'),
     'summaryPostsNote' => __('assistant_summary_posts_note', 'AiAgent'),
+    'floatingLabel' => __('assistant_floating_label', 'AiAgent'),
+    'floatingHint' => __('assistant_floating_hint', 'AiAgent'),
+    'floatingOpen' => __('assistant_floating_open', 'AiAgent'),
+    'floatingContextEmpty' => __('assistant_floating_context_empty', 'AiAgent'),
+    'floatingAria' => __('assistant_floating_aria', 'AiAgent'),
 ];
 ?>
 
@@ -133,11 +138,25 @@ $aiAgentI18n = [
     data-icon-dark="<?= e(asset('images/admin/ai-agent/icon-dark.png')) ?>"
     data-icon-light="<?= e(asset('images/admin/ai-agent/icon-light.png')) ?>"
 >
+    <div class="ai-agent-floating" data-ai-agent-floating hidden>
+        <button type="button" class="ai-agent-floating-button" data-ai-agent-floating-button aria-label="<?= e(__('assistant_floating_aria', 'AiAgent')) ?>">
+            <img src="<?= e(asset('images/admin/ai-agent/flatty-mascot.png')) ?>" alt="" aria-hidden="true" class="ai-agent-floating-avatar">
+        </button>
+
+        <section class="ai-agent-floating-card" data-ai-agent-floating-card hidden>
+            <button type="button" class="ai-agent-floating-close" data-ai-agent-floating-close aria-label="<?= e(__('assistant_close', 'AiAgent')) ?>">
+                <i class="fas fa-times"></i>
+            </button>
+            <p class="ai-agent-floating-context" data-ai-agent-floating-context><?= e(__('assistant_floating_context_empty', 'AiAgent')) ?></p>
+            <div class="ai-agent-floating-actions" data-ai-agent-floating-actions></div>
+        </section>
+    </div>
+
     <div class="ai-agent-backdrop" data-ai-agent-close hidden></div>
     <aside class="ai-agent-drawer" data-ai-agent-drawer hidden>
         <header class="ai-agent-drawer-header">
             <div class="ai-agent-drawer-hero">
-                <img src="<?= e(asset('images/admin/ai-agent/agent-flatty.webp')) ?>" alt="" aria-hidden="true" class="ai-agent-drawer-hero-image">
+                <img src="<?= e(asset('images/admin/ai-agent/flatty-mascot.png')) ?>" alt="" aria-hidden="true" class="ai-agent-drawer-hero-image">
             </div>
             <div class="ai-agent-drawer-headline">
                 <p class="ai-agent-eyebrow"><?= e(__('assistant_title', 'AiAgent')) ?></p>

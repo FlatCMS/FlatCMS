@@ -13,6 +13,7 @@ namespace App\Modules\AiAgent\Services;
 
 use App\Core\FlatFile;
 use App\Modules\Categories\Services\CategoryTranslationService;
+use App\Modules\Contact\Services\FormService;
 use App\Modules\Media\Models\MediaModel;
 use App\Modules\Pages\Services\PageTranslationService;
 use App\Modules\Posts\Services\PostTranslationService;
@@ -27,11 +28,13 @@ final class AdminAssistantService
 {
     private AIManager $ai;
     private EditorialAssistant $editorial;
+    private FormService $contactForms;
 
-    public function __construct(?AIManager $ai = null, ?EditorialAssistant $editorial = null)
+    public function __construct(?AIManager $ai = null, ?EditorialAssistant $editorial = null, ?FormService $contactForms = null)
     {
         $this->ai = $ai ?? new AIManager();
         $this->editorial = $editorial ?? new EditorialAssistant($this->ai);
+        $this->contactForms = $contactForms ?? new FormService();
     }
 
     /**
@@ -68,37 +71,28 @@ final class AdminAssistantService
                 ];
 
             case 'block_generate':
-                $generatedValues = $this->editorial->generateContent($entityType, $locale, $current, $message, $ctx['has_excerpt'], $editorialContext);
-                return [
-                    'intent' => $intent,
-                    'proposal_type' => 'content_block',
-                    'proposal' => [
-                        'values' => $this->finalizePostContentValues($ctx, $generatedValues),
-                    ],
-                    'chips' => $this->contentFollowUpChips($intent, $ctx),
-                ];
+                return $this->buildContentBlockResponse(
+                    $intent,
+                    $ctx,
+                    $message,
+                    $this->editorial->generateContent($entityType, $locale, $current, $message, $ctx['has_excerpt'], $editorialContext)
+                );
 
             case 'block_improve':
-                $improvedValues = $this->editorial->reviseContent($entityType, $locale, $current, 'enhance', $message, $ctx['has_excerpt'], $editorialContext);
-                return [
-                    'intent' => $intent,
-                    'proposal_type' => 'content_block',
-                    'proposal' => [
-                        'values' => $this->finalizePostContentValues($ctx, $improvedValues),
-                    ],
-                    'chips' => $this->contentFollowUpChips($intent, $ctx),
-                ];
+                return $this->buildContentBlockResponse(
+                    $intent,
+                    $ctx,
+                    $message,
+                    $this->editorial->reviseContent($entityType, $locale, $current, 'enhance', $message, $ctx['has_excerpt'], $editorialContext)
+                );
 
             case 'block_proofread':
-                $proofreadValues = $this->editorial->reviseContent($entityType, $locale, $current, 'proofread', $message, $ctx['has_excerpt'], $editorialContext);
-                return [
-                    'intent' => $intent,
-                    'proposal_type' => 'content_block',
-                    'proposal' => [
-                        'values' => $this->finalizePostContentValues($ctx, $proofreadValues),
-                    ],
-                    'chips' => $this->contentFollowUpChips($intent, $ctx),
-                ];
+                return $this->buildContentBlockResponse(
+                    $intent,
+                    $ctx,
+                    $message,
+                    $this->editorial->reviseContent($entityType, $locale, $current, 'proofread', $message, $ctx['has_excerpt'], $editorialContext)
+                );
 
             case 'block_translate':
                 if ($locale === $sourceLocale) {
@@ -106,17 +100,12 @@ final class AdminAssistantService
                 }
 
                 $source = $this->resolveSourceFields($ctx);
-                return [
-                    'intent' => $intent,
-                    'proposal_type' => 'content_block',
-                    'proposal' => [
-                        'values' => $this->finalizePostContentValues(
-                            $ctx,
-                            $this->editorial->translate($entityType, $sourceLocale, $locale, $source, $ctx['has_excerpt'], $message, $editorialContext)
-                        ),
-                    ],
-                    'chips' => $this->contentFollowUpChips($intent, $ctx),
-                ];
+                return $this->buildContentBlockResponse(
+                    $intent,
+                    $ctx,
+                    $message,
+                    $this->editorial->translate($entityType, $sourceLocale, $locale, $source, $ctx['has_excerpt'], $message, $editorialContext)
+                );
 
             case 'block_summary':
                 $summaryBudget = ($ctx['module'] ?? '') === 'posts' ? 320 : 520;
@@ -137,6 +126,9 @@ final class AdminAssistantService
                     ],
                     'chips' => ['seo_generate', 'block_improve'],
                 ];
+
+            case 'block_insert_form':
+                return $this->prepareContactFormProposal($ctx, $message);
 
             case 'seo_generate':
                 return [
@@ -252,6 +244,10 @@ final class AdminAssistantService
 
         if ($ctx['block'] === 'seo') {
             return 'seo_generate';
+        }
+
+        if ($this->isContactFormInsertionRequest($ctx, $normalized)) {
+            return 'block_insert_form';
         }
 
         $referencesWholeBlock = preg_match('/\b(page|article|post|bloc|block|section|contenu|content|texte)\b/u', $normalized) === 1;
@@ -442,6 +438,448 @@ final class AdminAssistantService
         }
 
         return array_values(array_slice(array_unique($chips), 0, 2));
+    }
+
+    /**
+     * @param array<string, mixed> $ctx
+     * @param array<string, mixed> $values
+     * @return array{intent:string,proposal_type:string,proposal:array<string,mixed>,chips:array<int,string>}
+     */
+    private function buildContentBlockResponse(string $intent, array $ctx, string $message, array $values): array
+    {
+        $preparedValues = $this->finalizePostContentValues($ctx, $values);
+        $proposal = [
+            'values' => $preparedValues,
+        ];
+
+        $contactFormResolution = $this->mergeRequestedContactFormIntoContentValues($ctx, $message, $preparedValues);
+        if (isset($contactFormResolution['response']) && is_array($contactFormResolution['response'])) {
+            return $contactFormResolution['response'];
+        }
+
+        if (isset($contactFormResolution['values']) && is_array($contactFormResolution['values'])) {
+            $proposal['values'] = $contactFormResolution['values'];
+            if (!empty($contactFormResolution['reply'])) {
+                $proposal['reply'] = (string) $contactFormResolution['reply'];
+            }
+            if (!empty($contactFormResolution['note'])) {
+                $proposal['note'] = (string) $contactFormResolution['note'];
+            }
+        }
+
+        return [
+            'intent' => $intent,
+            'proposal_type' => 'content_block',
+            'proposal' => $proposal,
+            'chips' => $this->contentFollowUpChips($intent, $ctx),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $ctx
+     * @return array{intent:string,proposal_type:string,proposal:array<string,mixed>,chips:array<int,string>}
+     */
+    private function prepareContactFormProposal(array $ctx, string $message): array
+    {
+        $selection = $this->resolveContactFormSelection($message);
+
+        if (($selection['status'] ?? '') === 'missing') {
+            return $this->buildInfoProposal(
+                'block_insert_form',
+                $this->translate('assistant_contact_form_missing_reply'),
+                $this->translate('assistant_contact_form_missing_title'),
+                $this->translate('assistant_contact_form_missing_message'),
+                $this->translate('assistant_contact_form_missing_action'),
+                url('/admin/contact/forms/create')
+            );
+        }
+
+        if (($selection['status'] ?? '') === 'unavailable') {
+            return $this->buildInfoProposal(
+                'block_insert_form',
+                $this->translate('assistant_contact_form_unavailable_reply'),
+                $this->translate('assistant_contact_form_unavailable_title'),
+                $this->translate('assistant_contact_form_unavailable_message'),
+                $this->translate('assistant_contact_form_manage_action'),
+                url('/admin/contact/forms')
+            );
+        }
+
+        $selectedSlug = trim((string) ($selection['slug'] ?? ''));
+        $selectedName = trim((string) ($selection['name'] ?? ''));
+        $selectedId = trim((string) ($selection['id'] ?? ''));
+        $shortcode = trim((string) ($selection['shortcode'] ?? ''));
+        $currentContent = (string) ($ctx['current']['content'] ?? '');
+
+        if ($selectedSlug !== '' && $this->contentContainsContactShortcode($currentContent, $selectedSlug)) {
+            $editUrl = $selectedId !== '' ? url('/admin/contact/forms/' . $selectedId . '/edit') : url('/admin/contact/forms');
+
+            return $this->buildInfoProposal(
+                'block_insert_form',
+                $this->translate('assistant_contact_form_existing_reply'),
+                $this->translate('assistant_contact_form_existing_title'),
+                $this->translate('assistant_contact_form_existing_message', [
+                    ':name' => $selectedName !== '' ? $selectedName : $selectedSlug,
+                ]),
+                $this->translate('assistant_contact_form_existing_action'),
+                $editUrl
+            );
+        }
+
+        return [
+            'intent' => 'block_insert_form',
+            'proposal_type' => 'content_block',
+            'proposal' => [
+                'reply' => $this->translate('assistant_contact_form_ready_reply'),
+                'note' => $this->translate('assistant_contact_form_ready_note', [
+                    ':name' => $selectedName !== '' ? $selectedName : $selectedSlug,
+                    ':shortcode' => $shortcode,
+                ]),
+                'values' => [
+                    'content' => $this->appendShortcodeToContent($currentContent, $shortcode),
+                ],
+            ],
+            'chips' => ['block_improve', 'block_proofread'],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $ctx
+     * @param array<string, mixed> $values
+     * @return array<string, mixed>
+     */
+    private function mergeRequestedContactFormIntoContentValues(array $ctx, string $message, array $values): array
+    {
+        if (!$this->shouldMergeContactFormIntoContentProposal($ctx, $message)) {
+            return [];
+        }
+
+        $selection = $this->resolveContactFormSelection($message);
+        if (($selection['status'] ?? '') === 'missing') {
+            return [
+                'response' => $this->buildInfoProposal(
+                    'block_insert_form',
+                    $this->translate('assistant_contact_form_missing_reply'),
+                    $this->translate('assistant_contact_form_missing_title'),
+                    $this->translate('assistant_contact_form_missing_message'),
+                    $this->translate('assistant_contact_form_missing_action'),
+                    url('/admin/contact/forms/create')
+                ),
+            ];
+        }
+
+        if (($selection['status'] ?? '') === 'unavailable') {
+            return [
+                'response' => $this->buildInfoProposal(
+                    'block_insert_form',
+                    $this->translate('assistant_contact_form_unavailable_reply'),
+                    $this->translate('assistant_contact_form_unavailable_title'),
+                    $this->translate('assistant_contact_form_unavailable_message'),
+                    $this->translate('assistant_contact_form_manage_action'),
+                    url('/admin/contact/forms')
+                ),
+            ];
+        }
+
+        $selectedSlug = trim((string) ($selection['slug'] ?? ''));
+        $selectedName = trim((string) ($selection['name'] ?? ''));
+        $shortcode = trim((string) ($selection['shortcode'] ?? ''));
+        $content = $this->replaceGeneratedHtmlFormsWithShortcode((string) ($values['content'] ?? ''), $shortcode);
+
+        if ($selectedSlug !== '' && !$this->contentContainsContactShortcode($content, $selectedSlug)) {
+            $content = $this->appendShortcodeToContent($content, $shortcode);
+        }
+
+        $values['content'] = $this->sanitizeGeneratedContactFormPresentation(
+            $this->deduplicateContactShortcodeInstances($content, $selectedSlug, $shortcode),
+            $shortcode
+        );
+
+        return [
+            'values' => $values,
+            'reply' => $this->translate('assistant_contact_form_ready_reply'),
+            'note' => $this->translate('assistant_contact_form_ready_note', [
+                ':name' => $selectedName !== '' ? $selectedName : $selectedSlug,
+                ':shortcode' => $shortcode,
+            ]),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $ctx
+     */
+    private function isContactFormInsertionRequest(array $ctx, string $message): bool
+    {
+        if (($ctx['block'] ?? '') === 'seo') {
+            return false;
+        }
+
+        $module = trim((string) ($ctx['module'] ?? ''));
+        if ($module !== 'pages' && $module !== 'posts') {
+            return false;
+        }
+
+        $mentionsForm = preg_match('/\b(form|formulaire|shortcode|newsletter|devis|quote|support|contact\s+form)\b/u', $message) === 1;
+        $mentionsInsert = preg_match('/\b(ajout|ajoute|ajouter|ins[ée]r|int[ée]gr|place|placer|mets|mettre|utilis|utiliser|embed|inclu|include)\b/u', $message) === 1;
+
+        return $mentionsForm && $mentionsInsert;
+    }
+
+    /**
+     * @param array<string, mixed> $ctx
+     */
+    private function shouldMergeContactFormIntoContentProposal(array $ctx, string $message): bool
+    {
+        if (($ctx['block'] ?? '') !== 'content') {
+            return false;
+        }
+
+        $scope = (string) ($ctx['scope'] ?? '');
+        $field = (string) ($ctx['field'] ?? '');
+        $fieldKind = (string) ($ctx['field_kind'] ?? '');
+        $isContentBlockContext = $scope === 'block';
+        $isRichTextContentFieldContext = $scope === 'field' && $field === 'content' && $fieldKind === 'richtext';
+
+        if (!$isContentBlockContext && !$isRichTextContentFieldContext) {
+            return false;
+        }
+
+        if (($ctx['module'] ?? '') !== 'pages' && ($ctx['module'] ?? '') !== 'posts') {
+            return false;
+        }
+
+        $normalizedMessage = mb_strtolower($message);
+        $mentionsForm = preg_match('/\b(form|formulaire|shortcode|newsletter|devis|quote|support|contact\s+form)\b/u', $normalizedMessage) === 1;
+        if (!$mentionsForm) {
+            return false;
+        }
+
+        return preg_match('/\b(avec|pour|repren|r[eé]dig|g[eé]n[eé]r|am[eé]lior|refon|compose|propose|cr[eé]e|mets|mettre|int[ée]gr|ajout|ajoute|ajouter|ins[ée]r|inclu|include)\b/u', $normalizedMessage) === 1;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolveContactFormSelection(string $message): array
+    {
+        $requestedType = $this->resolveRequestedContactFormType($message);
+        $allForms = $this->contactForms->all();
+        if ($allForms === []) {
+            return ['status' => 'missing'];
+        }
+
+        $activeForms = array_values(array_filter($allForms, static function (array $form): bool {
+            return !empty($form['is_active']) && trim((string) ($form['slug'] ?? '')) !== '';
+        }));
+
+        if ($activeForms === []) {
+            return ['status' => 'unavailable'];
+        }
+
+        $matchingActiveForms = $requestedType !== null
+            ? array_values(array_filter($activeForms, static function (array $form) use ($requestedType): bool {
+                return trim((string) ($form['form_type'] ?? '')) === $requestedType;
+            }))
+            : $activeForms;
+
+        if ($requestedType !== null && $matchingActiveForms === []) {
+            return ['status' => 'unavailable'];
+        }
+
+        $selectedForm = $this->selectContactFormForMessage($matchingActiveForms, $message);
+        $selectedSlug = trim((string) ($selectedForm['slug'] ?? ''));
+
+        return [
+            'status' => 'ready',
+            'id' => trim((string) ($selectedForm['id'] ?? '')),
+            'slug' => $selectedSlug,
+            'name' => trim((string) ($selectedForm['name'] ?? '')),
+            'shortcode' => '[contact-form slug="' . $selectedSlug . '"]',
+        ];
+    }
+
+    private function resolveRequestedContactFormType(string $message): ?string
+    {
+        $normalizedMessage = mb_strtolower($message);
+
+        if (preg_match('/\b(newsletter|rgpd)\b/u', $normalizedMessage) === 1) {
+            return FormService::FORM_TYPE_NEWSLETTER;
+        }
+
+        if (preg_match('/\b(devis|quote)\b/u', $normalizedMessage) === 1) {
+            return FormService::FORM_TYPE_QUOTE;
+        }
+
+        if (preg_match('/\b(support|sav|assistance)\b/u', $normalizedMessage) === 1) {
+            return FormService::FORM_TYPE_SUPPORT;
+        }
+
+        if (preg_match('/\b(contact|contacte|contactez)\b/u', $normalizedMessage) === 1) {
+            return FormService::FORM_TYPE_CONTACT;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $forms
+     * @return array<string, mixed>
+     */
+    private function selectContactFormForMessage(array $forms, string $message): array
+    {
+        if ($forms === []) {
+            return [];
+        }
+
+        $normalizedMessage = mb_strtolower($message);
+        $bestScore = null;
+        $bestForm = $forms[0];
+
+        foreach ($forms as $form) {
+            $score = 0;
+            $slug = mb_strtolower(trim((string) ($form['slug'] ?? '')));
+            $name = mb_strtolower(trim((string) ($form['name'] ?? '')));
+            $type = trim((string) ($form['form_type'] ?? ''));
+
+            if ($slug !== '' && str_contains($normalizedMessage, $slug)) {
+                $score += 120;
+            }
+            if ($name !== '' && str_contains($normalizedMessage, $name)) {
+                $score += 90;
+            }
+            if (!empty($form['is_default'])) {
+                $score += 40;
+            }
+
+            if ($type === FormService::FORM_TYPE_NEWSLETTER && preg_match('/\b(newsletter|rgpd)\b/u', $normalizedMessage) === 1) {
+                $score += 100;
+            }
+            if ($type === FormService::FORM_TYPE_QUOTE && preg_match('/\b(devis|quote)\b/u', $normalizedMessage) === 1) {
+                $score += 100;
+            }
+            if ($type === FormService::FORM_TYPE_SUPPORT && preg_match('/\b(support|sav|assistance)\b/u', $normalizedMessage) === 1) {
+                $score += 100;
+            }
+            if ($type === FormService::FORM_TYPE_CONTACT && preg_match('/\b(contact|form|formulaire)\b/u', $normalizedMessage) === 1) {
+                $score += 60;
+            }
+
+            if ($bestScore === null || $score > $bestScore) {
+                $bestScore = $score;
+                $bestForm = $form;
+            }
+        }
+
+        return $bestForm;
+    }
+
+    private function contentContainsContactShortcode(string $content, string $slug): bool
+    {
+        if ($slug === '') {
+            return false;
+        }
+
+        $pattern = '/\[contact-form\b[^\]]*slug\s*=\s*"'
+            . preg_quote($slug, '/')
+            . '"[^\]]*\]/i';
+
+        return preg_match($pattern, $content) === 1;
+    }
+
+    private function appendShortcodeToContent(string $content, string $shortcode): string
+    {
+        $trimmed = trim($content);
+        if ($trimmed === '') {
+            return $shortcode;
+        }
+
+        return rtrim($content) . "\n\n" . $shortcode;
+    }
+
+    private function replaceGeneratedHtmlFormsWithShortcode(string $content, string $shortcode): string
+    {
+        if (trim($content) === '' || $shortcode === '') {
+            return $content;
+        }
+
+        $replaced = preg_replace('/<form\b[\s\S]*?<\/form>/iu', $shortcode, $content, 1);
+        return is_string($replaced) ? $replaced : $content;
+    }
+
+    private function deduplicateContactShortcodeInstances(string $content, string $slug, string $shortcode): string
+    {
+        if ($slug === '' || $shortcode === '') {
+            return $content;
+        }
+
+        $pattern = '/\[contact-form\b[^\]]*slug\s*=\s*"'
+            . preg_quote($slug, '/')
+            . '"[^\]]*\](?:\s*\[contact-form\b[^\]]*slug\s*=\s*"'
+            . preg_quote($slug, '/')
+            . '"[^\]]*\])+/i';
+
+        $deduplicated = preg_replace($pattern, $shortcode, $content);
+        return is_string($deduplicated) ? $deduplicated : $content;
+    }
+
+    private function sanitizeGeneratedContactFormPresentation(string $content, string $shortcode): string
+    {
+        if ($shortcode === '' || trim($content) === '') {
+            return $content;
+        }
+
+        $escapedShortcode = preg_quote($shortcode, '/');
+        $labelBlockPattern = '/(?:<(?:div|p|li|span|label)\b[^>]*>\s*(?:nom|pr[ée]nom|e-?mail|email|sujet|objet|message|t[ée]l[ée]phone|envoyer(?:\s+le\s+message)?|submit)\s*<\/(?:div|p|li|span|label)>\s*){2,}(?=\s*'
+            . $escapedShortcode
+            . ')/iu';
+        $controlPattern = '/(?:<(?:input|textarea|select)\b[^>]*\/?>\s*|<button\b[^>]*>[\s\S]*?<\/button>\s*)+(?=\s*'
+            . $escapedShortcode
+            . ')/iu';
+
+        $sanitized = preg_replace($labelBlockPattern, '', $content);
+        if (!is_string($sanitized)) {
+            $sanitized = $content;
+        }
+
+        $sanitized = preg_replace($controlPattern, '', $sanitized);
+        if (!is_string($sanitized)) {
+            return $content;
+        }
+
+        return preg_replace("/\n{3,}/", "\n\n", $sanitized) ?: $sanitized;
+    }
+
+    /**
+     * @return array{intent:string,proposal_type:string,proposal:array<string,mixed>,chips:array<int,string>}
+     */
+    private function buildInfoProposal(string $intent, string $reply, string $title, string $message, string $actionLabel, string $actionUrl): array
+    {
+        return [
+            'intent' => $intent,
+            'proposal_type' => 'info_block',
+            'proposal' => [
+                'reply' => $reply,
+                'title' => $title,
+                'message' => $message,
+                'action_label' => $actionLabel,
+                'action_url' => $actionUrl,
+            ],
+            'chips' => [],
+        ];
+    }
+
+    /**
+     * @param array<string, string> $replacements
+     */
+    private function translate(string $key, array $replacements = []): string
+    {
+        $text = (string) __($key, 'AiAgent');
+
+        if ($replacements === []) {
+            return $text;
+        }
+
+        return strtr($text, $replacements);
     }
 
     /**

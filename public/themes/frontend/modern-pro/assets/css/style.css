@@ -69,6 +69,14 @@
   --fc-btn-ghost-hover-border: #f0abfc;
   --fc-btn-ghost-hover-color: #ffffff;
   --fc-btn-ghost-hover-shadow: 0 14px 26px -12px rgba(217, 70, 239, 0.54), inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 0 2px rgba(217, 70, 239, 0.24);
+  --fc-btn-outline-bg: transparent;
+  --fc-btn-outline-border: rgba(99, 102, 241, 0.54);
+  --fc-btn-outline-color: #c7d2fe;
+  --fc-btn-outline-shadow: 0 10px 22px -14px rgba(99, 102, 241, 0.42);
+  --fc-btn-outline-hover-bg: linear-gradient(180deg, #3730a3 0%, #312e81 100%);
+  --fc-btn-outline-hover-border: #a5b4fc;
+  --fc-btn-outline-hover-color: #ffffff;
+  --fc-btn-outline-hover-shadow: 0 14px 26px -10px rgba(99, 102, 241, 0.42), 0 0 0 2px rgba(99, 102, 241, 0.22);
   --fc-card-radius: 1rem;
   --fc-card-bg: linear-gradient(180deg, color-mix(in srgb, var(--color-bg-secondary) 82%, transparent) 0%, color-mix(in srgb, var(--color-bg-tertiary) 58%, transparent) 100%);
   --fc-card-border: color-mix(in srgb, var(--color-border) 88%, transparent);
@@ -1268,16 +1276,14 @@ span.logo-icon {
   transform: translateY(0);
 }
 
-.btn-ghost,
-.btn-outline {
+.btn-ghost {
   background: var(--fc-btn-ghost-bg);
   color: var(--fc-btn-ghost-color);
   border-color: var(--fc-btn-ghost-border);
   box-shadow: var(--fc-btn-ghost-shadow);
 }
 
-.btn-ghost:hover,
-.btn-outline:hover {
+.btn-ghost:hover {
   background: var(--fc-btn-ghost-hover-bg);
   border-color: var(--fc-btn-ghost-hover-border);
   color: var(--fc-btn-ghost-hover-color);
@@ -1285,8 +1291,34 @@ span.logo-icon {
   transform: translateY(-1px);
 }
 
-.btn-ghost:active,
+.btn-ghost:active {
+  background: var(--fc-btn-ghost-hover-bg);
+  border-color: var(--fc-btn-ghost-hover-border);
+  color: var(--fc-btn-ghost-hover-color);
+  box-shadow: var(--fc-btn-ghost-hover-shadow);
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background: var(--fc-btn-outline-bg);
+  color: var(--fc-btn-outline-color);
+  border-color: var(--fc-btn-outline-border);
+  box-shadow: var(--fc-btn-outline-shadow);
+}
+
+.btn-outline:hover {
+  background: var(--fc-btn-outline-hover-bg);
+  border-color: var(--fc-btn-outline-hover-border);
+  color: var(--fc-btn-outline-hover-color);
+  box-shadow: var(--fc-btn-outline-hover-shadow);
+  transform: translateY(-1px);
+}
+
 .btn-outline:active {
+  background: var(--fc-btn-outline-hover-bg);
+  border-color: var(--fc-btn-outline-hover-border);
+  color: var(--fc-btn-outline-hover-color);
+  box-shadow: var(--fc-btn-outline-hover-shadow);
   transform: translateY(0);
 }
 
@@ -2026,11 +2058,17 @@ span.logo-icon {
 
 .prose .prose-action-links .btn-ghost,
 .prose .prose-action-links .btn-ghost:hover,
-.prose .prose-action-links .btn-ghost:active,
-.prose .prose-action-links .btn-outline,
+.prose .prose-action-links .btn-ghost:active {
+  color: var(--fc-btn-ghost-color);
+}
+
+.prose .prose-action-links .btn-outline {
+  color: var(--fc-btn-outline-color);
+}
+
 .prose .prose-action-links .btn-outline:hover,
 .prose .prose-action-links .btn-outline:active {
-  color: var(--fc-btn-ghost-color);
+  color: var(--fc-btn-outline-hover-color);
 }
 
 .prose a {

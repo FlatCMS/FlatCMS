@@ -21,6 +21,7 @@ use App\Modules\Contact\Services\FormService;
 use App\Modules\Contact\Services\MessageService;
 use App\Modules\Pages\Support\SystemPages;
 use App\Modules\Settings\Services\SiteBrandingTranslationService;
+use App\Services\UpdateCatalogService;
 
 class FrontController extends BaseController
 {
@@ -232,6 +233,7 @@ class FrontController extends BaseController
         }
 
         $this->sendNotificationEmail($savedMessage);
+        $this->sendDownloadLinksEmail($savedMessage);
         $this->session->set('contact_last_submit_at', time());
         $successMessage = trim((string) ($form['success_message'] ?? ''));
         if ($successMessage === '') {
@@ -1152,6 +1154,146 @@ class FrontController extends BaseController
         if (!$sent && (bool) env('APP_DEBUG', false)) {
             error_log('[FlatCMS] Contact notification email could not be sent to ' . $recipient);
         }
+    }
+
+    /**
+     * @param array<string,mixed> $message
+     */
+    private function sendDownloadLinksEmail(array $message): void
+    {
+        $formSlug = trim((string) ($message['form_slug'] ?? ''));
+        if ($formSlug !== 'download-access') {
+            return;
+        }
+
+        $recipient = trim((string) ($message['email'] ?? ''));
+        if ($recipient === '' || filter_var($recipient, FILTER_VALIDATE_EMAIL) === false) {
+            return;
+        }
+
+        $packages = $this->resolvePublishedDownloadPackages();
+        if ($packages === []) {
+            return;
+        }
+
+        $name = trim((string) ($message['name'] ?? ''));
+        if ($name === '') {
+            $name = trim((string) ($this->extractCustomValue($message, ['prenom', 'firstname', 'first_name']) . ' ' . $this->extractCustomValue($message, ['nom', 'lastname', 'last_name'])));
+        }
+
+        $requestedPackage = $this->extractCustomValue($message, ['package_interest', 'package', 'download_package', 'requested_package']);
+        $subject = __('contact_download_links_subject', 'Contact');
+
+        $bodyLines = [];
+        $introKey = $name !== '' ? 'contact_download_links_intro_named' : 'contact_download_links_intro';
+        $bodyLines[] = __($introKey, 'Contact', ['name' => $name]);
+        $bodyLines[] = '';
+        $bodyLines[] = __('contact_download_links_body_intro', 'Contact');
+        if ($requestedPackage !== '') {
+            $bodyLines[] = __('contact_download_links_requested_package', 'Contact') . ': ' . $requestedPackage;
+        }
+        $bodyLines[] = '';
+
+        $htmlItems = [];
+        foreach ($packages as $package) {
+            $line = '- ' . $package['name'] . ' (' . $package['version'] . ')' . "\n  " . $package['url'];
+            if ($package['sha256'] !== '') {
+                $line .= "\n  SHA256: " . $package['sha256'];
+            }
+            $bodyLines[] = $line;
+
+            $html = '<li><strong>' . htmlspecialchars($package['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</strong> ';
+            $html .= '<span>(' . htmlspecialchars($package['version'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . ')</span><br>';
+            $html .= '<a href="' . htmlspecialchars($package['url'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"><u>' . htmlspecialchars($package['url'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</u></a>';
+            if ($package['sha256'] !== '') {
+                $html .= '<br><small>SHA256: <code>' . htmlspecialchars($package['sha256'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</code></small>';
+            }
+            $html .= '</li>';
+            $htmlItems[] = $html;
+        }
+
+        $bodyLines[] = '';
+        $bodyLines[] = __('contact_download_links_body_closing', 'Contact');
+
+        $htmlSections = [
+            '<p>' . htmlspecialchars(__($introKey, 'Contact', ['name' => $name]), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>',
+            '<p>' . htmlspecialchars(__('contact_download_links_body_intro', 'Contact'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>',
+        ];
+        if ($requestedPackage !== '') {
+            $htmlSections[] = '<p><strong>' . htmlspecialchars(__('contact_download_links_requested_package', 'Contact'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . ':</strong> ' . htmlspecialchars($requestedPackage, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>';
+        }
+        $htmlSections[] = '<ul>' . implode('', $htmlItems) . '</ul>';
+        $htmlSections[] = '<p>' . htmlspecialchars(__('contact_download_links_body_closing', 'Contact'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>';
+
+        $mailer = new Mailer();
+        $sent = $mailer->send($recipient, $subject, implode("\n", $bodyLines), [
+            'html_body' => implode("\n", $htmlSections),
+        ]);
+
+        if (!$sent && (bool) env('APP_DEBUG', false)) {
+            error_log('[FlatCMS] Download links email could not be sent to ' . $recipient);
+        }
+    }
+
+    /**
+     * @return array<int,array{name:string,version:string,url:string,sha256:string}>
+     */
+    private function resolvePublishedDownloadPackages(): array
+    {
+        $service = new UpdateCatalogService();
+        $packages = [];
+
+        foreach (['core', 'extensions', 'appliances'] as $catalog) {
+            $payload = $service->catalog($catalog);
+            $records = is_array($payload['packages'] ?? null) ? $payload['packages'] : [];
+            foreach ($records as $record) {
+                if (!is_array($record)) {
+                    continue;
+                }
+
+                $url = trim((string) ($record['download_url'] ?? ''));
+                if ($url === '' || empty($record['download_ready']) || (string) ($record['availability'] ?? '') !== 'published') {
+                    continue;
+                }
+
+                $packages[] = [
+                    'name' => trim((string) ($record['name'] ?? 'Package')),
+                    'version' => trim((string) ($record['version'] ?? '')),
+                    'url' => $url,
+                    'sha256' => trim((string) ($record['sha256'] ?? '')),
+                ];
+            }
+        }
+
+        return $packages;
+    }
+
+    /**
+     * @param array<string,mixed> $message
+     * @param array<int,string> $keys
+     */
+    private function extractCustomValue(array $message, array $keys): string
+    {
+        $customValues = is_array($message['custom_values'] ?? null) ? $message['custom_values'] : [];
+        if ($customValues === []) {
+            return '';
+        }
+
+        $normalizedKeys = array_map(static fn(string $key): string => strtolower(trim($key)), $keys);
+        foreach ($customValues as $customValue) {
+            if (!is_array($customValue)) {
+                continue;
+            }
+
+            $key = strtolower(trim((string) ($customValue['key'] ?? '')));
+            if ($key === '' || !in_array($key, $normalizedKeys, true)) {
+                continue;
+            }
+
+            return trim((string) ($customValue['value'] ?? ''));
+        }
+
+        return '';
     }
 
     private function resolveContactAttachmentAbsolutePath(string $relativePath): string

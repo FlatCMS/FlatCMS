@@ -124,6 +124,9 @@ final class ThemeCustomizationService
         $buttonStyle = $this->componentChoice((string) ($buttons['style'] ?? 'theme'), ['classic', 'soft', 'elevated']);
         if ($buttonStyle !== '') {
             $vars['--theme-button-style'] = $buttonStyle;
+            foreach ($this->buttonStyleVars($buttonStyle) as $name => $value) {
+                $vars[$name] = $value;
+            }
         }
 
         $badgeRadius = $this->componentRadius((string) ($badges['shape'] ?? 'theme'));
@@ -151,6 +154,9 @@ final class ThemeCustomizationService
         $typeScale = $this->componentChoice((string) ($typography['scale'] ?? 'theme'), ['compact', 'balanced', 'comfortable']);
         if ($typeScale !== '') {
             $vars['--theme-typography-scale'] = $typeScale;
+            foreach ($this->typographyScaleVars($typeScale) as $name => $value) {
+                $vars[$name] = $value;
+            }
         }
         $headingWeight = $this->headingWeight((string) ($typography['heading_weight'] ?? 'theme'));
         if ($headingWeight !== '') {
@@ -170,17 +176,47 @@ final class ThemeCustomizationService
             ":root {\n" . implode("\n", $lines) . "\n}",
         ];
 
-        if (isset($vars['--theme-heading-font-family']) || isset($vars['--theme-heading-font-weight'])) {
-            $blocks[] = "h1, h2, h3, h4, h5, h6 {\n"
-                . (isset($vars['--theme-heading-font-family']) ? '  font-family: var(--theme-heading-font-family);' . "\n" : '')
-                . (isset($vars['--theme-heading-font-weight']) ? '  font-weight: var(--theme-heading-font-weight);' . "\n" : '')
+        if (
+            isset($vars['--theme-body-font-family'])
+            || isset($vars['--theme-body-font-size'])
+            || isset($vars['--theme-body-line-height'])
+        ) {
+            $blocks[] = "body {\n"
+                . (isset($vars['--theme-body-font-family']) ? '  font-family: var(--theme-body-font-family);' . "\n" : '')
+                . (isset($vars['--theme-body-font-size']) ? '  font-size: var(--theme-body-font-size);' . "\n" : '')
+                . (isset($vars['--theme-body-line-height']) ? '  line-height: var(--theme-body-line-height);' . "\n" : '')
                 . "}";
         }
 
-        if (isset($vars['--theme-badge-radius']) || isset($vars['--theme-badge-font-weight'])) {
-            $blocks[] = ".badge, .theme-badge, [class*=\"badge\"] {\n"
+        if (
+            isset($vars['--theme-heading-font-family'])
+            || isset($vars['--theme-heading-font-weight'])
+            || isset($vars['--theme-heading-line-height'])
+            || isset($vars['--theme-heading-letter-spacing'])
+        ) {
+            $blocks[] = "h1, h2, h3, h4, h5, h6 {\n"
+                . (isset($vars['--theme-heading-font-family']) ? '  font-family: var(--theme-heading-font-family);' . "\n" : '')
+                . (isset($vars['--theme-heading-font-weight']) ? '  font-weight: var(--theme-heading-font-weight);' . "\n" : '')
+                . (isset($vars['--theme-heading-line-height']) ? '  line-height: var(--theme-heading-line-height);' . "\n" : '')
+                . (isset($vars['--theme-heading-letter-spacing']) ? '  letter-spacing: var(--theme-heading-letter-spacing);' . "\n" : '')
+                . "}";
+        }
+
+        if (isset($vars['--theme-body-line-height'])) {
+            $blocks[] = "p, li, dt, dd, blockquote, .prose, .page-content, .post-content {\n"
+                . '  line-height: var(--theme-body-line-height);' . "\n"
+                . "}";
+        }
+
+        if (
+            isset($vars['--theme-badge-radius'])
+            || isset($vars['--theme-badge-font-weight'])
+            || $badgeStyle !== ''
+        ) {
+            $blocks[] = ".badge, .theme-badge, .theme-preview-badge, [class*=\"badge\"] {\n"
                 . (isset($vars['--theme-badge-radius']) ? '  border-radius: var(--theme-badge-radius);' . "\n" : '')
                 . (isset($vars['--theme-badge-font-weight']) ? '  font-weight: var(--theme-badge-font-weight);' . "\n" : '')
+                . $this->badgeStyleDeclarations($badgeStyle)
                 . "}";
         }
 
@@ -261,6 +297,182 @@ final class ThemeCustomizationService
     private function componentChoice(string $value, array $allowed): string
     {
         return in_array($value, $allowed, true) ? $value : '';
+    }
+
+    private function buttonStyleVars(string $style): array
+    {
+        return match ($style) {
+            'classic' => [
+                '--btn-primary-shadow' => '0 4px 10px color-mix(in srgb, var(--color-primary, #2563EB) 20%, transparent)',
+                '--btn-primary-shadow-hover' => '0 10px 18px color-mix(in srgb, var(--color-primary, #2563EB) 26%, transparent)',
+                '--btn-secondary-bg' => 'var(--color-bg-secondary, var(--color-surface, #F8FAFC))',
+                '--btn-secondary-bg-hover' => 'var(--color-bg-hover, #EEF2F7)',
+                '--btn-secondary-bg-active' => 'color-mix(in srgb, var(--color-bg-hover, #EEF2F7) 76%, var(--color-border, #CBD5E1))',
+                '--btn-secondary-color' => 'var(--color-text-primary, #111827)',
+                '--btn-secondary-border' => 'var(--color-border, #CBD5E1)',
+                '--btn-secondary-border-hover' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 68%, var(--color-text-primary, #111827))',
+                '--btn-secondary-shadow' => '0 1px 2px rgba(15, 23, 42, 0.08)',
+                '--btn-secondary-shadow-hover' => '0 8px 14px color-mix(in srgb, var(--color-primary, #2563EB) 10%, transparent)',
+                '--btn-ghost-bg' => 'transparent',
+                '--btn-ghost-color' => 'var(--color-text-secondary, #4B5563)',
+                '--btn-ghost-border' => 'var(--color-border, #CBD5E1)',
+                '--btn-ghost-bg-hover' => 'var(--color-bg-hover, #F8FAFC)',
+                '--btn-ghost-color-hover' => 'var(--color-text-primary, #111827)',
+                '--btn-ghost-border-hover' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 72%, var(--color-text-primary, #111827))',
+                '--btn-ghost-shadow' => 'none',
+                '--btn-ghost-shadow-hover' => 'none',
+                '--btn-outline-bg' => 'transparent',
+                '--btn-outline-color' => 'var(--color-primary, #2563EB)',
+                '--btn-outline-border' => 'color-mix(in srgb, var(--color-primary, #2563EB) 38%, var(--color-border, #CBD5E1))',
+                '--btn-outline-bg-hover' => 'var(--color-primary, #2563EB)',
+                '--btn-outline-color-hover' => '#FFFFFF',
+                '--btn-outline-border-hover' => 'var(--color-primary-dark, var(--color-primary, #2563EB))',
+                '--btn-outline-shadow' => 'none',
+                '--btn-outline-shadow-hover' => '0 10px 18px color-mix(in srgb, var(--color-primary, #2563EB) 18%, transparent)',
+                '--fc-btn-primary-shadow' => '0 4px 10px color-mix(in srgb, var(--color-primary, #2563EB) 20%, transparent)',
+                '--fc-btn-primary-hover-shadow' => '0 10px 18px color-mix(in srgb, var(--color-primary, #2563EB) 26%, transparent)',
+                '--fc-btn-secondary-bg' => 'var(--color-bg-secondary, var(--color-surface, #F8FAFC))',
+                '--fc-btn-secondary-hover-bg' => 'var(--color-bg-hover, #EEF2F7)',
+                '--fc-btn-secondary-active-bg' => 'color-mix(in srgb, var(--color-bg-hover, #EEF2F7) 76%, var(--color-border, #CBD5E1))',
+                '--fc-btn-secondary-color' => 'var(--color-text-primary, #111827)',
+                '--fc-btn-secondary-border' => 'var(--color-border, #CBD5E1)',
+                '--fc-btn-secondary-hover-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 68%, var(--color-text-primary, #111827))',
+                '--fc-btn-secondary-active-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 68%, var(--color-text-primary, #111827))',
+                '--fc-btn-secondary-shadow' => '0 1px 2px rgba(15, 23, 42, 0.08)',
+                '--fc-btn-secondary-hover-shadow' => '0 8px 14px color-mix(in srgb, var(--color-primary, #2563EB) 10%, transparent)',
+                '--fc-btn-ghost-bg' => 'transparent',
+                '--fc-btn-ghost-color' => 'var(--color-text-secondary, #4B5563)',
+                '--fc-btn-ghost-border' => 'var(--color-border, #CBD5E1)',
+                '--fc-btn-ghost-hover-bg' => 'var(--color-bg-hover, #F8FAFC)',
+                '--fc-btn-ghost-hover-color' => 'var(--color-text-primary, #111827)',
+                '--fc-btn-ghost-hover-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 72%, var(--color-text-primary, #111827))',
+                '--fc-btn-ghost-shadow' => 'none',
+                '--fc-btn-ghost-hover-shadow' => 'none',
+                '--fc-btn-outline-bg' => 'transparent',
+                '--fc-btn-outline-color' => 'var(--color-primary, #2563EB)',
+                '--fc-btn-outline-border' => 'color-mix(in srgb, var(--color-primary, #2563EB) 38%, var(--color-border, #CBD5E1))',
+                '--fc-btn-outline-hover-bg' => 'var(--color-primary, #2563EB)',
+                '--fc-btn-outline-hover-color' => '#FFFFFF',
+                '--fc-btn-outline-hover-border' => 'var(--color-primary-dark, var(--color-primary, #2563EB))',
+                '--fc-btn-outline-shadow' => 'none',
+                '--fc-btn-outline-hover-shadow' => '0 10px 18px color-mix(in srgb, var(--color-primary, #2563EB) 18%, transparent)',
+            ],
+            'soft' => [
+                '--btn-primary-shadow' => '0 6px 14px color-mix(in srgb, var(--color-primary, #2563EB) 18%, transparent)',
+                '--btn-primary-shadow-hover' => '0 12px 20px color-mix(in srgb, var(--color-primary, #2563EB) 24%, transparent)',
+                '--btn-secondary-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 86%, var(--color-primary, #2563EB) 14%)',
+                '--btn-secondary-bg-hover' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 74%, var(--color-primary, #2563EB) 26%)',
+                '--btn-secondary-bg-active' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 66%, var(--color-primary, #2563EB) 34%)',
+                '--btn-secondary-color' => 'var(--color-text-primary, #111827)',
+                '--btn-secondary-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 78%, var(--color-primary, #2563EB) 22%)',
+                '--btn-secondary-border-hover' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 62%, var(--color-primary, #2563EB) 38%)',
+                '--btn-secondary-shadow' => '0 6px 14px color-mix(in srgb, var(--color-primary, #2563EB) 10%, transparent)',
+                '--btn-secondary-shadow-hover' => '0 10px 18px color-mix(in srgb, var(--color-primary, #2563EB) 16%, transparent)',
+                '--btn-ghost-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 94%, var(--color-primary, #2563EB) 6%)',
+                '--btn-ghost-color' => 'var(--color-text-secondary, #4B5563)',
+                '--btn-ghost-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 82%, var(--color-primary, #2563EB) 18%)',
+                '--btn-ghost-bg-hover' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 82%, var(--color-primary, #2563EB) 18%)',
+                '--btn-ghost-color-hover' => 'var(--color-text-primary, #111827)',
+                '--btn-ghost-border-hover' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 66%, var(--color-primary, #2563EB) 34%)',
+                '--btn-ghost-shadow' => 'none',
+                '--btn-ghost-shadow-hover' => 'none',
+                '--btn-outline-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 92%, var(--color-primary, #2563EB) 8%)',
+                '--btn-outline-color' => 'var(--color-primary, #2563EB)',
+                '--btn-outline-border' => 'color-mix(in srgb, var(--color-primary, #2563EB) 44%, var(--color-border, #CBD5E1))',
+                '--btn-outline-bg-hover' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 76%, var(--color-primary, #2563EB) 24%)',
+                '--btn-outline-color-hover' => 'var(--color-primary-dark, var(--color-primary, #2563EB))',
+                '--btn-outline-border-hover' => 'var(--color-primary, #2563EB)',
+                '--btn-outline-shadow' => 'none',
+                '--btn-outline-shadow-hover' => '0 10px 18px color-mix(in srgb, var(--color-primary, #2563EB) 16%, transparent)',
+                '--fc-btn-primary-shadow' => '0 6px 14px color-mix(in srgb, var(--color-primary, #2563EB) 18%, transparent)',
+                '--fc-btn-primary-hover-shadow' => '0 12px 20px color-mix(in srgb, var(--color-primary, #2563EB) 24%, transparent)',
+                '--fc-btn-secondary-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 86%, var(--color-primary, #2563EB) 14%)',
+                '--fc-btn-secondary-hover-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 74%, var(--color-primary, #2563EB) 26%)',
+                '--fc-btn-secondary-active-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 66%, var(--color-primary, #2563EB) 34%)',
+                '--fc-btn-secondary-color' => 'var(--color-text-primary, #111827)',
+                '--fc-btn-secondary-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 78%, var(--color-primary, #2563EB) 22%)',
+                '--fc-btn-secondary-hover-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 62%, var(--color-primary, #2563EB) 38%)',
+                '--fc-btn-secondary-active-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 62%, var(--color-primary, #2563EB) 38%)',
+                '--fc-btn-secondary-shadow' => '0 6px 14px color-mix(in srgb, var(--color-primary, #2563EB) 10%, transparent)',
+                '--fc-btn-secondary-hover-shadow' => '0 10px 18px color-mix(in srgb, var(--color-primary, #2563EB) 16%, transparent)',
+                '--fc-btn-ghost-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 94%, var(--color-primary, #2563EB) 6%)',
+                '--fc-btn-ghost-color' => 'var(--color-text-secondary, #4B5563)',
+                '--fc-btn-ghost-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 82%, var(--color-primary, #2563EB) 18%)',
+                '--fc-btn-ghost-hover-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 82%, var(--color-primary, #2563EB) 18%)',
+                '--fc-btn-ghost-hover-color' => 'var(--color-text-primary, #111827)',
+                '--fc-btn-ghost-hover-border' => 'color-mix(in srgb, var(--color-border, #CBD5E1) 66%, var(--color-primary, #2563EB) 34%)',
+                '--fc-btn-ghost-shadow' => 'none',
+                '--fc-btn-ghost-hover-shadow' => 'none',
+                '--fc-btn-outline-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 92%, var(--color-primary, #2563EB) 8%)',
+                '--fc-btn-outline-color' => 'var(--color-primary, #2563EB)',
+                '--fc-btn-outline-border' => 'color-mix(in srgb, var(--color-primary, #2563EB) 44%, var(--color-border, #CBD5E1))',
+                '--fc-btn-outline-hover-bg' => 'color-mix(in srgb, var(--color-bg-secondary, #F8FAFC) 76%, var(--color-primary, #2563EB) 24%)',
+                '--fc-btn-outline-hover-color' => 'var(--color-primary-dark, var(--color-primary, #2563EB))',
+                '--fc-btn-outline-hover-border' => 'var(--color-primary, #2563EB)',
+                '--fc-btn-outline-shadow' => 'none',
+                '--fc-btn-outline-hover-shadow' => '0 10px 18px color-mix(in srgb, var(--color-primary, #2563EB) 16%, transparent)',
+            ],
+            'elevated' => [
+                '--btn-primary-shadow' => '0 14px 28px color-mix(in srgb, var(--color-primary, #2563EB) 28%, transparent)',
+                '--btn-primary-shadow-hover' => '0 18px 34px color-mix(in srgb, var(--color-primary, #2563EB) 34%, transparent)',
+                '--btn-secondary-shadow' => '0 12px 24px color-mix(in srgb, var(--color-secondary, var(--color-primary, #2563EB)) 22%, transparent)',
+                '--btn-secondary-shadow-hover' => '0 16px 30px color-mix(in srgb, var(--color-secondary, var(--color-primary, #2563EB)) 28%, transparent)',
+                '--btn-ghost-shadow' => '0 8px 18px color-mix(in srgb, var(--color-secondary, var(--color-primary, #2563EB)) 12%, transparent)',
+                '--btn-ghost-shadow-hover' => '0 12px 24px color-mix(in srgb, var(--color-secondary, var(--color-primary, #2563EB)) 18%, transparent)',
+                '--btn-outline-shadow' => '0 10px 22px color-mix(in srgb, var(--color-primary, #2563EB) 14%, transparent)',
+                '--btn-outline-shadow-hover' => '0 14px 26px color-mix(in srgb, var(--color-primary, #2563EB) 20%, transparent)',
+                '--fc-btn-primary-shadow' => '0 14px 28px color-mix(in srgb, var(--color-primary, #2563EB) 28%, transparent)',
+                '--fc-btn-primary-hover-shadow' => '0 18px 34px color-mix(in srgb, var(--color-primary, #2563EB) 34%, transparent)',
+                '--fc-btn-secondary-shadow' => '0 12px 24px color-mix(in srgb, var(--color-secondary, var(--color-primary, #2563EB)) 22%, transparent)',
+                '--fc-btn-secondary-hover-shadow' => '0 16px 30px color-mix(in srgb, var(--color-secondary, var(--color-primary, #2563EB)) 28%, transparent)',
+                '--fc-btn-ghost-shadow' => '0 8px 18px color-mix(in srgb, var(--color-secondary, var(--color-primary, #2563EB)) 12%, transparent)',
+                '--fc-btn-ghost-hover-shadow' => '0 12px 24px color-mix(in srgb, var(--color-secondary, var(--color-primary, #2563EB)) 18%, transparent)',
+                '--fc-btn-outline-shadow' => '0 10px 22px color-mix(in srgb, var(--color-primary, #2563EB) 14%, transparent)',
+                '--fc-btn-outline-hover-shadow' => '0 14px 26px color-mix(in srgb, var(--color-primary, #2563EB) 20%, transparent)',
+            ],
+            default => [],
+        };
+    }
+
+    private function badgeStyleDeclarations(string $style): string
+    {
+        return match ($style) {
+            'soft' => '  background: color-mix(in srgb, var(--color-primary, #2563EB) 12%, transparent);' . "\n"
+                . '  color: var(--color-text-primary, #111827);' . "\n"
+                . '  border: 1px solid color-mix(in srgb, var(--color-primary, #2563EB) 18%, transparent);' . "\n",
+            'solid' => '  background: var(--color-primary, #2563EB);' . "\n"
+                . '  color: #FFFFFF;' . "\n"
+                . '  border: 1px solid var(--color-primary-dark, var(--color-primary, #2563EB));' . "\n",
+            'outline' => '  background: transparent;' . "\n"
+                . '  color: var(--color-primary, #2563EB);' . "\n"
+                . '  border: 1px solid color-mix(in srgb, var(--color-primary, #2563EB) 36%, var(--color-border, #CBD5E1));' . "\n",
+            default => '',
+        };
+    }
+
+    private function typographyScaleVars(string $scale): array
+    {
+        return match ($scale) {
+            'compact' => [
+                '--theme-body-font-size' => '0.975rem',
+                '--theme-body-line-height' => '1.58',
+                '--theme-heading-line-height' => '1.12',
+                '--theme-heading-letter-spacing' => '-0.02em',
+            ],
+            'balanced' => [
+                '--theme-body-font-size' => '1rem',
+                '--theme-body-line-height' => '1.65',
+                '--theme-heading-line-height' => '1.15',
+                '--theme-heading-letter-spacing' => '-0.025em',
+            ],
+            'comfortable' => [
+                '--theme-body-font-size' => '1.0625rem',
+                '--theme-body-line-height' => '1.72',
+                '--theme-heading-line-height' => '1.18',
+                '--theme-heading-letter-spacing' => '-0.03em',
+            ],
+            default => [],
+        };
     }
 
     private function resolveThemeConfigPath(string $type, string $name): string
@@ -433,12 +645,16 @@ final class ThemeCustomizationService
             '--btn-ghost-border-hover' => $lightMode ? $ghostAccent : $ghostAccentSoft,
             '--btn-ghost-shadow' => $lightMode ? 'none' : 'inset 0 1px 0 rgba(255, 255, 255, 0.08)',
             '--btn-ghost-shadow-hover' => '0 14px 26px -12px ' . $this->rgba($ghostAccent, 0.38),
-            '--btn-outline-bg' => 'transparent',
-            '--btn-outline-color' => $lightMode ? $ghostAccent : $ghostAccentSoft,
-            '--btn-outline-border' => $this->rgba($ghostAccent, $lightMode ? 0.34 : 0.46),
-            '--btn-outline-bg-hover' => $lightMode ? $ghostAccent : $this->mix($ghostAccent, '#0F172A', 0.18),
+            '--btn-outline-bg' => $lightMode ? 'transparent' : $this->rgba($palette['primary'], 0.04),
+            '--btn-outline-color' => $lightMode ? $palette['primary'] : $palette['primary_light'],
+            '--btn-outline-border' => $lightMode
+                ? $this->mix($palette['primary'], $palette['border'], 0.34)
+                : $this->rgba($palette['primary'], 0.54),
+            '--btn-outline-bg-hover' => $lightMode ? $palette['primary'] : $this->mix($palette['primary'], '#0F172A', 0.12),
             '--btn-outline-color-hover' => '#FFFFFF',
-            '--btn-outline-border-hover' => $lightMode ? $ghostAccent : $ghostAccentSoft,
+            '--btn-outline-border-hover' => $lightMode ? $palette['primary_dark'] : $palette['primary_light'],
+            '--btn-outline-shadow' => $lightMode ? 'none' : '0 10px 22px ' . $this->rgba($palette['primary'], 0.14),
+            '--btn-outline-shadow-hover' => '0 14px 26px ' . $this->rgba($palette['primary'], $lightMode ? 0.18 : 0.24),
             '--fc-btn-primary-bg' => $palette['primary'],
             '--fc-btn-primary-border' => $palette['primary_dark'],
             '--fc-btn-primary-color' => '#FFFFFF',
@@ -469,6 +685,16 @@ final class ThemeCustomizationService
             '--fc-btn-ghost-hover-border' => $lightMode ? $ghostAccent : $ghostAccentSoft,
             '--fc-btn-ghost-hover-color' => '#FFFFFF',
             '--fc-btn-ghost-hover-shadow' => '0 12px 22px ' . $this->rgba($ghostAccent, 0.32),
+            '--fc-btn-outline-bg' => $lightMode ? 'transparent' : $this->rgba($palette['primary'], 0.04),
+            '--fc-btn-outline-border' => $lightMode
+                ? $this->mix($palette['primary'], $palette['border'], 0.34)
+                : $this->rgba($palette['primary'], 0.54),
+            '--fc-btn-outline-color' => $lightMode ? $palette['primary'] : $palette['primary_light'],
+            '--fc-btn-outline-shadow' => $lightMode ? 'none' : '0 10px 22px ' . $this->rgba($palette['primary'], 0.14),
+            '--fc-btn-outline-hover-bg' => $lightMode ? $palette['primary'] : $this->mix($palette['primary'], '#0F172A', 0.12),
+            '--fc-btn-outline-hover-border' => $lightMode ? $palette['primary_dark'] : $palette['primary_light'],
+            '--fc-btn-outline-hover-color' => '#FFFFFF',
+            '--fc-btn-outline-hover-shadow' => '0 14px 26px ' . $this->rgba($palette['primary'], $lightMode ? 0.18 : 0.24),
             '--fc-card-bg' => $palette['surface'],
             '--fc-card-border' => $this->rgba($palette['border'], 0.88),
             '--fc-card-shadow' => '0 12px 24px ' . $this->rgba($palette['primary'], $lightMode ? 0.08 : 0.12),

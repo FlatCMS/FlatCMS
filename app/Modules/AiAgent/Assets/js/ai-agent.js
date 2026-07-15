@@ -185,6 +185,12 @@
     var navigationSessionLimit = 8;
     var pageVisitToken = String(Date.now()) + ':' + Math.random().toString(36).slice(2);
     var currentUser = parseJsonAttribute(root, 'data-user');
+    var floating = root.querySelector('[data-ai-agent-floating]');
+    var floatingButton = root.querySelector('[data-ai-agent-floating-button]');
+    var floatingCard = root.querySelector('[data-ai-agent-floating-card]');
+    var floatingContext = root.querySelector('[data-ai-agent-floating-context]');
+    var floatingActions = root.querySelector('[data-ai-agent-floating-actions]');
+    var floatingCloseButton = root.querySelector('[data-ai-agent-floating-close]');
     var drawer = root.querySelector('[data-ai-agent-drawer]');
     var backdrop = root.querySelector('.ai-agent-backdrop');
     var thread = root.querySelector('[data-ai-agent-thread]');
@@ -198,13 +204,15 @@
     var contextLabel = root.querySelector('[data-ai-agent-context-label]');
     var closeButtons = root.querySelectorAll('[data-ai-agent-close]');
 
-    if (!drawer || !backdrop || !thread || !suggestions || !workspaceBody || !workspaceMeta || !restoreButton || !applyButton || !sendButton || !input || endpoint === '') {
+    if (!floating || !floatingButton || !floatingCard || !floatingContext || !floatingActions || !floatingCloseButton || !drawer || !backdrop || !thread || !suggestions || !workspaceBody || !workspaceMeta || !restoreButton || !applyButton || !sendButton || !input || endpoint === '') {
       return;
     }
 
     var state = {
       open: false,
+      miniOpen: false,
       context: null,
+      currentTarget: null,
       snapshot: null,
       navigation: null,
       liveDirty: false,
@@ -212,8 +220,16 @@
       currentProposalType: '',
       currentProposal: null,
       selectedSuggestionAction: '',
-      selectedSuggestionLabel: ''
+      selectedSuggestionLabel: '',
+      floatingContextKey: '',
+      floatingMessage: '',
+      floatingDragged: false
     };
+    var floatingPlacementFrame = 0;
+    var floatingHideTimer = 0;
+    var floatingShowTimer = 0;
+    var floatingHoverDelayMs = 900;
+    var floatingFocusDelayMs = 520;
 
     function getPageFieldId(locale, key) {
       return locale ? 'page_' + locale + '_' + key : key;
@@ -520,8 +536,8 @@
       updateActionButtons(false);
     }
 
-    function resolveActionLabel(action) {
-      var subjectLabel = getAssistantSubjectLabel();
+    function resolveActionLabel(action, context) {
+      var subjectLabel = getAssistantSubjectLabel(context);
       var keyMap = {
         field_fill: i18n.actionFieldFill,
         field_improve: i18n.actionFieldImprove,
@@ -765,24 +781,25 @@
       writeNavigationHistory(history);
     }
 
-    function getAssistantSubjectLabel() {
-      if (!state.context) {
+    function getAssistantSubjectLabel(context) {
+      var activeContext = context || state.context;
+      if (!activeContext) {
         return '';
       }
 
-      if (state.context.scope === 'field' && state.context.field === 'excerpt') {
-        return lowerFirst(String(i18n.fieldSubjectExcerpt || state.context.label || '').trim());
+      if (activeContext.scope === 'field' && activeContext.field === 'excerpt') {
+        return lowerFirst(String(i18n.fieldSubjectExcerpt || activeContext.label || '').trim());
       }
 
-      if (state.context.scope === 'field' && state.context.label !== '') {
-        return lowerFirst(state.context.label);
+      if (activeContext.scope === 'field' && activeContext.label !== '') {
+        return lowerFirst(activeContext.label);
       }
 
-      if (state.context.block_label !== '') {
-        return lowerFirst(state.context.block_label);
+      if (activeContext.block_label !== '') {
+        return lowerFirst(activeContext.block_label);
       }
 
-      return lowerFirst(String(state.context.block || '').trim());
+      return lowerFirst(String(activeContext.block || '').trim());
     }
 
     function hasSeenGreetingInSession() {
@@ -928,39 +945,40 @@
       return template(variants[index], replacements || {}).trim();
     }
 
-    function getAssistantProposalMessage() {
-      if (!state.context) {
+    function getAssistantProposalMessage(context) {
+      var activeContext = context || state.context;
+      if (!activeContext) {
         return String(i18n.greetingProposalGeneric || '').trim();
       }
 
-      var subjectLabel = getAssistantSubjectLabel();
+      var subjectLabel = getAssistantSubjectLabel(activeContext);
 
-      if (state.context.scope === 'field') {
-        if (state.context.field === 'title') {
+      if (activeContext.scope === 'field') {
+        if (activeContext.field === 'title') {
           return String(i18n.greetingProposalFieldTitle || '').trim();
         }
 
-        if (state.context.field === 'excerpt') {
+        if (activeContext.field === 'excerpt') {
           return String(i18n.greetingProposalFieldExcerpt || '').trim();
         }
 
-        if (state.context.field === 'content') {
+        if (activeContext.field === 'content') {
           return String(i18n.greetingProposalFieldContent || '').trim();
         }
 
-        if (state.context.field === 'slug') {
+        if (activeContext.field === 'slug') {
           return String(i18n.greetingProposalFieldSlug || '').trim();
         }
 
-        if (state.context.field === 'meta_title') {
+        if (activeContext.field === 'meta_title') {
           return String(i18n.greetingProposalFieldMetaTitle || '').trim();
         }
 
-        if (state.context.field === 'meta_description') {
+        if (activeContext.field === 'meta_description') {
           return String(i18n.greetingProposalFieldMetaDescription || '').trim();
         }
 
-        if (state.context.field === 'featured_image') {
+        if (activeContext.field === 'featured_image') {
           return String(i18n.greetingProposalFieldFeaturedImage || '').trim();
         }
 
@@ -969,11 +987,11 @@
         }).trim();
       }
 
-      if (state.context.block === 'seo') {
+      if (activeContext.block === 'seo') {
         return String(i18n.greetingProposalBlockSeo || '').trim();
       }
 
-      if (state.context.block === 'content') {
+      if (activeContext.block === 'content') {
         return String(i18n.greetingProposalBlockContent || '').trim();
       }
 
@@ -982,16 +1000,17 @@
       }).trim();
     }
 
-    function getAssistantQuestionMessage(navigation, greetingTurn, entityAlreadyIntroduced) {
-      if (!state.context) {
+    function getAssistantQuestionMessage(context, navigation, greetingTurn, entityAlreadyIntroduced) {
+      var activeContext = context || state.context;
+      if (!activeContext) {
         return renderGreetingVariant('greetingQuestionGeneric', {}, greetingTurn);
       }
 
-      var subjectLabel = getAssistantSubjectLabel();
-      var hasField = state.context.scope === 'field' && subjectLabel !== '';
+      var subjectLabel = getAssistantSubjectLabel(activeContext);
+      var hasField = activeContext.scope === 'field' && subjectLabel !== '';
       var hasLabel = subjectLabel !== '';
       var isReturn = !!(navigation && navigation.seen_before) || !!entityAlreadyIntroduced;
-      var isCreate = isCreationContext();
+      var isCreate = isCreationContextValue(activeContext);
       var currentEntity = String((navigation && navigation.current && navigation.current.descriptor) || '').trim();
       var seed = greetingTurn + subjectLabel.length + currentEntity.length;
 
@@ -1034,17 +1053,19 @@
       return renderGreetingVariant('greetingQuestionGeneric', {}, seed);
     }
 
-    function getAssistantGreetingMessage() {
-      if (!state.context) {
+    function getAssistantGreetingMessage(context, navigation, options) {
+      var activeContext = context || state.context;
+      var config = options || {};
+      if (!activeContext) {
         return '';
       }
 
       var greetingName = String(currentUser.greeting_name || currentUser.display_name || '').trim();
       var isFirstGreeting = !hasSeenGreetingInSession();
-      var greetingTurn = consumeGreetingTurn();
-      var navigation = state.navigation || captureNavigationState(state.context);
-      var entityAlreadyIntroduced = hasGreetedEntityInCurrentVisit(navigation.current);
-      var currentEntity = String((navigation.current && navigation.current.descriptor) || getAssistantEntityDescriptor()).trim();
+      var greetingTurn = typeof config.greetingTurn === 'number' ? config.greetingTurn : consumeGreetingTurn();
+      var activeNavigation = navigation || state.navigation || captureNavigationState(activeContext);
+      var entityAlreadyIntroduced = hasGreetedEntityInCurrentVisit(activeNavigation.current);
+      var currentEntity = String((activeNavigation.current && activeNavigation.current.descriptor) || getEntityDescriptorFromContext(activeContext)).trim();
       var parts = [];
 
       if (isFirstGreeting) {
@@ -1056,11 +1077,11 @@
         }
       }
 
-      if (!entityAlreadyIntroduced && navigation.seen_before && currentEntity !== '') {
+      if (!entityAlreadyIntroduced && activeNavigation.seen_before && currentEntity !== '') {
         parts.push(template(i18n.greetingStateReturn || '', {
           entity: currentEntity
         }).trim());
-      } else if (!entityAlreadyIntroduced && isCreationContext() && currentEntity !== '') {
+      } else if (!entityAlreadyIntroduced && isCreationContextValue(activeContext) && currentEntity !== '') {
         parts.push(template(i18n.greetingStateNew || '', {
           entity: currentEntity
         }).trim());
@@ -1070,7 +1091,7 @@
         }).trim());
       }
 
-      var proposalMessage = getAssistantProposalMessage();
+      var proposalMessage = getAssistantProposalMessage(activeContext);
       if (proposalMessage !== '') {
         parts.push(proposalMessage);
       }
@@ -1079,11 +1100,13 @@
       if (proposalQuestion !== '') {
         parts.push(proposalQuestion);
       } else {
-        parts.push(getAssistantQuestionMessage(navigation, greetingTurn, entityAlreadyIntroduced));
+        parts.push(getAssistantQuestionMessage(activeContext, activeNavigation, greetingTurn, entityAlreadyIntroduced));
       }
 
-      markGreetingSeenInSession();
-      markEntityGreetedInCurrentVisit(navigation.current);
+      if (config.commit !== false) {
+        markGreetingSeenInSession();
+        markEntityGreetedInCurrentVisit(activeNavigation.current);
+      }
 
       return parts.filter(function(part) {
         return String(part || '').trim() !== '';
@@ -1253,6 +1276,269 @@
       }
 
       contextLabel.textContent = state.context.block_label;
+    }
+
+    function resolveCurrentTarget() {
+      var active = document.activeElement;
+      if (active instanceof Element) {
+        var activeTarget = active.closest('[data-ai-agent-target]');
+        if (activeTarget instanceof HTMLElement) {
+          return activeTarget;
+        }
+      }
+
+      if (state.currentTarget instanceof HTMLElement && document.body.contains(state.currentTarget)) {
+        return state.currentTarget;
+      }
+
+      var fallback = document.querySelector('[data-ai-agent-target]');
+      return fallback instanceof HTMLElement ? fallback : null;
+    }
+
+    function setCurrentTarget(target) {
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      state.currentTarget = target;
+      if (state.miniOpen && !state.floatingDragged) {
+        positionFloatingForTarget(target);
+      }
+
+      if (state.miniOpen) {
+        renderFloatingCard();
+      }
+    }
+
+    function getContextStateKey(context) {
+      if (!context) {
+        return '';
+      }
+
+      return [
+        String(context.module || '').trim(),
+        String(context.entity_id || '').trim(),
+        String(context.locale || '').trim(),
+        String(context.block || '').trim(),
+        String(context.field || '').trim()
+      ].join(':');
+    }
+
+    function clearFloatingHideTimer() {
+      if (floatingHideTimer) {
+        window.clearTimeout(floatingHideTimer);
+        floatingHideTimer = 0;
+      }
+    }
+
+    function clearFloatingShowTimer() {
+      if (floatingShowTimer) {
+        window.clearTimeout(floatingShowTimer);
+        floatingShowTimer = 0;
+      }
+    }
+
+    function scheduleFloatingShow(target, delay) {
+      clearFloatingShowTimer();
+      clearFloatingHideTimer();
+
+      if (!(target instanceof HTMLElement) || state.open) {
+        return;
+      }
+
+      floatingShowTimer = window.setTimeout(function() {
+        floatingShowTimer = 0;
+        showFloatingForTarget(target);
+      }, Math.max(0, Number(delay) || 0));
+    }
+
+    function scheduleFloatingHide() {
+      clearFloatingShowTimer();
+      clearFloatingHideTimer();
+
+      if (state.open || floatingDragState) {
+        return;
+      }
+
+      floatingHideTimer = window.setTimeout(function() {
+        hideFloating();
+      }, 180);
+    }
+
+    function renderFloatingCard() {
+      var target = resolveCurrentTarget();
+      var context = target ? getContextFromTarget(target) : null;
+      var contextKey = getContextStateKey(context);
+      var actions = context ? getDefaultActions(context).slice(0, 3) : [];
+
+      if (contextKey === '') {
+        floatingContext.textContent = String(i18n.floatingContextEmpty || i18n.contextWaiting || '').trim();
+        floatingActions.innerHTML = '';
+        return;
+      }
+
+      if (contextKey !== state.floatingContextKey) {
+        var navigation = captureNavigationState(context);
+        rememberContextNavigation(context);
+        state.floatingContextKey = contextKey;
+        state.floatingMessage = getAssistantGreetingMessage(context, navigation, { commit: true });
+      }
+
+      floatingContext.textContent = String(state.floatingMessage || i18n.floatingContextEmpty || i18n.contextWaiting || '').trim();
+      floatingActions.innerHTML = '';
+
+      actions.forEach(function(action) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'ai-agent-floating-action';
+        button.setAttribute('data-ai-agent-floating-action', String(action || '').trim());
+
+        var label = document.createElement('span');
+        label.className = 'ai-agent-floating-action-label';
+        label.textContent = resolveActionLabel(action, context);
+        button.appendChild(label);
+
+        button.addEventListener('click', function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          openDrawerForTarget(target, {
+            appendGreeting: false,
+            introMessage: state.floatingMessage,
+            prefillAction: action
+          });
+        });
+
+        floatingActions.appendChild(button);
+      });
+    }
+
+    function setMiniOpen(isOpen) {
+      state.miniOpen = !!isOpen;
+      if (state.miniOpen) {
+        floating.hidden = false;
+        renderFloatingCard();
+        floatingCard.hidden = false;
+        scheduleFloatingPlacement();
+        return;
+      }
+
+      floatingCard.hidden = true;
+      floating.classList.remove('is-open-right');
+      floating.classList.remove('is-above');
+    }
+
+    function clampFloatingPosition(x, y) {
+      var margin = 16;
+      var width = floatingButton.offsetWidth || 96;
+      var height = floatingButton.offsetHeight || 56;
+
+      return {
+        x: Math.min(Math.max(margin, x), Math.max(margin, window.innerWidth - width - margin)),
+        y: Math.min(Math.max(margin, y), Math.max(margin, window.innerHeight - height - margin))
+      };
+    }
+
+    function applyFloatingPosition(x, y) {
+      var clamped = clampFloatingPosition(x, y);
+      floating.style.left = clamped.x + 'px';
+      floating.style.top = clamped.y + 'px';
+
+      if (state.miniOpen) {
+        scheduleFloatingPlacement();
+      }
+    }
+
+    function updateFloatingPlacement() {
+      floatingPlacementFrame = 0;
+
+      if (floating.hidden || !state.miniOpen || floatingCard.hidden) {
+        return;
+      }
+
+      var gap = 12;
+      var margin = 16;
+      var buttonRect = floatingButton.getBoundingClientRect();
+      var cardWidth = floatingCard.offsetWidth || Math.min(320, Math.max(0, window.innerWidth - (margin * 2)));
+      var cardHeight = floatingCard.offsetHeight || 0;
+      var spaceRight = window.innerWidth - buttonRect.left - margin;
+      var spaceLeft = buttonRect.right - margin;
+      var spaceAbove = buttonRect.top - margin;
+      var spaceBelow = window.innerHeight - buttonRect.bottom - margin;
+      var shouldOpenRight = spaceRight >= cardWidth || spaceRight >= spaceLeft;
+      var shouldOpenAbove = spaceBelow < (cardHeight + gap) && spaceAbove > spaceBelow;
+
+      floating.classList.toggle('is-open-right', shouldOpenRight);
+      floating.classList.toggle('is-above', shouldOpenAbove);
+    }
+
+    function scheduleFloatingPlacement() {
+      if (floatingPlacementFrame) {
+        window.cancelAnimationFrame(floatingPlacementFrame);
+      }
+
+      floatingPlacementFrame = window.requestAnimationFrame(updateFloatingPlacement);
+    }
+
+    function positionFloatingForTarget(target) {
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      var rect = target.getBoundingClientRect();
+      var width = floatingButton.offsetWidth || 96;
+      var height = floatingButton.offsetHeight || 96;
+      var gap = 12;
+      var left = rect.right - Math.round(width * 0.35);
+      var top = rect.top - height - gap;
+
+      if (top < 16) {
+        top = rect.bottom + gap;
+      }
+
+      applyFloatingPosition(left, top);
+    }
+
+    function showFloatingForTarget(target) {
+      if (!(target instanceof HTMLElement) || state.open) {
+        return;
+      }
+
+      clearFloatingHideTimer();
+      state.floatingDragged = false;
+      setCurrentTarget(target);
+      floating.hidden = false;
+      positionFloatingForTarget(target);
+      setMiniOpen(true);
+    }
+
+    function hideFloating() {
+      clearFloatingShowTimer();
+      clearFloatingHideTimer();
+      state.miniOpen = false;
+      state.floatingDragged = false;
+      state.floatingContextKey = '';
+      state.floatingMessage = '';
+      floating.hidden = true;
+      floatingCard.hidden = true;
+      floating.classList.remove('is-open-right');
+      floating.classList.remove('is-above');
+      floating.classList.remove('is-dragging');
+    }
+
+    function refreshFloatingAvailability() {
+      var initialTarget = document.querySelector('[data-ai-agent-target]');
+      var hasTargets = initialTarget instanceof HTMLElement;
+
+      if (hasTargets) {
+        state.currentTarget = initialTarget;
+        floating.hidden = true;
+        floatingCard.hidden = true;
+        return;
+      }
+
+      state.currentTarget = null;
+      hideFloating();
+      closeDrawer();
     }
 
     function getFieldLabel(context, key) {
@@ -1508,6 +1794,61 @@
       return wrapper;
     }
 
+    function buildInlineInfoBlock(proposal) {
+      var titleText = String(proposal && proposal.title || '').trim();
+      var messageText = String(proposal && proposal.message || '').trim();
+      var actionLabel = String(proposal && proposal.action_label || '').trim();
+      var actionUrl = String(proposal && proposal.action_url || '').trim();
+
+      if (titleText === '' && messageText === '' && actionLabel === '' && actionUrl === '') {
+        return null;
+      }
+
+      var wrapper = document.createElement('div');
+      wrapper.className = 'ai-agent-inline-panel';
+
+      if (titleText !== '') {
+        var card = document.createElement('div');
+        card.className = 'ai-agent-preview-card is-draft';
+
+        var title = document.createElement('span');
+        title.className = 'ai-agent-preview-label';
+        title.textContent = titleText;
+        card.appendChild(title);
+
+        if (messageText !== '') {
+          var value = document.createElement('p');
+          value.className = 'ai-agent-preview-value';
+          value.textContent = messageText;
+          card.appendChild(value);
+        }
+
+        wrapper.appendChild(card);
+      } else if (messageText !== '') {
+        var note = document.createElement('p');
+        note.className = 'ai-agent-preview-note';
+        note.textContent = messageText;
+        wrapper.appendChild(note);
+      }
+
+      if (actionLabel !== '' && actionUrl !== '') {
+        var actions = document.createElement('div');
+        actions.className = 'ai-agent-inline-actions';
+
+        var link = document.createElement('a');
+        link.className = 'btn btn-secondary ai-agent-inline-action';
+        link.href = actionUrl;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = actionLabel;
+        actions.appendChild(link);
+
+        wrapper.appendChild(actions);
+      }
+
+      return wrapper;
+    }
+
     function buildInlineSummary(summaryText, canApplyToExcerpt) {
       var text = String(summaryText || '').trim();
       var wrapper = document.createElement('div');
@@ -1725,15 +2066,30 @@
         return;
       }
 
+      if (proposalType === 'info_block') {
+        setBubbleContent(
+          bubble,
+          String(proposal && proposal.reply || '').trim() || getAssistantReply(intent),
+          buildInlineInfoBlock(proposal || {})
+        );
+        renderCurrentWorkspace();
+        return;
+      }
+
       if (proposalType === 'content_block' || proposalType === 'seo_block') {
         var values = proposal && proposal.values ? proposal.values : {};
         var keys = getPreviewKeys(state.context, proposalType).filter(function(key) {
           return Object.prototype.hasOwnProperty.call(values, key);
         });
+        var noteText = String(proposal && proposal.note || '').trim();
 
         applyDraftValues(values, keys);
-        renderDraftWorkspace(keys, values, String(i18n.workspaceMetaDraft || ''), '');
-        setBubbleContent(bubble, getAssistantReply(intent), buildInlineDraftPreview(state.context, values, keys, ''));
+        renderDraftWorkspace(keys, values, String(i18n.workspaceMetaDraft || ''), noteText);
+        setBubbleContent(
+          bubble,
+          String(proposal && proposal.reply || '').trim() || getAssistantReply(intent),
+          buildInlineDraftPreview(state.context, values, keys, noteText)
+        );
         return;
       }
 
@@ -1878,12 +2234,15 @@
       document.body.classList.toggle('ai-agent-open', !!isOpen);
     }
 
-    function openDrawerForTarget(target) {
-      if (!(target instanceof HTMLElement)) {
+    function openDrawerForTarget(target, options) {
+      var config = options || {};
+      var resolvedTarget = target instanceof HTMLElement ? target : resolveCurrentTarget();
+      if (!(resolvedTarget instanceof HTMLElement)) {
         return;
       }
 
-      state.context = getContextFromTarget(target);
+      state.context = getContextFromTarget(resolvedTarget);
+      state.currentTarget = resolvedTarget;
       state.navigation = captureNavigationState(state.context);
       rememberContextNavigation(state.context);
       state.snapshot = captureSnapshot(state.context);
@@ -1899,10 +2258,24 @@
       renderContextLabel();
       renderCurrentWorkspace();
       setSuggestions(getDefaultActions(state.context));
-      appendMessage('assistant', getAssistantGreetingMessage());
+      if (String(config.introMessage || '').trim() !== '') {
+        appendMessage('assistant', String(config.introMessage || '').trim());
+      } else if (config.appendGreeting !== false) {
+        appendMessage('assistant', getAssistantGreetingMessage());
+      }
 
       updateOpenState(true);
+      hideFloating();
       window.setTimeout(function() {
+        if (config.prefillAction) {
+          selectSuggestion(String(config.prefillAction || '').trim(), { populateInput: true });
+          return;
+        }
+
+        if (config.autoAction) {
+          sendMessage('', String(config.autoAction || '').trim());
+          return;
+        }
         input.focus();
       }, 60);
     }
@@ -1911,36 +2284,147 @@
       updateOpenState(false);
     }
 
-    function createTargetButton(target) {
-      if (!(target instanceof HTMLElement) || target.querySelector('[data-ai-agent-trigger-button]')) {
+    refreshFloatingAvailability();
+    hideFloating();
+
+    var floatingDragState = null;
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ai-agent-target]'), function(target) {
+      if (!(target instanceof HTMLElement)) {
         return;
       }
 
-      var button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'ai-agent-trigger';
-      button.setAttribute('data-ai-agent-trigger-button', '1');
-      button.setAttribute('aria-label', String(i18n.title || 'AI'));
-      button.innerHTML = ''
-        + '<img src="' + escapeHtml(iconDark) + '" alt="" class="ai-agent-trigger-icon is-dark" aria-hidden="true">'
-        + '<img src="' + escapeHtml(iconLight) + '" alt="" class="ai-agent-trigger-icon is-light" aria-hidden="true">';
-      button.addEventListener('click', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        openDrawerForTarget(target);
+      target.addEventListener('mouseenter', function() {
+        scheduleFloatingShow(target, floatingHoverDelayMs);
       });
 
-      target.appendChild(button);
-    }
+      target.addEventListener('focusin', function() {
+        scheduleFloatingShow(target, floatingFocusDelayMs);
+      });
 
-    Array.prototype.forEach.call(document.querySelectorAll('[data-ai-agent-target]'), function(target) {
-      createTargetButton(target);
+      target.addEventListener('mouseleave', function() {
+        scheduleFloatingHide();
+      });
+
+      target.addEventListener('focusout', function(event) {
+        var next = event.relatedTarget;
+        if (next instanceof Node && (target.contains(next) || floating.contains(next))) {
+          return;
+        }
+
+        scheduleFloatingHide();
+      });
     });
 
-    var initialTarget = document.querySelector('[data-ai-agent-target]');
-    if (initialTarget instanceof HTMLElement) {
-      rememberContextNavigation(getContextFromTarget(initialTarget));
+    floating.addEventListener('mouseenter', function() {
+      clearFloatingShowTimer();
+      clearFloatingHideTimer();
+    });
+
+    floating.addEventListener('mouseleave', function() {
+      scheduleFloatingHide();
+    });
+
+    floatingButton.addEventListener('pointerdown', function(event) {
+      if (event.button !== 0) {
+        return;
+      }
+
+      clearFloatingShowTimer();
+      clearFloatingHideTimer();
+
+      floatingDragState = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        baseX: floating.offsetLeft,
+        baseY: floating.offsetTop,
+        moved: false
+      };
+
+      floating.classList.add('is-dragging');
+      if (typeof floatingButton.setPointerCapture === 'function') {
+        floatingButton.setPointerCapture(event.pointerId);
+      }
+    });
+
+    floatingButton.addEventListener('pointermove', function(event) {
+      if (!floatingDragState || event.pointerId !== floatingDragState.pointerId) {
+        return;
+      }
+
+      var deltaX = event.clientX - floatingDragState.startX;
+      var deltaY = event.clientY - floatingDragState.startY;
+      if (!floatingDragState.moved && (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4)) {
+        floatingDragState.moved = true;
+      }
+
+      if (!floatingDragState.moved) {
+        return;
+      }
+
+      event.preventDefault();
+      state.floatingDragged = true;
+      applyFloatingPosition(floatingDragState.baseX + deltaX, floatingDragState.baseY + deltaY);
+    });
+
+    function finishFloatingDrag(event) {
+      if (!floatingDragState || event.pointerId !== floatingDragState.pointerId) {
+        return;
+      }
+
+      if (typeof floatingButton.releasePointerCapture === 'function' && floatingButton.hasPointerCapture && floatingButton.hasPointerCapture(event.pointerId)) {
+        floatingButton.releasePointerCapture(event.pointerId);
+      }
+
+      if (floatingDragState.moved) {
+        floatingButton.setAttribute('data-ai-agent-drag-click', '1');
+      }
+
+      floating.classList.remove('is-dragging');
+      floatingDragState = null;
     }
+
+    floatingButton.addEventListener('pointerup', finishFloatingDrag);
+    floatingButton.addEventListener('pointercancel', finishFloatingDrag);
+
+    floatingButton.addEventListener('click', function(event) {
+      if (floatingButton.getAttribute('data-ai-agent-drag-click') === '1') {
+        floatingButton.removeAttribute('data-ai-agent-drag-click');
+        event.preventDefault();
+        return;
+      }
+
+      event.preventDefault();
+      openDrawerForTarget(resolveCurrentTarget(), {
+        appendGreeting: false,
+        introMessage: state.floatingMessage
+      });
+    });
+
+    floatingCloseButton.addEventListener('click', function(event) {
+      event.preventDefault();
+      hideFloating();
+    });
+
+    window.addEventListener('resize', function() {
+      if (floating.hidden) {
+        return;
+      }
+
+      if (!state.floatingDragged) {
+        var activeTarget = resolveCurrentTarget();
+        if (activeTarget instanceof HTMLElement) {
+          positionFloatingForTarget(activeTarget);
+        }
+      } else {
+        applyFloatingPosition(floating.offsetLeft, floating.offsetTop);
+      }
+
+      if (state.miniOpen) {
+        renderFloatingCard();
+      }
+    });
 
     sendButton.addEventListener('click', function() {
       sendMessage('', '');
@@ -1980,32 +2464,43 @@
     });
 
     document.addEventListener('mousedown', function(event) {
-      if (!state.open) {
-        return;
-      }
-
       var target = event.target;
       if (!(target instanceof Node)) {
         return;
       }
 
-      if (drawer.contains(target)) {
+      if (state.open && drawer.contains(target)) {
         return;
       }
 
-      if (target instanceof Element && target.closest('[data-ai-agent-trigger-button]')) {
+      if (target instanceof Element && target.closest('[data-ai-agent-floating]')) {
         return;
       }
 
-      closeDrawer();
+      if (target instanceof Element && target.closest('[data-ai-agent-target]')) {
+        return;
+      }
+
+      if (state.open) {
+        closeDrawer();
+      }
+
+      if (state.miniOpen) {
+        hideFloating();
+      }
     });
 
     document.addEventListener('pages:locale-changed', function() {
       if (!state.open || !state.context || state.context.module !== 'pages') {
+        if (state.miniOpen) {
+          state.floatingContextKey = '';
+          renderFloatingCard();
+        }
         return;
       }
 
       closeDrawer();
+      hideFloating();
     });
   }
 
