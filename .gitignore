@@ -70,3 +70,5 @@ public/release/
 /vendor/
 composer.lock
 phpunit.xml
+/tests/
+/flatcms
