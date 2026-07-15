@@ -21,7 +21,7 @@ final class ExtensionLicenseService
 
     public function __construct(?ModuleManager $modules = null, ?LicenseVaultService $vault = null)
     {
-        $this->modules = $modules ?? new ModuleManager();
+        $this->modules = $modules ?? ModuleManager::instance();
         $this->vault = $vault ?? new LicenseVaultService();
     }
 

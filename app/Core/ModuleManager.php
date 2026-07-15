@@ -20,11 +20,20 @@ final class ModuleManager
         'Install' => true,
     ];
 
+    private static ?self $instance = null;
     private array $modulesPaths;
     private string $statePath;
     private array $modules = [];
     private array $state = [];
     private ?array $resolvedEnabled = null;
+
+    public static function instance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
 
     /**
      * @param string|array|null $modulesPath

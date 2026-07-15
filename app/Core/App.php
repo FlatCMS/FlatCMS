@@ -189,10 +189,7 @@ class App
         $router = $this->router;
         
         // Load module routes FIRST (specific routes before generic ones)
-        $manager = new ModuleManager([
-            BASE_PATH . '/app/Modules',
-            BASE_PATH . '/app/Extensions',
-        ], BASE_PATH . '/data/modules.json');
+        $manager = ModuleManager::instance();
 
         foreach ($manager->enabled() as $module => $meta) {
             $moduleRoutes = trim((string) ($meta['routes_path'] ?? ''));
@@ -216,10 +213,7 @@ class App
 
     private function loadHooks(): void
     {
-        $manager = new ModuleManager([
-            BASE_PATH . '/app/Modules',
-            BASE_PATH . '/app/Extensions',
-        ], BASE_PATH . '/data/modules.json');
+        $manager = ModuleManager::instance();
 
         foreach ($manager->enabled() as $module => $meta) {
             $listenersFile = trim((string) ($meta['hooks_path'] ?? ''));

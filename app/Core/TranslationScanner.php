@@ -21,7 +21,7 @@ class TranslationScanner
     public static function scanCodeUsage(): array
     {
         $usage = [];
-        $manager = new ModuleManager();
+        $manager = ModuleManager::instance();
         $enabledModules = array_flip($manager->enabledNames());
 
         $dirs = [

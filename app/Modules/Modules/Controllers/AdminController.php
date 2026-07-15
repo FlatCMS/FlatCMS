@@ -39,8 +39,7 @@ class AdminController extends BaseController
         if (!$this->authorize('modules.view')) {
             return;
         }
-
-        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath], $this->statePath);
+        $manager = ModuleManager::instance();
         $modules = $manager->all();
         $enabled = $manager->enabled();
         $lockedModules = $this->resolveLockedModules($enabled);
@@ -85,7 +84,7 @@ class AdminController extends BaseController
             return;
         }
 
-        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath], $this->statePath);
+        $manager = ModuleManager::instance();
         $modules = $manager->all();
 
         if (!isset($modules[$name])) {
@@ -194,7 +193,7 @@ class AdminController extends BaseController
             return;
         }
 
-        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath], $this->statePath);
+        $manager = ModuleManager::instance();
         $modules = $manager->all();
 
         if (!isset($modules[$name])) {
@@ -487,7 +486,7 @@ class AdminController extends BaseController
             return;
         }
 
-        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath], $this->statePath);
+        $manager = ModuleManager::instance();
         $modules = $manager->all();
 
         if (!isset($modules[$name])) {

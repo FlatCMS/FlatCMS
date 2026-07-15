@@ -111,17 +111,12 @@ class Request
 
     private function detectDefaultLocale(array $supportedLocales): string
     {
-        $settingsPath = BASE_PATH . '/data/settings.json';
+        $settings = \App\Core\FlatFile::settings();
 
-        if (file_exists($settingsPath)) {
-            $content = file_get_contents($settingsPath);
-            $settings = json_decode($content, true);
-
-            if (is_array($settings) && !empty($settings['default_language'])) {
-                $lang = $settings['default_language'];
-                if (in_array($lang, $supportedLocales)) {
-                    return $lang;
-                }
+        if (!empty($settings['default_language'])) {
+            $lang = $settings['default_language'];
+            if (in_array($lang, $supportedLocales)) {
+                return $lang;
             }
         }
 

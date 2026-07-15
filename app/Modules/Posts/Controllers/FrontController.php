@@ -205,7 +205,7 @@ class FrontController extends BaseController
 
     private function isCommentsEnabled(): bool
     {
-        $manager = new ModuleManager();
+        $manager = ModuleManager::instance();
         $enabled = array_flip($manager->enabledNames());
         return isset($enabled['Comments']);
     }
@@ -225,7 +225,7 @@ class FrontController extends BaseController
 
     private function isCategoriesEnabled(): bool
     {
-        $manager = new ModuleManager();
+        $manager = ModuleManager::instance();
         $enabled = array_flip($manager->enabledNames());
         return isset($enabled['Categories']);
     }

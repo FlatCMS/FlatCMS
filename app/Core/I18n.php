@@ -226,8 +226,14 @@ class I18n
         return self::$translations[$module] ?? [];
     }
 
+    private static ?array $supportedLocales = null;
+
     public static function getSupportedLocales(): array
     {
+        if (self::$supportedLocales !== null) {
+            return self::$supportedLocales;
+        }
+
         $locales = [];
         $langDir = BASE_PATH . '/data/languages';
 
@@ -239,10 +245,12 @@ class I18n
 
         if (!empty($locales)) {
             sort($locales);
+            self::$supportedLocales = $locales;
             return $locales;
         }
 
-        return config('app.locales', ['fr-FR', 'en-US']);
+        self::$supportedLocales = config('app.locales', ['fr-FR', 'en-US']);
+        return self::$supportedLocales;
     }
 
     public static function localizeLanguageCatalog(array $languages, ?string $uiLocale = null): array
@@ -320,8 +328,14 @@ class I18n
         return json_encode(self::all($module), JSON_UNESCAPED_UNICODE);
     }
 
+    private static ?string $direction = null;
+
     public static function getDirection(): string
     {
+        if (self::$direction !== null) {
+            return self::$direction;
+        }
+
         $locale = self::$locale;
         $configPath = BASE_PATH . "/data/languages/{$locale}.json";
 
@@ -329,6 +343,7 @@ class I18n
             $content = file_get_contents($configPath);
             $config = json_decode($content, true);
             if (is_array($config) && isset($config['direction'])) {
+                self::$direction = $config['direction'];
                 return $config['direction'];
             }
         }
@@ -337,9 +352,11 @@ class I18n
         $rtlLanguages = ['ar', 'he', 'fa', 'ur'];
         $langPrefix = substr($locale, 0, 2);
         if (in_array($langPrefix, $rtlLanguages, true)) {
+            self::$direction = 'rtl';
             return 'rtl';
         }
 
+        self::$direction = 'ltr';
         return 'ltr';
     }
 

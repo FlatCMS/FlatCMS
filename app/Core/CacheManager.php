@@ -197,19 +197,30 @@ class CacheManager
         return $removed;
     }
 
+    private static ?int $lastCleanup = null;
+
     public function autoCleanup(): int
     {
-        $stampFile = BASE_PATH . '/storage/cache/.last_cleanup';
         $interval = 3600;
 
+        // In-memory check first (no I/O)
+        if (self::$lastCleanup !== null && (time() - self::$lastCleanup) < $interval) {
+            return 0;
+        }
+
+        // File check (1 I/O per request max)
+        $stampFile = BASE_PATH . '/storage/cache/.last_cleanup';
         if (file_exists($stampFile)) {
             $last = (int) @file_get_contents($stampFile);
+            self::$lastCleanup = $last;
             if ((time() - $last) < $interval) {
                 return 0;
             }
         }
 
-        return $this->cleanup();
+        $removed = $this->cleanup();
+        self::$lastCleanup = time();
+        return $removed;
     }
 
     private function updateCleanupTimestamp(): void

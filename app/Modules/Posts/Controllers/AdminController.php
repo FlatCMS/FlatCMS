@@ -520,7 +520,7 @@ class AdminController extends BaseController
 
     private function isCategoriesEnabled(): bool
     {
-        $manager = new ModuleManager();
+        $manager = ModuleManager::instance();
         $enabled = array_flip($manager->enabledNames());
         return isset($enabled['Categories']);
     }
@@ -620,7 +620,7 @@ class AdminController extends BaseController
 
     private function isTrashEnabled(): bool
     {
-        $manager = new ModuleManager([BASE_PATH . '/app/Modules', BASE_PATH . '/app/Extensions'], BASE_PATH . '/data/modules.json');
+        $manager = ModuleManager::instance();
         return $manager->isEnabled('Trash');
     }
 

@@ -958,7 +958,7 @@ class AuthController extends BaseController
     {
         $catalog = new LicenseCatalogService();
         $vault = new LicenseVaultService();
-        $moduleManager = new ModuleManager();
+        $moduleManager = ModuleManager::instance();
         $licenseService = new ExtensionLicenseService($moduleManager, $vault);
         $licenses = [];
 

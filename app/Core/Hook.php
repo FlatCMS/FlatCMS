@@ -146,10 +146,7 @@ final class Hook
             }
         }
 
-        $manager = new ModuleManager([
-            BASE_PATH . '/app/Modules',
-            BASE_PATH . '/app/Extensions',
-        ], BASE_PATH . '/data/modules.json');
+        $manager = ModuleManager::instance();
 
         foreach ($manager->enabled() as $module => $meta) {
             $hooksFile = trim((string) ($meta['hook_definitions_path'] ?? ''));

@@ -35,7 +35,7 @@ class AdminController extends BaseController
             return;
         }
 
-        $manager = new ModuleManager();
+        $manager = ModuleManager::instance();
         $enabled = array_flip($manager->enabledNames());
 
         // Gather all dashboard data
