@@ -120,14 +120,35 @@ final class ModuleManager
 
     private function loadState(): void
     {
+        $cacheKey = 'modules_state';
+        $cache = CacheManager::instance();
+        $cached = $cache->get($cacheKey);
+        if ($cached !== null) {
+            $this->state = $cached;
+            return;
+        }
+
         if (!file_exists($this->statePath)) {
             $this->state = [];
             return;
         }
 
-        $content = file_get_contents($this->statePath);
+        $handle = @fopen($this->statePath, 'r');
+        if (!$handle) {
+            $this->state = [];
+            return;
+        }
+
+        flock($handle, LOCK_SH);
+        $content = stream_get_contents($handle);
+        fclose($handle);
+
         $data = json_decode($content, true);
         $this->state = is_array($data) ? $data : [];
+
+        if (!empty($this->state)) {
+            $cache->set($cacheKey, $this->state, 60);
+        }
     }
 
     private function loadModules(): void

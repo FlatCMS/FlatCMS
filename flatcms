@@ -1,0 +1,139 @@
+#!/usr/bin/env php
+<?php
+/**
+ * FlatCMS CLI - Admin commands for stability and performance.
+ *
+ * Usage:
+ *   php flatcms index:rebuild        Rebuild all entity indexes
+ *   php flatcms index:rebuild <entity>  Rebuild index for one entity
+ *   php flatcms integrity:check      Verify all JSON checksums
+ *   php flatcms integrity:record     Record checksums for all entities
+ *   php flatcms cache:clear          Clear all cache files
+ *   php flatcms cache:cleanup        Remove expired cache files
+ */
+
+declare(strict_types=1);
+
+define('BASE_PATH', __DIR__);
+define('APP_PATH', BASE_PATH . '/app');
+define('DATA_PATH', BASE_PATH . '/data');
+define('STORAGE_PATH', BASE_PATH . '/storage');
+
+require BASE_PATH . '/vendor/autoload.php';
+require APP_PATH . '/Helpers/functions.php';
+require APP_PATH . '/Helpers/cache.php';
+require APP_PATH . '/Helpers/validation.php';
+require APP_PATH . '/Helpers/json.php';
+require APP_PATH . '/Helpers/files.php';
+
+$args = $argv;
+$command = $args[1] ?? '';
+$sub = $args[2] ?? '';
+
+switch ($command) {
+    case 'index:rebuild':
+        cmdIndexRebuild($sub);
+        break;
+    case 'integrity:check':
+        cmdIntegrityCheck();
+        break;
+    case 'integrity:record':
+        cmdIntegrityRecord();
+        break;
+    case 'cache:clear':
+        cmdCacheClear();
+        break;
+    case 'cache:cleanup':
+        cmdCacheCleanup();
+        break;
+    default:
+        echo "FlatCMS CLI\n\n";
+        echo "Commands:\n";
+        echo "  index:rebuild [entity]      Rebuild entity indexes\n";
+        echo "  integrity:check             Verify JSON checksums\n";
+        echo "  integrity:record            Record all checksums\n";
+        echo "  cache:clear                 Clear all cache\n";
+        echo "  cache:cleanup               Remove expired cache files\n";
+        break;
+}
+
+// -- index:rebuild --
+
+function cmdIndexRebuild(string $entity): void
+{
+    $index = \App\Core\IndexManager::instance();
+
+    if ($entity !== '') {
+        echo "Rebuilding index for: {$entity}\n";
+        $index->rebuildIndex($entity);
+        $count = $index->count($entity);
+        echo "  Done. {$count} entries indexed.\n";
+        return;
+    }
+
+    echo "Rebuilding all indexes...\n";
+    $index->rebuildAll();
+    echo "  Done.\n";
+}
+
+// -- integrity:check --
+
+function cmdIntegrityCheck(): void
+{
+    $im = \App\Core\IntegrityManager::instance();
+    $results = $im->verifyAll();
+
+    echo "Integrity check:\n";
+    echo "  Total:      {$results['total']}\n";
+    echo "  Valid:      {$results['valid']}\n";
+    echo "  Corrupted:  {$results['corrupted']}\n";
+    echo "  Missing:    {$results['missing']}\n";
+
+    if (!empty($results['details'])) {
+        echo "\nDetails:\n";
+        foreach ($results['details'] as $detail) {
+            $status = $detail['status'];
+            $entity = $detail['entity'];
+            $id = $detail['id'];
+            echo "  [{$status}] {$entity}/{$id}\n";
+        }
+    }
+
+    echo "\n" . ($results['corrupted'] === 0 && $results['missing'] === 0 ? "OK" : "ISSUES FOUND") . "\n";
+}
+
+// -- integrity:record --
+
+function cmdIntegrityRecord(): void
+{
+    echo "Recording checksums for all entities...\n";
+    $im = \App\Core\IntegrityManager::instance();
+    $im->recordAll();
+    echo "  Done.\n";
+}
+
+// -- cache:clear --
+
+function cmdCacheClear(): void
+{
+    echo "Clearing cache...\n";
+    $cache = \App\Core\CacheManager::instance();
+    $cache->clear();
+    echo "  Done.\n";
+}
+
+// -- cache:cleanup --
+
+function cmdCacheCleanup(): void
+{
+    $cachePath = STORAGE_PATH . '/cache/data';
+    $total = is_dir($cachePath) ? count(glob($cachePath . '/*.json')) : 0;
+
+    echo "Cleaning expired cache files...\n";
+    $cache = \App\Core\CacheManager::instance();
+    $removed = $cache->cleanup();
+
+    echo "  Files scanned: {$total}\n";
+    echo "  Removed:       {$removed}\n";
+    echo "  Remaining:     " . ($total - $removed) . "\n";
+}

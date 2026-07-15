@@ -558,8 +558,11 @@ class AdminController extends BaseController
 
         file_put_contents(
             $this->statePath,
-            json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+            LOCK_EX
         );
+
+        \App\Core\CacheManager::instance()->forget('modules_state');
     }
 
     private function setStateFlag(array &$state, string $name, string $flag, bool $value): void

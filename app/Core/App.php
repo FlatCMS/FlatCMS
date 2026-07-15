@@ -136,6 +136,8 @@ class App
 
             Hook::run('app.booted', $this);
 
+            CacheManager::instance()->autoCleanup();
+
             // Dispatch request
             $this->router->dispatch($this->request);
 

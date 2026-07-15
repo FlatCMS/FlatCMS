@@ -72,18 +72,17 @@ class FlatFile
 
     public function create(array $data): array
     {
-        // Generate ID if not provided
         if (!isset($data['id'])) {
             $data['id'] = $this->generateId();
         }
 
-        // Add timestamps
         $now = date('Y-m-d H:i:s');
         $data['created_at'] = $now;
         $data['updated_at'] = $now;
 
-        // Save
         $this->save($data['id'], $data);
+        IndexManager::instance()->onEntitySaved($this->entity, $data['id'], $data);
+        IntegrityManager::instance()->recordEntity($this->entity, $data['id']);
 
         return $data;
     }
@@ -96,13 +95,13 @@ class FlatFile
             return null;
         }
 
-        // Merge data
         $data = array_merge($existing, $data);
-        $data['id'] = $id; // Ensure ID doesn't change
+        $data['id'] = $id;
         $data['updated_at'] = date('Y-m-d H:i:s');
 
-        // Save
         $this->save($id, $data);
+        IndexManager::instance()->onEntitySaved($this->entity, $id, $data);
+        IntegrityManager::instance()->recordEntity($this->entity, $id);
 
         return $data;
     }
@@ -111,11 +110,30 @@ class FlatFile
     {
         $path = $this->getFilePath($id);
         
-        if (file_exists($path)) {
-            return unlink($path);
+        if (!file_exists($path)) {
+            return false;
         }
 
-        return false;
+        $lockPath = $path . '.lock';
+        $lock = @fopen($lockPath, 'c');
+        if ($lock) {
+            flock($lock, LOCK_EX);
+        }
+
+        $deleted = @unlink($path);
+
+        if ($deleted) {
+            IndexManager::instance()->onEntityDeleted($this->entity, $id);
+            IntegrityManager::instance()->removeEntity($this->entity, $id);
+        }
+
+        if ($lock) {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+            @unlink($lockPath);
+        }
+
+        return $deleted;
     }
 
     public function exists(string $id): bool
@@ -125,23 +143,35 @@ class FlatFile
 
     public function count(): int
     {
-        return count(glob($this->basePath . '/*.json'));
+        return IndexManager::instance()->count($this->entity);
     }
 
     public function paginate(int $page = 1, int $perPage = 15): array
     {
-        $all = $this->all();
-        $total = count($all);
-        $totalPages = (int) ceil($total / $perPage);
-        $offset = ($page - 1) * $perPage;
+        $indexManager = IndexManager::instance();
+        $index = $indexManager->getIndex($this->entity);
 
-        // Sort by created_at desc by default
-        usort($all, function ($a, $b) {
+        $total = count($index);
+        $totalPages = (int) ceil($total / $perPage);
+
+        $sorted = $index;
+        uasort($sorted, function ($a, $b) {
             return ($b['created_at'] ?? '') <=> ($a['created_at'] ?? '');
         });
 
+        $offset = ($page - 1) * $perPage;
+        $sliced = array_slice($sorted, $offset, $perPage, true);
+
+        $data = [];
+        foreach (array_keys($sliced) as $id) {
+            $item = $this->find($id);
+            if ($item) {
+                $data[] = $item;
+            }
+        }
+
         return [
-            'data' => array_slice($all, $offset, $perPage),
+            'data' => $data,
             'total' => $total,
             'per_page' => $perPage,
             'current_page' => $page,
@@ -164,11 +194,40 @@ class FlatFile
         });
     }
 
+    public function entity(): string
+    {
+        return $this->entity;
+    }
+
     private function save(string $id, array $data): void
     {
         $path = $this->getFilePath($id);
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $lockPath = $path . '.lock';
+        $lock = @fopen($lockPath, 'c');
+        if ($lock) {
+            flock($lock, LOCK_EX);
+        }
+
+        $tmp = $path . '.tmp.' . getmypid();
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        file_put_contents($path, $json, LOCK_EX);
+        $written = @file_put_contents($tmp, $json);
+
+        if ($written !== false) {
+            @rename($tmp, $path);
+        } else {
+            @unlink($tmp);
+        }
+
+        if ($lock) {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+            @unlink($lockPath);
+        }
     }
 
     private function readFile(string $path): ?array
@@ -177,7 +236,19 @@ class FlatFile
             return null;
         }
 
-        $content = file_get_contents($path);
+        $handle = @fopen($path, 'r');
+        if (!$handle) {
+            return null;
+        }
+
+        flock($handle, LOCK_SH);
+        $content = stream_get_contents($handle);
+        fclose($handle);
+
+        if ($content === false) {
+            return null;
+        }
+
         $data = json_decode($content, true);
 
         return json_last_error() === JSON_ERROR_NONE ? $data : null;
@@ -198,16 +269,40 @@ class FlatFile
     // Settings helper - for single config files
     public static function settings(string $name = 'settings'): array
     {
+        $cacheKey = 'settings_' . $name;
+        $cache = CacheManager::instance();
+        $cached = $cache->get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
         $path = self::resolveSettingsReadPath($name);
 
         if (!file_exists($path)) {
             return [];
         }
 
-        $content = file_get_contents($path);
-        $data = json_decode($content, true);
+        $handle = @fopen($path, 'r');
+        if (!$handle) {
+            return [];
+        }
 
-        return json_last_error() === JSON_ERROR_NONE ? $data : [];
+        flock($handle, LOCK_SH);
+        $content = stream_get_contents($handle);
+        fclose($handle);
+
+        if ($content === false) {
+            return [];
+        }
+
+        $data = json_decode($content, true);
+        $result = json_last_error() === JSON_ERROR_NONE ? $data : [];
+
+        if (!empty($result)) {
+            $cache->set($cacheKey, $result, 60);
+        }
+
+        return $result;
     }
 
     public static function saveSettings(array $data, string $name = 'settings'): bool
@@ -223,6 +318,7 @@ class FlatFile
         $saved = file_put_contents($path, $json, LOCK_EX) !== false;
         if ($saved) {
             self::cleanupLegacySettingsPath($name, $path);
+            CacheManager::instance()->forget('settings_' . $name);
         }
         return $saved;
     }

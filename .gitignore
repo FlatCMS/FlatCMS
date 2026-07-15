@@ -19,6 +19,10 @@ data/**/*.json
 !data/modules.json
 data/installed.lock
 
+# Runtime/cache generated locally
+storage/cache/
+.phpunit.cache/
+
 # Runtime/generated uploads and secrets
 public/uploads/
 storage/uploads/avatars/
@@ -61,3 +65,8 @@ public/release/
 
 # Local HTML source snapshots
 /home.html
+
+# Dev-only (tests, not shipped in production)
+/vendor/
+composer.lock
+phpunit.xml
