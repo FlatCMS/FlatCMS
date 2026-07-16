@@ -10,6 +10,7 @@
 $stats = $stats ?? [];
 $foldersConfig = $foldersConfig ?? [];
 $publicUrl = $publicUrl ?? '';
+$aiAgentEnabled = (bool) ($aiAgentEnabled ?? false);
 
 // Dossiers réservés (non affichés) - gérés par d'autres modules
 $reservedFolders = ['personal'];
@@ -84,10 +85,12 @@ $mediaConfigJson = e(json_encode($mediaConfig));
         <p class="page-subtitle"><?= __('subtitle', 'Media') ?></p>
     </div>
     <div class="page-header-actions" data-tour-target="media-toolbar">
-        <button type="button" class="btn btn-secondary" data-action="media-ai-index" data-ai-scope="all">
-            <i class="fas fa-robot"></i>
-            <?= __('media_ai_index', 'Media') ?>
-        </button>
+        <?php if ($aiAgentEnabled): ?>
+            <button type="button" class="btn btn-secondary" data-action="media-ai-index" data-ai-scope="all">
+                <i class="fas fa-robot"></i>
+                <?= __('media_ai_index', 'Media') ?>
+            </button>
+        <?php endif; ?>
         <button type="button" class="btn btn-secondary" data-action="media-sync-open">
             <i class="fas fa-sync-alt"></i>
             <?= __('sync', 'Media') ?>
@@ -114,7 +117,9 @@ $mediaConfigJson = e(json_encode($mediaConfig));
         </ul>
         <div class="admin-guidance-card__actions">
             <a href="#mediaFolderTabs" class="btn btn-primary"><?= __('media_help_action_folders', 'Media') ?></a>
-            <button type="button" class="btn btn-secondary" data-action="media-ai-index" data-ai-scope="all"><?= __('media_ai_index', 'Media') ?></button>
+            <?php if ($aiAgentEnabled): ?>
+                <button type="button" class="btn btn-secondary" data-action="media-ai-index" data-ai-scope="all"><?= __('media_ai_index', 'Media') ?></button>
+            <?php endif; ?>
             <button type="button" class="btn btn-secondary" data-action="media-sync-open"><?= __('media_help_action_sync', 'Media') ?></button>
         </div>
     </div>

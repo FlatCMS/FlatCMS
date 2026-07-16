@@ -13,6 +13,7 @@ namespace App\Modules\Media\Controllers;
 
 use App\Core\BaseController;
 use App\Core\I18n;
+use App\Core\ModuleManager;
 use App\Modules\Media\Models\MediaModel;
 use App\Modules\Media\Services\MediaAiIndexService;
 use App\Modules\Trash\Services\TrashService;
@@ -47,7 +48,8 @@ class AdminController extends BaseController
             'pageTitle' => __('title', 'Media'),
             'stats' => $stats,
             'foldersConfig' => $foldersConfig,
-            'publicUrl' => url('')
+            'publicUrl' => url(''),
+            'aiAgentEnabled' => $this->isAiIndexAvailable(),
         ], 'admin.main');
     }
 
@@ -80,7 +82,8 @@ class AdminController extends BaseController
             'stats' => $stats,
             'folderConfig' => $folderConfig,
             'foldersConfig' => $foldersConfig,
-            'publicUrl' => url('')
+            'publicUrl' => url(''),
+            'aiAgentEnabled' => $this->isAiIndexAvailable(),
         ], 'admin.main');
     }
 
@@ -434,6 +437,16 @@ class AdminController extends BaseController
             return;
         }
 
+        if (!$this->isAiIndexAvailable()) {
+            if ($this->request->isAjax()) {
+                json_error(__('media_ai_module_disabled', 'Media'));
+            }
+
+            $this->session->flash('error', __('media_ai_module_disabled', 'Media'));
+            $this->redirect(url('/admin/media'));
+            return;
+        }
+
         $token = $this->request->input('_token') ?? $this->request->header('X-CSRF-TOKEN');
         if (!$token || !$this->session->verifyToken($token)) {
             if ($this->request->isAjax()) {
@@ -513,6 +526,16 @@ class AdminController extends BaseController
         $this->session->flash('success', $message);
         $redirect = $folder !== '' ? url('/admin/media/folder/' . $folder) : url('/admin/media');
         $this->redirect($redirect);
+    }
+
+    private function isAiIndexAvailable(): bool
+    {
+        $manager = new ModuleManager([
+            BASE_PATH . '/app/Modules',
+            BASE_PATH . '/app/Extensions',
+        ], BASE_PATH . '/data/modules.json');
+
+        return $manager->isEnabled('AiAgent');
     }
 
     /**

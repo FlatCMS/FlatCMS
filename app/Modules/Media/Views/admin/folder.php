@@ -12,6 +12,7 @@ $files = $files ?? [];
 $stats = $stats ?? [];
 $folderConfig = $folderConfig ?? [];
 $publicUrl = $publicUrl ?? '';
+$aiAgentEnabled = (bool) ($aiAgentEnabled ?? false);
 
 // Couleurs par dossier
 $folderColors = [
@@ -67,10 +68,12 @@ $mediaConfigJson = e(json_encode($mediaConfig));
         <p class="page-subtitle"><?= count($files) ?> <?= __('files', 'Media') ?></p>
     </div>
     <div class="page-header-actions">
-        <button type="button" class="btn btn-secondary" data-action="media-ai-index" data-ai-scope="folder" data-folder="<?= e($folder) ?>">
-            <i class="fas fa-robot"></i>
-            <?= __('media_ai_index', 'Media') ?>
-        </button>
+        <?php if ($aiAgentEnabled): ?>
+            <button type="button" class="btn btn-secondary" data-action="media-ai-index" data-ai-scope="folder" data-folder="<?= e($folder) ?>">
+                <i class="fas fa-robot"></i>
+                <?= __('media_ai_index', 'Media') ?>
+            </button>
+        <?php endif; ?>
         <button type="button" class="btn btn-primary" data-action="media-upload-open">
             <i class="fas fa-plus"></i>
             <?= __('upload', 'Media') ?>

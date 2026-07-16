@@ -14,10 +14,8 @@ namespace App\Modules\Settings\Controllers;
 use App\Core\BaseController;
 use App\Core\FlatFile;
 use App\Core\I18n;
-use App\Modules\Categories\Services\CategoryTranslationService;
-use App\Modules\Pages\Services\PageTranslationService;
-use App\Modules\Posts\Services\PostTranslationService;
 use App\Modules\Settings\Services\SiteRoutingService;
+use App\Modules\SiteMap\Services\SiteMapService;
 
 class FrontController extends BaseController
 {
@@ -107,192 +105,14 @@ class FrontController extends BaseController
 
     public function sitemap(): void
     {
-        $settings = FlatFile::settings();
-        $entries = $this->buildSitemapEntries();
-
-        $xml = [];
-        $xml[] = '<?xml version="1.0" encoding="UTF-8"?>';
-        $xml[] = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-
-        foreach ($entries as $entry) {
-            $xml[] = '  <url>';
-            $xml[] = '    <loc>' . $this->xml((string) ($entry['loc'] ?? '')) . '</loc>';
-
-            $lastmod = trim((string) ($entry['lastmod'] ?? ''));
-            if ($lastmod !== '') {
-                $xml[] = '    <lastmod>' . $this->xml($lastmod) . '</lastmod>';
-            }
-
-            $changefreq = trim((string) ($entry['changefreq'] ?? ''));
-            if ($changefreq !== '') {
-                $xml[] = '    <changefreq>' . $this->xml($changefreq) . '</changefreq>';
-            }
-
-            $priority = trim((string) ($entry['priority'] ?? ''));
-            if ($priority !== '') {
-                $xml[] = '    <priority>' . $this->xml($priority) . '</priority>';
-            }
-
-            $xml[] = '  </url>';
-        }
-
-        $xml[] = '</urlset>';
-
         if (!headers_sent()) {
             header('Content-Type: application/xml; charset=UTF-8');
             header('X-Robots-Tag: all');
         }
 
         http_response_code(200);
-        echo implode(PHP_EOL, $xml) . PHP_EOL;
+        echo (new SiteMapService())->buildXml();
         exit;
-    }
-
-    /**
-     * @return array<int, array{loc:string,lastmod:string,changefreq:string,priority:string}>
-     */
-    private function buildSitemapEntries(): array
-    {
-        $settings = FlatFile::settings();
-        $siteRouting = new SiteRoutingService();
-        $pages = new PageTranslationService();
-        $posts = new PostTranslationService();
-        $categories = new CategoryTranslationService();
-        $entries = [];
-        $seen = [];
-        $locales = I18n::getSupportedLocales();
-
-        foreach ($locales as $locale) {
-            $homePage = $siteRouting->resolveHomepagePage($locale);
-            $homeLastmod = is_array($homePage) ? $this->lastmodFromRecord($homePage) : '';
-            $this->addSitemapEntry($entries, $seen, [
-                'loc' => $this->localizedHomeUrl($locale),
-                'lastmod' => $homeLastmod,
-                'changefreq' => 'weekly',
-                'priority' => '1.0',
-            ]);
-
-            $hasPostsForLocale = false;
-            foreach ($posts->all() as $post) {
-                if (
-                    (string) ($post['locale'] ?? '') === $locale
-                    && $posts->resolveEffectiveStatus($post) === 'published'
-                ) {
-                    $hasPostsForLocale = true;
-                    break;
-                }
-            }
-
-            if ($hasPostsForLocale) {
-                $this->addSitemapEntry($entries, $seen, [
-                    'loc' => $this->localizedBlogUrl($locale),
-                    'lastmod' => '',
-                    'changefreq' => 'weekly',
-                    'priority' => '0.8',
-                ]);
-            }
-        }
-
-        foreach ($pages->all() as $page) {
-            if ($pages->resolveEffectiveStatus($page) !== 'published') {
-                continue;
-            }
-
-            $locale = trim((string) ($page['locale'] ?? ''));
-            $slug = trim((string) ($page['slug'] ?? ''));
-            if ($locale === '' || $slug === '') {
-                continue;
-            }
-
-            $loc = ($slug === 'home' || $siteRouting->isHomepagePage($page))
-                ? $this->localizedHomeUrl($locale)
-                : $this->siteUrl($settings) . '/' . trim($locale, '/') . '/page/' . rawurlencode($slug);
-
-            $priority = ($slug === 'contact') ? '0.7' : '0.6';
-
-            $this->addSitemapEntry($entries, $seen, [
-                'loc' => $loc,
-                'lastmod' => $this->lastmodFromRecord($page),
-                'changefreq' => 'monthly',
-                'priority' => $priority,
-            ]);
-        }
-
-        foreach ($posts->all() as $post) {
-            if ($posts->resolveEffectiveStatus($post) !== 'published') {
-                continue;
-            }
-
-            $locale = trim((string) ($post['locale'] ?? ''));
-            $slug = trim((string) ($post['slug'] ?? ''));
-            if ($locale === '' || $slug === '') {
-                continue;
-            }
-
-            $this->addSitemapEntry($entries, $seen, [
-                'loc' => $this->siteUrl($settings) . '/' . trim($locale, '/') . '/blog/' . rawurlencode($slug),
-                'lastmod' => $this->lastmodFromRecord($post),
-                'changefreq' => 'monthly',
-                'priority' => '0.7',
-            ]);
-        }
-
-        foreach ($categories->all() as $category) {
-            if ($categories->resolveEffectiveStatus($category) !== 'active') {
-                continue;
-            }
-
-            if (trim((string) ($category['module'] ?? 'blog')) !== 'blog') {
-                continue;
-            }
-
-            $locale = trim((string) ($category['locale'] ?? ''));
-            $slug = trim((string) ($category['slug'] ?? ''));
-            if ($locale === '' || $slug === '') {
-                continue;
-            }
-
-            $this->addSitemapEntry($entries, $seen, [
-                'loc' => $this->siteUrl($settings) . '/' . trim($locale, '/') . '/blog/categorie/' . rawurlencode($slug),
-                'lastmod' => $this->lastmodFromRecord($category),
-                'changefreq' => 'weekly',
-                'priority' => '0.5',
-            ]);
-        }
-
-        usort($entries, static fn (array $left, array $right): int => strcmp($left['loc'], $right['loc']));
-
-        return $entries;
-    }
-
-    /**
-     * @param array<int, array{loc:string,lastmod:string,changefreq:string,priority:string}> $entries
-     * @param array<string, bool> $seen
-     * @param array{loc:string,lastmod:string,changefreq:string,priority:string} $entry
-     */
-    private function addSitemapEntry(array &$entries, array &$seen, array $entry): void
-    {
-        $loc = trim((string) ($entry['loc'] ?? ''));
-        if (!$this->isAbsoluteUrl($loc) || isset($seen[$loc])) {
-            return;
-        }
-
-        $seen[$loc] = true;
-        $entries[] = $entry;
-    }
-
-    private function lastmodFromRecord(array $record): string
-    {
-        $candidate = trim((string) ($record['updated_at'] ?? $record['created_at'] ?? ''));
-        if ($candidate === '') {
-            return '';
-        }
-
-        try {
-            return (new \DateTimeImmutable($candidate))->format('c');
-        } catch (\Throwable) {
-            return '';
-        }
     }
 
     private function siteUrl(array $settings): string
@@ -350,13 +170,4 @@ class FrontController extends BaseController
         return strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? '')) === 'https';
     }
 
-    private function isAbsoluteUrl(string $value): bool
-    {
-        return filter_var($value, FILTER_VALIDATE_URL) !== false;
-    }
-
-    private function xml(string $value): string
-    {
-        return htmlspecialchars($value, ENT_XML1 | ENT_COMPAT, 'UTF-8');
-    }
 }

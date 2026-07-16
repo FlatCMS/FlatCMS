@@ -100,6 +100,7 @@
     "media_ai_indexing": "Indexation IA en cours...",
     "media_ai_index_result": "Indexation IA terminée : :indexed fichier(s) indexé(s), :skipped déjà à jour, :failed en échec.",
     "media_ai_index_failed": "L’indexation IA a échoué.",
+    "media_ai_module_disabled": "Activez d’abord le module AiAgent dans Modules.",
     "media_ai_not_configured": "Configurez d’abord OpenAI dans Paramètres > Intégrations.",
     "media_ai_nothing_to_index": "Aucun média à indexer.",
     "media_ai_leave_message": "Des fichiers récemment téléversés ne sont pas encore indexés par l’IA.",

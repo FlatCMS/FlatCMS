@@ -215,7 +215,7 @@ if ($langSwitchHtml !== '') {
                 </div>
             </div>
 <?= $langSwitchHtml !== '' ? $langSwitchHtml . PHP_EOL : '' ?>
-            <button class="menu-toggle" id="menuToggle">
+            <button type="button" class="menu-toggle" id="menuToggle" aria-label="<?= e(__('navigation', 'Core')) ?>">
                 <span></span><span></span><span></span>
             </button>
         </div>

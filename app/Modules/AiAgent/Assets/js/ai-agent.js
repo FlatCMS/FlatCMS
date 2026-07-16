@@ -230,6 +230,7 @@
     var floatingShowTimer = 0;
     var floatingHoverDelayMs = 900;
     var floatingFocusDelayMs = 520;
+    var floatingHideDelayMs = 960;
 
     function getPageFieldId(locale, key) {
       return locale ? 'page_' + locale + '_' + key : key;
@@ -1362,7 +1363,7 @@
 
       floatingHideTimer = window.setTimeout(function() {
         hideFloating();
-      }, 180);
+      }, floatingHideDelayMs);
     }
 
     function renderFloatingCard() {

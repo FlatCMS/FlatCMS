@@ -19,9 +19,6 @@ $router->get('/robots.txt', [\App\Modules\Settings\Controllers\FrontController::
 $router->get('/llms.txt', [\App\Modules\Settings\Controllers\FrontController::class, 'llms'])
     ->name('llms');
 
-$router->get('/sitemap.xml', [\App\Modules\Settings\Controllers\FrontController::class, 'sitemap'])
-    ->name('sitemap');
-
 $router->get('/admin/settings/routing-probe/{token}', [\App\Modules\Settings\Controllers\AdminController::class, 'routingProbe'])
     ->name('admin.settings.routing_probe');
 

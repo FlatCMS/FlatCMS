@@ -100,6 +100,7 @@
     "media_ai_indexing": "AI indexing in progress...",
     "media_ai_index_result": "AI indexing complete: :indexed file(s) indexed, :skipped already up to date, :failed failed.",
     "media_ai_index_failed": "AI indexing failed.",
+    "media_ai_module_disabled": "Enable the AiAgent module first in Modules.",
     "media_ai_not_configured": "Configure OpenAI first in Settings > Integrations.",
     "media_ai_nothing_to_index": "No media to index.",
     "media_ai_leave_message": "Some recently uploaded files are still waiting for AI indexing.",

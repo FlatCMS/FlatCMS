@@ -1,0 +1,93 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+.sitemap-admin-layout {
+  display: grid;
+  gap: var(--spacing-5);
+  margin-bottom: var(--spacing-5);
+}
+
+.sitemap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-5);
+}
+
+.sitemap-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-3);
+}
+
+.sitemap-stat {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+  padding: var(--spacing-4);
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.sitemap-stat-label {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.sitemap-stat-value {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.sitemap-path-list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.sitemap-card-body {
+  display: grid;
+  gap: var(--spacing-4);
+  align-content: start;
+}
+
+.sitemap-path-row {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.sitemap-path-row dt {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.sitemap-path-row dd {
+  margin: 0;
+  color: var(--color-text-secondary);
+  word-break: break-word;
+}
+
+.sitemap-path-row a {
+  word-break: break-all;
+}
+
+.sitemap-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+@media (max-width: 960px) {
+  .sitemap-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

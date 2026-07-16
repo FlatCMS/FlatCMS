@@ -1,0 +1,151 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+.sitemap-public-header {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sitemap-public-header-inner {
+  display: grid;
+  gap: 1.5rem;
+  padding-block: clamp(2rem, 4vw, 3.25rem);
+}
+
+.sitemap-public-intro {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 52rem;
+}
+
+.sitemap-public-kicker {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sitemap-public-intro h1 {
+  margin: 0;
+}
+
+.sitemap-public-intro p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.sitemap-public-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  max-width: 28rem;
+}
+
+.sitemap-public-summary-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+}
+
+.sitemap-public-summary-label {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.sitemap-public-summary-value {
+  color: var(--color-text-primary);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.sitemap-public-content .container {
+  padding-block: clamp(2rem, 4vw, 3rem);
+}
+
+.sitemap-public-stack {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.sitemap-public-locale-card {
+  overflow: hidden;
+}
+
+.sitemap-public-locale-body {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.sitemap-public-locale-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sitemap-public-locale-head .card-title {
+  margin: 0;
+}
+
+.sitemap-public-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.sitemap-public-section {
+  height: 100%;
+}
+
+.sitemap-public-section-body {
+  display: grid;
+  gap: 1rem;
+  height: 100%;
+}
+
+.sitemap-public-section-title {
+  margin: 0;
+}
+
+.sitemap-public-links {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.sitemap-public-links a {
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.sitemap-public-links a:hover,
+.sitemap-public-links a:focus-visible {
+  color: var(--color-primary);
+}
+
+@media (max-width: 900px) {
+  .sitemap-public-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .sitemap-public-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sitemap-public-locale-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

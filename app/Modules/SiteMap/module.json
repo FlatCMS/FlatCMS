@@ -1,0 +1,22 @@
+{
+    "name": "SiteMap",
+    "version": "1.0.0",
+    "description": "Human-readable sitemap and sitemap.xml generator.",
+    "type": "system",
+    "author": "Alain BROYE",
+    "enabled": true,
+    "sidebar_visible": true,
+    "dependencies": [
+        "Auth",
+        "Core",
+        "Settings",
+        "Pages",
+        "Posts",
+        "Categories"
+    ],
+    "vendor": "FlatCMS",
+    "official": true,
+    "origin": "flatcms",
+    "required": true,
+    "signature": ""
+}
