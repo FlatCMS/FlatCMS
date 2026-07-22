@@ -1030,7 +1030,7 @@ final class SiteBackupService
 
         $files['data/settings.json'] = $this->encodeJson($this->buildResetSettingsPayload($settings));
         $files['data/modules.json'] = $this->readJsonFileContent(BASE_PATH . '/data/modules.json', []);
-        $files['data/auth/login_attempts.json'] = $this->encodeJson([]);
+        $files['data/core/auth/login_attempts.json'] = $this->encodeJson([]);
         $files['data/site_branding_translations.json'] = $this->readJsonFileContent(BASE_PATH . '/data/site_branding_translations.json', [
             'source_locale' => $defaultLanguage,
             'updated_at' => date('Y-m-d H:i:s'),

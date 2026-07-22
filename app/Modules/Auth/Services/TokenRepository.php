@@ -22,8 +22,8 @@ class TokenRepository
 
     public function __construct()
     {
-        $this->tokensPath = BASE_PATH . '/data/auth/tokens.json';
-        $this->attemptsPath = BASE_PATH . '/data/auth/login_attempts.json';
+        $this->tokensPath = BASE_PATH . '/data/core/auth/tokens.json';
+        $this->attemptsPath = BASE_PATH . '/data/core/auth/login_attempts.json';
     }
 
     // --- Reset Tokens ---
