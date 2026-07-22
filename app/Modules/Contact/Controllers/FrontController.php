@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace App\Modules\Contact\Controllers;
 
 use App\Core\BaseController;
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
 use App\Core\Mail\Mailer;
@@ -28,7 +29,7 @@ class FrontController extends BaseController
     private MessageService $messages;
     private FormService $forms;
     private ContactFormTranslationService $translations;
-    private FlatFile $pages;
+    private ContentDocumentStore $pages;
     private array $settings;
 
     public function __construct()
@@ -38,7 +39,7 @@ class FrontController extends BaseController
         $this->messages = new MessageService();
         $this->forms = new FormService();
         $this->translations = new ContactFormTranslationService();
-        $this->pages = FlatFile::for('core/pages');
+        $this->pages = ContentDocumentStore::for('core/pages');
         $this->settings = (new SiteBrandingTranslationService())->resolveForLocale(
             FlatFile::settings(),
             (string) $this->request->locale()

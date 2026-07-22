@@ -1,0 +1,15 @@
+{
+    "id": "page_savoir_faire",
+    "title": "Savoir-faire",
+    "slug": "savoir-faire",
+    "editor_mode": "classic",
+    "meta_title": "Savoir-faire - {{SITE_NAME}}",
+    "meta_description": "Étapes de fabrication, matières et gestes derrière chaque pièce artisanale.",
+    "status": "published",
+    "author_id": "{{ADMIN_ID}}",
+    "created_at": "2026-05-10 10:00:00",
+    "updated_at": "2026-05-10 10:00:00",
+    "translation_group": "page_savoir_faire",
+    "locale": "fr-FR",
+    "source_locale": "fr-FR"
+}

@@ -264,7 +264,12 @@ class MediaRepository
         
         // Supprimer les entrées sans fichier physique
         foreach ($this->data as $key => $item) {
-            $fullPath = $uploadPath . '/' . ($item['folder'] ?? '') . '/' . ($item['name'] ?? '');
+            $relativePath = trim((string) ($item['path'] ?? ''), '/');
+            if ($relativePath === '') {
+                $relativePath = trim((string) ($item['folder'] ?? ''), '/') . '/' . ltrim((string) ($item['name'] ?? ''), '/');
+            }
+
+            $fullPath = rtrim($uploadPath, '/') . '/' . $relativePath;
             if (!file_exists($fullPath)) {
                 $removed[] = $item['name'] ?? 'unknown';
                 unset($this->data[$key]);

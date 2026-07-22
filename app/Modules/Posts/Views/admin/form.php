@@ -28,6 +28,8 @@ if (!is_array($selectedCategories)) {
 }
 $selectedCategories = array_map('strval', $selectedCategories);
 $featuredImageValue = (string) old('featured_image', $formData['featured_image'] ?? '');
+$postMediaSlug = str_slug(trim((string) old('slug', $formData['slug'] ?? $post['slug'] ?? $post['id'] ?? '')));
+$postMediaContext = 'posts/' . ($postMediaSlug !== '' ? $postMediaSlug : 'draft');
 $mediaEnabled = (new \App\Core\ModuleManager([
     BASE_PATH . '/app/Modules',
     BASE_PATH . '/app/Extensions',
@@ -236,6 +238,7 @@ $postsLocaleFlag = static function (string $locale): string {
                         class="form-input"
                         rows="15"
                         data-post-suneditor
+                        data-suneditor-media-context="<?= e($postMediaContext) ?>"
                         data-suneditor-media-modal-error="<?= e($postLabel('featured_image_modal_unavailable', __('featured_image_modal_unavailable', 'Posts'))) ?>"
                         data-suneditor-toolbar-expand="<?= e($postLabel('suneditor_toolbar_expand', __('suneditor_toolbar_expand', 'Posts'))) ?>"
                         data-suneditor-toolbar-collapse="<?= e($postLabel('suneditor_toolbar_collapse', __('suneditor_toolbar_collapse', 'Posts'))) ?>"

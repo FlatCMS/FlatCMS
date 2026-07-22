@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Trash\Services;
 
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Modules\Media\Repositories\MediaRepository;
 
@@ -21,8 +22,8 @@ final class TrashService
     private FlatFile $trashCategories;
     private FlatFile $trashThemes;
     private FlatFile $trashMedia;
-    private FlatFile $pages;
-    private FlatFile $posts;
+    private ContentDocumentStore $pages;
+    private ContentDocumentStore $posts;
     private FlatFile $categories;
     private MediaRepository $mediaRepository;
     private string $themeArchivesPath;
@@ -36,8 +37,8 @@ final class TrashService
         $this->trashCategories = FlatFile::for('trash/categories');
         $this->trashThemes = FlatFile::for('trash/themes');
         $this->trashMedia = FlatFile::for('trash/media');
-        $this->pages = FlatFile::for('core/pages');
-        $this->posts = FlatFile::for('core/posts');
+        $this->pages = ContentDocumentStore::for('core/pages');
+        $this->posts = ContentDocumentStore::for('core/posts');
         $this->categories = FlatFile::for('core/categories');
         $this->mediaRepository = new MediaRepository();
         $this->themeArchivesPath = BASE_PATH . '/storage/trash/themes';
@@ -310,9 +311,9 @@ final class TrashService
 
         $type = (string) ($item['entity_type'] ?? '');
         return match ($type) {
-            'page' => $this->restoreEntity($item, $this->pages, $this->trashPages, 'core/pages'),
-            'post' => $this->restoreEntity($item, $this->posts, $this->trashPosts, 'core/posts'),
-            'category' => $this->restoreEntity($item, $this->categories, $this->trashCategories, 'core/categories'),
+            'page' => $this->restoreEntity($item, $this->pages, $this->trashPages),
+            'post' => $this->restoreEntity($item, $this->posts, $this->trashPosts),
+            'category' => $this->restoreEntity($item, $this->categories, $this->trashCategories),
             'theme' => $this->restoreTheme($item),
             'media' => $this->restoreMedia($item),
             default => ['success' => false, 'code' => 'invalid_type'],
@@ -448,7 +449,7 @@ final class TrashService
         }));
     }
 
-    private function restoreEntity(array $item, FlatFile $liveStore, FlatFile $trashStore, string $entityPath): array
+    private function restoreEntity(array $item, ContentDocumentStore|FlatFile $liveStore, FlatFile $trashStore): array
     {
         $payload = $item['payload'] ?? null;
         if (!is_array($payload)) {
@@ -465,7 +466,8 @@ final class TrashService
         }
 
         $payload = $this->ensureUniqueSlug($payload, $entityId, $liveStore);
-        if (!$this->writeEntityJson($entityPath, $entityId, $payload)) {
+        $restored = $liveStore->create($payload);
+        if (!is_array($restored)) {
             return ['success' => false, 'code' => 'write_failed'];
         }
 
@@ -473,7 +475,7 @@ final class TrashService
 
         return [
             'success' => true,
-            'item' => $payload,
+            'item' => $restored,
             'entity_type' => (string) ($item['entity_type'] ?? ''),
         ];
     }
@@ -482,7 +484,7 @@ final class TrashService
      * @param array<string, mixed> $payload
      * @return array<string, mixed>
      */
-    private function ensureUniqueSlug(array $payload, string $entityId, FlatFile $liveStore): array
+    private function ensureUniqueSlug(array $payload, string $entityId, ContentDocumentStore|FlatFile $liveStore): array
     {
         $slug = trim((string) ($payload['slug'] ?? ''));
         if ($slug === '') {
@@ -497,30 +499,6 @@ final class TrashService
         $payload['slug'] = $slug . '-restored-' . date('His');
 
         return $payload;
-    }
-
-    /**
-     * @param array<string, mixed> $payload
-     */
-    private function writeEntityJson(string $entity, string $id, array $payload): bool
-    {
-        $safeId = preg_replace('/[^a-zA-Z0-9_-]/', '', $id) ?? '';
-        if ($safeId === '') {
-            return false;
-        }
-
-        $directory = BASE_PATH . '/data/' . trim($entity, '/');
-        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
-            return false;
-        }
-
-        $path = $directory . '/' . $safeId . '.json';
-        $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        if ($json === false) {
-            return false;
-        }
-
-        return file_put_contents($path, $json, LOCK_EX) !== false;
     }
 
     private function normalizeType(string $type): string

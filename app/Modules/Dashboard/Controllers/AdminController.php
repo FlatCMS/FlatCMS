@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace App\Modules\Dashboard\Controllers;
 
 use App\Core\BaseController;
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
 use App\Core\ModuleManager;
@@ -92,13 +93,13 @@ class AdminController extends BaseController
             'posts' => isset($enabled['Posts']) ? $this->getGroupedPostCount() : 0,
             'media' => $this->getMediaCount($enabled),
             'users' => isset($enabled['Users']) ? FlatFile::for('users')->count() : 0,
-            'comments' => isset($enabled['Comments']) ? FlatFile::for('comments')->count() : 0,
+            'comments' => isset($enabled['Comments']) ? FlatFile::for('core/comments')->count() : 0,
         ];
     }
 
     private function getGroupedPageCount(): int
     {
-        $translations = new PageTranslationService(FlatFile::for('core/pages'));
+        $translations = new PageTranslationService(ContentDocumentStore::for('core/pages'));
         $groups = [];
 
         foreach ($translations->all() as $page) {
@@ -115,7 +116,7 @@ class AdminController extends BaseController
 
     private function getGroupedPublishedPageCount(): int
     {
-        $translations = new PageTranslationService(FlatFile::for('core/pages'));
+        $translations = new PageTranslationService(ContentDocumentStore::for('core/pages'));
         $groups = [];
 
         foreach ($translations->all() as $page) {
@@ -142,7 +143,7 @@ class AdminController extends BaseController
 
     private function getGroupedPostCount(): int
     {
-        $translations = new PostTranslationService(FlatFile::for('core/posts'));
+        $translations = new PostTranslationService(ContentDocumentStore::for('core/posts'));
         $groups = [];
 
         foreach ($translations->all() as $post) {
@@ -159,7 +160,7 @@ class AdminController extends BaseController
 
     private function getGroupedPublishedPostCount(): int
     {
-        $translations = new PostTranslationService(FlatFile::for('core/posts'));
+        $translations = new PostTranslationService(ContentDocumentStore::for('core/posts'));
         $groups = [];
 
         foreach ($translations->all() as $post) {
@@ -362,22 +363,8 @@ class AdminController extends BaseController
 
     private function hasConfiguredMainMenu(): bool
     {
-        $path = BASE_PATH . '/data/menus/menus.json';
-        if (!is_file($path)) {
-            return false;
-        }
-
-        $content = @file_get_contents($path);
-        if (!is_string($content) || trim($content) === '') {
-            return false;
-        }
-
-        $decoded = json_decode($content, true);
-        if (!is_array($decoded)) {
-            return false;
-        }
-
-        $items = $decoded['main']['items'] ?? [];
+        $menus = FlatFile::settings('menus');
+        $items = $menus['main']['items'] ?? [];
         return is_array($items) && $items !== [];
     }
 
@@ -448,7 +435,7 @@ class AdminController extends BaseController
 
     private function getRecentPosts(int $limit): array
     {
-        $translations = new PostTranslationService(FlatFile::for('core/posts'));
+        $translations = new PostTranslationService(ContentDocumentStore::for('core/posts'));
         $groups = [];
 
         foreach ($translations->all() as $post) {
@@ -489,7 +476,7 @@ class AdminController extends BaseController
 
     private function getRecentPages(int $limit): array
     {
-        $translations = new PageTranslationService(FlatFile::for('core/pages'));
+        $translations = new PageTranslationService(ContentDocumentStore::for('core/pages'));
         $groups = [];
         $rows = [];
 

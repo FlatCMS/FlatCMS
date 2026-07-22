@@ -23,7 +23,7 @@ class AdminController extends BaseController
     {
         parent::__construct();
         I18n::load('Comments');
-        $this->comments = FlatFile::for('comments');
+        $this->comments = FlatFile::for('core/comments');
     }
 
     public function index(): void

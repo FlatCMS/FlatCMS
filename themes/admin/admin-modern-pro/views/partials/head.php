@@ -13,6 +13,7 @@
     $headSettings = is_array($settings ?? null) ? $settings : \App\Core\FlatFile::settings();
     $themeCustomizationService = new \App\Modules\Themes\Services\ThemeCustomizationService();
     $themeCustomizationAsset = $themeCustomizationService->assetForActiveTheme('admin', $headSettings);
+    $editorPreviewThemeAsset = $themeCustomizationService->editorPreviewAssetForActiveFrontendTheme($headSettings);
     $siteFavicon = trim((string) ($headSettings['site_favicon'] ?? ''));
     $siteFaviconUrl = $siteFavicon !== '' ? site_media_url($siteFavicon) : '';
     if ($siteFaviconUrl === '') {
@@ -39,6 +40,9 @@
     <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('dists/suneditor/suneditor.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/admin/suneditor.css') ?>">
+    <?php if ($editorPreviewThemeAsset !== ''): ?>
+        <link rel="stylesheet" href="<?= e($editorPreviewThemeAsset) ?>">
+    <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('css/core/components-password-toggle.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/admin/guided-tour.css') ?>">
 <?php

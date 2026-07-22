@@ -69,7 +69,9 @@
             window.FlatCMS.toast.show(text, type || 'warning');
             return;
         }
-        window.alert(text);
+        if (window.console && typeof window.console.warn === 'function') {
+            window.console.warn(text);
+        }
     }
 
     function resolveMediaSrc(raw, uploadsBase) {
@@ -116,6 +118,7 @@
 
         const getApiImagesUrl = () => String(config.apiImagesUrl || '');
         const getApiFilesUrl = () => String(config.apiFilesUrl || '');
+        const getApiDirectoriesUrl = () => String(config.apiDirectoriesUrl || '');
         const getUploadsBase = () => String(config.uploadsBase || '/uploads');
         const getUploadUrl = () => String(config.uploadUrl || '');
         const getCsrfToken = () => String(config.csrfToken || '');
@@ -127,7 +130,30 @@
         const getFilesLabel = () => String(config.filesLabel || '').trim();
         const getNoImagesLabel = () => String(config.noImagesLabel || '').trim();
         const getNoMediaLabel = () => String(config.noMediaLabel || '').trim();
+        const getCurrentDirectoryLabel = () => String(config.currentDirectoryLabel || '').trim();
+        const getRootDirectoryLabel = () => String(config.rootDirectoryLabel || '').trim();
+        const getDirectoryEmptyLabel = () => String(config.directoryEmptyLabel || '').trim();
         const getMediaMode = () => (String(config.mode || 'images').toLowerCase() === 'files' ? 'files' : 'images');
+        const normalizeContext = (rawContext) => {
+            const raw = String(rawContext || '').replace(/\\/g, '/').trim();
+            if (raw === '') {
+                return '';
+            }
+            return raw
+                .replace(/^\/+|\/+$/g, '')
+                .split('/')
+                .map((part) => part.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase())
+                .filter(Boolean)
+                .join('/')
+                .slice(0, 160);
+        };
+        const getMediaContext = () => {
+            const raw = String(config.mediaContext || config.context || '').replace(/\\/g, '/').trim();
+            if (raw === '') {
+                return '';
+            }
+            return normalizeContext(raw);
+        };
         const getMediaFolder = () => {
             if (getMediaMode() === 'images') {
                 return 'images';
@@ -167,10 +193,14 @@
         const libraryIcon = modal.querySelector('#tabLibraryIcon');
         const emptyIcon = modal.querySelector('#mediaLibraryEmptyIcon');
         const emptyText = modal.querySelector('#mediaLibraryEmptyText');
+        const directoryCurrent = modal.querySelector('#mediaModalDirectoryCurrent');
+        const directoryList = modal.querySelector('#mediaModalDirectoryList');
 
         let files = [];
+        let directories = [];
         let selectedIndex = null;
         let uploadInProgress = false;
+        let activeContext = getMediaContext();
 
         const show = (el) => { if (el) el.classList.remove('hidden'); };
         const hide = (el) => { if (el) el.classList.add('hidden'); };
@@ -346,6 +376,67 @@
             if (emptyText) {
                 emptyText.textContent = emptyLabel || '';
             }
+            updateDirectoryUi();
+        }
+
+        function getDirectoryLabel(context) {
+            const normalized = normalizeContext(context);
+            return normalized === '' ? (getRootDirectoryLabel() || 'Root') : normalized;
+        }
+
+        function updateDirectoryUi() {
+            if (directoryCurrent) {
+                const prefix = getCurrentDirectoryLabel() || 'Current directory';
+                directoryCurrent.textContent = `${prefix}: ${getDirectoryLabel(activeContext)}`;
+            }
+
+            if (!directoryList) {
+                return;
+            }
+
+            if (!directories.length) {
+                directoryList.innerHTML = `<p class="media-modal-directory-empty">${escapeAttribute(getDirectoryEmptyLabel() || 'No subdirectory.')}</p>`;
+                return;
+            }
+
+            directoryList.innerHTML = '';
+            directories.forEach((directory) => {
+                const path = normalizeContext(directory.path || '');
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'media-modal-directory-item' + (path === activeContext ? ' active' : '');
+                item.dataset.context = path;
+                item.innerHTML = `
+                    <i class="fas ${path === '' ? 'fa-folder-open' : 'fa-folder'}" aria-hidden="true"></i>
+                    <span>${escapeAttribute(getDirectoryLabel(path))}</span>
+                `;
+                directoryList.appendChild(item);
+            });
+        }
+
+        function setActiveContext(context) {
+            activeContext = normalizeContext(context);
+            selectedIndex = null;
+            if (info) info.textContent = '';
+            if (selectBtn) selectBtn.disabled = true;
+            updateDirectoryUi();
+            load({ preserveTab: true });
+        }
+
+        function loadDirectories() {
+            const params = { folder: getUploadFolder() };
+            const apiCandidates = buildApiCandidates(getApiDirectoriesUrl(), 'admin/media/api/directories', params);
+            const primaryApi = apiCandidates.shift() || buildApiUrlFromLocation('admin/media/api/directories', params);
+
+            return fetchJsonWithFallback(primaryApi, apiCandidates)
+                .then((data) => {
+                    directories = Array.isArray(data.directories) ? data.directories : [];
+                    updateDirectoryUi();
+                })
+                .catch(() => {
+                    directories = [];
+                    updateDirectoryUi();
+                });
         }
 
         function render() {
@@ -390,7 +481,11 @@
         function load(options) {
             const preserveTab = !!(options && options.preserveTab);
             const mode = getMediaMode();
+            const context = activeContext;
             const params = mode === 'images' ? {} : { folder: getMediaFolder() };
+            if (context !== '') {
+                params.context = context;
+            }
             const pathValue = mode === 'images' ? 'admin/media/api/images' : 'admin/media/api/files';
             const apiUrl = mode === 'images' ? getApiImagesUrl() : (getApiFilesUrl() || getApiImagesUrl());
 
@@ -429,6 +524,17 @@
                 if (!item) return;
                 const index = Number(item.dataset.index || 0);
                 setSelected(index);
+            });
+        }
+
+        if (directoryList) {
+            directoryList.addEventListener('click', (event) => {
+                const item = event.target.closest('.media-modal-directory-item');
+                if (!item) {
+                    return;
+                }
+                event.preventDefault();
+                setActiveContext(item.dataset.context || '');
             });
         }
 
@@ -476,6 +582,10 @@
             uploadInProgress = true;
             const formData = new FormData();
             formData.append('folder', getUploadFolder());
+            const context = activeContext;
+            if (context !== '') {
+                formData.append('media_context', context);
+            }
 
             const csrfToken = getCsrfToken();
             if (csrfToken) {
@@ -536,7 +646,7 @@
                 }
 
                 switchTab('library');
-                load();
+                loadDirectories().finally(() => load({ preserveTab: true }));
             });
 
             xhr.addEventListener('error', () => {
@@ -635,7 +745,8 @@
             reload: (nextOptions) => {
                 const liveConfig = parseModalConfig(modal);
                 config = Object.assign({}, liveConfig, config, nextOptions && typeof nextOptions === 'object' ? nextOptions : {});
-                load(nextOptions);
+                activeContext = getMediaContext();
+                loadDirectories().finally(() => load(nextOptions));
             },
             open: () => openModal(),
             close: () => closeModal(),
@@ -644,10 +755,12 @@
             updateConfig: (nextConfig) => {
                 const liveConfig = parseModalConfig(modal);
                 config = Object.assign({}, liveConfig, config, nextConfig && typeof nextConfig === 'object' ? nextConfig : {});
+                activeContext = getMediaContext();
                 applyFileInputAccept();
+                loadDirectories();
             },
         };
 
-        load();
+        loadDirectories().finally(() => load());
     };
 })();

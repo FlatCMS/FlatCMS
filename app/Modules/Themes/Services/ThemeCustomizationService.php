@@ -42,6 +42,32 @@ final class ThemeCustomizationService
         return runtime_css_asset($css, 'theme-customization', $type . '-' . $name);
     }
 
+    public function editorPreviewAssetForActiveFrontendTheme(?array $settings = null): string
+    {
+        $settings = $settings ?? FlatFile::settings();
+        $theme = trim((string) ($settings['frontend_theme'] ?? 'default'));
+        if ($theme === '') {
+            return '';
+        }
+
+        return $this->editorPreviewAssetForFrontendTheme($theme);
+    }
+
+    public function editorPreviewAssetForFrontendTheme(string $name): string
+    {
+        $safeName = trim((string) preg_replace('/[^a-zA-Z0-9_-]/', '', $name));
+        if ($safeName === '') {
+            return '';
+        }
+
+        $css = $this->buildEditorPreviewCss($safeName);
+        if ($css === '') {
+            return '';
+        }
+
+        return runtime_css_asset($css, 'theme-editor-preview', 'frontend-' . $safeName);
+    }
+
     public function buildRuntimeCss(string $type, string $name): string
     {
         if (!in_array($type, ['admin', 'frontend'], true)) {
@@ -96,6 +122,35 @@ final class ThemeCustomizationService
         }
 
         return trim(implode("\n\n", array_filter($blocks, static fn($block): bool => trim((string) $block) !== '')));
+    }
+
+    private function buildEditorPreviewCss(string $name): string
+    {
+        $themeCssPath = $this->resolveThemeStylePath('frontend', $name);
+        $themeCss = is_file($themeCssPath) ? (string) @file_get_contents($themeCssPath) : '';
+        $runtimeCss = $this->buildRuntimeCss('frontend', $name);
+
+        $baseVariables = array_merge(
+            $this->extractCssVariablesForSelectors($themeCss, [':root']),
+            $this->extractCssVariablesForSelectors($runtimeCss, [':root'])
+        );
+        $lightVariables = array_merge(
+            $this->extractCssVariablesForSelectors($themeCss, ['body.light-mode', 'html.theme-light-init']),
+            $this->extractCssVariablesForSelectors($runtimeCss, ['body.light-mode', 'html.theme-light-init'])
+        );
+
+        $blocks = [];
+        $baseBlock = $this->buildScopedCssVariableBlock('body.admin-body .sun-editor .sun-editor-editable', $baseVariables);
+        if ($baseBlock !== '') {
+            $blocks[] = $baseBlock;
+        }
+
+        $lightBlock = $this->buildScopedCssVariableBlock('body.admin-body.light-mode .sun-editor .sun-editor-editable, html.theme-light-init body.admin-body .sun-editor .sun-editor-editable', $lightVariables);
+        if ($lightBlock !== '') {
+            $blocks[] = $lightBlock;
+        }
+
+        return implode("\n\n", $blocks);
     }
 
     private function buildComponentCustomizationCss(array $customization): string
@@ -483,6 +538,94 @@ final class ThemeCustomizationService
         }
 
         return BASE_PATH . '/public/themes/' . $type . '/' . $name . '/theme.json';
+    }
+
+    private function resolveThemeStylePath(string $type, string $name): string
+    {
+        $rootPath = BASE_PATH . '/themes/' . $type . '/' . $name . '/assets/css/style.css';
+        if (is_file($rootPath)) {
+            return $rootPath;
+        }
+
+        return BASE_PATH . '/public/themes/' . $type . '/' . $name . '/assets/css/style.css';
+    }
+
+    private function extractCssVariablesForSelectors(string $css, array $selectors): array
+    {
+        $css = trim((string) preg_replace('/\/\*.*?\*\//s', '', $css));
+        if ($css === '' || $selectors === []) {
+            return [];
+        }
+
+        if (!preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $blocks, PREG_SET_ORDER)) {
+            return [];
+        }
+
+        $variables = [];
+        foreach ($blocks as $block) {
+            $selector = trim((string) ($block[1] ?? ''));
+            if (!$this->selectorListContains($selector, $selectors)) {
+                continue;
+            }
+
+            foreach ($this->extractCssVariablesFromDeclarations((string) ($block[2] ?? '')) as $name => $value) {
+                $variables[$name] = $value;
+            }
+        }
+
+        return $variables;
+    }
+
+    private function selectorListContains(string $selectorList, array $selectors): bool
+    {
+        $parts = array_map(
+            static fn(string $selector): string => trim($selector),
+            explode(',', $selectorList)
+        );
+        $needles = array_map(
+            static fn(string $selector): string => trim($selector),
+            $selectors
+        );
+
+        foreach ($parts as $part) {
+            if ($part !== '' && in_array($part, $needles, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function extractCssVariablesFromDeclarations(string $declarations): array
+    {
+        if (!preg_match_all('/(--[a-zA-Z0-9_-]+)\s*:\s*([^;]+);/', $declarations, $matches, PREG_SET_ORDER)) {
+            return [];
+        }
+
+        $variables = [];
+        foreach ($matches as $match) {
+            $name = trim((string) ($match[1] ?? ''));
+            $value = trim((string) ($match[2] ?? ''));
+            if ($name !== '' && $value !== '') {
+                $variables[$name] = $value;
+            }
+        }
+
+        return $variables;
+    }
+
+    private function buildScopedCssVariableBlock(string $selector, array $variables): string
+    {
+        if ($selector === '' || $variables === []) {
+            return '';
+        }
+
+        $lines = [];
+        foreach ($variables as $name => $value) {
+            $lines[] = '  ' . $name . ': ' . $value . ';';
+        }
+
+        return $selector . " {\n" . implode("\n", $lines) . "\n}";
     }
 
     private function readJsonFile(string $path): ?array

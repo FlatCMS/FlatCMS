@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Pages\Support;
 
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
 
@@ -51,7 +52,7 @@ final class SystemPages
     /**
      * @return array<string, array<string, mixed>>
      */
-    public static function ensureRequired(FlatFile $pages, callable $translate): array
+    public static function ensureRequired(ContentDocumentStore $pages, callable $translate): array
     {
         $definitions = self::definitions($translate);
         $resolved = [];
@@ -105,7 +106,7 @@ final class SystemPages
     /**
      * @return array<string,mixed>|null
      */
-    public static function findByKey(FlatFile $pages, string $key): ?array
+    public static function findByKey(ContentDocumentStore $pages, string $key): ?array
     {
         $key = trim($key);
         if ($key === '') {
@@ -218,7 +219,7 @@ final class SystemPages
      * @param array<string,mixed> $definition
      * @return array<string,mixed>|null
      */
-    private static function findExisting(FlatFile $pages, string $key, array $definition): ?array
+    private static function findExisting(ContentDocumentStore $pages, string $key, array $definition): ?array
     {
         $found = self::findByKey($pages, $key);
         if (is_array($found)) {
@@ -287,7 +288,7 @@ final class SystemPages
      * @param array<string,mixed>|null $builderState
      * @return array<string,mixed>
      */
-    private static function buildUpdatePayload(FlatFile $pages, array $page, array $definition, string $key): array
+    private static function buildUpdatePayload(ContentDocumentStore $pages, array $page, array $definition, string $key): array
     {
         $updatePayload = [];
 
@@ -343,7 +344,7 @@ final class SystemPages
         return $updatePayload;
     }
 
-    private static function inferSourceLocale(FlatFile $pages, array $page): string
+    private static function inferSourceLocale(ContentDocumentStore $pages, array $page): string
     {
         $sourceLocale = self::normalizeLocale((string) ($page['source_locale'] ?? ''));
         if ($sourceLocale !== '') {

@@ -12,8 +12,9 @@ declare(strict_types=1);
 namespace App\Modules\Pages\Controllers;
 
 use App\Core\BaseController;
-use App\Core\I18n;
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
+use App\Core\I18n;
 use App\Modules\Pages\Services\PageContentRenderer;
 use App\Modules\Pages\Services\PageTranslationService;
 use App\Modules\Pages\Support\SystemPages;
@@ -23,7 +24,7 @@ use App\Modules\Settings\Services\SiteBrandingTranslationService;
 
 class FrontController extends BaseController
 {
-    private FlatFile $pages;
+    private ContentDocumentStore $pages;
     private PageTranslationService $translations;
     private SiteRoutingService $siteRouting;
     private ?PageContentRenderer $pageContentRenderer = null;
@@ -32,7 +33,7 @@ class FrontController extends BaseController
     {
         parent::__construct();
         I18n::load('Pages');
-        $this->pages = FlatFile::for('core/pages');
+        $this->pages = ContentDocumentStore::for('core/pages');
         $this->translations = new PageTranslationService($this->pages);
         $this->siteRouting = new SiteRoutingService($this->translations);
     }
@@ -72,7 +73,7 @@ class FrontController extends BaseController
         }
 
         // Get recent posts for homepage
-        $posts = FlatFile::for('core/posts');
+        $posts = ContentDocumentStore::for('core/posts');
         $postTranslations = new PostTranslationService($posts);
         $currentLocale = (string) $this->request->locale();
         $recentPosts = array_filter(

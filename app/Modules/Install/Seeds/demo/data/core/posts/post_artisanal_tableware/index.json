@@ -1,0 +1,20 @@
+{
+    "id": "post_artisanal_tableware",
+    "title": "Le retour de l'art de la table artisanal",
+    "slug": "retour-art-table-artisanal",
+    "excerpt": "Les objets de table faits main reviennent au centre des usages domestiques et des rituels quotidiens.",
+    "featured_image": "/uploads/images/demo-post-tableware.webp",
+    "meta_title": "Le retour de l'art de la table artisanal",
+    "meta_description": "Pourquoi les objets de table faits main retrouvent une place forte dans les intérieurs contemporains.",
+    "categories": [
+        "cat_collections",
+        "cat_inspirations"
+    ],
+    "author_id": "{{ADMIN_ID}}",
+    "status": "published",
+    "created_at": "2026-05-14 10:00:00",
+    "updated_at": "2026-05-14 10:00:00",
+    "translation_group": "post_artisanal_tableware",
+    "locale": "fr-FR",
+    "source_locale": "fr-FR"
+}

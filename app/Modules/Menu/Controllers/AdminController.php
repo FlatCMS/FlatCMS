@@ -13,6 +13,7 @@ namespace App\Modules\Menu\Controllers;
 
 use App\Modules\Categories\Services\CategoryTranslationService;
 use App\Core\BaseController;
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
 use App\Helpers\IconHelper;
@@ -48,7 +49,7 @@ class AdminController extends BaseController
         I18n::load('Posts');
 
         $menus = FlatFile::settings('menus');
-        $pages = FlatFile::for('core/pages')->all();
+        $pages = ContentDocumentStore::for('core/pages')->all();
         $items = $menus['main']['items'] ?? [];
         $items = $this->ensureItemIds(is_array($items) ? $items : []);
         $library = $menus['main']['library'] ?? [];
@@ -253,7 +254,7 @@ class AdminController extends BaseController
     protected function buildPostItems(): array
     {
         $items = [];
-        $posts = FlatFile::for('core/posts')->all();
+        $posts = ContentDocumentStore::for('core/posts')->all();
         $sourceLocale = $this->siteSourceLocale();
         $canonicalPosts = $this->resolveCanonicalPostsForMenu($posts, $sourceLocale);
 
@@ -419,7 +420,7 @@ class AdminController extends BaseController
     protected function pageTranslations(): PageTranslationService
     {
         if (!$this->pageTranslations instanceof PageTranslationService) {
-            $this->pageTranslations = new PageTranslationService(FlatFile::for('core/pages'));
+            $this->pageTranslations = new PageTranslationService(ContentDocumentStore::for('core/pages'));
         }
 
         return $this->pageTranslations;
@@ -428,7 +429,7 @@ class AdminController extends BaseController
     protected function postTranslations(): PostTranslationService
     {
         if (!$this->postTranslations instanceof PostTranslationService) {
-            $this->postTranslations = new PostTranslationService(FlatFile::for('core/posts'));
+            $this->postTranslations = new PostTranslationService(ContentDocumentStore::for('core/posts'));
         }
 
         return $this->postTranslations;
@@ -930,7 +931,7 @@ class AdminController extends BaseController
             ? new \App\Modules\Settings\Services\SiteRoutingService()
             : null;
 
-        $pages = FlatFile::for('core/pages')->all();
+        $pages = ContentDocumentStore::for('core/pages')->all();
         $pageTranslations = $this->pageTranslations();
         $canonicalPages = $this->resolveCanonicalPagesForMenu($pages, $this->siteSourceLocale());
 
@@ -981,7 +982,7 @@ class AdminController extends BaseController
             }
         }
 
-        $posts = FlatFile::for('core/posts')->all();
+        $posts = ContentDocumentStore::for('core/posts')->all();
         foreach ($posts as $post) {
             if (!is_array($post)) {
                 continue;

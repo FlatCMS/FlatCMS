@@ -13,6 +13,7 @@ namespace App\Modules\Posts\Controllers;
 
 use App\Modules\Categories\Services\CategoryTranslationService;
 use App\Core\BaseController;
+use App\Core\ContentDocumentStore;
 use App\Core\I18n;
 use App\Core\FlatFile;
 use App\Core\ModuleManager;
@@ -22,7 +23,7 @@ use App\Modules\Trash\Services\TrashService;
 
 class AdminController extends BaseController
 {
-    private FlatFile $posts;
+    private ContentDocumentStore $posts;
     private FlatFile $categories;
     private CategoryTranslationService $categoryTranslations;
     private PostTranslationService $translations;
@@ -31,7 +32,7 @@ class AdminController extends BaseController
     {
         parent::__construct();
         I18n::load('Posts');
-        $this->posts = FlatFile::for('core/posts');
+        $this->posts = ContentDocumentStore::for('core/posts');
         $this->categories = FlatFile::for('core/categories');
         $this->categoryTranslations = new CategoryTranslationService($this->categories);
         $this->translations = new PostTranslationService($this->posts);

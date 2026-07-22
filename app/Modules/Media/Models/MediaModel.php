@@ -173,13 +173,16 @@ class MediaModel
         $items = [];
 
         foreach (array_keys(self::FOLDERS) as $folder) {
-            foreach ($this->scanFolder($folder) as $item) {
-                $path = trim((string) ($item['path'] ?? ''));
-                if ($path === '') {
-                    continue;
-                }
+            foreach ($this->listDirectories($folder) as $directory) {
+                $context = (string) ($directory['path'] ?? '');
+                foreach ($this->scanFolder($folder, $context) as $item) {
+                    $path = trim((string) ($item['path'] ?? ''));
+                    if ($path === '') {
+                        continue;
+                    }
 
-                $items[$path] = $item;
+                    $items[$path] = $item;
+                }
             }
         }
 
@@ -265,8 +268,10 @@ class MediaModel
     /**
      * Upload un fichier
      */
-    public function upload(array $file, string $folder = 'images', int|string $uploadedBy = 1): array
+    public function upload(array $file, string $folder = 'images', int|string $uploadedBy = 1, string $context = ''): array
     {
+        $context = $this->sanitizeSubdirectory($context);
+
         // Validation du dossier
         if (!isset(self::FOLDERS[$folder])) {
             return ['success' => false, 'error' => 'invalid_folder'];
@@ -315,8 +320,13 @@ class MediaModel
         }
 
         // Génération du nom de fichier unique
-        $filename = $this->generateUniqueFilename($originalName, $folder);
-        $targetPath = $this->uploadPath . '/' . $folder . '/' . $filename;
+        $filename = $this->generateUniqueFilename($originalName, $folder, $context);
+        $targetDir = rtrim($this->uploadPath . '/' . $folder . '/' . $context, '/');
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+        $targetPath = $targetDir . '/' . $filename;
+        $relativePath = $folder . '/' . ($context !== '' ? $context . '/' : '') . $filename;
 
         // Déplacement du fichier
         if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
@@ -336,8 +346,8 @@ class MediaModel
         $media = $this->repository->create([
             'name' => $filename,
             'original_name' => $originalName,
-            'path' => $folder . '/' . $filename,
-            'url' => $this->normalizeMediaUrl('/uploads/' . $folder . '/' . $filename, $folder, $filename),
+            'path' => $relativePath,
+            'url' => $this->normalizeMediaUrl('/uploads/' . $relativePath, $folder, $filename),
             'folder' => $folder,
             'type' => $this->getTypeByExtension($extension),
             'mime' => $mimeType,
@@ -353,6 +363,94 @@ class MediaModel
         ]);
 
         return ['success' => true, 'media' => $media];
+    }
+
+    public function contextualize(string $path, string $folder = 'images', int|string $uploadedBy = 1, string $context = ''): array
+    {
+        if (!isset(self::FOLDERS[$folder])) {
+            return ['success' => false, 'error' => 'invalid_folder'];
+        }
+
+        $context = $this->sanitizeSubdirectory($context);
+        $normalizedPath = trim(str_replace('\\', '/', $path), '/');
+        $normalizedPath = preg_replace('#^(?:public/)?uploads/#', '', $normalizedPath) ?? $normalizedPath;
+        if ($normalizedPath === '') {
+            return ['success' => false, 'error' => 'media_not_found'];
+        }
+
+        $source = $this->findByPath($normalizedPath);
+        if (!is_array($source)) {
+            return ['success' => false, 'error' => 'media_not_found'];
+        }
+
+        if ($context === '') {
+            return [
+                'success' => true,
+                'media' => $this->ensurePersisted($source) ?? $source,
+                'created' => false,
+            ];
+        }
+
+        $sourcePath = trim((string) ($source['path'] ?? $normalizedPath), '/');
+        $targetPrefix = $folder . '/' . $context . '/';
+        if (str_starts_with($sourcePath, $targetPrefix)) {
+            return [
+                'success' => true,
+                'media' => $this->ensurePersisted($source) ?? $source,
+                'created' => false,
+            ];
+        }
+
+        $sourcePath = preg_replace('#^(?:public/)?uploads/#', '', $sourcePath) ?? $sourcePath;
+        $sourceAbsolute = $this->getAbsolutePath($sourcePath);
+        if ($sourceAbsolute === null) {
+            return ['success' => false, 'error' => 'media_not_found'];
+        }
+
+        $originalName = trim((string) ($source['original_name'] ?? $source['name'] ?? ''));
+        if ($originalName === '') {
+            $originalName = basename($sourcePath);
+        }
+
+        $filename = $this->sanitizeFilename($originalName);
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if (!in_array($extension, self::FOLDERS[$folder], true)) {
+            return ['success' => false, 'error' => 'invalid_extension'];
+        }
+
+        $targetDir = rtrim($this->uploadPath . '/' . $folder . '/' . $context, '/');
+        if (!is_dir($targetDir) && !mkdir($targetDir, 0755, true)) {
+            return ['success' => false, 'error' => 'move_failed'];
+        }
+
+        $targetPath = $targetDir . '/' . $filename;
+        $relativePath = $targetPrefix . $filename;
+        if (is_file($targetPath)) {
+            $existing = $this->findByPath($relativePath);
+            if (is_array($existing)) {
+                return ['success' => true, 'media' => $existing, 'created' => false];
+            }
+
+            $record = $this->buildFileRecord($targetPath, $relativePath, $folder, $filename, $uploadedBy, $source);
+            $media = $this->ensurePersisted($record);
+
+            return [
+                'success' => is_array($media),
+                'media' => $media,
+                'created' => is_array($media),
+                'error' => is_array($media) ? null : 'move_failed',
+            ];
+        }
+
+        if (!copy($sourceAbsolute, $targetPath)) {
+            return ['success' => false, 'error' => 'move_failed'];
+        }
+
+        $media = $this->repository->create(
+            $this->buildFileRecord($targetPath, $relativePath, $folder, $filename, $uploadedBy, $source)
+        );
+
+        return ['success' => true, 'media' => $media, 'created' => true];
     }
 
     /**
@@ -393,22 +491,168 @@ class MediaModel
         return $this->repository->deleteByPath($path);
     }
 
+    public function deleteDirectory(string $path): bool
+    {
+        $path = trim(str_replace('\\', '/', $path), '/');
+        if ($path === '') {
+            return false;
+        }
+
+        $segments = explode('/', $path);
+        $folder = array_shift($segments) ?? '';
+        if ($folder === '' || !isset(self::FOLDERS[$folder])) {
+            return false;
+        }
+
+        $context = $this->sanitizeSubdirectory(implode('/', $segments));
+        if ($context === '') {
+            return false;
+        }
+
+        $relativePath = $folder . '/' . $context;
+        $dir = $this->resolveSafeUploadDirectory($relativePath);
+        if ($dir === null) {
+            return false;
+        }
+
+        if (!$this->removeDirectoryRecursive($dir)) {
+            return false;
+        }
+
+        foreach ($this->repository->all() as $media) {
+            $mediaPath = trim((string) ($media['path'] ?? ''), '/');
+            if ($mediaPath === $relativePath || str_starts_with($mediaPath, $relativePath . '/')) {
+                $this->repository->delete((int) ($media['id'] ?? 0));
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Déplace un fichier ou dossier vers un autre sous-dossier.
+     *
+     * @param string $folder     Famille (images, documents, etc.)
+     * @param string $context    Contexte actuel du fichier/dossier source
+     * @param string $itemName   Nom du fichier ou dossier à déplacer
+     * @param string $targetContext  Contexte de destination
+     * @param string $type       'file' ou 'directory'
+     * @return array<string, mixed>
+     */
+    public function move(string $folder, string $context, string $itemName, string $targetContext, string $type): array
+    {
+        $folder = basename($folder);
+        if ($folder === '' || $folder === '.' || $folder === '..' || !isset(self::FOLDERS[$folder])) {
+            return ['success' => false, 'error' => 'invalid_folder'];
+        }
+
+        $context = $this->sanitizeSubdirectory($context);
+        $targetContext = $this->sanitizeSubdirectory($targetContext);
+        $itemName = basename($itemName);
+        if ($itemName === '' || $itemName === '.' || $itemName === '..') {
+            return ['success' => false, 'error' => 'invalid_name'];
+        }
+
+        if (!in_array($type, ['file', 'directory'], true)) {
+            return ['success' => false, 'error' => 'invalid_type'];
+        }
+
+        $sourcePath = rtrim($this->uploadPath . '/' . $folder . '/' . ($context !== '' ? $context . '/' : ''), '/') . '/' . $itemName;
+        $destPath = rtrim($this->uploadPath . '/' . $folder . '/' . ($targetContext !== '' ? $targetContext . '/' : ''), '/') . '/' . $itemName;
+
+        if (!file_exists($sourcePath)) {
+            return ['success' => false, 'error' => 'source_not_found'];
+        }
+
+        if (file_exists($destPath)) {
+            return ['success' => false, 'error' => 'target_exists'];
+        }
+
+        if ($type === 'file') {
+            $destDir = dirname($destPath);
+            if (!is_dir($destDir)) {
+                if (!mkdir($destDir, 0755, true)) {
+                    return ['success' => false, 'error' => 'mkdir_failed'];
+                }
+            }
+
+            if (!rename($sourcePath, $destPath)) {
+                return ['success' => false, 'error' => 'rename_failed'];
+            }
+
+            $sourceRelative = $folder . '/' . ($context !== '' ? $context . '/' : '') . $itemName;
+            $relativePath = $folder . '/' . ($targetContext !== '' ? $targetContext . '/' : '') . $itemName;
+            $existing = $this->repository->findByPath($sourceRelative);
+            if ($existing) {
+                $url = $this->normalizeMediaUrl('/uploads/' . $relativePath, $folder, $itemName);
+                $this->repository->update((int) ($existing['id'] ?? 0), [
+                    'path' => $relativePath,
+                    'url' => $url,
+                ]);
+            }
+
+            return ['success' => true, 'type' => 'file'];
+        }
+
+        // Directory move
+        $sourceContext = trim(($context !== '' ? $context . '/' : '') . $itemName, '/');
+        if ($targetContext === $sourceContext || str_starts_with($targetContext . '/', $sourceContext . '/')) {
+            return ['success' => false, 'error' => 'invalid_name'];
+        }
+
+        if (!is_dir($sourcePath)) {
+            return ['success' => false, 'error' => 'source_not_directory'];
+        }
+
+        $destDir = dirname($destPath);
+        if (!is_dir($destDir)) {
+            if (!mkdir($destDir, 0755, true)) {
+                return ['success' => false, 'error' => 'mkdir_failed'];
+            }
+        }
+
+        if (!rename($sourcePath, $destPath)) {
+            return ['success' => false, 'error' => 'rename_failed'];
+        }
+
+        $oldPrefix = $folder . '/' . ($context !== '' ? $context . '/' : '') . $itemName;
+        $newPrefix = $folder . '/' . ($targetContext !== '' ? $targetContext . '/' : '') . $itemName;
+
+        foreach ($this->repository->all() as $media) {
+            $path = (string) ($media['path'] ?? '');
+            if (str_starts_with($path, $oldPrefix . '/') || $path === $oldPrefix) {
+                $newPath = str_replace($oldPrefix, $newPrefix, $path);
+                $url = $this->normalizeMediaUrl('/uploads/' . $newPath, $folder, basename($newPath));
+                $this->repository->update((int) ($media['id'] ?? 0), [
+                    'path' => $newPath,
+                    'url' => $url,
+                ]);
+            }
+        }
+
+        return ['success' => true, 'type' => 'directory'];
+    }
+
     /**
      * Scanne un dossier et retourne les fichiers (physiques + JSON)
      */
-    public function scanFolder(string $folder): array
+    public function scanFolder(string $folder, string $context = ''): array
     {
-        if (!isset(self::FOLDERS[$folder])) {
+        // Sécurité : pas de traversal
+        $folder = basename($folder);
+        if ($folder === '' || $folder === '.' || $folder === '..') {
             return [];
         }
 
-        $folderPath = $this->uploadPath . '/' . $folder;
+        $context = $this->sanitizeSubdirectory($context);
+        $folderPath = rtrim($this->uploadPath . '/' . $folder . '/' . $context, '/');
         if (!is_dir($folderPath)) {
             return [];
         }
 
         $files = [];
-        $allowedExtensions = self::FOLDERS[$folder];
+        $isConfigured = isset(self::FOLDERS[$folder]);
+        $allowedExtensions = $isConfigured ? self::FOLDERS[$folder] : null;
 
         foreach (scandir($folderPath) as $filename) {
             if ($filename === '.' || $filename === '..' || $filename === '.gitkeep') {
@@ -421,12 +665,13 @@ class MediaModel
             }
 
             $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-            if (!in_array($extension, $allowedExtensions)) {
+            if ($allowedExtensions !== null && !in_array($extension, $allowedExtensions)) {
                 continue;
             }
 
             // Chercher dans le repository d'abord
-            $existing = $this->repository->findByPath($folder . '/' . $filename);
+            $relativePath = $folder . '/' . ($context !== '' ? $context . '/' : '') . $filename;
+            $existing = $this->repository->findByPath($relativePath);
             
             if ($existing) {
                 $files[] = $this->normalizeMediaRecord($existing, true);
@@ -447,8 +692,8 @@ class MediaModel
                     'id' => 0,
                     'name' => $filename,
                     'original_name' => $filename,
-                    'path' => $folder . '/' . $filename,
-                    'url' => $this->normalizeMediaUrl('/uploads/' . $folder . '/' . $filename, $folder, $filename),
+                    'path' => $relativePath,
+                    'url' => $this->normalizeMediaUrl('/uploads/' . $relativePath, $folder, $filename),
                     'folder' => $folder,
                     'type' => $this->getTypeByExtension($extension),
                     'mime' => $mime,
@@ -470,6 +715,90 @@ class MediaModel
     }
 
     /**
+     * Liste les sous-dossiers disponibles dans une famille de medias.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listDirectories(string $folder): array
+    {
+        $folder = basename($folder);
+        if ($folder === '' || $folder === '.' || $folder === '..') {
+            return [];
+        }
+
+        $rootPath = $this->uploadPath . '/' . $folder;
+        if (!is_dir($rootPath)) {
+            return [];
+        }
+
+        $directories = [
+            $this->buildDirectoryRecord($folder, ''),
+        ];
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($rootPath, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            if (!$item instanceof \SplFileInfo || !$item->isDir()) {
+                continue;
+            }
+
+            $relative = str_replace('\\', '/', substr($item->getPathname(), strlen($rootPath) + 1));
+            $context = $this->sanitizeSubdirectory($relative);
+            if ($context === '') {
+                continue;
+            }
+
+            $directories[] = $this->buildDirectoryRecord($folder, $context);
+        }
+
+        usort($directories, static function (array $left, array $right): int {
+            $leftPath = (string) ($left['path'] ?? '');
+            $rightPath = (string) ($right['path'] ?? '');
+
+            if ($leftPath === '') {
+                return -1;
+            }
+            if ($rightPath === '') {
+                return 1;
+            }
+
+            return strnatcasecmp($leftPath, $rightPath);
+        });
+
+        return $directories;
+    }
+
+    /**
+     * Cree un sous-dossier dans une famille de medias.
+     *
+     * @return array<string, mixed>
+     */
+    public function createDirectory(string $folder, string $context): array
+    {
+        if (!isset(self::FOLDERS[$folder])) {
+            return ['success' => false, 'error' => 'invalid_folder'];
+        }
+
+        $context = $this->sanitizeSubdirectory($context);
+        if ($context === '') {
+            return ['success' => false, 'error' => 'directory_invalid'];
+        }
+
+        $targetPath = $this->uploadPath . '/' . $folder . '/' . $context;
+        if (!is_dir($targetPath) && !mkdir($targetPath, 0755, true)) {
+            return ['success' => false, 'error' => 'directory_create_error'];
+        }
+
+        return [
+            'success' => true,
+            'directory' => $this->buildDirectoryRecord($folder, $context),
+        ];
+    }
+
+    /**
      * Retourne les statistiques
      */
     public function getStats(): array
@@ -477,8 +806,7 @@ class MediaModel
         $stats = [];
         
         foreach (array_keys(self::FOLDERS) as $folder) {
-            $files = $this->scanFolder($folder);
-            $stats[$folder] = count($files);
+            $stats[$folder] = $this->countFilesRecursive($folder);
         }
         
         $stats['total'] = array_sum($stats);
@@ -499,13 +827,15 @@ class MediaModel
         
         // Ajouter les fichiers physiques manquants dans le repository
         foreach (array_keys(self::FOLDERS) as $folder) {
-            $files = $this->scanFolder($folder);
-            foreach ($files as $file) {
-                if (($file['id'] ?? 0) === 0) {
-                    // Fichier sans ID = pas dans le repository
-                    unset($file['id']);
-                    $this->repository->create($file);
-                    $result['added']++;
+            foreach ($this->listDirectories($folder) as $directory) {
+                $files = $this->scanFolder($folder, (string) ($directory['path'] ?? ''));
+                foreach ($files as $file) {
+                    if (($file['id'] ?? 0) === 0) {
+                        // Fichier sans ID = pas dans le repository
+                        unset($file['id']);
+                        $this->repository->create($file);
+                        $result['added']++;
+                    }
                 }
             }
         }
@@ -516,16 +846,17 @@ class MediaModel
     /**
      * Retourne uniquement les images (pour sélecteur avatar, etc.)
      */
-    public function getImages(bool $includeAvatars = false): array
+    public function getImages(bool $includeAvatars = false, string $context = ''): array
     {
         unset($includeAvatars);
 
         $images = [];
+        $context = $this->sanitizeSubdirectory($context);
 
         $folders = ['images'];
 
         foreach ($folders as $folder) {
-            $files = $this->scanFolder($folder);
+            $files = $this->scanFolder($folder, $context);
             foreach ($files as $file) {
                 if (str_starts_with($file['mime'] ?? '', 'image/')) {
                     $images[] = $file;
@@ -595,24 +926,268 @@ class MediaModel
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function buildDirectoryRecord(string $folder, string $context): array
+    {
+        $directoryPath = rtrim($this->uploadPath . '/' . $folder . '/' . $context, '/');
+        $segments = $context === '' ? [] : explode('/', $context);
+        $name = $context === '' ? $folder : (string) end($segments);
+
+        $subdirNames = [];
+        $subdirCount = 0;
+        if (is_dir($directoryPath)) {
+            foreach (scandir($directoryPath) ?: [] as $entry) {
+                if ($entry === '.' || $entry === '..' || $entry === '.gitkeep' || $entry === 'gitkeep') {
+                    continue;
+                }
+                if (in_array($entry, self::HIDDEN_DIRS, true) || str_starts_with($entry, '.')) {
+                    continue;
+                }
+                $full = $directoryPath . '/' . $entry;
+                if (is_dir($full)) {
+                    $subdirCount++;
+                    $subdirNames[] = $entry;
+                }
+            }
+        }
+
+        return [
+            'folder' => $folder,
+            'path' => $context,
+            'name' => $name,
+            'depth' => count($segments),
+            'files_count' => $this->countFilesInDirectory($folder, $context),
+            'has_children' => $subdirCount > 0,
+            'subdir_count' => $subdirCount,
+            'subdirs' => $subdirNames,
+            'created_at' => is_dir($directoryPath) ? date('Y-m-d H:i:s', (int) filemtime($directoryPath)) : null,
+        ];
+    }
+
+    private function countFilesInDirectory(string $folder, string $context = ''): int
+    {
+        $directoryPath = rtrim($this->uploadPath . '/' . $folder . '/' . $this->sanitizeSubdirectory($context), '/');
+        if (!is_dir($directoryPath)) {
+            return 0;
+        }
+
+        $count = 0;
+        $allowedExtensions = self::FOLDERS[$folder] ?? null;
+        foreach (scandir($directoryPath) ?: [] as $filename) {
+            if ($filename === '.' || $filename === '..' || $filename === '.gitkeep') {
+                continue;
+            }
+
+            $filePath = $directoryPath . '/' . $filename;
+            if (!is_file($filePath)) {
+                continue;
+            }
+
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            if ($allowedExtensions === null || in_array($extension, $allowedExtensions, true)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    private function countFilesRecursive(string $folder): int
+    {
+        if (!isset(self::FOLDERS[$folder])) {
+            return 0;
+        }
+
+        $rootPath = $this->uploadPath . '/' . $folder;
+        if (!is_dir($rootPath)) {
+            return 0;
+        }
+
+        $count = 0;
+        $allowedExtensions = self::FOLDERS[$folder];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($rootPath, \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $item) {
+            if (!$item instanceof \SplFileInfo || !$item->isFile()) {
+                continue;
+            }
+
+            $extension = strtolower(pathinfo($item->getFilename(), PATHINFO_EXTENSION));
+            if (in_array($extension, $allowedExtensions, true)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    private function hasSubdirectories(string $directoryPath): bool
+    {
+        if (!is_dir($directoryPath)) {
+            return false;
+        }
+
+        foreach (scandir($directoryPath) ?: [] as $filename) {
+            if ($filename === '.' || $filename === '..') {
+                continue;
+            }
+
+            if (is_dir($directoryPath . '/' . $filename)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Génère un nom de fichier unique
      */
-    private function generateUniqueFilename(string $originalName, string $folder): string
+    private function generateUniqueFilename(string $originalName, string $folder, string $context = ''): string
     {
-        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-        $baseName = pathinfo($originalName, PATHINFO_FILENAME);
-        $baseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
-        $baseName = substr($baseName, 0, 50);
-        
-        $filename = $baseName . '.' . $extension;
+        $filename = $this->sanitizeFilename($originalName);
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $baseName = pathinfo($filename, PATHINFO_FILENAME);
         $counter = 1;
         
-        while (file_exists($this->uploadPath . '/' . $folder . '/' . $filename)) {
+        $targetDir = rtrim($this->uploadPath . '/' . $folder . '/' . $this->sanitizeSubdirectory($context), '/');
+        while (file_exists($targetDir . '/' . $filename)) {
             $filename = $baseName . '_' . $counter . '.' . $extension;
             $counter++;
         }
         
         return $filename;
+    }
+
+    /**
+     * @param array<string, mixed> $source
+     * @return array<string, mixed>
+     */
+    private function buildFileRecord(
+        string $filePath,
+        string $relativePath,
+        string $folder,
+        string $filename,
+        int|string $uploadedBy,
+        array $source = []
+    ): array {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $mime = strtolower((string) (mime_content_type($filePath) ?: ($source['mime'] ?? 'application/octet-stream')));
+        $size = (int) (filesize($filePath) ?: ($source['size'] ?? 0));
+
+        $dimensions = null;
+        if (str_starts_with($mime, 'image/') && $mime !== 'image/svg+xml') {
+            $imgInfo = @getimagesize($filePath);
+            if ($imgInfo) {
+                $dimensions = ['width' => $imgInfo[0], 'height' => $imgInfo[1]];
+            }
+        }
+
+        return [
+            'name' => $filename,
+            'original_name' => (string) ($source['original_name'] ?? $source['name'] ?? $filename),
+            'path' => $relativePath,
+            'url' => $this->normalizeMediaUrl('/uploads/' . $relativePath, $folder, $filename),
+            'folder' => $folder,
+            'type' => $this->getTypeByExtension($extension),
+            'mime' => $mime,
+            'extension' => $extension,
+            'size' => $size,
+            'dimensions' => $dimensions,
+            'uploaded_by' => $uploadedBy,
+            'ai_index_status' => 'not_indexed',
+            'ai_indexed_at' => null,
+            'ai_source_hash' => null,
+            'ai_last_error' => null,
+            'ai_metadata' => [],
+        ];
+    }
+
+    private function sanitizeFilename(string $originalName): string
+    {
+        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        $baseName = pathinfo($originalName, PATHINFO_FILENAME);
+        $baseName = (string) preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+        $baseName = trim($baseName, '_-');
+        $baseName = substr($baseName !== '' ? $baseName : 'media', 0, 50);
+
+        return $extension !== '' ? ($baseName . '.' . $extension) : $baseName;
+    }
+
+    private function sanitizeSubdirectory(string $context): string
+    {
+        $normalized = trim(str_replace('\\', '/', $context), '/');
+        if ($normalized === '') {
+            return '';
+        }
+
+        $segments = array_filter(explode('/', $normalized), static function (string $segment): bool {
+            return $segment !== '' && !in_array($segment, ['.', '..'], true);
+        });
+
+        $safeSegments = [];
+        foreach ($segments as $segment) {
+            $safe = strtolower((string) preg_replace('/[^a-z0-9_-]+/i', '-', $segment));
+            $safe = trim($safe, '-_');
+            if ($safe !== '') {
+                $safeSegments[] = $safe;
+            }
+        }
+
+        return substr(implode('/', $safeSegments), 0, 160);
+    }
+
+    private function resolveSafeUploadDirectory(string $relativePath): ?string
+    {
+        $normalized = trim(str_replace('\\', '/', $relativePath), '/');
+        if ($normalized === '' || str_contains($normalized, "\0")) {
+            return null;
+        }
+
+        $root = realpath($this->uploadPath);
+        $directory = realpath($this->uploadPath . '/' . $normalized);
+        if ($root === false || $directory === false || !is_dir($directory)) {
+            return null;
+        }
+
+        $root = rtrim(str_replace('\\', '/', $root), '/');
+        $directory = rtrim(str_replace('\\', '/', $directory), '/');
+        if ($directory === $root || !str_starts_with($directory . '/', $root . '/')) {
+            return null;
+        }
+
+        return $directory;
+    }
+
+    private function removeDirectoryRecursive(string $directory): bool
+    {
+        $items = scandir($directory);
+        if ($items === false) {
+            return false;
+        }
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $itemPath = $directory . '/' . $item;
+            if (is_dir($itemPath) && !is_link($itemPath)) {
+                if (!$this->removeDirectoryRecursive($itemPath)) {
+                    return false;
+                }
+                continue;
+            }
+
+            if (!@unlink($itemPath)) {
+                return false;
+            }
+        }
+
+        return @rmdir($directory);
     }
 
     /**
@@ -726,6 +1301,83 @@ class MediaModel
     }
 
     /**
+     * Dossiers masqués - jamais affichés dans l'arborescence
+     */
+    private const HIDDEN_DIRS = ['cache', 'files', 'media', 'personal', 'logo', '.DS_Store'];
+
+    /**
+     * Scanne les vrais dossiers du filesystem dans public/uploads/
+     *
+     * @return array<int, array{path: string, name: string, icon: string, color: string, count: int}>
+     */
+    public function scanUploadDirectories(): array
+    {
+        if (!is_dir($this->uploadPath)) {
+            return [];
+        }
+
+        $directories = [];
+        $items = scandir($this->uploadPath);
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $fullPath = $this->uploadPath . '/' . $item;
+            if (!is_dir($fullPath)) {
+                continue;
+            }
+
+            if (in_array($item, self::HIDDEN_DIRS, true) || str_starts_with($item, '.')) {
+                continue;
+            }
+
+            $isConfigured = isset(self::FOLDER_CONFIG[$item]);
+            $icon = $isConfigured ? (self::FOLDER_CONFIG[$item]['icon'] ?? 'fa-folder') : 'fa-folder';
+            $color = $isConfigured ? (self::FOLDER_CONFIG[$item]['color'] ?? 'gray') : 'gray';
+            $count = $this->countAllFiles($fullPath);
+
+            $directories[] = [
+                'path' => $item,
+                'name' => $item,
+                'icon' => $icon,
+                'color' => $color,
+                'count' => $count,
+            ];
+        }
+
+        usort($directories, static function (array $left, array $right): int {
+            return strnatcasecmp($left['name'], $right['name']);
+        });
+
+        return $directories;
+    }
+
+    /**
+     * Compte tous les fichiers d'un dossier (sans filtre d'extension)
+     */
+    private function countAllFiles(string $directory): int
+    {
+        if (!is_dir($directory)) {
+            return 0;
+        }
+
+        $count = 0;
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $item) {
+            if ($item instanceof \SplFileInfo && $item->isFile()) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
      * Formate la taille en unité lisible
      */
     public static function formatSize(int $bytes): string
@@ -735,5 +1387,101 @@ class MediaModel
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
         return round($bytes / (1024 ** $pow), 2) . ' ' . $units[$pow];
+    }
+
+    /**
+     * Retourne l'arborescence complète de public/uploads/ avec fichiers et dossiers.
+     *
+     * @return array<string, mixed>
+     */
+    public function getDirectoryTree(): array
+    {
+        $rootPath = $this->uploadPath;
+        if (!is_dir($rootPath)) {
+            return ['name' => 'uploads', 'path' => '', 'type' => 'directory', 'count' => 0, 'children' => []];
+        }
+
+        return $this->buildTreeRecursive($rootPath, '');
+    }
+
+    /**
+     * Construit récursivement l'arbre d'un dossier.
+     *
+     * @param string $absolutePath Chemin absolu sur le disque
+     * @param string $relativePath Chemin relatif à uploads/
+     * @return array<string, mixed>
+     */
+    private function buildTreeRecursive(string $absolutePath, string $relativePath): array
+    {
+        $name = $relativePath === '' ? 'uploads' : basename($absolutePath);
+        $items = scandir($absolutePath);
+
+        if ($items === false) {
+            return ['name' => $name, 'path' => $relativePath, 'type' => 'directory', 'count' => 0, 'children' => []];
+        }
+
+        $children = [];
+        $fileCount = 0;
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..' || $item === '.gitkeep' || $item === 'gitkeep') {
+                continue;
+            }
+
+            if (in_array($item, self::HIDDEN_DIRS, true) || str_starts_with($item, '.')) {
+                continue;
+            }
+
+            // Skip macOS metadata files that don't start with '.'
+            if ($item === "Icon\r" || $item === 'Thumbs.db') {
+                continue;
+            }
+
+            $fullPath = $absolutePath . '/' . $item;
+            $itemRelative = $relativePath === '' ? $item : $relativePath . '/' . $item;
+
+            if (is_dir($fullPath)) {
+                $sub = $this->buildTreeRecursive($fullPath, $itemRelative);
+                $fileCount += $sub['count'];
+                $children[] = $sub;
+            } elseif (is_file($fullPath)) {
+                $fileCount++;
+                $ext = strtolower(pathinfo($item, PATHINFO_EXTENSION));
+                $folder = explode('/', $itemRelative)[0];
+                $url = $this->normalizeMediaUrl('/uploads/' . $itemRelative, $folder, $item);
+                $mime = mime_content_type($fullPath) ?: 'application/octet-stream';
+                $children[] = [
+                    'name' => $item,
+                    'path' => $itemRelative,
+                    'type' => 'file',
+                    'extension' => $ext,
+                    'url' => $url,
+                    'mime' => $mime,
+                ];
+            }
+        }
+
+        $isConfigured = $relativePath !== '' && isset(self::FOLDER_CONFIG[$name]);
+        $icon = $isConfigured ? (self::FOLDER_CONFIG[$name]['icon'] ?? 'fa-folder') : 'fa-folder';
+        $color = $isConfigured ? (self::FOLDER_CONFIG[$name]['color'] ?? 'gray') : 'gray';
+
+        return [
+            'name' => $name,
+            'path' => $relativePath,
+            'type' => 'directory',
+            'count' => $fileCount,
+            'icon' => $icon,
+            'color' => $color,
+            'children' => $children,
+        ];
+    }
+
+    /**
+     * Retourne le nombre total de fichiers dans uploads/
+     */
+    public function getTotalFileCount(): int
+    {
+        $tree = $this->getDirectoryTree();
+        return $tree['count'] ?? 0;
     }
 }

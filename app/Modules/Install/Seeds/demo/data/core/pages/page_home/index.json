@@ -1,0 +1,15 @@
+{
+    "id": "page_home",
+    "title": "Accueil",
+    "slug": "home",
+    "editor_mode": "classic",
+    "meta_title": "Accueil - {{SITE_NAME}}",
+    "meta_description": "Vitrine éditoriale de céramiques artisanales, collections, atelier et journal de marque.",
+    "status": "published",
+    "author_id": "{{ADMIN_ID}}",
+    "created_at": "2026-05-10 09:00:00",
+    "updated_at": "2026-05-10 09:00:00",
+    "translation_group": "page_home",
+    "locale": "fr-FR",
+    "source_locale": "fr-FR"
+}

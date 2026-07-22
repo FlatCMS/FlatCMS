@@ -12,17 +12,19 @@ declare(strict_types=1);
 namespace App\Modules\Pages\Controllers;
 
 use App\Core\BaseController;
-use App\Core\I18n;
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
+use App\Core\I18n;
 use App\Core\ModuleManager;
 use App\Modules\Auth\Services\RoleService;
+use App\Modules\Media\Models\MediaModel;
 use App\Modules\Pages\Services\PageTranslationService;
 use App\Modules\Pages\Support\SystemPages;
 use App\Modules\Trash\Services\TrashService;
 
 class AdminController extends BaseController
 {
-    private FlatFile $pages;
+    private ContentDocumentStore $pages;
     private PageTranslationService $translations;
 
     /** @var array<string,array<string,mixed>>|null */
@@ -32,7 +34,7 @@ class AdminController extends BaseController
     {
         parent::__construct();
         I18n::load('Pages');
-        $this->pages = FlatFile::for('core/pages');
+        $this->pages = ContentDocumentStore::for('core/pages');
         $this->translations = new PageTranslationService($this->pages);
     }
 
@@ -299,6 +301,7 @@ class AdminController extends BaseController
             }
 
             $entries = is_array($prepared['entries'] ?? null) ? $prepared['entries'] : [];
+            $entries = $this->propagatePageMediaReplacements($entries, $existingTranslations);
             $savedByLocale = [];
             $sourceId = (string) ($sourcePage['id'] ?? '');
             $sourceAuthorId = trim((string) (($sourcePage['author_id'] ?? '') ?: (auth()['id'] ?? '')));
@@ -347,6 +350,8 @@ class AdminController extends BaseController
                 $this->syncTranslationStatuses($translationGroup, $sourceId, $globalStatus);
             }
 
+            $this->cleanupPageContextImages(array_values($savedByLocale));
+
             $redirectPage = $savedByLocale[$activeLocale]
                 ?? ($sourceId !== '' ? $this->translations->find($sourceId) : null)
                 ?? $page;
@@ -379,6 +384,7 @@ class AdminController extends BaseController
         $updated = $this->pages->update($id, $data);
         if ($updated) {
             hook_run('pages.after_save', $updated);
+            $this->cleanupPageContextImages([$updated]);
         }
 
         $this->session->flash('success', __('page_updated', 'Pages'));
@@ -608,6 +614,260 @@ class AdminController extends BaseController
         }
 
         return false;
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $entries
+     * @param array<string, array<string, mixed>> $existingTranslations
+     * @return array<string, array<string, mixed>>
+     */
+    private function propagatePageMediaReplacements(array $entries, array $existingTranslations): array
+    {
+        $replacements = [];
+
+        foreach ($entries as $locale => $entry) {
+            if (!is_array($entry) || !array_key_exists('content', $entry)) {
+                continue;
+            }
+
+            $existing = is_array($existingTranslations[$locale] ?? null)
+                ? $this->translations->normalizePage($existingTranslations[$locale])
+                : null;
+            if (!is_array($existing)) {
+                continue;
+            }
+
+            $oldReferences = $this->extractUploadImageReferenceMap((string) ($existing['content'] ?? ''));
+            $newReferences = $this->extractUploadImageReferenceMap((string) ($entry['content'] ?? ''));
+            if ($oldReferences === [] || $newReferences === []) {
+                continue;
+            }
+
+            $removed = array_values(array_diff(array_keys($oldReferences), array_keys($newReferences)));
+            $added = array_values(array_diff(array_keys($newReferences), array_keys($oldReferences)));
+            if ($removed === [] || count($removed) !== count($added)) {
+                continue;
+            }
+
+            foreach ($removed as $index => $oldPath) {
+                $newPath = $added[$index] ?? '';
+                if ($oldPath === '' || $newPath === '') {
+                    continue;
+                }
+
+                $replacements[$oldPath] = [
+                    'old' => $oldReferences[$oldPath],
+                    'new' => $newReferences[$newPath],
+                ];
+            }
+        }
+
+        if ($replacements === []) {
+            return $entries;
+        }
+
+        foreach ($entries as $locale => $entry) {
+            if (!is_array($entry) || !array_key_exists('content', $entry)) {
+                continue;
+            }
+
+            $content = (string) $entry['content'];
+            foreach ($replacements as $oldPath => $replacement) {
+                $content = $this->replaceUploadImageReference(
+                    $content,
+                    (string) $oldPath,
+                    (string) ($replacement['old'] ?? ''),
+                    (string) ($replacement['new'] ?? '')
+                );
+            }
+
+            $entries[$locale]['content'] = $content;
+        }
+
+        return $entries;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function extractUploadImageReferenceMap(string $content): array
+    {
+        if ($content === '' || !preg_match_all('/\b(?:src|href)=["\']([^"\']+)["\']/i', $content, $matches)) {
+            return [];
+        }
+
+        $references = [];
+        foreach ($matches[1] as $rawPath) {
+            $path = $this->normalizeUploadImagePath((string) $rawPath);
+            if ($path === '' || !str_starts_with($path, 'images/')) {
+                continue;
+            }
+
+            $references[$path] ??= (string) $rawPath;
+        }
+
+        return $references;
+    }
+
+    private function replaceUploadImageReference(string $content, string $oldPath, string $oldReference, string $newReference): string
+    {
+        if ($content === '' || $oldPath === '' || $newReference === '') {
+            return $content;
+        }
+
+        $candidates = [
+            $oldReference,
+            html_entity_decode($oldReference, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            '/uploads/' . ltrim($oldPath, '/'),
+            'uploads/' . ltrim($oldPath, '/'),
+        ];
+
+        $urlPath = parse_url(html_entity_decode($oldReference, ENT_QUOTES | ENT_HTML5, 'UTF-8'), PHP_URL_PATH);
+        if (is_string($urlPath) && $urlPath !== '') {
+            $candidates[] = $urlPath;
+        }
+
+        foreach (array_unique(array_filter($candidates, static fn ($candidate) => is_string($candidate) && $candidate !== '')) as $candidate) {
+            if ($candidate === $newReference) {
+                continue;
+            }
+
+            $content = str_replace($candidate, $newReference, $content);
+        }
+
+        return $content;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $pages
+     */
+    private function cleanupPageContextImages(array $pages): void
+    {
+        if ($pages === []) {
+            return;
+        }
+
+        $media = new MediaModel();
+        $referenced = $this->extractReferencedPageUploadImages($pages);
+
+        foreach ($this->resolvePageMediaContexts($pages) as $context) {
+            if (!str_starts_with($context, 'pages/')) {
+                continue;
+            }
+
+            foreach ($media->scanFolder('images', $context) as $file) {
+                $relativePath = trim((string) ($file['path'] ?? ''), '/');
+                if ($relativePath === '' || isset($referenced[$relativePath])) {
+                    continue;
+                }
+
+                $absolutePath = $media->getAbsolutePath($relativePath);
+                $media->deleteByPath($relativePath);
+                if ($absolutePath !== null && is_file($absolutePath)) {
+                    @unlink($absolutePath);
+                }
+            }
+
+            $this->removeEmptyUploadDirectory(BASE_PATH . '/public/uploads/images/' . $context);
+        }
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $pages
+     * @return array<int, string>
+     */
+    private function resolvePageMediaContexts(array $pages): array
+    {
+        $contexts = [];
+
+        foreach ($pages as $page) {
+            foreach (['slug', 'id', 'translation_group'] as $field) {
+                $raw = trim((string) ($page[$field] ?? ''));
+                if ($raw === '') {
+                    continue;
+                }
+
+                $normalized = str_slug($raw);
+                if ($normalized !== '') {
+                    $contexts['pages/' . $normalized] = true;
+                }
+
+                if (str_starts_with($raw, 'page_')) {
+                    $short = str_slug(substr($raw, 5));
+                    if ($short !== '') {
+                        $contexts['pages/' . $short] = true;
+                    }
+                }
+            }
+        }
+
+        return array_keys($contexts);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $pages
+     * @return array<string, true>
+     */
+    private function extractReferencedPageUploadImages(array $pages): array
+    {
+        $referenced = [];
+
+        foreach ($pages as $page) {
+            $content = (string) ($page['content'] ?? '');
+            if ($content === '') {
+                continue;
+            }
+
+            if (!preg_match_all('/\b(?:src|href)=["\']([^"\']+)["\']/i', $content, $matches)) {
+                continue;
+            }
+
+            foreach ($matches[1] as $rawPath) {
+                $path = $this->normalizeUploadImagePath((string) $rawPath);
+                if ($path !== '') {
+                    $referenced[$path] = true;
+                }
+            }
+        }
+
+        return $referenced;
+    }
+
+    private function normalizeUploadImagePath(string $rawPath): string
+    {
+        $path = html_entity_decode(trim($rawPath), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if ($path === '') {
+            return '';
+        }
+
+        $urlPath = parse_url($path, PHP_URL_PATH);
+        if (is_string($urlPath) && $urlPath !== '') {
+            $path = $urlPath;
+        }
+
+        $path = trim(str_replace('\\', '/', $path), '/');
+        $needle = 'uploads/images/';
+        $position = strpos($path, $needle);
+        if ($position === false) {
+            return '';
+        }
+
+        return substr($path, $position + strlen('uploads/'));
+    }
+
+    private function removeEmptyUploadDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+
+        $items = array_values(array_filter(scandir($directory) ?: [], static function (string $item): bool {
+            return !in_array($item, ['.', '..', '.gitkeep'], true);
+        }));
+
+        if ($items === []) {
+            @rmdir($directory);
+        }
     }
 
     private function generateUniqueSlug(string $title): string

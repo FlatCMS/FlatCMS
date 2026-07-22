@@ -43,11 +43,15 @@ class AdminController extends BaseController
 
         $stats = $this->mediaModel->getStats();
         $foldersConfig = $this->mediaModel->getAllFoldersConfig();
+        $uploadDirectories = $this->mediaModel->scanUploadDirectories();
         
         $this->render('Media/Views/admin/index', [
             'pageTitle' => __('title', 'Media'),
             'stats' => $stats,
             'foldersConfig' => $foldersConfig,
+            'uploadDirectories' => $uploadDirectories,
+            'directoryTree' => $this->mediaModel->getDirectoryTree(),
+            'totalFiles' => $this->mediaModel->getTotalFileCount(),
             'publicUrl' => url(''),
             'aiAgentEnabled' => $this->isAiIndexAvailable(),
         ], 'admin.main');
@@ -108,7 +112,17 @@ class AdminController extends BaseController
             return;
         }
 
-        $folder = $this->request->input('folder', 'images');
+        $folder = trim((string) $this->request->input('folder', ''));
+        if ($folder === '' || !isset(MediaModel::FOLDERS[$folder])) {
+            if ($this->request->isAjax()) {
+                json_error(__('media_root_upload_forbidden', 'Media'));
+            }
+            $this->session->flash('error', __('media_root_upload_forbidden', 'Media'));
+            $this->redirect(url('/admin/media'));
+            return;
+        }
+
+        $context = (string) $this->request->input('media_context', '');
         $userId = $this->session->get('user_id', 1);
         
         // Gestion upload multiple
@@ -139,7 +153,7 @@ class AdminController extends BaseController
                     'size' => $files['size'][$i]
                 ];
                 
-                $result = $this->mediaModel->upload($file, $folder, $userId);
+                $result = $this->mediaModel->upload($file, $folder, $userId, $context);
                 $results[] = [
                     'name' => $file['name'],
                     'success' => $result['success'],
@@ -159,7 +173,7 @@ class AdminController extends BaseController
             }
         } else {
             // Upload simple
-            $result = $this->mediaModel->upload($files, $folder, $userId);
+            $result = $this->mediaModel->upload($files, $folder, $userId, $context);
             $results[] = [
                 'name' => $files['name'],
                 'success' => $result['success'],
@@ -198,6 +212,77 @@ class AdminController extends BaseController
         $this->redirect(url('/admin/media/folder/' . $folder));
     }
 
+    public function contextualize(): void
+    {
+        if (!$this->authorize('media.upload')) {
+            return;
+        }
+
+        $token = $this->request->input('_token') ?? $this->request->header('X-CSRF-TOKEN');
+        if (!$token || !$this->session->verifyToken($token)) {
+            json_error(__('csrf_error', 'Core'));
+        }
+
+        $path = trim((string) $this->request->input('path', ''));
+        if ($path === '') {
+            json_error(__('media_not_found', 'Media'));
+        }
+
+        $folder = trim((string) $this->request->input('folder', 'images'));
+        $context = (string) $this->request->input('media_context', '');
+        $userId = $this->session->get('user_id', 1);
+        $result = $this->mediaModel->contextualize($path, $folder, $userId, $context);
+
+        if (empty($result['success']) || empty($result['media']) || !is_array($result['media'])) {
+            $error = (string) ($result['error'] ?? 'media_not_found');
+            $messageKey = in_array($error, ['invalid_folder', 'media_not_found'], true) ? $error : 'upload_invalid';
+            json_error(__($messageKey, 'Media'));
+        }
+
+        if (!empty($result['created'])) {
+            hook_run('media.uploaded', $result['media']);
+        }
+
+        json_response([
+            'success' => true,
+            'media' => $result['media'],
+        ]);
+    }
+
+    public function createDirectory(): void
+    {
+        if (!$this->authorize('media.upload')) {
+            return;
+        }
+
+        $token = $this->request->input('_token') ?? $this->request->header('X-CSRF-TOKEN');
+        if (!$token || !$this->session->verifyToken($token)) {
+            json_error(__('csrf_error', 'Core'));
+        }
+
+        $folder = trim((string) $this->request->input('folder', ''));
+        if ($folder === '' || !isset(MediaModel::FOLDERS[$folder])) {
+            json_error(__('media_root_directory_forbidden', 'Media'));
+        }
+
+        $context = trim((string) $this->request->input('context', ''));
+        $result = $this->mediaModel->createDirectory($folder, $context);
+
+        if (empty($result['success'])) {
+            $error = (string) ($result['error'] ?? 'directory_create_error');
+            $messageKey = in_array($error, ['invalid_folder', 'directory_invalid', 'directory_create_error'], true)
+                ? $error
+                : 'directory_create_error';
+            json_error(__($messageKey, 'Media'));
+        }
+
+        json_response([
+            'success' => true,
+            'message' => __('directory_created', 'Media'),
+            'directory' => $result['directory'] ?? null,
+        ]);
+    }
+
     /**
      * Suppression d'un média
      */
@@ -219,17 +304,17 @@ class AdminController extends BaseController
         }
 
         $media = $this->mediaModel->find($id);
-        $folder = $media['folder'] ?? 'images';
 
         if (!is_array($media)) {
             if ($this->request->isAjax()) {
                 json_error(__('media_not_found', 'Media'));
             }
             $this->session->flash('error', __('media_not_found', 'Media'));
-            $this->redirect(url('/admin/media/folder/' . $folder));
+            $this->redirect(url('/admin/media'));
             return;
         }
 
+        $folder = $media['folder'] ?? 'images';
         $trash = new TrashService();
         $archived = $trash->archiveMedia($media, $this->resolveDeletedBy());
         if (is_array($archived)) {
@@ -270,9 +355,22 @@ class AdminController extends BaseController
 
         $path = $this->request->input('path', '');
         $folder = explode('/', $path)[0] ?? 'images';
+        if (!isset(MediaModel::FOLDERS[$folder])) {
+            $folder = 'images';
+        }
 
         $media = $this->mediaModel->findByPath($path);
         if (!is_array($media)) {
+            // Not in repository — try directory deletion
+            $deleted = $this->mediaModel->deleteDirectory($path);
+            if ($deleted) {
+                if ($this->request->isAjax()) {
+                    json_success(__('delete_success', 'Media'));
+                }
+                $this->session->flash('success', __('delete_success', 'Media'));
+                $this->redirect(url('/admin/media/folder/' . $folder));
+                return;
+            }
             if ($this->request->isAjax()) {
                 json_error(__('media_not_found', 'Media'));
             }
@@ -548,13 +646,13 @@ class AdminController extends BaseController
         }
 
         $folder = $this->request->input('folder', 'images');
-        $files = $this->mediaModel->scanFolder($folder);
-        if (!$files) {
-            $files = $this->mediaModel->getByFolder($folder);
-        }
+        $context = trim((string) $this->request->input('context', ''));
+        $files = $this->mediaModel->scanFolder($folder, $context);
         
         json_response([
             'success' => true,
+            'folder' => $folder,
+            'context' => $context,
             'files' => $files,
             'count' => count($files)
         ]);
@@ -570,13 +668,87 @@ class AdminController extends BaseController
         }
 
         $includeAvatars = (bool) $this->request->input('include_avatars', false);
-        $images = $this->mediaModel->getImages($includeAvatars);
+        $context = trim((string) $this->request->input('context', ''));
+        $images = $this->mediaModel->getImages($includeAvatars, $context);
         
         json_response([
             'success' => true,
+            'folder' => 'images',
+            'context' => $context,
             'files' => $images,
             'count' => count($images)
         ]);
+    }
+
+    public function apiDirectories(): void
+    {
+        if (!$this->authorize('media.view')) {
+            return;
+        }
+
+        $folder = trim((string) $this->request->input('folder', 'images'));
+        $context = trim((string) $this->request->input('context', ''));
+        $allDirectories = $this->mediaModel->listDirectories($folder);
+
+        $contextDepth = $context === '' ? 0 : count(explode('/', $context));
+        $directories = array_values(array_filter($allDirectories, static function (array $dir) use ($contextDepth): bool {
+            $depth = (int) ($dir['depth'] ?? 0);
+            return $depth <= $contextDepth + 1;
+        }));
+
+        json_response([
+            'success' => true,
+            'folder' => $folder,
+            'context' => $context,
+            'directories' => $directories,
+            'count' => count($directories),
+        ]);
+    }
+
+    /**
+     * API - Déplacer un fichier ou dossier
+     */
+    public function move(): void
+    {
+        if (!$this->authorize('media.edit')) {
+            return;
+        }
+
+        $token = $this->request->input('_token') ?? $this->request->header('X-CSRF-TOKEN');
+        if (!$token || !$this->session->verifyToken($token)) {
+            json_error(__('csrf_error', 'Core'));
+            return;
+        }
+
+        $folder = trim((string) $this->request->input('folder', 'images'));
+        $context = trim((string) $this->request->input('context', ''));
+        $itemName = trim((string) $this->request->input('item', ''));
+        $targetContext = trim((string) $this->request->input('target', ''));
+        $type = trim((string) $this->request->input('type', 'file'));
+
+        if ($itemName === '') {
+            json_error(__('media_move_invalid', 'Media'));
+            return;
+        }
+
+        $result = $this->mediaModel->move($folder, $context, $itemName, $targetContext, $type);
+
+        if ($result['success'] ?? false) {
+            json_response(['success' => true, 'type' => $result['type'] ?? 'file']);
+        } else {
+            $errorKey = $result['error'] ?? 'move_failed';
+            $errorMap = [
+                'source_not_found' => __('media_move_not_found', 'Media'),
+                'target_exists' => __('media_move_target_exists', 'Media'),
+                'mkdir_failed' => __('media_move_mkdir_failed', 'Media'),
+                'rename_failed' => __('media_move_failed', 'Media'),
+                'source_not_directory' => __('media_move_invalid', 'Media'),
+                'invalid_folder' => __('media_move_invalid', 'Media'),
+                'invalid_name' => __('media_move_invalid', 'Media'),
+                'invalid_type' => __('media_move_invalid', 'Media'),
+            ];
+            json_error($errorMap[$errorKey] ?? __('media_move_failed', 'Media'));
+        }
     }
 
     /**

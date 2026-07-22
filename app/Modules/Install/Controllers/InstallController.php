@@ -669,13 +669,16 @@ final class InstallController
             DATA_PATH . '/core/contact_forms',
             DATA_PATH . '/core/contact_messages',
             DATA_PATH . '/core/comments',
-            DATA_PATH . '/comments',
-            DATA_PATH . '/menus',
-            DATA_PATH . '/pages',
-            DATA_PATH . '/footer',
+            DATA_PATH . '/core/menus',
+            DATA_PATH . '/core/footer',
+            DATA_PATH . '/core/media',
+            PUBLIC_PATH . '/uploads/archives',
+            PUBLIC_PATH . '/uploads/documents',
             PUBLIC_PATH . '/uploads/images',
-            PUBLIC_PATH . '/uploads/files',
-            PUBLIC_PATH . '/uploads/media',
+            PUBLIC_PATH . '/uploads/pdf',
+            PUBLIC_PATH . '/uploads/sounds',
+            PUBLIC_PATH . '/uploads/spreadsheets',
+            PUBLIC_PATH . '/uploads/videos',
             PUBLIC_PATH . '/uploads/logo',
             PUBLIC_PATH . '/uploads/cache/runtime-css',
             BASE_PATH . '/resources/uploads/contact',
@@ -685,6 +688,12 @@ final class InstallController
             $this->resetDirectory($directory);
         }
 
+        foreach ($this->legacyStorageDirectories() as $directory) {
+            if (is_dir($directory)) {
+                $this->removeDirectory($directory);
+            }
+        }
+
         // Réinitialiser le registre media natif
         $this->ensureDirectory(DATA_PATH . '/core/media', 'Unable to create media directory.');
         $this->writeJsonFile(
@@ -692,6 +701,21 @@ final class InstallController
             [],
             'Unable to reset media registry.'
         );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function legacyStorageDirectories(): array
+    {
+        return [
+            DATA_PATH . '/comments',
+            DATA_PATH . '/menus',
+            DATA_PATH . '/pages',
+            DATA_PATH . '/footer',
+            PUBLIC_PATH . '/uploads/files',
+            PUBLIC_PATH . '/uploads/media',
+        ];
     }
 
     private function buildApplicationUrl(string $path, string $siteUrl): string
@@ -1215,6 +1239,11 @@ final class InstallController
      */
     private function materializeDemoTranslatedRecords(string $directory, array $catalog, array $translatableFields): void
     {
+        if ($this->isContentDocumentSeedDirectory($directory)) {
+            $this->materializeDemoTranslatedContentDocuments($directory, $catalog, $translatableFields);
+            return;
+        }
+
         foreach ($catalog as $sourceId => $translations) {
             $normalizedSourceId = trim((string) $sourceId);
             if ($normalizedSourceId === '' || !is_array($translations)) {
@@ -1268,6 +1297,97 @@ final class InstallController
                 json_write($directory . '/' . $localized['id'] . '.json', $localized);
             }
         }
+    }
+
+    /**
+     * @param array<string, mixed> $catalog
+     * @param array<int, string> $translatableFields
+     */
+    private function materializeDemoTranslatedContentDocuments(string $directory, array $catalog, array $translatableFields): void
+    {
+        $entity = $this->contentDocumentEntityFromDirectory($directory);
+        if ($entity === '') {
+            return;
+        }
+
+        $store = \App\Core\ContentDocumentStore::for($entity);
+
+        foreach ($catalog as $sourceId => $translations) {
+            $normalizedSourceId = trim((string) $sourceId);
+            if ($normalizedSourceId === '' || !is_array($translations)) {
+                continue;
+            }
+
+            $source = $store->find($normalizedSourceId);
+            if (!is_array($source)) {
+                continue;
+            }
+
+            $translationGroup = trim((string) ($source['translation_group'] ?? $normalizedSourceId));
+            $sourceLocale = trim((string) ($source['source_locale'] ?? $source['locale'] ?? 'fr-FR'));
+            if ($translationGroup === '') {
+                $translationGroup = $normalizedSourceId;
+            }
+            if ($sourceLocale === '') {
+                $sourceLocale = 'fr-FR';
+            }
+
+            $source = $store->update($normalizedSourceId, [
+                'translation_group' => $translationGroup,
+                'locale' => trim((string) ($source['locale'] ?? $sourceLocale)) !== ''
+                    ? trim((string) $source['locale'])
+                    : $sourceLocale,
+                'source_locale' => $sourceLocale,
+            ]) ?? $source;
+
+            foreach ($translations as $locale => $override) {
+                $normalizedLocale = trim((string) $locale);
+                if ($normalizedLocale === '' || $normalizedLocale === $sourceLocale || !is_array($override)) {
+                    continue;
+                }
+
+                $localized = $source;
+                $localized['id'] = $this->buildLocalizedSeedId($normalizedSourceId, $normalizedLocale);
+                $localized['translation_group'] = $translationGroup;
+                $localized['locale'] = $normalizedLocale;
+                $localized['source_locale'] = $sourceLocale;
+
+                foreach ($translatableFields as $field) {
+                    if (array_key_exists($field, $override)) {
+                        $value = $override[$field];
+                        if ($field === 'content' && is_string($value)) {
+                            $value = $this->localizeDemoContentLinks($value, $normalizedLocale);
+                        }
+                        $localized[$field] = $value;
+                    }
+                }
+
+                $localizedId = (string) $localized['id'];
+                if ($store->exists($localizedId)) {
+                    $store->update($localizedId, $localized);
+                    continue;
+                }
+
+                $store->create($localized);
+            }
+        }
+    }
+
+    private function isContentDocumentSeedDirectory(string $directory): bool
+    {
+        return in_array($this->contentDocumentEntityFromDirectory($directory), ['core/pages', 'core/posts'], true);
+    }
+
+    private function contentDocumentEntityFromDirectory(string $directory): string
+    {
+        $normalized = str_replace('\\', '/', rtrim($directory, '/'));
+        $dataPrefix = str_replace('\\', '/', rtrim(DATA_PATH, '/')) . '/';
+
+        if (!str_starts_with($normalized, $dataPrefix)) {
+            return '';
+        }
+
+        return trim(substr($normalized, strlen($dataPrefix)), '/');
     }
 
     /**
@@ -1372,7 +1492,7 @@ final class InstallController
 
         \App\Core\I18n::load('Pages');
         \App\Modules\Pages\Support\SystemPages::ensureRequired(
-            \App\Core\FlatFile::for('core/pages'),
+            \App\Core\ContentDocumentStore::for('core/pages'),
             static fn (string $key): string => (string) \App\Core\I18n::get($key, 'Pages')
         );
     }
@@ -1398,6 +1518,8 @@ final class InstallController
     {
         $pagesDir = DATA_PATH . '/core/pages';
         $this->ensureDirectory($pagesDir, 'Unable to create sample pages directory.');
+        $pagesStore = \App\Core\ContentDocumentStore::for('core/pages');
+        $sourceLocale = $this->resolveSampleSourceLocale();
 
         $homeContent = '<p>' . $this->sampleText('sample.sample_home_intro', 'Bienvenue sur FlatCMS. Cette page d\'accueil de démonstration vous montre une structure prête à personnaliser.') . '</p>'
             . '<p>' . $this->sampleText('sample.sample_home_cta', 'Commencez par adapter les pages, puis organisez votre menu et votre footer depuis l\'administration.') . '</p>'
@@ -1504,13 +1626,13 @@ final class InstallController
         foreach ($pages as $page) {
             $pageKey = (string) ($page['__key'] ?? '');
             unset($page['__key']);
-            $this->writeJsonFile(
-                $pagesDir . '/' . $page['id'] . '.json',
-                $page,
-                'Unable to write sample page.'
-            );
+            $page['id'] = $this->buildSampleContentDocumentId('page', $pageKey, $page);
+            $page['translation_group'] = (string) $page['id'];
+            $page['locale'] = $sourceLocale;
+            $page['source_locale'] = $sourceLocale;
+            $created = $pagesStore->create($page);
             if ($pageKey !== '') {
-                $pageIds[$pageKey] = (string) $page['id'];
+                $pageIds[$pageKey] = (string) ($created['id'] ?? $page['id']);
             }
         }
 
@@ -1619,6 +1741,8 @@ final class InstallController
     {
         $postsDir = DATA_PATH . '/core/posts';
         $this->ensureDirectory($postsDir, 'Unable to create sample posts directory.');
+        $postsStore = \App\Core\ContentDocumentStore::for('core/posts');
+        $sourceLocale = $this->resolveSampleSourceLocale();
 
         $posts = [
             [
@@ -1798,17 +1922,59 @@ final class InstallController
         foreach ($posts as $post) {
             $postKey = (string) ($post['__key'] ?? '');
             unset($post['__key']);
-            $this->writeJsonFile(
-                $postsDir . '/' . $post['id'] . '.json',
-                $post,
-                'Unable to write sample post.'
-            );
+            $post['id'] = $this->buildSampleContentDocumentId('post', $postKey, $post);
+            $post['translation_group'] = (string) $post['id'];
+            $post['locale'] = $sourceLocale;
+            $post['source_locale'] = $sourceLocale;
+            $created = $postsStore->create($post);
             if ($postKey !== '') {
-                $postIds[$postKey] = (string) $post['id'];
+                $postIds[$postKey] = (string) ($created['id'] ?? $post['id']);
             }
         }
 
         return $postIds;
+    }
+
+    /**
+     * @param array<string,mixed> $record
+     */
+    private function buildSampleContentDocumentId(string $prefix, string $key, array $record): string
+    {
+        $base = trim($key);
+        if ($base === '') {
+            $base = trim((string) ($record['slug'] ?? $record['title'] ?? ''));
+        }
+        if ($base === '') {
+            $base = uniqid('document_', false);
+        }
+
+        if (function_exists('iconv')) {
+            $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $base);
+            if (is_string($ascii) && $ascii !== '') {
+                $base = $ascii;
+            }
+        }
+
+        $base = strtolower($base);
+        $base = preg_replace('/[^a-z0-9]+/', '_', $base) ?? $base;
+        $base = trim($base, '_');
+        if ($base === '') {
+            $base = uniqid('document_', false);
+        }
+
+        $prefix = preg_replace('/[^a-z0-9]+/', '_', strtolower(trim($prefix))) ?? $prefix;
+        $prefix = trim($prefix, '_');
+        if ($prefix === '') {
+            $prefix = 'document';
+        }
+
+        return $prefix . '_' . $base;
+    }
+
+    private function resolveSampleSourceLocale(): string
+    {
+        $locale = trim((string) \App\Core\I18n::getLocale());
+        return $locale !== '' ? $locale : 'fr-FR';
     }
 
     private function createSampleContactForms(\DateTimeImmutable $now): void

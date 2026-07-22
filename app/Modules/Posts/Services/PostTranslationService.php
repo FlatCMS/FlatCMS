@@ -11,19 +11,20 @@ declare(strict_types=1);
 
 namespace App\Modules\Posts\Services;
 
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
 
 final class PostTranslationService
 {
-    private FlatFile $posts;
+    private ContentDocumentStore $posts;
 
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allPosts = null;
 
-    public function __construct(?FlatFile $posts = null)
+    public function __construct(?ContentDocumentStore $posts = null)
     {
-        $this->posts = $posts ?? FlatFile::for('core/posts');
+        $this->posts = $posts ?? ContentDocumentStore::for('core/posts');
     }
 
     /**

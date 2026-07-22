@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace App\Modules\Contact\Controllers;
 
 use App\Core\BaseController;
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
 use App\Modules\Auth\Services\RoleService;
@@ -919,7 +920,7 @@ class AdminController extends BaseController
      */
     private function resolveRequiredLegalPages(): array
     {
-        $pagesStore = FlatFile::for('core/pages');
+        $pagesStore = ContentDocumentStore::for('core/pages');
         $required = SystemPages::ensureRequired($pagesStore, static function (string $key): string {
             return __($key, 'Pages');
         });

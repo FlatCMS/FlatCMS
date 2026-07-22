@@ -9,11 +9,14 @@
 
 $stats = $stats ?? [];
 $foldersConfig = $foldersConfig ?? [];
+$uploadDirectories = $uploadDirectories ?? [];
+$totalFiles = $totalFiles ?? 0;
+$directoryTree = $directoryTree ?? ['name' => 'uploads', 'path' => '', 'type' => 'directory', 'count' => 0, 'children' => []];
 $publicUrl = $publicUrl ?? '';
 $aiAgentEnabled = (bool) ($aiAgentEnabled ?? false);
 
 // Dossiers réservés (non affichés) - gérés par d'autres modules
-$reservedFolders = ['personal'];
+$reservedFolders = ['cache', 'files', 'logo', 'media', 'personal'];
 
 // Dossiers publics
 $publicFolders = array_filter($foldersConfig, function($key) use ($reservedFolders) {
@@ -31,6 +34,17 @@ $folderColors = [
     'archives' => 'yellow',
 ];
 
+// Icônes par dossier
+$folderIcons = [
+    'images' => 'fa-image',
+    'videos' => 'fa-video',
+    'sounds' => 'fa-music',
+    'documents' => 'fa-file-alt',
+    'pdf' => 'fa-file-pdf',
+    'spreadsheets' => 'fa-file-excel',
+    'archives' => 'fa-file-archive',
+];
+
 $uploadUrl = url('/admin/media/upload');
 $adminFront = strtok($uploadUrl, '?') ?: $uploadUrl;
 $mediaConfig = [
@@ -39,10 +53,16 @@ $mediaConfig = [
     'aiIndexUrl' => url('/admin/media/ai-index'),
     // Always use same front controller as uploadUrl (avoid /public mismatch)
     'apiFilesUrl' => $adminFront . '?path=admin/media/api/files',
+    'apiDirectoriesUrl' => $adminFront . '?path=admin/media/api/directories',
+    'apiMoveUrl' => $adminFront . '?path=admin/media/api/move',
+    'apiStatsUrl' => $adminFront . '?path=admin/media/api/stats',
+    'createDirectoryUrl' => $adminFront . '?path=admin/media/api/directories',
     'deleteUrl' => url('/admin/media'),
+    'deletePathUrl' => url('/admin/media/delete-path'),
     'batchDeleteUrl' => url('/admin/media/batch-delete'),
     'csrfToken' => csrf_token(),
     'folders' => $publicFolders,
+    'directoryTree' => $directoryTree,
     'labels' => [
         'images' => __('images', 'Media'),
         'videos' => __('videos', 'Media'),
@@ -56,22 +76,13 @@ $mediaConfig = [
         'files_in' => __('files_in', 'Media'),
         'file_label' => __('file_label', 'Media'),
         'files_label' => __('files_label', 'Media'),
+        'root_directory' => __('root_directory', 'Media'),
     ],
-    'i18n' => [
-        'copy_url' => __('copy_url', 'Media'),
-        'delete' => __('delete', 'Core'),
-        'select' => __('select', 'Media'),
-        'media_ai_indexing' => __('media_ai_indexing', 'Media'),
-        'media_ai_leave_message' => __('media_ai_leave_message', 'Media'),
-        'media_ai_leave_warning' => __('media_ai_leave_warning', 'Media'),
-        'media_ai_leave_confirm' => __('media_ai_leave_confirm', 'Media'),
-        'media_ai_index_failed' => __('media_ai_index_failed', 'Media'),
-        'media_batch_selected_count' => __('media_batch_selected_count', 'Media', ['count' => ':count']),
-        'media_batch_delete_items_label' => __('media_batch_delete_items_label', 'Media', ['count' => ':count']),
-    ],
+    'i18n' => \App\Core\I18n::all('Media'),
 ];
 
 $mediaConfigJson = e(json_encode($mediaConfig));
+$uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
 ?>
 
 <link rel="stylesheet" href="<?= module_asset('Media', 'css/media-module.css') ?>?v=<?= filemtime(BASE_PATH . '/app/Modules/Media/Assets/css/media-module.css') ?>">
@@ -98,74 +109,30 @@ $mediaConfigJson = e(json_encode($mediaConfig));
     </div>
 </div>
 
-<div class="card admin-guidance-card" data-admin-help-template hidden>
-    <div class="card-body">
-        <div class="admin-guidance-card__head">
-            <div class="admin-guidance-card__eyebrow-row">
-                <span class="admin-guidance-card__icon" aria-hidden="true">
-                    <i class="fas fa-photo-film"></i>
-                </span>
-                <span class="admin-guidance-card__eyebrow"><?= __('media_help_badge', 'Media') ?></span>
-            </div>
-            <h2 class="admin-guidance-card__title"><?= __('media_help_title', 'Media') ?></h2>
-            <p class="admin-guidance-card__copy"><?= __('media_help_intro', 'Media') ?></p>
-        </div>
-        <ul class="admin-guidance-card__list">
-            <li><?= __('media_help_step_folder', 'Media') ?></li>
-            <li><?= __('media_help_step_upload', 'Media') ?></li>
-            <li><?= __('media_help_step_sync', 'Media') ?></li>
-        </ul>
-        <div class="admin-guidance-card__actions">
-            <a href="#mediaFolderTabs" class="btn btn-primary"><?= __('media_help_action_folders', 'Media') ?></a>
-            <?php if ($aiAgentEnabled): ?>
-                <button type="button" class="btn btn-secondary" data-action="media-ai-index" data-ai-scope="all"><?= __('media_ai_index', 'Media') ?></button>
-            <?php endif; ?>
-            <button type="button" class="btn btn-secondary" data-action="media-sync-open"><?= __('media_help_action_sync', 'Media') ?></button>
-        </div>
+<!-- Onglets de dossiers (pleine largeur) -->
+<div class="media-tabs-section">
+    <div class="media-tabs-section-title"><?= __('media_folders', 'Media') ?></div>
+    <div class="media-tabs" id="mediaFolderTabs">
+        <?php foreach ($publicFolders as $folderName => $config):
+            $color = $folderColors[$folderName] ?? 'blue';
+            $icon = $folderIcons[$folderName] ?? 'fa-file';
+            $count = $stats[$folderName] ?? 0;
+        ?>
+        <button type="button"
+                class="media-tab media-tab-<?= $color ?>"
+                data-folder="<?= $folderName ?>"
+                data-accept="<?= $config['accept'] ?? '*/*' ?>">
+            <span class="media-tab-icon">
+                <i class="fas <?= $icon ?>"></i>
+            </span>
+            <span class="media-tab-name"><?= __($folderName, 'Media') ?></span>
+            <span class="media-tab-count"><?= $count ?> <?= __('files', 'Media') ?></span>
+        </button>
+        <?php endforeach; ?>
     </div>
 </div>
 
-<!-- Onglets des dossiers -->
-<div id="mediaFolderTabs" class="media-tabs" data-tour-target="media-folders">
-    <?php foreach ($publicFolders as $folderName => $config): 
-        $color = $folderColors[$folderName] ?? 'blue';
-        $count = $stats[$folderName] ?? 0;
-    ?>
-    <button type="button"
-            class="media-tab media-tab-<?= $color ?>"
-            data-folder="<?= $folderName ?>"
-            data-accept="<?= $config['accept'] ?? '*/*' ?>">
-        <span class="media-tab-icon">
-            <?php echo match($folderName) {
-                'images' => '<i class="fas fa-image"></i>',
-                'videos' => '<i class="fas fa-video"></i>',
-                'sounds' => '<i class="fas fa-music"></i>',
-                'documents' => '<i class="fas fa-file-alt"></i>',
-                'pdf' => '<i class="fas fa-file-pdf"></i>',
-                'spreadsheets' => '<i class="fas fa-file-excel"></i>',
-                'archives' => '<i class="fas fa-file-archive"></i>',
-                default => '<i class="fas fa-file"></i>'
-            }; ?>
-        </span>
-        <span class="media-tab-name"><?= __($folderName, 'Media') ?></span>
-        <span class="media-tab-count"><?= $count ?> <?= __('files', 'Media') ?></span>
-    </button>
-    <?php endforeach; ?>
-</div>
-
-<!-- Message initial -->
-<div id="initialMessage" class="media-initial-message" data-tour-target="media-initial-state">
-    <div class="media-initial-icon">
-        <i class="fas fa-folder-open"></i>
-    </div>
-    <h3><?= __('select_folder_title', 'Media') ?></h3>
-    <p><?= __('select_folder_message', 'Media') ?></p>
-    <div class="media-initial-actions">
-        <a href="#mediaFolderTabs" class="btn btn-secondary"><?= __('media_initial_action_folders', 'Media') ?></a>
-    </div>
-</div>
-
-<!-- Zone d'upload (cachée par défaut) -->
+<!-- Zone d'upload (pleine largeur) -->
 <div id="uploadZone" class="media-upload-section hidden" data-tour-target="media-upload-zone">
     <div class="card">
         <div class="card-header">
@@ -178,17 +145,18 @@ $mediaConfigJson = e(json_encode($mediaConfig));
             <form id="uploadForm" action="<?= url('/admin/media/upload') ?>" method="POST" enctype="multipart/form-data">
                 <?= csrf_field() ?>
                 <input type="hidden" name="folder" id="uploadFolder" value="">
-                
+                <input type="hidden" name="media_context" id="uploadContext" value="">
+
                 <div id="dropZone" class="upload-zone">
                     <input type="file" name="files[]" id="fileInput" multiple class="media-file-input-hidden">
-                    
+
                     <div class="upload-zone-icon">
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
-                    
+
                     <p class="upload-zone-text"><?= __('drop_message', 'Media') ?></p>
                     <p class="upload-zone-hint" id="acceptedFormats"></p>
-                    
+
                     <button type="button" class="btn btn-primary media-upload-trigger" data-file-target="fileInput">
                         <i class="fas fa-plus"></i>
                         <?= __('select_files', 'Media') ?>
@@ -210,58 +178,249 @@ $mediaConfigJson = e(json_encode($mediaConfig));
     </div>
 </div>
 
-<!-- Liste des fichiers (cachée par défaut) -->
-<div id="filesList" class="media-files-section hidden" data-tour-target="media-files-grid">
-    <div class="media-files-header">
-        <h3><span id="filesCount">0</span> <span id="filesInLabel"><?= __('files_in', 'Media') ?></span> <span id="currentFolderName" class="text-primary"></span></h3>
-    </div>
-    <form
-        method="POST"
-        action="<?= url('/admin/media/batch-delete') ?>"
-        class="media-batch-form hidden"
-        data-media-batch-form
-        data-empty-selection-message="<?= e(__('media_batch_no_selection', 'Media')) ?>"
-        data-selected-template="<?= e(__('media_batch_selected_count', 'Media', ['count' => ':count'])) ?>"
-        data-delete-message="<?= e(__('media_batch_confirm_delete', 'Media')) ?>"
-        data-delete-warning="<?= e(__('media_batch_delete_warning', 'Media')) ?>"
-        data-delete-item-template="<?= e(__('media_batch_delete_items_label', 'Media', ['count' => ':count'])) ?>"
-    >
-        <?= csrf_field() ?>
-        <input type="hidden" name="folder" id="mediaBatchFolder" value="">
-        <div class="media-batch-controls">
-            <label class="media-batch-select-all">
-                <input type="checkbox" data-media-select-all>
-                <span><?= __('media_batch_select_all', 'Media') ?></span>
-            </label>
-            <span class="media-batch-count" data-media-batch-count><?= __('media_batch_selected_count', 'Media', ['count' => '0']) ?></span>
-            <button
-                type="submit"
-                class="btn btn-sm btn-secondary"
-                data-media-batch-submit
-                data-confirm-text="<?= e(__('delete', 'Core')) ?>"
-                disabled
-            >
-                <?= __('media_batch_delete', 'Media') ?>
+<!-- Media Container (Joomla-style layout) -->
+<div class="media-container" data-tour-target="media-folders">
+
+    <!-- Toolbar (pleine largeur) -->
+    <div class="media-toolbar" data-tour-target="media-toolbar">
+        <!-- Dropdown dossiers (disk/drive/tree) -->
+        <details class="media-toolbar-drive-dropdown" id="mediaDriveDropdown">
+            <summary class="media-toolbar-drive-trigger">
+                <i class="fas fa-hdd"></i>
+                <span class="media-toolbar-drive-label" id="mediaDriveLabel"><?= __('media_uploads_root', 'Media') ?></span>
+                <i class="fas fa-chevron-down media-toolbar-drive-chevron"></i>
+            </summary>
+            <div class="media-toolbar-drive-panel">
+                <div class="media-drive">
+                    <ul class="media-tree" role="tree">
+                        <li class="media-tree-item" data-folder-root>
+                            <a role="treeitem" class="media-tree-root-link" tabindex="0">
+                                <span class="item-icon"><i class="fas fa-hdd"></i></span>
+                                <span class="item-name"><?= __('media_uploads_root', 'Media') ?></span>
+                                <span class="item-count"><?= $totalFiles ?></span>
+                            </a>
+                            <ul class="media-tree" role="group">
+                                <?php $__renderTree = static function(array $node, string $parentPath = '') use (&$__renderTree, $folderIcons): void {
+                                    $itemPath = $node['path'];
+                                    $isDir = $node['type'] === 'directory';
+                                    $name = $node['name'];
+                                    $ext = $node['extension'] ?? '';
+                                ?>
+                                <li class="media-tree-item <?= $isDir ? 'media-tree-folder' : 'media-tree-file' ?>" data-path="<?= e($itemPath) ?>">
+                                    <?php if ($isDir): ?>
+                                    <button type="button" class="media-tree-toggle" aria-label="<?= __('media_toggle_folder', 'Media') ?>"><i class="fas fa-chevron-right"></i></button>
+                                    <?php endif; ?>
+                                    <a role="treeitem" tabindex="-1" <?= $isDir ? 'data-select-folder="' . e($itemPath) . '"' : 'data-action="media-preview" data-url="' . e($node['url'] ?? '') . '" data-mime="' . e($node['mime'] ?? 'application/octet-stream') . '" data-name="' . e($name) . '"' ?>>
+                                        <span class="item-icon">
+                                            <?php if ($isDir): ?>
+                                                <i class="fas fa-folder media-icon-collapsed"></i>
+                                                <i class="fas fa-folder-open media-icon-expanded"></i>
+                                            <?php else: ?>
+                                                <?php
+                                                    $fileIcon = 'fa-file-alt';
+                                                    if (in_array($ext, ['jpg','jpeg','png','gif','webp','svg','avif','bmp'])) $fileIcon = 'fa-file-image';
+                                                    elseif (in_array($ext, ['mp4','webm','ogg','avi','mov','mkv'])) $fileIcon = 'fa-file-video';
+                                                    elseif (in_array($ext, ['mp3','wav','ogg','flac','aac','wma'])) $fileIcon = 'fa-file-audio';
+                                                    elseif (in_array($ext, ['pdf'])) $fileIcon = 'fa-file-pdf';
+                                                    elseif (in_array($ext, ['zip','rar','tar','gz','7z'])) $fileIcon = 'fa-file-archive';
+                                                    elseif (in_array($ext, ['csv','xls','xlsx'])) $fileIcon = 'fa-file-excel';
+                                                ?>
+                                                <i class="fas <?= $fileIcon ?>"></i>
+                                            <?php endif; ?>
+                                        </span>
+                                        <span class="item-name"><?= e($name) ?></span>
+                                        <?php if ($isDir && $node['count'] > 0): ?>
+                                        <span class="item-count"><?= $node['count'] ?></span>
+                                        <?php endif; ?>
+                                    </a>
+                                    <?php if ($isDir && !empty($node['children'])): ?>
+                                    <ul class="media-tree media-tree-children" role="group">
+                                        <?php foreach ($node['children'] as $child): ?>
+                                        <?php $__renderTree($child, $itemPath); ?>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                    <?php endif; ?>
+                                </li>
+                                <?php }; ?>
+                                <?php foreach ($directoryTree['children'] ?? [] as $child): ?>
+                                <?php $__renderTree($child, ''); ?>
+                                <?php endforeach; ?>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </details>
+
+        <div class="media-toolbar-btns">
+            <button type="button" class="media-toolbar-icon" title="<?= __('media_select_all', 'Media') ?>" data-toolbar-action="select-all">
+                <i class="fas fa-check-double"></i>
+            </button>
+            <div class="media-toolbar-divider"></div>
+            <button type="button" class="media-toolbar-icon" title="<?= __('media_sort', 'Media') ?>" data-toolbar-action="sort" data-sort-dir="asc">
+                <i class="fas fa-sort-amount-down-alt"></i>
+            </button>
+            <button type="button" class="media-toolbar-icon" title="<?= __('media_grid_small', 'Media') ?>" data-toolbar-action="view-small">
+                <i class="fas fa-search-minus"></i>
+            </button>
+            <button type="button" class="media-toolbar-icon active" title="<?= __('media_grid', 'Media') ?>" data-toolbar-action="view-grid">
+                <i class="fas fa-th"></i>
+            </button>
+            <button type="button" class="media-toolbar-icon" title="<?= __('media_list', 'Media') ?>" data-toolbar-action="view-list">
+                <i class="fas fa-list"></i>
+            </button>
+            <div class="media-toolbar-divider"></div>
+            <button type="button" class="media-toolbar-icon" title="<?= __('media_infos', 'Media') ?>" data-toolbar-action="infobar-toggle">
+                <i class="fas fa-info-circle"></i>
+            </button>
+            <div class="media-toolbar-divider"></div>
+            <button type="button" class="media-toolbar-icon" title="<?= __('upload_files', 'Media') ?>" data-file-target="fileInput">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </button>
+            <button type="button" class="media-toolbar-icon" title="<?= __('media_empty_action_create_directory', 'Media') ?>" data-action="media-directory-create-open">
+                <i class="fas fa-folder-plus"></i>
             </button>
         </div>
-        <div data-media-batch-paths></div>
-    </form>
-    <div id="filesGrid" class="media-grid">
-        <!-- Les fichiers seront insérés ici par JavaScript -->
-    </div>
-    <div id="filesEmpty" class="media-empty hidden">
-        <div class="media-empty-icon">
-            <i class="fas fa-folder-open"></i>
-        </div>
-        <h3 class="media-empty-title"><?= __('empty_folder', 'Media') ?></h3>
-        <p class="media-empty-text"><?= __('empty_folder_message', 'Media') ?></p>
-        <div class="media-empty-actions">
-            <button type="button" class="btn btn-primary media-empty-upload-btn" data-file-target="fileInput"><?= __('media_empty_action_upload', 'Media') ?></button>
+
+        <!-- Recherche -->
+        <div class="media-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="<?= __('media_search_placeholder', 'Media') ?>" id="mediaSearchInput">
         </div>
     </div>
-    <div id="filesLoading" class="media-loading hidden">
-        <div class="spinner"></div>
-        <p><?= __('loading', 'Core') ?></p>
+
+    <!-- Panneau principal -->
+    <div class="media-main">
+
+        <!-- Panneau d'exploration (caché par défaut) -->
+        <div id="mediaDirectoryPanel" class="media-explorer hidden" data-tour-target="media-directories">
+
+                <!-- Liste des fichiers (cachée par défaut) -->
+                <div id="filesList" class="media-files-section hidden" data-tour-target="media-files-grid">
+                    <div class="media-files-header">
+                        <h3><span id="filesCount">0</span> <span id="filesInLabel"><?= __('files_in', 'Media') ?></span> <span id="mediaBreadcrumb" class="media-breadcrumb-inline"></span></h3>
+                    </div>
+                    <form
+                        method="POST"
+                        action="<?= url('/admin/media/batch-delete') ?>"
+                        class="media-batch-form hidden"
+                        data-media-batch-form
+                        data-empty-selection-message="<?= e(__('media_batch_no_selection', 'Media')) ?>"
+                        data-selected-template="<?= e(__('media_batch_selected_count', 'Media', ['count' => ':count'])) ?>"
+                        data-delete-message="<?= e(__('media_batch_confirm_delete', 'Media')) ?>"
+                        data-delete-warning="<?= e(__('media_batch_delete_warning', 'Media')) ?>"
+                        data-delete-item-template="<?= e(__('media_batch_delete_items_label', 'Media', ['count' => ':count'])) ?>"
+                    >
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="folder" id="mediaBatchFolder" value="">
+                        <input type="hidden" name="media_context" id="mediaBatchContext" value="">
+                        <div class="media-batch-controls">
+                            <span class="media-batch-count" data-media-batch-count><?= __('media_batch_selected_count', 'Media', ['count' => '0']) ?></span>
+                            <button
+                                type="submit"
+                                class="btn btn-sm btn-secondary"
+                                data-media-batch-submit
+                                data-confirm-text="<?= e(__('delete', 'Core')) ?>"
+                                disabled
+                            >
+                                <?= __('media_batch_delete', 'Media') ?>
+                            </button>
+                        </div>
+                        <div data-media-batch-paths></div>
+                    </form>
+
+                    <!-- Grille de fichiers (Joomla media-browser) -->
+                    <div class="media-browser">
+                        <div class="media-browser-grid">
+                            <div id="filesGrid" class="media-browser-items">
+                                <!-- Les fichiers seront insérés ici par JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Infobar (Joomla properties panel) -->
+                        <div class="media-infobar" id="mediaInfobar">
+                            <div class="media-infobar-inner">
+                                <span class="infobar-close" id="btnCloseInfobar">&times;</span>
+                                <h2 id="infobarFileName"></h2>
+                                <dl>
+                                    <dt><?= __('media_infobar_folder', 'Media') ?></dt>
+                                    <dd id="infobarFolder">-</dd>
+                                    <dt><?= __('media_infobar_type', 'Media') ?></dt>
+                                    <dd id="infobarType">-</dd>
+                                    <dt><?= __('media_infobar_created', 'Media') ?></dt>
+                                    <dd id="infobarCreated">-</dd>
+                                    <dt><?= __('media_infobar_modified', 'Media') ?></dt>
+                                    <dd id="infobarModified">-</dd>
+                                    <dt><?= __('media_infobar_dimensions', 'Media') ?></dt>
+                                    <dd id="infobarDimensions">-</dd>
+                                    <dt><?= __('media_infobar_size', 'Media') ?></dt>
+                                    <dd id="infobarSize">-</dd>
+                                    <dt><?= __('media_infobar_mime', 'Media') ?></dt>
+                                    <dd id="infobarMime">-</dd>
+                                    <dt><?= __('media_infobar_extension', 'Media') ?></dt>
+                                    <dd id="infobarExtension">-</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="filesLoading" class="media-loading hidden">
+                        <div class="spinner"></div>
+                        <p><?= __('loading', 'Core') ?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Directory Modal -->
+<div id="directoryModal" class="modal-overlay hidden">
+    <div class="modal-container modal-sm">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i class="fas fa-folder-plus"></i>
+                <?= __('create_directory', 'Media') ?>
+            </h3>
+            <button type="button" class="modal-close" data-modal-close="directoryModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="directoryForm" class="media-directory-form">
+                <label for="directoryName" class="form-label"><?= __('directory_name', 'Media') ?></label>
+                <input type="text" id="directoryName" class="form-input" autocomplete="off">
+                <p class="form-hint"><?= __('directory_hint', 'Media') ?></p>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-modal-close="directoryModal"><?= __('cancel', 'Core') ?></button>
+            <button type="button" class="btn btn-primary" data-action="media-directory-create-confirm">
+                <i class="fas fa-check"></i>
+                <?= __('create_directory', 'Media') ?>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Rename Modal -->
+<div id="renameModal" class="modal-overlay hidden">
+    <div class="modal-container modal-sm">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i class="fas fa-i-cursor"></i>
+                <?= __('rename', 'Media') ?>
+            </h3>
+            <button type="button" class="modal-close" data-modal-close="renameModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <label for="renameInput" class="form-label"><?= __('new_name', 'Media') ?></label>
+            <input type="text" id="renameInput" class="form-input" autocomplete="off">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-modal-close="renameModal"><?= __('cancel', 'Core') ?></button>
+            <button type="button" class="btn btn-primary" data-action="media-rename-confirm">
+                <i class="fas fa-check"></i>
+                <?= __('rename', 'Media') ?>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -284,6 +443,18 @@ $mediaConfigJson = e(json_encode($mediaConfig));
                 <i class="fas fa-trash-alt"></i>
                 <?= __('delete', 'Core') ?>
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div id="previewModal" class="modal-overlay hidden">
+    <div class="modal-container modal-lg">
+        <div class="modal-header">
+            <h3 class="modal-title"><?= __('media_preview', 'Media') ?></h3>
+            <button type="button" class="modal-close" data-modal-close="previewModal">&times;</button>
+        </div>
+        <div class="modal-body">
         </div>
     </div>
 </div>
@@ -319,8 +490,5 @@ $mediaConfigJson = e(json_encode($mediaConfig));
         </div>
     </div>
 </div>
-
-<!-- Toast Notification -->
-<div id="toast" class="toast"></div>
 
 <script src="<?= module_asset('Media', 'js/media.js') ?>?v=<?= filemtime(BASE_PATH . '/app/Modules/Media/Assets/js/media.js') ?>"></script>

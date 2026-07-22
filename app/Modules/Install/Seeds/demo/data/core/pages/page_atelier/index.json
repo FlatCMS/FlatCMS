@@ -1,0 +1,15 @@
+{
+    "id": "page_atelier",
+    "title": "Atelier",
+    "slug": "atelier",
+    "editor_mode": "classic",
+    "meta_title": "Atelier - {{SITE_NAME}}",
+    "meta_description": "Plongez dans l’atelier et le rythme de fabrication des céramiques artisanales.",
+    "status": "published",
+    "author_id": "{{ADMIN_ID}}",
+    "created_at": "2026-05-10 09:40:00",
+    "updated_at": "2026-05-10 09:40:00",
+    "translation_group": "page_atelier",
+    "locale": "fr-FR",
+    "source_locale": "fr-FR"
+}

@@ -35,12 +35,38 @@ class FlatFile
     public function all(): array
     {
         $items = [];
-        $files = glob($this->basePath . '/*.json');
+        $seen = [];
+        $files = glob($this->basePath . '/*.json') ?: [];
 
         foreach ($files as $file) {
             $data = $this->readFile($file);
             if ($data) {
                 $items[] = $data;
+                $id = trim((string) ($data['id'] ?? ''));
+                if ($id !== '') {
+                    $seen[$id] = true;
+                }
+            }
+        }
+
+        $legacyBasePath = $this->legacyBasePath();
+        if ($legacyBasePath !== null && is_dir($legacyBasePath)) {
+            $legacyFiles = glob($legacyBasePath . '/*.json') ?: [];
+            foreach ($legacyFiles as $file) {
+                $data = $this->readFile($file);
+                if (!$data) {
+                    continue;
+                }
+
+                $id = trim((string) ($data['id'] ?? ''));
+                if ($id !== '' && isset($seen[$id])) {
+                    continue;
+                }
+
+                $items[] = $data;
+                if ($id !== '') {
+                    $seen[$id] = true;
+                }
             }
         }
 
@@ -50,7 +76,13 @@ class FlatFile
     public function find(string $id): ?array
     {
         $path = $this->getFilePath($id);
-        return $this->readFile($path);
+        $data = $this->readFile($path);
+        if ($data !== null) {
+            return $data;
+        }
+
+        $legacyPath = $this->getLegacyFilePath($id);
+        return $legacyPath !== null ? $this->readFile($legacyPath) : null;
     }
 
     public function findBy(string $field, mixed $value): ?array
@@ -115,17 +147,27 @@ class FlatFile
             return unlink($path);
         }
 
+        $legacyPath = $this->getLegacyFilePath($id);
+        if ($legacyPath !== null && file_exists($legacyPath)) {
+            return unlink($legacyPath);
+        }
+
         return false;
     }
 
     public function exists(string $id): bool
     {
-        return file_exists($this->getFilePath($id));
+        if (file_exists($this->getFilePath($id))) {
+            return true;
+        }
+
+        $legacyPath = $this->getLegacyFilePath($id);
+        return $legacyPath !== null && file_exists($legacyPath);
     }
 
     public function count(): int
     {
-        return count(glob($this->basePath . '/*.json'));
+        return count($this->all());
     }
 
     public function paginate(int $page = 1, int $perPage = 15): array
@@ -168,7 +210,10 @@ class FlatFile
     {
         $path = $this->getFilePath($id);
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        file_put_contents($path, $json, LOCK_EX);
+        $saved = file_put_contents($path, $json, LOCK_EX) !== false;
+        if ($saved) {
+            $this->cleanupLegacyFilePath($id, $path);
+        }
     }
 
     private function readFile(string $path): ?array
@@ -188,6 +233,39 @@ class FlatFile
         // Sanitize ID
         $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $id);
         return $this->basePath . '/' . $id . '.json';
+    }
+
+    private function getLegacyFilePath(string $id): ?string
+    {
+        $legacyBasePath = $this->legacyBasePath();
+        if ($legacyBasePath === null) {
+            return null;
+        }
+
+        $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $id);
+        return $legacyBasePath . '/' . $id . '.json';
+    }
+
+    private function legacyBasePath(): ?string
+    {
+        $legacyEntity = match ($this->entity) {
+            'core/comments' => 'comments',
+            default => null,
+        };
+
+        return $legacyEntity === null ? null : BASE_PATH . '/data/' . $legacyEntity;
+    }
+
+    private function cleanupLegacyFilePath(string $id, string $writtenPath): void
+    {
+        $legacyPath = $this->getLegacyFilePath($id);
+        if ($legacyPath === null || $legacyPath === $writtenPath) {
+            return;
+        }
+
+        if (file_exists($legacyPath)) {
+            @unlink($legacyPath);
+        }
     }
 
     private function generateId(): string
@@ -234,10 +312,10 @@ class FlatFile
             return $preferred;
         }
 
-        // Backward compatibility for legacy files: /data/{name}.json
-        $legacy = self::resolveLegacySettingsPath($name);
-        if ($legacy !== $preferred && file_exists($legacy)) {
-            return $legacy;
+        foreach (self::resolveLegacySettingsPaths($name) as $legacy) {
+            if ($legacy !== $preferred && file_exists($legacy)) {
+                return $legacy;
+            }
         }
 
         return $preferred;
@@ -246,11 +324,11 @@ class FlatFile
     private static function resolveSettingsWritePath(string $name): string
     {
         if ($name === 'menus') {
-            return BASE_PATH . '/data/menus/menus.json';
+            return BASE_PATH . '/data/core/menus/menus.json';
         }
 
         if ($name === 'footer') {
-            return BASE_PATH . '/data/footer/footer.json';
+            return BASE_PATH . '/data/core/footer/footer.json';
         }
 
         return self::resolveLegacySettingsPath($name);
@@ -263,13 +341,34 @@ class FlatFile
 
     private static function cleanupLegacySettingsPath(string $name, string $writtenPath): void
     {
-        $legacy = self::resolveLegacySettingsPath($name);
-        if ($legacy === $writtenPath) {
-            return;
-        }
+        foreach (self::resolveLegacySettingsPaths($name) as $legacy) {
+            if ($legacy === $writtenPath) {
+                continue;
+            }
 
-        if (file_exists($legacy)) {
-            @unlink($legacy);
+            if (file_exists($legacy)) {
+                @unlink($legacy);
+            }
         }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function resolveLegacySettingsPaths(string $name): array
+    {
+        return match ($name) {
+            'menus' => [
+                BASE_PATH . '/data/menus/menus.json',
+                self::resolveLegacySettingsPath($name),
+            ],
+            'footer' => [
+                BASE_PATH . '/data/footer/footer.json',
+                self::resolveLegacySettingsPath($name),
+            ],
+            default => [
+                self::resolveLegacySettingsPath($name),
+            ],
+        };
     }
 }

@@ -13,6 +13,8 @@ $defaultMediaModalConfig = [
     // Always use same front controller as uploadUrl (avoid /public mismatch)
     'apiImagesUrl' => $adminFront . '?path=admin/media/api/images',
     'apiFilesUrl' => $adminFront . '?path=admin/media/api/files',
+    'apiDirectoriesUrl' => $adminFront . '?path=admin/media/api/directories',
+    'contextualizeUrl' => $adminFront . '?path=admin/media/api/contextualize',
     'uploadUrl' => $uploadUrl,
     'csrfToken' => csrf_token(),
     'uploadsBase' => url('/uploads'),
@@ -25,6 +27,11 @@ $defaultMediaModalConfig = [
     'filesLabel' => __('files_label', 'Media'),
     'noImagesLabel' => __('no_images', 'Media'),
     'noMediaLabel' => __('no_media', 'Media'),
+    'directoriesLabel' => __('directories', 'Media'),
+    'currentDirectoryLabel' => __('current_directory', 'Media'),
+    'rootDirectoryLabel' => __('root_directory', 'Media'),
+    'directoryEmptyLabel' => __('directory_empty', 'Media'),
+    'selectDirectoryLabel' => __('media_select_directory', 'Media'),
 ];
 $mediaModalConfig = array_merge(
     $defaultMediaModalConfig,
@@ -63,6 +70,10 @@ $mediaModalConfigJson = e(json_encode($mediaModalConfig));
             </div>
 
             <div id="tabContentLibrary">
+                <div class="media-modal-directory-bar">
+                    <div id="mediaModalDirectoryCurrent" class="media-modal-directory-current"></div>
+                    <div id="mediaModalDirectoryList" class="media-modal-directory-list" aria-label="<?= e(__('media_select_directory', 'Media')) ?>"></div>
+                </div>
                 <div id="mediaLibraryGrid" class="media-library-grid">
                     <!-- Images loaded via JS -->
                 </div>

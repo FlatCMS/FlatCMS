@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Contact\Support;
 
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
 use App\Core\Security\Turnstile;
@@ -72,7 +73,7 @@ final class ContactFormRenderer
 
         if (is_array($resolvedForm)) {
             $resolvedForm = $translations->resolveForLocale($resolvedForm, locale());
-            $pages = FlatFile::for('core/pages');
+            $pages = ContentDocumentStore::for('core/pages');
             $legalPage = SystemPages::findByKey($pages, SystemPages::LEGAL_NOTICE_KEY);
             $privacyPage = SystemPages::findByKey($pages, SystemPages::PRIVACY_POLICY_KEY);
 

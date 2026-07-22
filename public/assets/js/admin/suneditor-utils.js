@@ -31,6 +31,50 @@
         return null;
     }
 
+    function hasButtonVariant(anchor) {
+        if (!anchor || !anchor.classList) {
+            return false;
+        }
+
+        return anchor.classList.contains('btn-primary')
+            || anchor.classList.contains('btn-secondary')
+            || anchor.classList.contains('btn-outline')
+            || anchor.classList.contains('btn-ghost');
+    }
+
+    function normalizeActionLink(anchor) {
+        if (!anchor || !anchor.classList) {
+            return;
+        }
+
+        anchor.classList.add('btn');
+        if (!hasButtonVariant(anchor)) {
+            anchor.classList.add('btn-primary');
+        }
+    }
+
+    function normalizeFlatCmsContent(html) {
+        var source = String(html || '');
+        if (source.trim() === '' || typeof document === 'undefined') {
+            return source;
+        }
+
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = source;
+
+        Array.prototype.slice.call(wrapper.querySelectorAll('p.prose-action-links')).forEach(function (paragraph) {
+            Array.prototype.slice.call(paragraph.querySelectorAll('a[href]')).forEach(normalizeActionLink);
+        });
+
+        Array.prototype.slice.call(wrapper.querySelectorAll('a.btn-primary, a.btn-secondary, a.btn-outline, a.btn-ghost')).forEach(function (anchor) {
+            if (anchor && anchor.classList) {
+                anchor.classList.add('btn');
+            }
+        });
+
+        return wrapper.innerHTML;
+    }
+
     function initToolbarAccordion(editor, config) {
         if (!editor || !editor.core || !editor.core.context || !editor.core.context.element) {
             return;
@@ -781,6 +825,7 @@
             charCounter: !!cfg.charCounter,
             charCounterType: 'char',
             defaultStyle: 'font-family: inherit; font-size: 14px; line-height: 1.65;',
+            allowedClassNames: '.*',
             formats: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'],
             buttonList: Array.isArray(cfg.buttonList) && cfg.buttonList.length ? cfg.buttonList : getDefaultButtonList(),
         };
@@ -819,12 +864,12 @@
         var readHtml = function () {
             try {
                 if (editor && typeof editor.getContents === 'function') {
-                    return String(editor.getContents() || '');
+                    return normalizeFlatCmsContent(editor.getContents());
                 }
             } catch (error) {
-                return String(textarea.value || '');
+                return normalizeFlatCmsContent(textarea.value);
             }
-            return String(textarea.value || '');
+            return normalizeFlatCmsContent(textarea.value);
         };
 
         var syncValue = function (nextHtml, emitInput, emitChange) {

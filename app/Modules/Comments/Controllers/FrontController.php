@@ -23,7 +23,7 @@ class FrontController extends BaseController
     {
         parent::__construct();
         I18n::load('Comments');
-        $this->comments = FlatFile::for('comments');
+        $this->comments = FlatFile::for('core/comments');
     }
 
     public function store(): void
@@ -84,7 +84,7 @@ class FrontController extends BaseController
 
     public static function getComments(string $postId, string $postType = 'post'): array
     {
-        $comments = FlatFile::for('comments');
+        $comments = FlatFile::for('core/comments');
         $all = $comments->where('post_id', $postId);
         
         // Filter approved only and matching post type

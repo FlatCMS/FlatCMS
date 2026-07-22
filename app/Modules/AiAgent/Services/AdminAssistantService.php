@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace App\Modules\AiAgent\Services;
 
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Modules\Categories\Services\CategoryTranslationService;
 use App\Modules\Contact\Services\FormService;
@@ -1135,7 +1136,7 @@ final class AdminAssistantService
     {
         $used = [];
 
-        foreach (FlatFile::for('core/posts')->all() as $post) {
+        foreach (ContentDocumentStore::for('core/posts')->all() as $post) {
             $featured = $this->normalizeUploadImagePath((string) ($post['featured_image'] ?? ''));
             if ($featured !== '') {
                 $used[$featured] = true;
@@ -1146,7 +1147,7 @@ final class AdminAssistantService
             }
         }
 
-        foreach (FlatFile::for('core/pages')->all() as $page) {
+        foreach (ContentDocumentStore::for('core/pages')->all() as $page) {
             foreach ($this->extractImagePathsFromHtml((string) ($page['content'] ?? '')) as $path) {
                 $used[$path] = true;
             }

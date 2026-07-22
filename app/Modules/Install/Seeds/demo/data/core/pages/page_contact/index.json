@@ -1,0 +1,15 @@
+{
+    "id": "page_contact",
+    "title": "Contact",
+    "slug": "contact",
+    "editor_mode": "classic",
+    "meta_title": "Contact - {{SITE_NAME}}",
+    "meta_description": "Contact, demandes sur mesure et visites de l’atelier.",
+    "status": "published",
+    "author_id": "{{ADMIN_ID}}",
+    "created_at": "2026-05-10 10:40:00",
+    "updated_at": "2026-05-10 10:40:00",
+    "translation_group": "page_contact",
+    "locale": "fr-FR",
+    "source_locale": "fr-FR"
+}

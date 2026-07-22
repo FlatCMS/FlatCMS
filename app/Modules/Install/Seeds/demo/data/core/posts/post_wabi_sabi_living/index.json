@@ -1,0 +1,20 @@
+{
+    "id": "post_wabi_sabi_living",
+    "title": "L'art de vivre wabi-sabi",
+    "slug": "art-vivre-wabi-sabi",
+    "excerpt": "Comment matières naturelles, lumière douce et objets imparfaits créent des intérieurs plus apaisés.",
+    "featured_image": "/uploads/images/demo-post-wabi-sabi.webp",
+    "meta_title": "L'art de vivre wabi-sabi",
+    "meta_description": "Repères simples pour introduire le wabi-sabi dans un intérieur contemporain.",
+    "categories": [
+        "cat_inspirations",
+        "cat_materials"
+    ],
+    "author_id": "{{ADMIN_ID}}",
+    "status": "published",
+    "created_at": "2026-05-11 09:00:00",
+    "updated_at": "2026-05-11 09:00:00",
+    "translation_group": "post_wabi_sabi_living",
+    "locale": "fr-FR",
+    "source_locale": "fr-FR"
+}

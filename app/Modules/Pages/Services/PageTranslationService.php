@@ -11,19 +11,20 @@ declare(strict_types=1);
 
 namespace App\Modules\Pages\Services;
 
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
 
 final class PageTranslationService
 {
-    private FlatFile $pages;
+    private ContentDocumentStore $pages;
 
     /** @var array<int, array<string, mixed>>|null */
     private ?array $allPages = null;
 
-    public function __construct(?FlatFile $pages = null)
+    public function __construct(?ContentDocumentStore $pages = null)
     {
-        $this->pages = $pages ?? FlatFile::for('core/pages');
+        $this->pages = $pages ?? ContentDocumentStore::for('core/pages');
     }
 
     /**

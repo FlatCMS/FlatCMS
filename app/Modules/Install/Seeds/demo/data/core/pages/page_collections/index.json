@@ -1,0 +1,15 @@
+{
+    "id": "page_collections",
+    "title": "Collections",
+    "slug": "collections",
+    "editor_mode": "classic",
+    "meta_title": "Collections - {{SITE_NAME}}",
+    "meta_description": "Collections artisanales pour la table, le thé et les intérieurs calmes.",
+    "status": "published",
+    "author_id": "{{ADMIN_ID}}",
+    "created_at": "2026-05-10 09:20:00",
+    "updated_at": "2026-05-10 09:20:00",
+    "translation_group": "page_collections",
+    "locale": "fr-FR",
+    "source_locale": "fr-FR"
+}

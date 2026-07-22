@@ -32,18 +32,7 @@ $mediaConfig = [
     'csrfToken' => csrf_token(),
     'currentFolder' => $folder,
     'folderConfig' => $folderConfig,
-    'i18n' => [
-        'copy_url' => __('copy_url', 'Media'),
-        'delete' => __('delete', 'Core'),
-        'select' => __('select', 'Media'),
-        'media_ai_indexing' => __('media_ai_indexing', 'Media'),
-        'media_ai_leave_message' => __('media_ai_leave_message', 'Media'),
-        'media_ai_leave_warning' => __('media_ai_leave_warning', 'Media'),
-        'media_ai_leave_confirm' => __('media_ai_leave_confirm', 'Media'),
-        'media_ai_index_failed' => __('media_ai_index_failed', 'Media'),
-        'media_batch_selected_count' => __('media_batch_selected_count', 'Media', ['count' => ':count']),
-        'media_batch_delete_items_label' => __('media_batch_delete_items_label', 'Media', ['count' => ':count']),
-    ],
+    'i18n' => \App\Core\I18n::all('Media'),
 ];
 
 $mediaConfigJson = e(json_encode($mediaConfig));
@@ -135,10 +124,6 @@ $mediaConfigJson = e(json_encode($mediaConfig));
             <?= csrf_field() ?>
             <input type="hidden" name="folder" value="<?= e($folder) ?>">
             <div class="media-batch-controls">
-                <label class="media-batch-select-all">
-                    <input type="checkbox" data-media-select-all>
-                    <span><?= __('media_batch_select_all', 'Media') ?></span>
-                </label>
                 <span class="media-batch-count" data-media-batch-count><?= __('media_batch_selected_count', 'Media', ['count' => '0']) ?></span>
                 <button
                     type="submit"
@@ -287,8 +272,5 @@ $mediaConfigJson = e(json_encode($mediaConfig));
         </form>
     </div>
 </div>
-
-<!-- Toast Notification -->
-<div id="toast" class="toast"></div>
 
 <script src="<?= module_asset('Media', 'js/media.js') ?>?v=<?= filemtime(BASE_PATH . '/app/Modules/Media/Assets/js/media.js') ?>"></script>

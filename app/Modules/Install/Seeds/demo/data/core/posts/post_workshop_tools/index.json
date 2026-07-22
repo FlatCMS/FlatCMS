@@ -1,0 +1,20 @@
+{
+    "id": "post_workshop_tools",
+    "title": "Les outils silencieux qui façonnent l'atelier",
+    "slug": "outils-silencieux-faconnent-atelier",
+    "excerpt": "Mirettes, couteaux, rouleaux et pinceaux portent une mémoire de gestes qui influence directement la finition des pièces.",
+    "featured_image": "/uploads/images/demo-post-workshop-tools.webp",
+    "meta_title": "Les outils silencieux qui façonnent l'atelier",
+    "meta_description": "Comment les outils de céramique influencent le geste, la matière et la présence finale des pièces.",
+    "categories": [
+        "cat_workshop",
+        "cat_materials"
+    ],
+    "author_id": "{{ADMIN_ID}}",
+    "status": "published",
+    "created_at": "2026-05-15 09:25:00",
+    "updated_at": "2026-05-15 09:25:00",
+    "translation_group": "post_workshop_tools",
+    "locale": "fr-FR",
+    "source_locale": "fr-FR"
+}

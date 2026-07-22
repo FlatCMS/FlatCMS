@@ -150,8 +150,8 @@ if ($trashType !== 'all') {
             <div data-trash-batch-ids></div>
         </form>
 
-        <div class="table-wrapper">
-            <table class="table">
+        <div class="table-wrapper trash-table-wrapper">
+            <table class="table trash-table">
                 <thead>
                     <tr>
                         <th class="trash-select-column"><?= __('trash_batch_select_label', 'Trash') ?></th>
@@ -188,11 +188,11 @@ if ($trashType !== 'all') {
                                     <?= e($typeLabel) ?>
                                 </span>
                             </td>
-                            <td data-label="<?= __('trash_title_column', 'Trash') ?>">
-                                <strong><?= e($title !== '' ? $title : __('trash_untitled', 'Trash')) ?></strong>
+                            <td data-label="<?= __('trash_title_column', 'Trash') ?>" class="trash-title-cell">
+                                <strong class="trash-cell-text"><?= e($title !== '' ? $title : __('trash_untitled', 'Trash')) ?></strong>
                             </td>
-                            <td data-label="<?= __('trash_slug_column', 'Trash') ?>">
-                                <?= $slug !== '' ? e($slug) : '—' ?>
+                            <td data-label="<?= __('trash_slug_column', 'Trash') ?>" class="trash-slug-cell">
+                                <span class="trash-cell-text"><?= $slug !== '' ? e($slug) : '—' ?></span>
                             </td>
                             <td data-label="<?= __('trash_deleted_at', 'Trash') ?>">
                                 <?= human_date((string) ($item['deleted_at'] ?? '')) ?>

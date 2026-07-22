@@ -23,6 +23,12 @@ $router->group(['prefix' => 'admin', 'middleware' => 'auth'], function (Router $
     // Upload de fichier(s)
     $router->post('/media/upload', [\App\Modules\Media\Controllers\AdminController::class, 'upload'])->name('admin.media.upload');
 
+    // API - Copie d'un média existant dans le contexte métier courant
+    $router->post('/media/api/contextualize', [\App\Modules\Media\Controllers\AdminController::class, 'contextualize'])->name('admin.media.api.contextualize');
+
+    // API - Création d'un sous-répertoire média
+    $router->post('/media/api/directories', [\App\Modules\Media\Controllers\AdminController::class, 'createDirectory'])->name('admin.media.api.directories.create');
+
     // Suppression d'un média par ID
     $router->post('/media/{id}/delete', [\App\Modules\Media\Controllers\AdminController::class, 'delete'])->name('admin.media.delete');
 
@@ -44,9 +50,15 @@ $router->group(['prefix' => 'admin', 'middleware' => 'auth'], function (Router $
     // API - Liste des images uniquement (AJAX)
     $router->get('/media/api/images', [\App\Modules\Media\Controllers\AdminController::class, 'apiImages'])->name('admin.media.api.images');
 
+    // API - Liste des sous-répertoires d'une famille média (AJAX)
+    $router->get('/media/api/directories', [\App\Modules\Media\Controllers\AdminController::class, 'apiDirectories'])->name('admin.media.api.directories');
+
     // API - Détails d'un média (AJAX)
     $router->get('/media/{id}/details', [\App\Modules\Media\Controllers\AdminController::class, 'details'])->name('admin.media.details');
 
     // API - Statistiques (AJAX)
     $router->get('/media/api/stats', [\App\Modules\Media\Controllers\AdminController::class, 'apiStats'])->name('admin.media.api.stats');
+
+    // API - Déplacer un fichier ou dossier (AJAX)
+    $router->post('/media/api/move', [\App\Modules\Media\Controllers\AdminController::class, 'move'])->name('admin.media.api.move');
 });

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Menu\Services;
 
+use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 
 final class MenuSyncService
@@ -105,12 +106,11 @@ final class MenuSyncService
 
     private static function loadRecord(string $type, string $id): ?array
     {
-        $path = match ($type) {
-            'post' => 'core/posts',
-            'category' => 'core/categories',
-            default => 'core/pages',
+        $store = match ($type) {
+            'post' => ContentDocumentStore::for('core/posts'),
+            'category' => FlatFile::for('core/categories'),
+            default => ContentDocumentStore::for('core/pages'),
         };
-        $store = FlatFile::for($path);
         $record = $store->find($id);
         return is_array($record) ? $record : null;
     }

@@ -1048,8 +1048,8 @@ final class SiteBackupService
             'updated_at' => date('Y-m-d H:i:s'),
             'translations' => (object) [],
         ]);
-        $files['data/menus/menus.json'] = $this->encodeJson($this->buildResetMenusPayload());
-        $files['data/footer/footer.json'] = $this->encodeJson($this->buildResetFooterPayload($settings, $defaultLanguage));
+        $files['data/core/menus/menus.json'] = $this->encodeJson($this->buildResetMenusPayload());
+        $files['data/core/footer/footer.json'] = $this->encodeJson($this->buildResetFooterPayload($settings, $defaultLanguage));
         $files['data/core/media/media.json'] = $this->encodeJson([]);
 
         ksort($files);

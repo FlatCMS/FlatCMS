@@ -42,6 +42,16 @@ $pagesPanelLabel = static function (array $labelBag, string $key, string $fallba
     return is_string($value) && trim($value) !== '' ? $value : $fallback;
 };
 
+$pagesMediaContext = static function (array $values = []) use ($page): string {
+    $slug = trim((string) ($values['slug'] ?? ''));
+    if ($slug === '' && is_array($page)) {
+        $slug = trim((string) ($page['slug'] ?? $page['id'] ?? ''));
+    }
+
+    $slug = str_slug($slug);
+    return 'pages/' . ($slug !== '' ? $slug : 'draft');
+};
+
 $pagesLocaleFlag = static function (string $locale): string {
     $value = trim($locale);
     if ($value === '') {
@@ -254,6 +264,7 @@ $pagesLocaleFlag = static function (string $locale): string {
                                     class="form-input"
                                     rows="15"
                                     data-page-suneditor
+                                    data-suneditor-media-context="<?= e($pagesMediaContext($tabValues)) ?>"
                                     data-suneditor-toolbar-expand="<?= e($pagesPanelLabel($panelLabels, 'suneditor_toolbar_expand', __('suneditor_toolbar_expand', 'Pages'))) ?>"
                                     data-suneditor-toolbar-collapse="<?= e($pagesPanelLabel($panelLabels, 'suneditor_toolbar_collapse', __('suneditor_toolbar_collapse', 'Pages'))) ?>"
                                     data-suneditor-media-modal-error="<?= e($pagesPanelLabel($panelLabels, 'suneditor_media_modal_unavailable', __('suneditor_media_modal_unavailable', 'Pages'))) ?>"
@@ -326,6 +337,7 @@ $pagesLocaleFlag = static function (string $locale): string {
                             class="form-input"
                             rows="15"
                             data-page-suneditor
+                            data-suneditor-media-context="<?= e($pagesMediaContext(['slug' => old('slug', $page['slug'] ?? '')])) ?>"
                             data-suneditor-toolbar-expand="<?= e($pageLabel('suneditor_toolbar_expand', __('suneditor_toolbar_expand', 'Pages'))) ?>"
                             data-suneditor-toolbar-collapse="<?= e($pageLabel('suneditor_toolbar_collapse', __('suneditor_toolbar_collapse', 'Pages'))) ?>"
                             data-suneditor-media-modal-error="<?= e($pageLabel('suneditor_media_modal_unavailable', __('suneditor_media_modal_unavailable', 'Pages'))) ?>"
