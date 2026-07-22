@@ -4,37 +4,37 @@
       "en-US": {
         "title": "Home",
         "slug": "home",
-        "content": "<p>{{SITE_NAME}} creates a world of handcrafted ceramics inspired by wabi-sabi, Mediterranean light and the slow gestures of the workshop.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Wabi-sabi living room with handcrafted ceramics\"></p><h2>An editorial showcase, without builders</h2><p>This demo shows how to present an artisanal brand with classic pages, a native journal, a standard menu and a simple but coherent footer.</p><ul><li>Collections designed for the table, tea and calm interiors.</li><li>A workshop story told with restraint, texture and natural light.</li><li>An editorial journal that extends the brand universe.</li></ul><p class=\"prose-action-links\"><a href=\"/page/collections\" class=\"btn btn-primary\">Discover the collections</a><a href=\"/page/atelier\" class=\"btn btn-primary\">Enter the workshop</a><a href=\"/blog\" class=\"btn btn-primary\">Read the journal</a></p>",
+        "content": "<p>{{SITE_NAME}} creates a world of handcrafted ceramics inspired by wabi-sabi, Mediterranean light and the slow gestures of the workshop.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Wabi-sabi living room with handcrafted ceramics\"></p><h2>An editorial showcase, without a page builder</h2><p>This demo shows how to present an artisanal brand with classic pages, a native journal, a standard menu and a simple but coherent footer.</p><ul><li>Collections designed for the table, tea and calm interiors.</li><li>A workshop story told with restraint, texture and natural light.</li><li>An editorial journal that extends the brand universe.</li></ul><p class=\"prose-action-links\"><a href=\"/page/collections\" class=\"btn btn-primary\">Discover the collections</a><a href=\"/page/workshop\" class=\"btn btn-primary\">Enter the workshop</a><a href=\"/blog\" class=\"btn btn-primary\">Read the journal</a></p>",
         "meta_title": "Home - {{SITE_NAME}}",
         "meta_description": "Editorial showcase for handcrafted ceramics, collections, workshop and brand journal."
       },
       "de-DE": {
         "title": "Startseite",
         "slug": "startseite",
-        "content": "<p>{{SITE_NAME}} erschafft eine Welt handgefertigter Keramik, inspiriert von Wabi-Sabi, mediterranem Licht und den langsamen Gesten des Ateliers.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Wabi-Sabi-Wohnraum mit handgefertigter Keramik\"></p><h2>Eine editoriale Präsentationsseite ohne Builder</h2><p>Diese Demo zeigt, wie sich eine handwerkliche Marke mit klassischen Seiten, einem nativen Journal, einem Standardmenü und einem schlichten, stimmigen Footer präsentieren lässt.</p><ul><li>Kollektionen für Tischkultur, Tee und ruhige Innenräume.</li><li>Ein Atelier, erzählt mit Zurückhaltung, Materialität und natürlichem Licht.</li><li>Ein redaktionelles Journal, das das Markenuniversum fortführt.</li></ul><p class=\"prose-action-links\"><a href=\"/page/kollektionen\" class=\"btn btn-primary\">Kollektionen entdecken</a><a href=\"/page/atelier\" class=\"btn btn-primary\">Das Atelier betreten</a><a href=\"/blog\" class=\"btn btn-primary\">Das Journal lesen</a></p>",
+        "content": "<p>{{SITE_NAME}} erschafft eine Welt handgefertigter Keramik, inspiriert von Wabi-Sabi, mediterranem Licht und den langsamen Gesten der Werkstatt.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Wabi-Sabi-Wohnraum mit handgefertigter Keramik\"></p><h2>Eine editoriale Präsentationsseite ohne Baukasten</h2><p>Diese Demo zeigt, wie sich eine handwerkliche Marke mit klassischen Seiten, einem nativen Journal, einem Standardmenü und einer schlichten, stimmigen Fußzeile präsentieren lässt.</p><ul><li>Kollektionen für Tischkultur, Tee und ruhige Innenräume.</li><li>Eine Werkstatt, erzählt mit Zurückhaltung, Materialität und natürlichem Licht.</li><li>Ein redaktionelles Journal, das das Markenuniversum fortführt.</li></ul><p class=\"prose-action-links\"><a href=\"/page/kollektionen\" class=\"btn btn-primary\">Kollektionen entdecken</a><a href=\"/page/werkstatt\" class=\"btn btn-primary\">Die Werkstatt betreten</a><a href=\"/blog\" class=\"btn btn-primary\">Das Journal lesen</a></p>",
         "meta_title": "Startseite - {{SITE_NAME}}",
-        "meta_description": "Editoriale Präsentation für handgefertigte Keramik, Kollektionen, Atelier und Markenjournal."
+        "meta_description": "Editoriale Präsentation für handgefertigte Keramik, Kollektionen, Werkstatt und Markenjournal."
       },
       "es-ES": {
         "title": "Inicio",
         "slug": "inicio",
-        "content": "<p>{{SITE_NAME}} compone un universo de cerámicas artesanales inspirado por el wabi-sabi, la luz mediterránea y los gestos lentos del taller.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Salón wabi-sabi con cerámicas artesanales\"></p><h2>Un sitio editorial, sin builders</h2><p>Esta demo muestra cómo presentar una marca artesanal con páginas clásicas, un diario nativo, un menú estándar y un pie de página simple pero coherente.</p><ul><li>Colecciones pensadas para la mesa, el té y los interiores serenos.</li><li>Un taller contado con sobriedad, materia y luz natural.</li><li>Un diario editorial para prolongar el universo de marca.</li></ul><p class=\"prose-action-links\"><a href=\"/page/colecciones\" class=\"btn btn-primary\">Descubrir las colecciones</a><a href=\"/page/taller\" class=\"btn btn-primary\">Entrar en el taller</a><a href=\"/blog\" class=\"btn btn-primary\">Leer el diario</a></p>",
+        "content": "<p>{{SITE_NAME}} compone un universo de cerámicas artesanales inspirado por el wabi-sabi, la luz mediterránea y los gestos lentos del taller.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Salón wabi-sabi con cerámicas artesanales\"></p><h2>Un sitio editorial, sin constructores visuales</h2><p>Esta demo muestra cómo presentar una marca artesanal con páginas clásicas, un diario nativo, un menú estándar y un pie de página simple pero coherente.</p><ul><li>Colecciones pensadas para la mesa, el té y los interiores serenos.</li><li>Un taller contado con sobriedad, materia y luz natural.</li><li>Un diario editorial para prolongar el universo de marca.</li></ul><p class=\"prose-action-links\"><a href=\"/page/colecciones\" class=\"btn btn-primary\">Descubrir las colecciones</a><a href=\"/page/taller\" class=\"btn btn-primary\">Entrar en el taller</a><a href=\"/blog\" class=\"btn btn-primary\">Leer el diario</a></p>",
         "meta_title": "Inicio - {{SITE_NAME}}",
         "meta_description": "Escaparate editorial de cerámicas artesanales, colecciones, taller y diario de marca."
       },
       "it-IT": {
         "title": "Home",
         "slug": "home",
-        "content": "<p>{{SITE_NAME}} compone un universo di ceramiche artigianali ispirato al wabi-sabi, alla luce mediterranea e ai gesti lenti dell'atelier.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Salotto wabi-sabi con ceramiche artigianali\"></p><h2>Un sito vetrina editoriale, senza builder</h2><p>Questa demo mostra come presentare un marchio artigianale con pagine classiche, un giornale nativo, un menu standard e un footer semplice ma coerente.</p><ul><li>Collezioni pensate per la tavola, il tè e gli interni quieti.</li><li>Un atelier raccontato con sobrietà, materia e luce naturale.</li><li>Un giornale editoriale per prolungare l'universo del marchio.</li></ul><p class=\"prose-action-links\"><a href=\"/page/collezioni\" class=\"btn btn-primary\">Scoprire le collezioni</a><a href=\"/page/laboratorio\" class=\"btn btn-primary\">Entrare nell'atelier</a><a href=\"/blog\" class=\"btn btn-primary\">Leggere il giornale</a></p>",
+        "content": "<p>{{SITE_NAME}} compone un universo di ceramiche artigianali ispirato al wabi-sabi, alla luce mediterranea e ai gesti lenti del laboratorio.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Salotto wabi-sabi con ceramiche artigianali\"></p><h2>Un sito vetrina editoriale, senza costruttori visuali</h2><p>Questa demo mostra come presentare un marchio artigianale con pagine classiche, un diario nativo, un menu standard e un piè di pagina semplice ma coerente.</p><ul><li>Collezioni pensate per la tavola, il tè e gli interni quieti.</li><li>Un laboratorio raccontato con sobrietà, materia e luce naturale.</li><li>Un diario editoriale per prolungare l'universo del marchio.</li></ul><p class=\"prose-action-links\"><a href=\"/page/collezioni\" class=\"btn btn-primary\">Scoprire le collezioni</a><a href=\"/page/laboratorio\" class=\"btn btn-primary\">Entrare nel laboratorio</a><a href=\"/blog\" class=\"btn btn-primary\">Leggere il diario</a></p>",
         "meta_title": "Home - {{SITE_NAME}}",
-        "meta_description": "Vetrina editoriale di ceramiche artigianali, collezioni, atelier e giornale di marca."
+        "meta_description": "Vetrina editoriale di ceramiche artigianali, collezioni, laboratorio e diario di marca."
       },
       "pt-PT": {
         "title": "Início",
         "slug": "inicio",
-        "content": "<p>{{SITE_NAME}} compõe um universo de cerâmicas artesanais inspirado pelo wabi-sabi, pela luz mediterrânica e pelos gestos lentos do atelier.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Sala wabi-sabi com cerâmicas artesanais\"></p><h2>Um site vitrine editorial, sem builders</h2><p>Esta demo mostra como apresentar uma marca artesanal com páginas clássicas, um jornal nativo, um menu standard e um footer simples mas coerente.</p><ul><li>Coleções pensadas para a mesa, o chá e interiores tranquilos.</li><li>Um atelier contado com sobriedade, matéria e luz natural.</li><li>Um jornal editorial para prolongar o universo da marca.</li></ul><p class=\"prose-action-links\"><a href=\"/page/colecoes\" class=\"btn btn-primary\">Descobrir as coleções</a><a href=\"/page/atelie\" class=\"btn btn-primary\">Entrar no atelier</a><a href=\"/blog\" class=\"btn btn-primary\">Ler o jornal</a></p>",
+        "content": "<p>{{SITE_NAME}} compõe um universo de cerâmicas artesanais inspirado pelo wabi-sabi, pela luz mediterrânica e pelos gestos lentos da oficina.</p><p><img src=\"/uploads/images/pages/home/demo-atelier-home-hero.webp\" alt=\"Sala wabi-sabi com cerâmicas artesanais\"></p><h2>Um site montra editorial, sem construtores visuais</h2><p>Esta demo mostra como apresentar uma marca artesanal com páginas clássicas, um diário nativo, um menu padrão e um rodapé simples mas coerente.</p><ul><li>Coleções pensadas para a mesa, o chá e interiores tranquilos.</li><li>Uma oficina contada com sobriedade, matéria e luz natural.</li><li>Um diário editorial para prolongar o universo da marca.</li></ul><p class=\"prose-action-links\"><a href=\"/page/colecoes\" class=\"btn btn-primary\">Descobrir as coleções</a><a href=\"/page/oficina\" class=\"btn btn-primary\">Entrar na oficina</a><a href=\"/blog\" class=\"btn btn-primary\">Ler o diário</a></p>",
         "meta_title": "Início - {{SITE_NAME}}",
-        "meta_description": "Montra editorial de cerâmicas artesanais, coleções, atelier e jornal da marca."
+        "meta_description": "Montra editorial de cerâmicas artesanais, coleções, oficina e diário da marca."
       }
     },
     "page_collections": {
@@ -76,18 +76,18 @@
     },
     "page_atelier": {
       "en-US": {
-        "title": "Atelier",
-        "slug": "atelier",
+        "title": "Workshop",
+        "slug": "workshop",
         "content": "<p>The workshop is a place of slow rhythm, natural light and precise gestures. Every object takes shape there without industrial automation.</p><p><img src=\"/uploads/images/pages/atelier/demo-atelier-workshop.webp\" alt=\"Living ceramics workshop\"></p><h2>A human-scale place of making</h2><p>We work in small series, paying particular attention to textures, irregularities and the final touch.</p><ul><li>Selection of natural clays and mineral pigments.</li><li>Shaping, drying and firing at the workshop's own pace.</li><li>Manual control of every surface before signature.</li></ul><p class=\"prose-action-links\"><a href=\"/page/craftsmanship\" class=\"btn btn-primary\">Discover the craftsmanship</a></p>",
-        "meta_title": "Atelier - {{SITE_NAME}}",
+        "meta_title": "Workshop - {{SITE_NAME}}",
         "meta_description": "Step inside the workshop and the making rhythm of handcrafted ceramics."
       },
       "de-DE": {
-        "title": "Atelier",
-        "slug": "atelier",
-        "content": "<p>Das Atelier ist ein Ort des langsamen Rhythmus, des natürlichen Lichts und präziser Gesten. Jedes Objekt nimmt dort ohne industrielle Automatisierung Form an.</p><p><img src=\"/uploads/images/pages/atelier/demo-atelier-workshop.webp\" alt=\"Lebendiges Keramikatelier\"></p><h2>Ein Produktionsort in menschlichem Maßstab</h2><p>Wir arbeiten in kleinen Serien und achten besonders auf Texturen, Unregelmäßigkeiten und die finale Haptik.</p><ul><li>Auswahl natürlicher Tone und mineralischer Pigmente.</li><li>Formen, Trocknen und Brennen im Rhythmus des Ateliers.</li><li>Manuelle Kontrolle jeder Oberfläche vor der Signatur.</li></ul><p class=\"prose-action-links\"><a href=\"/page/handwerk\" class=\"btn btn-primary\">Das Handwerk entdecken</a></p>",
-        "meta_title": "Atelier - {{SITE_NAME}}",
-        "meta_description": "Tauchen Sie in das Atelier und den Herstellungsrhythmus handgefertigter Keramik ein."
+        "title": "Werkstatt",
+        "slug": "werkstatt",
+        "content": "<p>Die Werkstatt ist ein Ort des langsamen Rhythmus, des natürlichen Lichts und präziser Gesten. Jedes Objekt nimmt dort ohne industrielle Automatisierung Form an.</p><p><img src=\"/uploads/images/pages/atelier/demo-atelier-workshop.webp\" alt=\"Lebendige Keramikwerkstatt\"></p><h2>Ein Produktionsort in menschlichem Maßstab</h2><p>Wir arbeiten in kleinen Serien und achten besonders auf Texturen, Unregelmäßigkeiten und die finale Haptik.</p><ul><li>Auswahl natürlicher Tone und mineralischer Pigmente.</li><li>Formen, Trocknen und Brennen im Rhythmus der Werkstatt.</li><li>Manuelle Kontrolle jeder Oberfläche vor der Signatur.</li></ul><p class=\"prose-action-links\"><a href=\"/page/handwerk\" class=\"btn btn-primary\">Das Handwerk entdecken</a></p>",
+        "meta_title": "Werkstatt - {{SITE_NAME}}",
+        "meta_description": "Tauchen Sie in die Werkstatt und den Herstellungsrhythmus handgefertigter Keramik ein."
       },
       "es-ES": {
         "title": "Taller",
@@ -99,16 +99,16 @@
       "it-IT": {
         "title": "Laboratorio",
         "slug": "laboratorio",
-        "content": "<p>L'atelier è un luogo di ritmo lento, luce naturale e gesti precisi. Ogni oggetto prende forma lì senza automatismi industriali.</p><p><img src=\"/uploads/images/pages/atelier/demo-atelier-workshop.webp\" alt=\"Laboratorio di ceramica vivo\"></p><h2>Uno spazio di produzione a misura d'uomo</h2><p>Lavoriamo in piccole serie, con un'attenzione particolare alle texture, alle irregolarità e al tatto finale.</p><ul><li>Selezione di argille naturali e pigmenti minerali.</li><li>Modellazione, asciugatura e cottura al ritmo dell'atelier.</li><li>Controllo manuale di ogni superficie prima della firma.</li></ul><p class=\"prose-action-links\"><a href=\"/page/saper-fare\" class=\"btn btn-primary\">Scoprire il savoir-faire</a></p>",
+        "content": "<p>Il laboratorio è un luogo di ritmo lento, luce naturale e gesti precisi. Ogni oggetto prende forma lì senza automatismi industriali.</p><p><img src=\"/uploads/images/pages/atelier/demo-atelier-workshop.webp\" alt=\"Laboratorio di ceramica vivo\"></p><h2>Uno spazio di produzione a misura d'uomo</h2><p>Lavoriamo in piccole serie, con un'attenzione particolare alle texture, alle irregolarità e al tatto finale.</p><ul><li>Selezione di argille naturali e pigmenti minerali.</li><li>Modellazione, asciugatura e cottura al ritmo del laboratorio.</li><li>Controllo manuale di ogni superficie prima della firma.</li></ul><p class=\"prose-action-links\"><a href=\"/page/saper-fare\" class=\"btn btn-primary\">Scoprire il saper fare</a></p>",
         "meta_title": "Laboratorio - {{SITE_NAME}}",
-        "meta_description": "Immergiti nell’atelier e nel ritmo di produzione delle ceramiche artigianali."
+        "meta_description": "Immergiti nel laboratorio e nel ritmo di produzione delle ceramiche artigianali."
       },
       "pt-PT": {
-        "title": "Atelier",
-        "slug": "atelie",
-        "content": "<p>O atelier é um lugar de ritmo lento, luz natural e gestos precisos. Cada objeto ganha forma ali sem automatismos industriais.</p><p><img src=\"/uploads/images/pages/atelier/demo-atelier-workshop.webp\" alt=\"Atelier de cerâmica vivo\"></p><h2>Um espaço de produção à escala humana</h2><p>Trabalhamos em pequenas séries, com atenção particular às texturas, irregularidades e ao toque final.</p><ul><li>Seleção de argilas naturais e pigmentos minerais.</li><li>Moldagem, secagem e cozedura ao ritmo do atelier.</li><li>Controlo manual de cada superfície antes da assinatura.</li></ul><p class=\"prose-action-links\"><a href=\"/page/saber-fazer\" class=\"btn btn-primary\">Descobrir o saber-fazer</a></p>",
-        "meta_title": "Atelier - {{SITE_NAME}}",
-        "meta_description": "Mergulhe no atelier e no ritmo de produção das cerâmicas artesanais."
+        "title": "Oficina",
+        "slug": "oficina",
+        "content": "<p>A oficina é um lugar de ritmo lento, luz natural e gestos precisos. Cada objeto ganha forma ali sem automatismos industriais.</p><p><img src=\"/uploads/images/pages/atelier/demo-atelier-workshop.webp\" alt=\"Oficina de cerâmica viva\"></p><h2>Um espaço de produção à escala humana</h2><p>Trabalhamos em pequenas séries, com atenção particular às texturas, irregularidades e ao toque final.</p><ul><li>Seleção de argilas naturais e pigmentos minerais.</li><li>Moldagem, secagem e cozedura ao ritmo da oficina.</li><li>Controlo manual de cada superfície antes da assinatura.</li></ul><p class=\"prose-action-links\"><a href=\"/page/saber-fazer\" class=\"btn btn-primary\">Descobrir o saber-fazer</a></p>",
+        "meta_title": "Oficina - {{SITE_NAME}}",
+        "meta_description": "Mergulhe na oficina e no ritmo de produção das cerâmicas artesanais."
       }
     },
     "page_savoir_faire": {
@@ -122,7 +122,7 @@
       "de-DE": {
         "title": "Handwerk",
         "slug": "handwerk",
-        "content": "<p>Das Handwerk beruht auf einer kurzen Kette von Entscheidungen: Material, Geste, Ruhezeit, Brennen und Finish.</p><p><img src=\"/uploads/images/pages/savoir-faire/demo-atelier-craftsmanship-banner.webp\" alt=\"Banner Handwerk\"></p><h2>Die wichtigsten Schritte</h2><ol><li><strong>Rohmaterialien</strong>: Tone, Pigmente und Glasuren, ausgewählt wegen ihres Charakters.</li><li><strong>Formgebung</strong>: Jedes Stück wird von Hand aufgebaut oder modelliert.</li><li><strong>Trocknen und Brennen</strong>: Die lange Zeit schützt Material und Haltbarkeit.</li><li><strong>Finish</strong>: Kanten, Texturen und Details werden von Hand überarbeitet.</li><li><strong>Signatur</strong>: Jedes Objekt trägt die letzte Spur des Ateliers.</li></ol><p>Dieser Prozess schafft Stücke, die zusammengehören, ohne jemals identisch zu werden.</p>",
+        "content": "<p>Das Handwerk beruht auf einer kurzen Kette von Entscheidungen: Material, Geste, Ruhezeit, Brennen und Finish.</p><p><img src=\"/uploads/images/pages/savoir-faire/demo-atelier-craftsmanship-banner.webp\" alt=\"Banner Handwerk\"></p><h2>Die wichtigsten Schritte</h2><ol><li><strong>Rohmaterialien</strong>: Tone, Pigmente und Glasuren, ausgewählt wegen ihres Charakters.</li><li><strong>Formgebung</strong>: Jedes Stück wird von Hand aufgebaut oder modelliert.</li><li><strong>Trocknen und Brennen</strong>: Die lange Zeit schützt Material und Haltbarkeit.</li><li><strong>Finish</strong>: Kanten, Texturen und Details werden von Hand überarbeitet.</li><li><strong>Signatur</strong>: Jedes Objekt trägt die letzte Spur der Werkstatt.</li></ol><p>Dieser Prozess schafft Stücke, die zusammengehören, ohne jemals identisch zu werden.</p>",
         "meta_title": "Handwerk - {{SITE_NAME}}",
         "meta_description": "Herstellungsschritte, Materialien und Gesten hinter jedem handwerklichen Stück."
       },
@@ -136,14 +136,14 @@
       "it-IT": {
         "title": "Saper fare",
         "slug": "saper-fare",
-        "content": "<p>Il savoir-faire si basa su una catena breve di decisioni: materia, gesto, tempo di riposo, cottura e finiture.</p><p><img src=\"/uploads/images/pages/savoir-faire/demo-atelier-craftsmanship-banner.webp\" alt=\"Banner savoir-faire\"></p><h2>Le tappe chiave</h2><ol><li><strong>Materie grezze</strong>: argille, pigmenti e smalti scelti per il loro carattere.</li><li><strong>Modellazione</strong>: ogni pezzo viene costruito o modellato a mano.</li><li><strong>Asciugatura e cottura</strong>: il tempo lungo protegge la materia e la durata.</li><li><strong>Finiture</strong>: bordi, texture e dettagli vengono ripresi a mano.</li><li><strong>Firma</strong>: ogni oggetto porta la traccia finale dell'atelier.</li></ol><p>Questo processo crea pezzi coerenti tra loro senza renderli mai identici.</p>",
+        "content": "<p>Il saper fare si basa su una catena breve di decisioni: materia, gesto, tempo di riposo, cottura e finiture.</p><p><img src=\"/uploads/images/pages/savoir-faire/demo-atelier-craftsmanship-banner.webp\" alt=\"Banner saper fare\"></p><h2>Le tappe chiave</h2><ol><li><strong>Materie grezze</strong>: argille, pigmenti e smalti scelti per il loro carattere.</li><li><strong>Modellazione</strong>: ogni pezzo viene costruito o modellato a mano.</li><li><strong>Asciugatura e cottura</strong>: il tempo lungo protegge la materia e la durata.</li><li><strong>Finiture</strong>: bordi, texture e dettagli vengono ripresi a mano.</li><li><strong>Firma</strong>: ogni oggetto porta la traccia finale del laboratorio.</li></ol><p>Questo processo crea pezzi coerenti tra loro senza renderli mai identici.</p>",
         "meta_title": "Saper fare - {{SITE_NAME}}",
         "meta_description": "Fasi di lavorazione, materie e gesti dietro ogni pezzo artigianale."
       },
       "pt-PT": {
         "title": "Saber-fazer",
         "slug": "saber-fazer",
-        "content": "<p>O saber-fazer assenta numa cadeia curta de decisões: matéria, gesto, tempo de repouso, cozedura e acabamentos.</p><p><img src=\"/uploads/images/pages/savoir-faire/demo-atelier-craftsmanship-banner.webp\" alt=\"Banner saber-fazer\"></p><h2>As etapas-chave</h2><ol><li><strong>Matérias-primas</strong>: argilas, pigmentos e esmaltes escolhidos pelo seu carácter.</li><li><strong>Moldagem</strong>: cada peça é montada ou modelada à mão.</li><li><strong>Secagem e cozedura</strong>: o tempo longo protege a matéria e a durabilidade.</li><li><strong>Acabamentos</strong>: rebordos, texturas e detalhes são revistos à mão.</li><li><strong>Assinatura</strong>: cada objeto conserva a marca final do atelier.</li></ol><p>Este processo dá origem a peças coerentes entre si, sem nunca as tornar idênticas.</p>",
+        "content": "<p>O saber-fazer assenta numa cadeia curta de decisões: matéria, gesto, tempo de repouso, cozedura e acabamentos.</p><p><img src=\"/uploads/images/pages/savoir-faire/demo-atelier-craftsmanship-banner.webp\" alt=\"Banner saber-fazer\"></p><h2>As etapas-chave</h2><ol><li><strong>Matérias-primas</strong>: argilas, pigmentos e esmaltes escolhidos pelo seu carácter.</li><li><strong>Moldagem</strong>: cada peça é montada ou modelada à mão.</li><li><strong>Secagem e cozedura</strong>: o tempo longo protege a matéria e a durabilidade.</li><li><strong>Acabamentos</strong>: rebordos, texturas e detalhes são revistos à mão.</li><li><strong>Assinatura</strong>: cada objeto conserva a marca final da oficina.</li></ol><p>Este processo dá origem a peças coerentes entre si, sem nunca as tornar idênticas.</p>",
         "meta_title": "Saber-fazer - {{SITE_NAME}}",
         "meta_description": "Etapas de fabrico, matérias e gestos por trás de cada peça artesanal."
       }
@@ -159,9 +159,9 @@
       "de-DE": {
         "title": "Über uns",
         "slug": "ueber-uns",
-        "content": "<p>{{SITE_NAME}} entstand aus einem einfachen Wunsch: zu verlangsamen, zur Materialität zurückzukehren und Objekte zu schaffen, die den Alltag leise begleiten.</p><p><img src=\"/uploads/images/pages/a-propos/demo-atelier-portrait.webp\" alt=\"Porträt einer Kunsthandwerkerin im Atelier\"></p><h2>Drei grundlegende Werte</h2><ul><li><strong>Handarbeit</strong>: Jedes Objekt bewahrt die Spur der menschlichen Geste.</li><li><strong>Natürliche Materialien</strong>: Ton, Holz, Leinen und Licht leiten das Ganze.</li><li><strong>Langsames Leben</strong>: Stücke für langlebige und bewusste Nutzungen.</li></ul><p>Die Website folgt derselben Philosophie: wenige Effekte, klare Inhalte und eine stabile editoriale Atmosphäre.</p>",
+        "content": "<p>{{SITE_NAME}} entstand aus einem einfachen Wunsch: zu verlangsamen, zur Materialität zurückzukehren und Objekte zu schaffen, die den Alltag leise begleiten.</p><p><img src=\"/uploads/images/pages/a-propos/demo-atelier-portrait.webp\" alt=\"Porträt einer Kunsthandwerkerin in der Werkstatt\"></p><h2>Drei grundlegende Werte</h2><ul><li><strong>Handarbeit</strong>: Jedes Objekt bewahrt die Spur der menschlichen Geste.</li><li><strong>Natürliche Materialien</strong>: Ton, Holz, Leinen und Licht leiten das Ganze.</li><li><strong>Langsames Leben</strong>: Stücke für langlebige und bewusste Nutzungen.</li></ul><p>Die Website folgt derselben Philosophie: wenige Effekte, klare Inhalte und eine stabile editoriale Atmosphäre.</p>",
         "meta_title": "Über uns - {{SITE_NAME}}",
-        "meta_description": "Philosophie, Materialität und Werte eines handwerklichen Keramikateliers."
+        "meta_description": "Philosophie, Materialität und Werte einer handwerklichen Keramikwerkstatt."
       },
       "es-ES": {
         "title": "Acerca de",
@@ -173,16 +173,16 @@
       "it-IT": {
         "title": "Chi siamo",
         "slug": "chi-siamo",
-        "content": "<p>{{SITE_NAME}} è nato da un desiderio semplice: rallentare, tornare alla materia e creare oggetti che attraversino il quotidiano senza rumore.</p><p><img src=\"/uploads/images/pages/a-propos/demo-atelier-portrait.webp\" alt=\"Ritratto di artigiana nell'atelier\"></p><h2>Tre valori fondanti</h2><ul><li><strong>Fatto a mano</strong>: ogni oggetto conserva la traccia del gesto umano.</li><li><strong>Materiali naturali</strong>: terra, legno, lino e luce guidano l'insieme.</li><li><strong>Vita lenta</strong>: pezzi pensati per usi durevoli e intenzionali.</li></ul><p>Il sito segue la stessa filosofia: pochi effetti, contenuti chiari e un'atmosfera editoriale stabile.</p>",
+        "content": "<p>{{SITE_NAME}} è nato da un desiderio semplice: rallentare, tornare alla materia e creare oggetti che attraversino il quotidiano senza rumore.</p><p><img src=\"/uploads/images/pages/a-propos/demo-atelier-portrait.webp\" alt=\"Ritratto di artigiana nel laboratorio\"></p><h2>Tre valori fondanti</h2><ul><li><strong>Fatto a mano</strong>: ogni oggetto conserva la traccia del gesto umano.</li><li><strong>Materiali naturali</strong>: terra, legno, lino e luce guidano l'insieme.</li><li><strong>Vita lenta</strong>: pezzi pensati per usi durevoli e intenzionali.</li></ul><p>Il sito segue la stessa filosofia: pochi effetti, contenuti chiari e un'atmosfera editoriale stabile.</p>",
         "meta_title": "Chi siamo - {{SITE_NAME}}",
-        "meta_description": "Filosofia, materia e valori di un atelier di ceramica artigianale."
+        "meta_description": "Filosofia, materia e valori di un laboratorio di ceramica artigianale."
       },
       "pt-PT": {
         "title": "Sobre",
         "slug": "sobre",
-        "content": "<p>{{SITE_NAME}} nasceu de uma vontade simples: abrandar, regressar à matéria e criar objetos que atravessem o quotidiano sem ruído.</p><p><img src=\"/uploads/images/pages/a-propos/demo-atelier-portrait.webp\" alt=\"Retrato de artesã no atelier\"></p><h2>Três valores fundadores</h2><ul><li><strong>Feito à mão</strong>: cada objeto guarda a marca do gesto humano.</li><li><strong>Materiais naturais</strong>: terra, madeira, linho e luz orientam o conjunto.</li><li><strong>Vida lenta</strong>: peças pensadas para usos duradouros e intencionais.</li></ul><p>O site segue a mesma filosofia: poucos efeitos, conteúdos claros e uma atmosfera editorial estável.</p>",
+        "content": "<p>{{SITE_NAME}} nasceu de uma vontade simples: abrandar, regressar à matéria e criar objetos que atravessem o quotidiano sem ruído.</p><p><img src=\"/uploads/images/pages/a-propos/demo-atelier-portrait.webp\" alt=\"Retrato de artesã na oficina\"></p><h2>Três valores fundadores</h2><ul><li><strong>Feito à mão</strong>: cada objeto guarda a marca do gesto humano.</li><li><strong>Materiais naturais</strong>: terra, madeira, linho e luz orientam o conjunto.</li><li><strong>Vida lenta</strong>: peças pensadas para usos duradouros e intencionais.</li></ul><p>O site segue a mesma filosofia: poucos efeitos, conteúdos claros e uma atmosfera editorial estável.</p>",
         "meta_title": "Sobre - {{SITE_NAME}}",
-        "meta_description": "Filosofia, matéria e valores de um atelier de cerâmica artesanal."
+        "meta_description": "Filosofia, matéria e valores de uma oficina de cerâmica artesanal."
       }
     },
     "page_contact": {
@@ -196,9 +196,9 @@
       "de-DE": {
         "title": "Kontakt",
         "slug": "kontakt",
-        "content": "<p>Fragen, Kooperationen, Maßanfertigungen oder ein Besuch im Atelier: Dieses Formular bündelt die ersten Kontaktaufnahmen.</p><p><img src=\"/uploads/images/pages/contact/demo-atelier-contact-banner.webp\" alt=\"Handwerkliches Kontaktbanner\"></p><h2>Kontaktdaten</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>Frankreich</p><p><strong>E-Mail</strong><br>contact@atelier-nova.fr</p><p><strong>Telefon</strong><br>+33 4 92 01 02 03</p><h2>An das Atelier schreiben</h2>[contact-form slug=\"contact-main\"]<h2>Häufige Fragen</h2><h3>Werden alle Stücke von Hand geformt?</h3><p>Ja. Jedes Stück wird im Atelier modelliert, gebrannt und fertiggestellt.</p><h3>Kann man einen Besuch organisieren?</h3><p>Ja, nach Terminvereinbarung und je nach Produktionskalender.</p><h3>Versenden Sie international?</h3><p>Ja, mit verstärkter Verpackung und angepasster Sendungsverfolgung je nach Zielort.</p>",
+        "content": "<p>Fragen, Kooperationen, Maßanfertigungen oder ein Besuch in der Werkstatt: Dieses Formular bündelt die ersten Kontaktaufnahmen.</p><p><img src=\"/uploads/images/pages/contact/demo-atelier-contact-banner.webp\" alt=\"Handwerkliches Kontaktbanner\"></p><h2>Kontaktdaten</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>Frankreich</p><p><strong>E-Mail</strong><br>contact@atelier-nova.fr</p><p><strong>Telefon</strong><br>+33 4 92 01 02 03</p><h2>An die Werkstatt schreiben</h2>[contact-form slug=\"contact-main\"]<h2>Häufige Fragen</h2><h3>Werden alle Stücke von Hand geformt?</h3><p>Ja. Jedes Stück wird in der Werkstatt modelliert, gebrannt und fertiggestellt.</p><h3>Kann man einen Besuch organisieren?</h3><p>Ja, nach Terminvereinbarung und je nach Produktionskalender.</p><h3>Versenden Sie international?</h3><p>Ja, mit verstärkter Verpackung und angepasster Sendungsverfolgung je nach Zielort.</p>",
         "meta_title": "Kontakt - {{SITE_NAME}}",
-        "meta_description": "Kontakt, Maßanfertigungen und Besuche im Atelier."
+        "meta_description": "Kontakt, Maßanfertigungen und Besuche in der Werkstatt."
       },
       "es-ES": {
         "title": "Contacto",
@@ -210,16 +210,16 @@
       "it-IT": {
         "title": "Contatto",
         "slug": "contatto",
-        "content": "<p>Domande, collaborazioni, ordini su misura o visita all'atelier: questo modulo centralizza i primi contatti.</p><p><img src=\"/uploads/images/pages/contact/demo-atelier-contact-banner.webp\" alt=\"Banner contatto artigianale\"></p><h2>Contatti</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>Francia</p><p><strong>Email</strong><br>contact@atelier-nova.fr</p><p><strong>Telefono</strong><br>+33 4 92 01 02 03</p><h2>Scrivere all'atelier</h2>[contact-form slug=\"contact-main\"]<h2>Domande frequenti</h2><h3>Tutti i pezzi sono modellati a mano?</h3><p>Sì. Ogni pezzo viene modellato, cotto e rifinito nell'atelier.</p><h3>È possibile organizzare una visita?</h3><p>Sì, su appuntamento e secondo il calendario di produzione.</p><h3>Spedite all'estero?</h3><p>Sì, con imballaggio rinforzato e tracciamento adeguato alla destinazione.</p>",
+        "content": "<p>Domande, collaborazioni, ordini su misura o visita al laboratorio: questo modulo centralizza i primi contatti.</p><p><img src=\"/uploads/images/pages/contact/demo-atelier-contact-banner.webp\" alt=\"Banner contatto artigianale\"></p><h2>Contatti</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>Francia</p><p><strong>Email</strong><br>contact@atelier-nova.fr</p><p><strong>Telefono</strong><br>+33 4 92 01 02 03</p><h2>Scrivere al laboratorio</h2>[contact-form slug=\"contact-main\"]<h2>Domande frequenti</h2><h3>Tutti i pezzi sono modellati a mano?</h3><p>Sì. Ogni pezzo viene modellato, cotto e rifinito in laboratorio.</p><h3>È possibile organizzare una visita?</h3><p>Sì, su appuntamento e secondo il calendario di produzione.</p><h3>Spedite all'estero?</h3><p>Sì, con imballaggio rinforzato e tracciamento adeguato alla destinazione.</p>",
         "meta_title": "Contatto - {{SITE_NAME}}",
-        "meta_description": "Contatti, richieste su misura e visite all’atelier."
+        "meta_description": "Contatti, richieste su misura e visite al laboratorio."
       },
       "pt-PT": {
         "title": "Contacto",
         "slug": "contacto",
-        "content": "<p>Perguntas, colaborações, encomendas por medida ou visita ao atelier: este formulário centraliza os primeiros contactos.</p><p><img src=\"/uploads/images/pages/contact/demo-atelier-contact-banner.webp\" alt=\"Banner de contacto artesanal\"></p><h2>Contactos</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>França</p><p><strong>Email</strong><br>contact@atelier-nova.fr</p><p><strong>Telefone</strong><br>+33 4 92 01 02 03</p><h2>Escrever ao atelier</h2>[contact-form slug=\"contact-main\"]<h2>Perguntas frequentes</h2><h3>Todas as peças são moldadas à mão?</h3><p>Sim. Cada peça é moldada, cozida e acabada no atelier.</p><h3>É possível organizar uma visita?</h3><p>Sim, por marcação e segundo o calendário de produção.</p><h3>Enviam para o estrangeiro?</h3><p>Sim, com embalagem reforçada e seguimento adaptado ao destino.</p>",
+        "content": "<p>Perguntas, colaborações, encomendas por medida ou visita à oficina: este formulário centraliza os primeiros contactos.</p><p><img src=\"/uploads/images/pages/contact/demo-atelier-contact-banner.webp\" alt=\"Banner de contacto artesanal\"></p><h2>Contactos</h2><p><strong>Atelier Nova</strong><br>18 rue des Artisans<br>04700 Oraison<br>França</p><p><strong>Email</strong><br>contact@atelier-nova.fr</p><p><strong>Telefone</strong><br>+33 4 92 01 02 03</p><h2>Escrever à oficina</h2>[contact-form slug=\"contact-main\"]<h2>Perguntas frequentes</h2><h3>Todas as peças são moldadas à mão?</h3><p>Sim. Cada peça é moldada, cozida e acabada na oficina.</p><h3>É possível organizar uma visita?</h3><p>Sim, por marcação e segundo o calendário de produção.</p><h3>Enviam para o estrangeiro?</h3><p>Sim, com embalagem reforçada e seguimento adaptado ao destino.</p>",
         "meta_title": "Contacto - {{SITE_NAME}}",
-        "meta_description": "Contacto, pedidos por medida e visitas ao atelier."
+        "meta_description": "Contacto, pedidos por medida e visitas à oficina."
       }
     }
   },
@@ -444,11 +444,11 @@
         "meta_description": "How ceramics tools influence the gesture, the material and the final presence of each piece."
       },
       "de-DE": {
-        "title": "Die stillen Werkzeuge, die das Atelier formen",
-        "slug": "stille-werkzeuge-formen-atelier",
+        "title": "Die stillen Werkzeuge, die die Werkstatt formen",
+        "slug": "stille-werkzeuge-formen-werkstatt",
         "excerpt": "Schlingen, Messer, Rollen und Pinsel tragen eine Erinnerung an Gesten, die das Finish der Stücke direkt beeinflussen.",
-        "content": "<p>In einem Atelier sind Werkzeuge nicht austauschbar. Sie nutzen sich ab, entwickeln eine Patina und beginnen, die Hand ebenso zu führen wie zu begleiten.</p><h2>Ein sehr ausdrucksstarker Werkzeugkasten</h2><ul><li>Eine Schlinge öffnet nicht nur das Material: Sie zeichnet auch eine Spannung in die Form.</li><li>Rolle und Rippen bestimmen die Weichheit oder Schärfe einer Oberfläche.</li><li>Kleine Finish-Werkzeuge hinterlassen subtile Hinweise, die jedes Stück bewohnter wirken lassen.</li></ul><p>Die Werkzeuge eines Ateliers zu beobachten bedeutet bereits, einen Teil seiner Sprache zu verstehen: Die Geste ist nie abstrakt, sondern immer in Material und präzisem Instrument verkörpert.</p>",
-        "meta_title": "Die stillen Werkzeuge, die das Atelier formen",
+        "content": "<p>In einer Werkstatt sind Werkzeuge nicht austauschbar. Sie nutzen sich ab, entwickeln eine Patina und beginnen, die Hand ebenso zu führen wie zu begleiten.</p><h2>Ein sehr ausdrucksstarker Werkzeugkasten</h2><ul><li>Eine Schlinge öffnet nicht nur das Material: Sie zeichnet auch eine Spannung in die Form.</li><li>Rolle und Rippen bestimmen die Weichheit oder Schärfe einer Oberfläche.</li><li>Kleine Finish-Werkzeuge hinterlassen subtile Hinweise, die jedes Stück bewohnter wirken lassen.</li></ul><p>Die Werkzeuge einer Werkstatt zu beobachten bedeutet bereits, einen Teil seiner Sprache zu verstehen: Die Geste ist nie abstrakt, sondern immer in Material und präzisem Instrument verkörpert.</p>",
+        "meta_title": "Die stillen Werkzeuge, die die Werkstatt formen",
         "meta_description": "Wie Keramikwerkzeuge Geste, Material und die endgültige Präsenz der Stücke beeinflussen."
       },
       "es-ES": {
@@ -460,19 +460,19 @@
         "meta_description": "Cómo las herramientas de cerámica influyen en el gesto, la materia y la presencia final de las piezas."
       },
       "it-IT": {
-        "title": "Gli strumenti silenziosi che plasmano l’atelier",
-        "slug": "strumenti-silenziosi-plasmano-atelier",
+        "title": "Gli strumenti silenziosi che plasmano il laboratorio",
+        "slug": "strumenti-silenziosi-plasmano-laboratorio",
         "excerpt": "Mirette, coltelli, rulli e pennelli portano una memoria di gesti che influenza direttamente la finitura dei pezzi.",
-        "content": "<p>In un atelier, gli strumenti non sono intercambiabili. Si usurano, si patinano e finiscono per guidare la mano tanto quanto accompagnarla.</p><h2>Una cassetta degli attrezzi molto espressiva</h2><ul><li>Una miretta non apre soltanto la materia: disegna anche una tensione nella forma.</li><li>Il rullo e le stecche determinano la morbidezza o la nettezza di una superficie.</li><li>I piccoli strumenti di finitura lasciano indizi sottili che rendono ogni pezzo più abitato.</li></ul><p>Osservare gli strumenti di un atelier significa già comprenderne una parte del linguaggio: il gesto non è mai astratto, si incarna sempre in una materia e in uno strumento preciso.</p>",
-        "meta_title": "Gli strumenti silenziosi che plasmano l’atelier",
+        "content": "<p>In un laboratorio, gli strumenti non sono intercambiabili. Si usurano, si patinano e finiscono per guidare la mano tanto quanto accompagnarla.</p><h2>Una cassetta degli attrezzi molto espressiva</h2><ul><li>Una miretta non apre soltanto la materia: disegna anche una tensione nella forma.</li><li>Il rullo e le stecche determinano la morbidezza o la nettezza di una superficie.</li><li>I piccoli strumenti di finitura lasciano indizi sottili che rendono ogni pezzo più abitato.</li></ul><p>Osservare gli strumenti di un laboratorio significa già comprenderne una parte del linguaggio: il gesto non è mai astratto, si incarna sempre in una materia e in uno strumento preciso.</p>",
+        "meta_title": "Gli strumenti silenziosi che plasmano il laboratorio",
         "meta_description": "Come gli strumenti della ceramica influenzano il gesto, la materia e la presenza finale dei pezzi."
       },
       "pt-PT": {
-        "title": "As ferramentas silenciosas que moldam o atelier",
-        "slug": "ferramentas-silenciosas-moldam-atelier",
-        "excerpt": "Miretes, facas, rolos e pincéis transportam uma memória de gestos que influencia diretamente o acabamento das peças.",
-        "content": "<p>Num atelier, as ferramentas não são intercambiáveis. Gastam-se, ganham pátina e acabam por guiar a mão tanto quanto a acompanham.</p><h2>Uma caixa de ferramentas muito expressiva</h2><ul><li>Uma mirete não abre apenas a matéria: também desenha uma tensão na forma.</li><li>O rolo e as estecas determinam a suavidade ou a nitidez de uma superfície.</li><li>As pequenas ferramentas de acabamento deixam sinais subtis que tornam cada peça mais habitada.</li></ul><p>Observar as ferramentas de um atelier já é compreender parte da sua linguagem: o gesto nunca é abstrato, encarna-se sempre numa matéria e num instrumento preciso.</p>",
-        "meta_title": "As ferramentas silenciosas que moldam o atelier",
+        "title": "As ferramentas silenciosas que moldam a oficina",
+        "slug": "ferramentas-silenciosas-moldam-oficina",
+        "excerpt": "Miretas, facas, rolos e pincéis transportam uma memória de gestos que influencia diretamente o acabamento das peças.",
+        "content": "<p>Numa oficina, as ferramentas não são intercambiáveis. Gastam-se, ganham pátina e acabam por guiar a mão tanto quanto a acompanham.</p><h2>Uma caixa de ferramentas muito expressiva</h2><ul><li>Uma mirete não abre apenas a matéria: também desenha uma tensão na forma.</li><li>O rolo e as estecas determinam a suavidade ou a nitidez de uma superfície.</li><li>As pequenas ferramentas de acabamento deixam sinais subtis que tornam cada peça mais habitada.</li></ul><p>Observar as ferramentas de uma oficina já é compreender parte da sua linguagem: o gesto nunca é abstrato, encarna-se sempre numa matéria e num instrumento preciso.</p>",
+        "meta_title": "As ferramentas silenciosas que moldam a oficina",
         "meta_description": "Como as ferramentas de cerâmica influenciam o gesto, a matéria e a presença final das peças."
       }
     }
@@ -497,12 +497,12 @@
       "it-IT": {
         "name": "Collezioni",
         "slug": "collezioni-journal",
-        "description": "Pezzi, usi e serie artigianali presentati nel giornale."
+        "description": "Pezzi, usi e serie artigianali presentati nel diario."
       },
       "pt-PT": {
         "name": "Coleções",
         "slug": "colecoes-journal",
-        "description": "Peças, usos e séries artesanais apresentadas no jornal."
+        "description": "Peças, usos e séries artesanais apresentadas no diário."
       }
     },
     "cat_inspirations": {
@@ -514,7 +514,7 @@
       "de-DE": {
         "name": "Inspirationen",
         "slug": "inspirationen-journal",
-        "description": "Referenzen, Atmosphären und Lebensweisen rund um das Universum des Ateliers."
+        "description": "Referenzen, Atmosphären und Lebensweisen rund um das Universum der Werkstatt."
       },
       "es-ES": {
         "name": "Inspiraciones",
@@ -524,12 +524,12 @@
       "it-IT": {
         "name": "Ispirazioni",
         "slug": "ispirazioni-journal",
-        "description": "Riferimenti, atmosfere e modi di vivere attorno all’universo dell’atelier."
+        "description": "Riferimenti, atmosfere e modi di vivere attorno all’universo del laboratorio."
       },
       "pt-PT": {
         "name": "Inspirações",
         "slug": "inspiracoes-journal",
-        "description": "Referências, atmosferas e formas de habitar em torno do universo do atelier."
+        "description": "Referências, atmosferas e formas de habitar em torno do universo da oficina."
       }
     },
     "cat_materials": {
@@ -568,7 +568,7 @@
       "de-DE": {
         "name": "Werkstatt",
         "slug": "werkstatt-journal",
-        "description": "Werkzeuge, Herstellungsprozesse und Einblicke hinter die Kulissen des Ateliers."
+        "description": "Werkzeuge, Herstellungsprozesse und Einblicke hinter die Kulissen der Werkstatt."
       },
       "es-ES": {
         "name": "Taller",
@@ -578,12 +578,12 @@
       "it-IT": {
         "name": "Laboratorio",
         "slug": "laboratorio-journal",
-        "description": "Strumenti, processi di lavorazione e scorci dietro le quinte dell’atelier."
+        "description": "Strumenti, processi di lavorazione e scorci dietro le quinte del laboratorio."
       },
       "pt-PT": {
         "name": "Oficina",
         "slug": "oficina-journal",
-        "description": "Ferramentas, processos de fabrico e bastidores do atelier."
+        "description": "Ferramentas, processos de fabrico e bastidores da oficina."
       }
     }
   },
