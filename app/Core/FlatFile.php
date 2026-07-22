@@ -309,6 +309,7 @@ class FlatFile
     {
         $preferred = self::resolveSettingsWritePath($name);
         if (file_exists($preferred)) {
+            self::cleanupLegacySettingsPath($name, $preferred);
             return $preferred;
         }
 
@@ -349,6 +350,24 @@ class FlatFile
             if (file_exists($legacy)) {
                 @unlink($legacy);
             }
+
+            self::cleanupLegacyDirectory($legacy);
+        }
+    }
+
+    private static function cleanupLegacyDirectory(string $legacyPath): void
+    {
+        $directory = dirname($legacyPath);
+        $dataRoot = rtrim(BASE_PATH . '/data', '/');
+        $directory = rtrim($directory, '/');
+
+        if ($directory === $dataRoot || !is_dir($directory)) {
+            return;
+        }
+
+        $entries = array_diff(scandir($directory) ?: [], ['.', '..', '.DS_Store', '.gitkeep']);
+        if ($entries === []) {
+            @rmdir($directory);
         }
     }
 
