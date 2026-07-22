@@ -661,7 +661,7 @@ final class InstallController
     {
         $directoriesToReset = [
             DATA_PATH . '/users',
-            DATA_PATH . '/auth',
+            DATA_PATH . '/core/auth',
             DATA_PATH . '/languages',
             DATA_PATH . '/core/pages',
             DATA_PATH . '/core/posts',
@@ -709,6 +709,7 @@ final class InstallController
     private function legacyStorageDirectories(): array
     {
         return [
+            DATA_PATH . '/auth',
             DATA_PATH . '/comments',
             DATA_PATH . '/menus',
             DATA_PATH . '/pages',
