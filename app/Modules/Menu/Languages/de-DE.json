@@ -76,6 +76,8 @@
   "menu_help_step_save": "Speichern Sie das Menü und prüfen Sie anschließend das Frontend, um Hierarchie und Labels zu validieren.",
   "menu_help_action_structure": "Aktive Struktur ansehen",
   "menu_help_action_library": "Bibliothek öffnen",
+  "menu_mobile_notice_title": "Für den Desktop optimiert",
+  "menu_mobile_notice_text": "Die Menüverwaltung verwendet Drag & Drop. Um die Struktur komfortabel zu bearbeiten, öffnen Sie diese Ansicht in einem Desktop-Browser.",
   "menu_empty_title": "Das Hauptmenü ist leer",
   "menu_empty_text": "Beginnen Sie damit, Elemente aus der Bibliothek zu ziehen oder einen benutzerdefinierten Link zu erstellen. Danach passen Sie Ebenen und Labels an.",
   "menu_empty_action_library": "Elemente hinzufügen"

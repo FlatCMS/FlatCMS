@@ -129,6 +129,10 @@
   height: 36px;
 }
 
+.backups-action-label {
+  display: none;
+}
+
 .backups-action-form {
   margin-top: var(--spacing-2);
 }
@@ -142,5 +146,55 @@
 @media (max-width: 640px) {
   .backups-stats {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .backups-action-form .btn,
+  .module-installer-form .btn,
+  .backups-table-card .admin-empty-state-panel__actions .btn,
+  .backups-table-card .admin-empty-state-panel__actions form {
+    width: 100%;
+  }
+
+  .backups-action-form .btn,
+  .module-installer-form .btn,
+  .backups-table-card .admin-empty-state-panel__actions .btn {
+    justify-content: center;
+  }
+
+  .backups-actions-cell {
+    white-space: normal;
+  }
+
+  .table-actions.table-actions-compact.backups-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: var(--spacing-2);
+  }
+
+  .table-actions.table-actions-compact.backups-actions form {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 100%;
+  }
+
+  .table-actions.table-actions-compact.backups-actions .table-action {
+    display: inline-flex;
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    min-height: 40px;
+    max-height: none;
+    height: auto;
+    gap: var(--spacing-2);
+    justify-content: center;
+  }
+
+  .backups-action-label {
+    display: inline;
   }
 }

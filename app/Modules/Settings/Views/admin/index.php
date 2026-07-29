@@ -286,6 +286,7 @@ $mediaModalScriptPath = BASE_PATH . '/app/Modules/Media/Assets/js/media-modal.js
 $siteBrandingUi = is_array($siteBrandingUi ?? null) ? $siteBrandingUi : [];
 $siteBrandingTabs = is_array($siteBrandingUi['tabs'] ?? null) ? $siteBrandingUi['tabs'] : [];
 $siteBrandingActiveLocale = (string) ($siteBrandingUi['active_locale'] ?? $selectedDefaultLanguage);
+$siteBrandingSourceLocale = (string) ($siteBrandingUi['source_locale'] ?? $selectedDefaultLanguage);
 $siteBrandingActiveValues = is_array($siteBrandingUi['active_values'] ?? null) ? $siteBrandingUi['active_values'] : [];
 $siteRoutingUi = is_array($siteRoutingUi ?? null) ? $siteRoutingUi : [];
 $siteHomepageUi = is_array($siteRoutingUi['homepage'] ?? null) ? $siteRoutingUi['homepage'] : [];
@@ -335,6 +336,39 @@ foreach ($siteBrandingTabs as $brandingTabCandidate) {
     }
 }
 $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? null) ? $siteBrandingInitialTab['ui_labels'] : [];
+
+$settingsAiAttrs = static function (
+    string $entity,
+    string $block,
+    string $blockLabel,
+    string $locale,
+    string $sourceLocale,
+    string $field,
+    string $label,
+    string $sourceSelector,
+    string $kind = 'text'
+): string {
+    $attrs = [
+        'data-ai-agent-target' => null,
+        'data-ai-agent-module' => 'settings',
+        'data-ai-agent-entity' => $entity,
+        'data-ai-agent-scope' => 'field',
+        'data-ai-agent-block' => $block,
+        'data-ai-agent-block-label' => $blockLabel,
+        'data-ai-agent-field' => $field,
+        'data-ai-agent-label' => $label,
+        'data-ai-agent-field-kind' => $kind,
+        'data-ai-agent-locale' => $locale,
+        'data-ai-agent-source-locale' => $sourceLocale,
+        'data-ai-agent-source-selector' => $sourceSelector,
+    ];
+    $html = '';
+    foreach ($attrs as $name => $value) {
+        $html .= $value === null ? ' ' . $name : ' ' . $name . '="' . e((string) $value) . '"';
+    }
+
+    return $html;
+};
 ?>
 
 <form method="POST" action="<?= url('/admin/settings') ?>" class="settings-form" data-settings-form>
@@ -899,6 +933,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     class="form-input"
                                     rows="2"
                                     data-no-editor
+                                    <?= $settingsAiAttrs('promo_banner', 'promo_banner', __('promo_banner_title', 'Settings'), $localeCode, $promoBannerSourceLocale, 'text', (string) ($labels['promo_banner_text'] ?? __('promo_banner_text', 'Settings')), '#promo_banner_' . $promoBannerSourceLocale . '_text', 'textarea') ?>
                                 ><?= e((string) ($values['text'] ?? '')) ?></textarea>
                                 <div class="form-hint"><?= e((string) ($labels['promo_banner_text_hint'] ?? __('promo_banner_text_hint', 'Settings'))) ?></div>
                             </div>
@@ -912,6 +947,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                         name="promo_banner_translations[<?= e($localeCode) ?>][cta_label]"
                                         class="form-input"
                                         value="<?= e((string) ($values['cta_label'] ?? '')) ?>"
+                                        <?= $settingsAiAttrs('promo_banner', 'promo_banner', __('promo_banner_title', 'Settings'), $localeCode, $promoBannerSourceLocale, 'cta_label', (string) ($labels['promo_banner_cta_label'] ?? __('promo_banner_cta_label', 'Settings')), '#promo_banner_' . $promoBannerSourceLocale . '_cta_label') ?>
                                     >
                                     <div class="form-hint"><?= e((string) ($labels['promo_banner_cta_label_hint'] ?? __('promo_banner_cta_label_hint', 'Settings'))) ?></div>
                                 </div>
@@ -2125,6 +2161,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     class="form-input"
                                     value="<?= e((string) ($values['site_name'] ?? '')) ?>"
                                     data-site-branding-locale-field="site_name"
+                                    <?= $settingsAiAttrs('site_branding', 'site_branding', __('site_branding_translations_modal_title', 'Settings'), $localeCode, $siteBrandingSourceLocale, 'site_name', (string) ($tabFormLabels['site_name'] ?? __('site_name', 'Settings')), '#branding_' . $siteBrandingSourceLocale . '_site_name') ?>
                                     <?= !empty($tab['is_source']) ? 'data-site-branding-source-field="site_name"' : '' ?>
                                 >
                             </div>
@@ -2137,6 +2174,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     rows="3"
                                     data-no-editor
                                     data-site-branding-locale-field="site_description"
+                                    <?= $settingsAiAttrs('site_branding', 'site_branding', __('site_branding_translations_modal_title', 'Settings'), $localeCode, $siteBrandingSourceLocale, 'site_description', (string) ($tabFormLabels['site_description'] ?? __('site_description', 'Settings')), '#branding_' . $siteBrandingSourceLocale . '_site_description', 'textarea') ?>
                                     <?= !empty($tab['is_source']) ? 'data-site-branding-source-field="site_description"' : '' ?>
                                 ><?= e((string) ($values['site_description'] ?? '')) ?></textarea>
                             </div>
@@ -2150,6 +2188,7 @@ $siteBrandingInitialUiLabels = is_array($siteBrandingInitialTab['ui_labels'] ?? 
                                     value="<?= e((string) ($values['site_slogan'] ?? '')) ?>"
                                     placeholder="<?= e((string) ($tabFormLabels['site_slogan_placeholder'] ?? __('site_slogan_placeholder', 'Settings'))) ?>"
                                     data-site-branding-locale-field="site_slogan"
+                                    <?= $settingsAiAttrs('site_branding', 'site_branding', __('site_branding_translations_modal_title', 'Settings'), $localeCode, $siteBrandingSourceLocale, 'site_slogan', (string) ($tabFormLabels['site_slogan'] ?? __('site_slogan', 'Settings')), '#branding_' . $siteBrandingSourceLocale . '_site_slogan') ?>
                                     <?= !empty($tab['is_source']) ? 'data-site-branding-source-field="site_slogan"' : '' ?>
                                 >
                                 <div class="form-hint"><?= e((string) ($tabFormLabels['site_slogan_hint'] ?? __('site_slogan_hint', 'Settings'))) ?></div>

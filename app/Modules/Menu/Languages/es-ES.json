@@ -76,6 +76,8 @@
   "menu_help_step_save": "Por último guarde el menú y compruebe el frontend para validar jerarquía y etiquetas.",
   "menu_help_action_structure": "Ver estructura activa",
   "menu_help_action_library": "Abrir biblioteca",
+  "menu_mobile_notice_title": "Optimizado para ordenador",
+  "menu_mobile_notice_text": "La gestión de menús usa arrastrar y soltar. Para editar la estructura cómodamente, abra esta vista desde un navegador de escritorio.",
   "menu_empty_title": "El menú principal está vacío",
   "menu_empty_text": "Empiece arrastrando elementos desde la biblioteca o creando un enlace personalizado. Cuando la base exista, ajuste niveles y etiquetas.",
   "menu_empty_action_library": "Añadir elementos"

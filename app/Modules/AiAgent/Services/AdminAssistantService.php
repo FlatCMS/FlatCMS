@@ -194,7 +194,7 @@ final class AdminAssistantService
      */
     private function normalizeFieldMap(array $values): array
     {
-        return [
+        $normalized = [
             'title' => trim((string) ($values['title'] ?? '')),
             'slug' => trim((string) ($values['slug'] ?? '')),
             'excerpt' => trim((string) ($values['excerpt'] ?? '')),
@@ -204,6 +204,19 @@ final class AdminAssistantService
             'meta_title' => trim((string) ($values['meta_title'] ?? '')),
             'meta_description' => trim((string) ($values['meta_description'] ?? '')),
         ];
+
+        foreach ($values as $key => $value) {
+            $normalizedKey = strtolower(trim((string) $key));
+            if ($normalizedKey === '' || array_key_exists($normalizedKey, $normalized)) {
+                continue;
+            }
+
+            $normalized[$normalizedKey] = is_array($value)
+                ? $this->normalizeStringList($value)
+                : trim((string) $value);
+        }
+
+        return $normalized;
     }
 
     /**

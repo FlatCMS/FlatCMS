@@ -66,6 +66,30 @@ $categoriesLocaleFlag = static function (string $locale): string {
 
     return html_entity_decode('&#' . $first . ';&#' . $second . ';', ENT_QUOTES | ENT_HTML5, 'UTF-8');
 };
+
+$categoryAiAttrs = static function (string $locale, string $field, string $label, string $kind = 'text') use ($sourceLocale, $formActionId): string {
+    $attrs = [
+        'data-ai-agent-target' => null,
+        'data-ai-agent-module' => 'categories',
+        'data-ai-agent-entity' => 'category',
+        'data-ai-agent-entity-id' => $formActionId,
+        'data-ai-agent-scope' => 'field',
+        'data-ai-agent-block' => 'translations',
+        'data-ai-agent-block-label' => __('translations', 'Categories'),
+        'data-ai-agent-field' => $field,
+        'data-ai-agent-label' => $label,
+        'data-ai-agent-field-kind' => $kind,
+        'data-ai-agent-locale' => $locale,
+        'data-ai-agent-source-locale' => $sourceLocale,
+        'data-ai-agent-source-selector' => '#category_' . $sourceLocale . '_' . $field,
+    ];
+    $html = '';
+    foreach ($attrs as $name => $value) {
+        $html .= $value === null ? ' ' . $name : ' ' . $name . '="' . e((string) $value) . '"';
+    }
+
+    return $html;
+};
 ?>
 
 <link rel="stylesheet" href="<?= module_asset('Categories', 'css/categories.css') ?>">
@@ -182,6 +206,7 @@ $categoriesLocaleFlag = static function (string $locale): string {
                                 name="translations[<?= e($localeCode) ?>][name]"
                                 class="form-input"
                                 value="<?= e((string) ($tabValues['name'] ?? '')) ?>"
+                                <?= $categoryAiAttrs($localeCode, 'name', $categoriesPanelLabel($panelLabels, 'name', __('name', 'Categories'))) ?>
                             >
                         </div>
 
@@ -193,6 +218,7 @@ $categoriesLocaleFlag = static function (string $locale): string {
                                 name="translations[<?= e($localeCode) ?>][slug]"
                                 class="form-input"
                                 value="<?= e((string) ($tabValues['slug'] ?? '')) ?>"
+                                <?= $categoryAiAttrs($localeCode, 'slug', $categoriesPanelLabel($panelLabels, 'slug', __('slug', 'Categories'))) ?>
                             >
                         </div>
 
@@ -204,6 +230,7 @@ $categoriesLocaleFlag = static function (string $locale): string {
                                 class="form-input"
                                 rows="5"
                                 data-no-editor
+                                <?= $categoryAiAttrs($localeCode, 'description', $categoriesPanelLabel($panelLabels, 'description', __('description', 'Categories')), 'textarea') ?>
                             ><?= e((string) ($tabValues['description'] ?? '')) ?></textarea>
                         </div>
                     </section>

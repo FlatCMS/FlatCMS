@@ -76,6 +76,8 @@
   "menu_help_step_save": "Infine salva il menu e controlla il frontend per validare gerarchia ed etichette.",
   "menu_help_action_structure": "Vedi struttura attiva",
   "menu_help_action_library": "Apri libreria",
+  "menu_mobile_notice_title": "Ottimizzato per computer",
+  "menu_mobile_notice_text": "La gestione dei menu usa il trascinamento. Per modificare comodamente la struttura, apra questa vista da un browser desktop.",
   "menu_empty_title": "Il menu principale è vuoto",
   "menu_empty_text": "Inizia trascinando elementi dalla libreria o creando un link personalizzato. Quando la base esiste, regola livelli ed etichette.",
   "menu_empty_action_library": "Aggiungi elementi"

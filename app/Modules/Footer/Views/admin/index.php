@@ -11,6 +11,7 @@ $footer = is_array($footer ?? null) ? $footer : [];
 $poweredBy = is_array($footer['powered_by'] ?? null) ? $footer['powered_by'] : [];
 $translationUi = is_array($translationUi ?? null) ? $translationUi : [];
 $translationTabs = is_array($translationUi['tabs'] ?? null) ? $translationUi['tabs'] : [];
+$footerSourceLocale = (string) ($translationUi['source_locale'] ?? '');
 
 $footerLabel = static function (array $labelBag, string $key, string $fallback = ''): string {
     $value = $labelBag[$key] ?? null;
@@ -37,6 +38,29 @@ $footerLocaleFlag = static function (string $locale): string {
     $second = 127397 + ord($country[1]);
 
     return html_entity_decode('&#' . $first . ';&#' . $second . ';', ENT_QUOTES | ENT_HTML5, 'UTF-8');
+};
+
+$footerAiAttrs = static function (string $locale, string $field, string $label, string $kind = 'text') use ($footerSourceLocale): string {
+    $attrs = [
+        'data-ai-agent-target' => null,
+        'data-ai-agent-module' => 'footer',
+        'data-ai-agent-entity' => 'footer',
+        'data-ai-agent-scope' => 'field',
+        'data-ai-agent-block' => 'footer',
+        'data-ai-agent-block-label' => __('footer_title', 'Footer'),
+        'data-ai-agent-field' => $field,
+        'data-ai-agent-label' => $label,
+        'data-ai-agent-field-kind' => $kind,
+        'data-ai-agent-locale' => $locale,
+        'data-ai-agent-source-locale' => $footerSourceLocale,
+        'data-ai-agent-source-selector' => '#footer_' . $footerSourceLocale . '_' . $field,
+    ];
+    $html = '';
+    foreach ($attrs as $name => $value) {
+        $html .= $value === null ? ' ' . $name : ' ' . $name . '="' . e((string) $value) . '"';
+    }
+
+    return $html;
 };
 ?>
 
@@ -154,6 +178,7 @@ $footerLocaleFlag = static function (string $locale): string {
                             name="translations[<?= e($localeCode) ?>][brand_text]"
                             class="form-input"
                             value="<?= e((string) ($values['brand_text'] ?? '')) ?>"
+                            <?= $footerAiAttrs($localeCode, 'brand_text', $footerLabel($labels, 'footer_brand_text', __('footer_brand_text', 'Footer'))) ?>
                         >
                         <div class="form-hint"><?= e($footerLabel($labels, 'footer_brand_text_hint', __('footer_brand_text_hint', 'Footer'))) ?></div>
                     </div>
@@ -166,6 +191,7 @@ $footerLocaleFlag = static function (string $locale): string {
                             class="form-input"
                             rows="4"
                             data-no-editor
+                            <?= $footerAiAttrs($localeCode, 'copyright_text', $footerLabel($labels, 'footer_copyright_text', __('footer_copyright_text', 'Footer')), 'textarea') ?>
                         ><?= e((string) ($values['copyright_text'] ?? '')) ?></textarea>
                         <div class="form-hint"><?= e($footerLabel($labels, 'footer_copyright_hint', __('footer_copyright_hint', 'Footer'))) ?></div>
                         <div class="form-hint"><?= e($footerLabel($labels, 'footer_tokens_hint', __('footer_tokens_hint', 'Footer'))) ?></div>
@@ -179,6 +205,7 @@ $footerLocaleFlag = static function (string $locale): string {
                             name="translations[<?= e($localeCode) ?>][powered_by_label]"
                             class="form-input"
                             value="<?= e((string) ($values['powered_by_label'] ?? '')) ?>"
+                            <?= $footerAiAttrs($localeCode, 'powered_by_label', $footerLabel($labels, 'footer_powered_by_label', __('footer_powered_by_label', 'Footer'))) ?>
                         >
                     </div>
                 </section>

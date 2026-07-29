@@ -76,6 +76,8 @@
   "menu_help_step_save": "Sauvegardez enfin le menu puis contrôlez le front pour valider la hiérarchie et les libellés.",
   "menu_help_action_structure": "Voir la structure active",
   "menu_help_action_library": "Ouvrir la bibliothèque",
+  "menu_mobile_notice_title": "Optimisé pour ordinateur",
+  "menu_mobile_notice_text": "La gestion des menus utilise le glisser-déposer. Pour modifier la structure confortablement, ouvrez cette vue depuis un navigateur sur ordinateur.",
   "menu_empty_title": "Le menu principal est vide",
   "menu_empty_text": "Commencez par faire glisser des éléments depuis la bibliothèque ou créez un lien personnalisé. Une fois la base en place, ajustez les niveaux et les libellés.",
   "menu_empty_action_library": "Ajouter des éléments"

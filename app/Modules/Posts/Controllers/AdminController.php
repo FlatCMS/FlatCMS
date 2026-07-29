@@ -764,7 +764,9 @@ class AdminController extends BaseController
                 'status' => $exists ? $this->translations->resolveEffectiveStatus($translation) : null,
                 'url' => $exists
                     ? url('/admin/posts/' . $translation['id'] . '/edit')
-                    : ($translationGroup !== '' ? $this->buildCreateUrl($locale, $translationGroup, (string) ($sourcePost['id'] ?? '')) : ''),
+                    : ($translationGroup !== ''
+                        ? $this->buildCreateUrl($locale, $translationGroup, (string) ($sourcePost['id'] ?? ''))
+                        : $this->buildCreateUrl($locale)),
             ];
         }
 

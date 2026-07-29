@@ -167,6 +167,18 @@
                 html += ' class="translation-input' + missingClass + '"';
                 html += ' data-key="' + escapeAttr(item.key) + '"';
                 html += ' data-module="' + escapeAttr(moduleName) + '"';
+                html += ' data-ai-agent-target';
+                html += ' data-ai-agent-module="languages"';
+                html += ' data-ai-agent-entity="translation_key"';
+                html += ' data-ai-agent-scope="field"';
+                html += ' data-ai-agent-block="' + escapeAttr(moduleName) + '"';
+                html += ' data-ai-agent-block-label="' + escapeAttr(moduleName) + '"';
+                html += ' data-ai-agent-field="' + escapeAttr(item.key) + '"';
+                html += ' data-ai-agent-label="' + escapeAttr(item.key) + '"';
+                html += ' data-ai-agent-field-kind="text"';
+                html += ' data-ai-agent-locale="' + escapeAttr(config.code || '') + '"';
+                html += ' data-ai-agent-source-locale="' + escapeAttr(referenceLang || '') + '"';
+                html += ' data-ai-agent-source-value="' + escapeAttr(item.reference || '') + '"';
                 html += ' data-original="' + escapeAttr(item.translation) + '"';
                 html += ' value="' + escapeAttr(item.translation) + '"';
                 html += ' placeholder="' + escapeAttr(item.reference) + '"';

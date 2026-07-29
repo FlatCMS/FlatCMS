@@ -227,6 +227,41 @@ $contactPanelLabel = static function (array $labels, string $key, string $fallba
     $value = $labels[$key] ?? null;
     return is_string($value) && trim($value) !== '' ? $value : $fallback;
 };
+$contactAiAttrs = static function (
+    string $locale,
+    string $field,
+    string $label,
+    string $sourceValue,
+    string $kind = 'text'
+) use ($contactTranslationSourceLocale, $formId): string {
+    $attrs = [
+        'data-ai-agent-target' => null,
+        'data-ai-agent-module' => 'contact',
+        'data-ai-agent-entity' => 'contact_form',
+        'data-ai-agent-entity-id' => $formId,
+        'data-ai-agent-scope' => 'field',
+        'data-ai-agent-block' => 'translations',
+        'data-ai-agent-block-label' => __('translations', 'Contact'),
+        'data-ai-agent-field' => $field,
+        'data-ai-agent-label' => $label,
+        'data-ai-agent-field-kind' => $kind,
+        'data-ai-agent-locale' => $locale,
+        'data-ai-agent-source-locale' => $contactTranslationSourceLocale,
+        'data-ai-agent-source-value' => $sourceValue,
+    ];
+
+    $rendered = [];
+    foreach ($attrs as $name => $value) {
+        if ($value === null) {
+            $rendered[] = e($name);
+            continue;
+        }
+
+        $rendered[] = e($name) . '="' . e((string) $value) . '"';
+    }
+
+    return implode(' ', $rendered);
+};
 $contactSourcePanel = is_array($contactTranslationPanels[$contactTranslationSourceLocale] ?? null)
     ? $contactTranslationPanels[$contactTranslationSourceLocale]
     : [];
@@ -862,6 +897,7 @@ if (!is_string($formTypePresetsJson)) {
                                                 class="form-input"
                                                 value="<?= e((string) ($panel['submit_label'] ?? '')) ?>"
                                                 placeholder="<?= e($contactPanelLabel($panelLabels, 'contact_form_submit_placeholder', __('contact_form_submit_placeholder', 'Contact'))) ?>"
+                                                <?= $contactAiAttrs($localeCode, 'submit_label', $contactPanelLabel($panelLabels, 'contact_form_submit_label_admin', __('contact_form_submit_label_admin', 'Contact')), (string) ($contactSourcePanel['submit_label'] ?? '')) ?>
                                             >
                                         </div>
                                         <div class="form-group">
@@ -873,6 +909,7 @@ if (!is_string($formTypePresetsJson)) {
                                                 class="form-input"
                                                 value="<?= e((string) ($panel['success_message'] ?? '')) ?>"
                                                 placeholder="<?= e($contactPanelLabel($panelLabels, 'contact_form_success_placeholder', __('contact_form_success_placeholder', 'Contact'))) ?>"
+                                                <?= $contactAiAttrs($localeCode, 'success_message', $contactPanelLabel($panelLabels, 'contact_form_success_message_label', __('contact_form_success_message_label', 'Contact')), (string) ($contactSourcePanel['success_message'] ?? '')) ?>
                                             >
                                         </div>
                                     <?php endif; ?>
@@ -891,6 +928,7 @@ if (!is_string($formTypePresetsJson)) {
                                             $translationKey = (string) ($panelField['key'] ?? '');
                                             $translationType = (string) ($panelField['type'] ?? 'text');
                                             $translationOptions = $normalizeOptionsList($panelField['options'] ?? []);
+                                            $translationSourceOptions = $normalizeOptionsList($panelField['source_options'] ?? []);
                                             ?>
                                             <div class="contact-form-translation-field-card">
                                                 <div class="contact-form-translation-field-head">
@@ -908,6 +946,7 @@ if (!is_string($formTypePresetsJson)) {
                                                             name="translations[<?= e($localeCode) ?>][fields][<?= e($translationKey) ?>][label]"
                                                             value="<?= e((string) ($panelField['label'] ?? '')) ?>"
                                                             maxlength="120"
+                                                            <?= $contactAiAttrs($localeCode, 'field_' . $translationKey . '_label', $contactPanelLabel($panelLabels, 'contact_form_custom_label', __('contact_form_custom_label', 'Contact')), (string) ($panelField['source_label'] ?? '')) ?>
                                                         >
                                                     </div>
                                                     <div class="form-group">
@@ -919,6 +958,7 @@ if (!is_string($formTypePresetsJson)) {
                                                             name="translations[<?= e($localeCode) ?>][fields][<?= e($translationKey) ?>][placeholder]"
                                                             value="<?= e((string) ($panelField['placeholder'] ?? '')) ?>"
                                                             maxlength="190"
+                                                            <?= $contactAiAttrs($localeCode, 'field_' . $translationKey . '_placeholder', $contactPanelLabel($panelLabels, 'contact_form_custom_placeholder', __('contact_form_custom_placeholder', 'Contact')), (string) ($panelField['source_placeholder'] ?? '')) ?>
                                                         >
                                                     </div>
                                                     <div class="form-group">
@@ -930,6 +970,7 @@ if (!is_string($formTypePresetsJson)) {
                                                             name="translations[<?= e($localeCode) ?>][fields][<?= e($translationKey) ?>][help]"
                                                             value="<?= e((string) ($panelField['help'] ?? '')) ?>"
                                                             maxlength="190"
+                                                            <?= $contactAiAttrs($localeCode, 'field_' . $translationKey . '_help', $contactPanelLabel($panelLabels, 'contact_form_custom_help', __('contact_form_custom_help', 'Contact')), (string) ($panelField['source_help'] ?? '')) ?>
                                                         >
                                                     </div>
                                                     <?php if (!empty($panelField['show_options'])): ?>
@@ -941,6 +982,7 @@ if (!is_string($formTypePresetsJson)) {
                                                                 name="translations[<?= e($localeCode) ?>][fields][<?= e($translationKey) ?>][options]"
                                                                 rows="3"
                                                                 placeholder="<?= e($contactPanelLabel($panelLabels, 'contact_form_custom_options_placeholder', __('contact_form_custom_options_placeholder', 'Contact'))) ?>"
+                                                                <?= $contactAiAttrs($localeCode, 'field_' . $translationKey . '_options', $contactPanelLabel($panelLabels, 'contact_form_custom_options_label', __('contact_form_custom_options_label', 'Contact')), implode("\n", $translationSourceOptions), 'textarea') ?>
                                                             ><?= e(implode("\n", $translationOptions)) ?></textarea>
                                                         </div>
                                                     <?php endif; ?>

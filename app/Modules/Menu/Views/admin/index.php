@@ -276,6 +276,16 @@ if (!function_exists('menu_render_item')) {
     </div>
 </div>
 
+<div class="menu-mobile-editor-notice" role="status" aria-live="polite">
+    <span class="menu-mobile-editor-notice__icon" aria-hidden="true">
+        <i class="fas fa-desktop"></i>
+    </span>
+    <span class="menu-mobile-editor-notice__body">
+        <strong><?= __('menu_mobile_notice_title', 'Menu') ?></strong>
+        <span><?= __('menu_mobile_notice_text', 'Menu') ?></span>
+    </span>
+</div>
+
 <form method="POST" action="<?= url('/admin/menus') ?>" id="menuForm" class="menu-editor-form">
     <?= csrf_field() ?>
     <input type="hidden" name="menu_data" id="menuDataField" value="">
@@ -569,7 +579,25 @@ if (!function_exists('menu_render_item')) {
                         ?>
                         <div class="form-group">
                             <label class="form-label" for="<?= e($inputId) ?>"><?= e($localeLabel) ?></label>
-                            <input type="text" class="form-input" id="<?= e($inputId) ?>" data-locale="<?= e($localeCode) ?>" value="">
+                            <input
+                                type="text"
+                                class="form-input"
+                                id="<?= e($inputId) ?>"
+                                data-locale="<?= e($localeCode) ?>"
+                                data-ai-agent-target
+                                data-ai-agent-module="menu"
+                                data-ai-agent-entity="menu_item"
+                                data-ai-agent-scope="field"
+                                data-ai-agent-block="menu"
+                                data-ai-agent-block-label="<?= e(__('menu_translate_title', 'Menu')) ?>"
+                                data-ai-agent-field="label"
+                                data-ai-agent-label="<?= e($localeLabel) ?>"
+                                data-ai-agent-field-kind="text"
+                                data-ai-agent-locale="<?= e($localeCode) ?>"
+                                data-ai-agent-source-locale="<?= e($menuSourceLocale) ?>"
+                                data-ai-agent-source-selector="#menuTranslationSourceLabel"
+                                value=""
+                            >
                         </div>
                     <?php endforeach; ?>
                 </div>

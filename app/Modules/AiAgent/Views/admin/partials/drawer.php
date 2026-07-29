@@ -76,6 +76,31 @@ $aiAgentI18n = [
     'entityPostCurrent' => __('assistant_entity_post_current', 'AiAgent'),
     'entityPostNew' => __('assistant_entity_post_new', 'AiAgent'),
     'fieldSubjectExcerpt' => __('assistant_field_subject_excerpt', 'AiAgent'),
+    'subjectFieldTitle' => __('assistant_subject_field_title', 'AiAgent'),
+    'subjectFieldSlug' => __('assistant_subject_field_slug', 'AiAgent'),
+    'subjectFieldContent' => __('assistant_subject_field_content', 'AiAgent'),
+    'subjectFieldExcerpt' => __('assistant_subject_field_excerpt', 'AiAgent'),
+    'subjectFieldMetaTitle' => __('assistant_subject_field_meta_title', 'AiAgent'),
+    'subjectFieldMetaDescription' => __('assistant_subject_field_meta_description', 'AiAgent'),
+    'subjectFieldFeaturedImage' => __('assistant_subject_field_featured_image', 'AiAgent'),
+    'subjectFieldName' => __('assistant_subject_field_name', 'AiAgent'),
+    'subjectFieldDescription' => __('assistant_subject_field_description', 'AiAgent'),
+    'subjectFieldText' => __('assistant_subject_field_text', 'AiAgent'),
+    'subjectFieldLabel' => __('assistant_subject_field_label', 'AiAgent'),
+    'subjectFieldUrl' => __('assistant_subject_field_url', 'AiAgent'),
+    'subjectFieldCtaLabel' => __('assistant_subject_field_cta_label', 'AiAgent'),
+    'subjectFieldSiteName' => __('assistant_subject_field_site_name', 'AiAgent'),
+    'subjectFieldSiteDescription' => __('assistant_subject_field_site_description', 'AiAgent'),
+    'subjectFieldSiteSlogan' => __('assistant_subject_field_site_slogan', 'AiAgent'),
+    'subjectFieldBrandText' => __('assistant_subject_field_brand_text', 'AiAgent'),
+    'subjectFieldCopyrightText' => __('assistant_subject_field_copyright_text', 'AiAgent'),
+    'subjectFieldPoweredByLabel' => __('assistant_subject_field_powered_by_label', 'AiAgent'),
+    'subjectFieldSubmitLabel' => __('assistant_subject_field_submit_label', 'AiAgent'),
+    'subjectFieldSuccessMessage' => __('assistant_subject_field_success_message', 'AiAgent'),
+    'subjectSuffixLabel' => __('assistant_subject_suffix_label', 'AiAgent'),
+    'subjectSuffixPlaceholder' => __('assistant_subject_suffix_placeholder', 'AiAgent'),
+    'subjectSuffixHelp' => __('assistant_subject_suffix_help', 'AiAgent'),
+    'subjectSuffixOptions' => __('assistant_subject_suffix_options', 'AiAgent'),
     'greetingField' => __('assistant_greeting_field', 'AiAgent'),
     'greetingBlock' => __('assistant_greeting_block', 'AiAgent'),
     'replyField' => __('assistant_reply_field_ready', 'AiAgent'),
@@ -130,6 +155,7 @@ $aiAgentI18n = [
     class="ai-agent-root"
     data-ai-agent-root
     data-endpoint="<?= e(url('/admin/ai-agent/chat')) ?>"
+    data-locale="<?= e(locale()) ?>"
     data-i18n="<?= e((string) json_encode($aiAgentI18n, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>"
     data-user="<?= e((string) json_encode([
         'greeting_name' => (string) ($aiAgentUser['greeting_name'] ?? ''),

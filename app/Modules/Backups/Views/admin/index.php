@@ -331,6 +331,7 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                                         aria-label="<?= e(__('download', 'Core')) ?>"
                                     >
                                         <i class="fas fa-download" aria-hidden="true"></i>
+                                        <span class="backups-action-label"><?= __('download', 'Core') ?></span>
                                     </a>
                                     <?php if ($canManageBackups): ?>
                                         <form method="POST" action="<?= url('/admin/backups/' . rawurlencode($filename) . '/restore') ?>" class="form-inline">
@@ -348,6 +349,7 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                                                 <?= $zipAvailable ? '' : 'disabled' ?>
                                             >
                                                 <i class="fas fa-rotate-left" aria-hidden="true"></i>
+                                                <span class="backups-action-label"><?= __('backups_restore_action', 'Backups') ?></span>
                                             </button>
                                         </form>
                                         <form method="POST" action="<?= url('/admin/backups/' . rawurlencode($filename) . '/delete') ?>" class="form-inline">
@@ -364,6 +366,7 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                                                 aria-label="<?= e(__('backups_delete_action', 'Backups')) ?>"
                                             >
                                                 <i class="fas fa-trash" aria-hidden="true"></i>
+                                                <span class="backups-action-label"><?= __('backups_delete_action', 'Backups') ?></span>
                                             </button>
                                         </form>
                                     <?php endif; ?>

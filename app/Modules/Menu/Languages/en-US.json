@@ -76,6 +76,8 @@
   "menu_help_step_save": "Finally save the menu and check the frontend to validate hierarchy and labels.",
   "menu_help_action_structure": "View active structure",
   "menu_help_action_library": "Open library",
+  "menu_mobile_notice_title": "Optimized for desktop",
+  "menu_mobile_notice_text": "Menu management uses drag and drop. To edit the structure comfortably, open this screen from a desktop browser.",
   "menu_empty_title": "The main menu is empty",
   "menu_empty_text": "Start by dragging items from the library or by creating a custom link. Once the base exists, adjust levels and labels.",
   "menu_empty_action_library": "Add items"

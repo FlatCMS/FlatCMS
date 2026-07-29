@@ -40,7 +40,9 @@
 
   function template(text, replacements) {
     var rendered = String(text || '');
-    Object.keys(replacements || {}).forEach(function(key) {
+    Object.keys(replacements || {}).sort(function(left, right) {
+      return right.length - left.length;
+    }).forEach(function(key) {
       rendered = rendered.replace(new RegExp(':' + key, 'g'), String(replacements[key] || ''));
     });
     return rendered;
@@ -103,6 +105,10 @@
       return '';
     }
 
+    if (field.isContentEditable) {
+      return String(field.innerHTML || field.textContent || '');
+    }
+
     if (field instanceof HTMLTextAreaElement) {
       var handle = field[editorHandleName] || null;
       if (handle && typeof handle.getHtml === 'function') {
@@ -121,6 +127,14 @@
     }
 
     return '';
+  }
+
+  function readElementValue(element) {
+    if (!(element instanceof HTMLElement)) {
+      return '';
+    }
+
+    return readFieldValue(element, '') || String(element.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
   function setTextareaValue(field, value, editorHandleName) {
@@ -175,6 +189,7 @@
     }
 
     var i18n = parseJsonAttribute(root, 'data-i18n');
+    var currentLocale = String(root.getAttribute('data-locale') || document.documentElement.getAttribute('lang') || '').trim();
     var endpoint = String(root.getAttribute('data-endpoint') || '').trim();
     var iconDark = String(root.getAttribute('data-icon-dark') || '').trim();
     var iconLight = String(root.getAttribute('data-icon-light') || '').trim();
@@ -243,6 +258,10 @@
 
       if (context.module === 'pages') {
         return document.getElementById(getPageFieldId(context.locale, key));
+      }
+
+      if (context.module !== 'posts') {
+        return getGenericFieldNode(context, key);
       }
 
       return document.getElementById(key);
@@ -336,12 +355,133 @@
       };
     }
 
+    function findClosestDataValue(target, attribute) {
+      var current = target instanceof HTMLElement ? target : null;
+      while (current instanceof HTMLElement) {
+        if (current.hasAttribute(attribute)) {
+          return String(current.getAttribute(attribute) || '').trim();
+        }
+        current = current.parentElement;
+      }
+
+      return '';
+    }
+
+    function findBySelector(selector, rootNode) {
+      var value = String(selector || '').trim();
+      if (value === '') {
+        return null;
+      }
+
+      try {
+        if (rootNode instanceof HTMLElement) {
+          var local = rootNode.querySelector(value);
+          if (local instanceof HTMLElement) {
+            return local;
+          }
+        }
+
+        var global = document.querySelector(value);
+        return global instanceof HTMLElement ? global : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function getGenericFieldNode(context, key) {
+      if (!context || !(context.target instanceof HTMLElement)) {
+        return null;
+      }
+
+      var target = context.target;
+      var selector = String(target.getAttribute('data-ai-agent-field-selector') || '').trim();
+      var selected = findBySelector(selector, target);
+      if (selected instanceof HTMLElement) {
+        return selected;
+      }
+
+      if (target.matches('input, textarea, select, [contenteditable="true"]')) {
+        return target;
+      }
+
+      var byMarker = target.querySelector('[data-ai-agent-value]');
+      if (byMarker instanceof HTMLElement) {
+        return byMarker;
+      }
+
+      var controls = target.querySelectorAll('input:not([type="hidden"]), textarea, select, [contenteditable="true"]');
+      for (var i = 0; i < controls.length; i += 1) {
+        if (controls[i] instanceof HTMLElement) {
+          return controls[i];
+        }
+      }
+
+      if (key !== '' && context.form instanceof HTMLFormElement) {
+        var named = context.form.querySelector('[name="' + escapeSelector(key) + '"], [data-ai-agent-field="' + escapeSelector(key) + '"]');
+        if (named instanceof HTMLElement) {
+          return named;
+        }
+      }
+
+      return null;
+    }
+
+    function getGenericSourceValue(context, key) {
+      if (!context || !(context.target instanceof HTMLElement)) {
+        return '';
+      }
+
+      var target = context.target;
+      var explicitValue = String(target.getAttribute('data-ai-agent-source-value') || '').trim();
+      if (explicitValue !== '') {
+        return explicitValue;
+      }
+
+      var selector = String(target.getAttribute('data-ai-agent-source-selector') || '').trim();
+      var selected = findBySelector(selector, context.form || document.body);
+      if (selected instanceof HTMLElement) {
+        return readElementValue(selected);
+      }
+
+      return '';
+    }
+
+    function collectGenericValues(context) {
+      var values = {};
+      var key = String(context && context.field || '').trim();
+      if (key === '') {
+        return values;
+      }
+
+      values[key] = readElementValue(getGenericFieldNode(context, key));
+      return values;
+    }
+
+    function collectGenericSourceValues(context) {
+      var values = cloneValues(collectGenericValues(context));
+      var key = String(context && context.field || '').trim();
+      if (key === '') {
+        return values;
+      }
+
+      var sourceValue = getGenericSourceValue(context, key);
+      if (sourceValue !== '') {
+        values[key] = sourceValue;
+      }
+
+      return values;
+    }
+
     function hydrateContext(context) {
-      if (!context || !(context.form instanceof HTMLFormElement)) {
+      if (!context) {
         return context;
       }
 
       if (context.module === 'pages') {
+        if (!(context.form instanceof HTMLFormElement)) {
+          return context;
+        }
+
         var activeLocaleInput = context.form.querySelector('[data-pages-active-locale]');
         var sourceLocaleInput = context.form.querySelector('input[name="source_locale"]');
         var targetLocale = String(context.target_locale || '').trim();
@@ -358,6 +498,21 @@
         context.source_locale = currentSourceLocale;
         context.current = collectPageValues(currentLocale);
         context.source = collectPageValues(currentSourceLocale);
+        return context;
+      }
+
+      if (context.module !== 'posts') {
+        context.locale = String(context.target_locale || context.locale || findClosestDataValue(context.target, 'data-ai-agent-locale') || '').trim();
+        context.source_locale = String(context.source_locale || findClosestDataValue(context.target, 'data-ai-agent-source-locale') || context.locale).trim();
+        if (context.target_locale === '') {
+          context.target_locale = context.locale;
+        }
+        context.current = collectGenericValues(context);
+        context.source = collectGenericSourceValues(context);
+        return context;
+      }
+
+      if (!(context.form instanceof HTMLFormElement)) {
         return context;
       }
 
@@ -379,6 +534,7 @@
     function getContextFromTarget(target) {
       var form = target.closest('form');
       var targetPanel = target.closest('[data-pages-panel]');
+      var explicitTargetLocale = String(target.getAttribute('data-ai-agent-locale') || findClosestDataValue(target, 'data-ai-agent-locale') || '').trim();
       var context = {
         target: target,
         form: form,
@@ -386,15 +542,15 @@
         entity: String(target.getAttribute('data-ai-agent-entity') || '').trim(),
         entity_id: String(target.getAttribute('data-ai-agent-entity-id') || '').trim(),
         source_id: '',
-        target_locale: String(targetPanel && targetPanel.getAttribute('data-pages-panel') || '').trim(),
+        target_locale: explicitTargetLocale !== '' ? explicitTargetLocale : String(targetPanel && targetPanel.getAttribute('data-pages-panel') || '').trim(),
         scope: String(target.getAttribute('data-ai-agent-scope') || '').trim() || 'field',
         block: String(target.getAttribute('data-ai-agent-block') || '').trim(),
         block_label: String(target.getAttribute('data-ai-agent-block-label') || '').trim(),
         field: String(target.getAttribute('data-ai-agent-field') || '').trim(),
         label: String(target.getAttribute('data-ai-agent-label') || '').trim(),
         field_kind: String(target.getAttribute('data-ai-agent-field-kind') || 'text').trim(),
-        locale: '',
-        source_locale: '',
+        locale: explicitTargetLocale,
+        source_locale: String(target.getAttribute('data-ai-agent-source-locale') || findClosestDataValue(target, 'data-ai-agent-source-locale') || '').trim(),
         current: {},
         source: {},
         has_excerpt: String(target.getAttribute('data-ai-agent-module') || '').trim() === 'posts',
@@ -451,6 +607,13 @@
 
       if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
         field.value = String(value || '');
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
+
+      if (field.isContentEditable) {
+        field.innerHTML = String(value || '');
         field.dispatchEvent(new Event('input', { bubbles: true }));
         field.dispatchEvent(new Event('change', { bubbles: true }));
       }
@@ -782,6 +945,91 @@
       writeNavigationHistory(history);
     }
 
+    function subjectKeyFromField(field) {
+      var value = String(field || '').trim();
+      if (value === '') {
+        return '';
+      }
+
+      return 'subjectField' + value
+        .split(/[_-]+/)
+        .filter(function(part) {
+          return part !== '';
+        })
+        .map(function(part) {
+          return upperFirst(part);
+        })
+        .join('');
+    }
+
+    function getAssistantSubjectFromI18n(field, label) {
+      var fieldName = String(field || '').trim();
+      if (currentLocale.toLowerCase().indexOf('fr') !== 0) {
+        return lowerFirst(label);
+      }
+
+      var subjectKey = subjectKeyFromField(fieldName);
+      var configured = subjectKey !== '' ? String(i18n[subjectKey] || '').trim() : '';
+
+      if (configured !== '') {
+        return lowerFirst(configured);
+      }
+
+      if (/^field_.+_label$/.test(fieldName) && String(i18n.subjectSuffixLabel || '').trim() !== '') {
+        return lowerFirst(i18n.subjectSuffixLabel);
+      }
+
+      if (/^field_.+_placeholder$/.test(fieldName) && String(i18n.subjectSuffixPlaceholder || '').trim() !== '') {
+        return lowerFirst(i18n.subjectSuffixPlaceholder);
+      }
+
+      if (/^field_.+_help$/.test(fieldName) && String(i18n.subjectSuffixHelp || '').trim() !== '') {
+        return lowerFirst(i18n.subjectSuffixHelp);
+      }
+
+      if (/^field_.+_options$/.test(fieldName) && String(i18n.subjectSuffixOptions || '').trim() !== '') {
+        return lowerFirst(i18n.subjectSuffixOptions);
+      }
+
+      return lowerFirst(label);
+    }
+
+    function getAssistantSubjectAfterDe(label) {
+      var text = lowerFirst(label);
+      if (text === '' || currentLocale.toLowerCase().indexOf('fr') !== 0) {
+        return text;
+      }
+
+      if (/^le\s+/i.test(text)) {
+        return text.replace(/^le\s+/i, 'du ');
+      }
+
+      if (/^les\s+/i.test(text)) {
+        return text.replace(/^les\s+/i, 'des ');
+      }
+
+      if (/^l[’']/.test(text)) {
+        return 'de ' + text;
+      }
+
+      if (/^un\s+/i.test(text)) {
+        return text.replace(/^un\s+/i, 'd’un ');
+      }
+
+      if (/^une\s+/i.test(text)) {
+        return text.replace(/^une\s+/i, 'd’une ');
+      }
+
+      return 'de ' + text;
+    }
+
+    function getAssistantSubjectReplacements(subjectLabel) {
+      return {
+        label: subjectLabel,
+        label_after_de: getAssistantSubjectAfterDe(subjectLabel)
+      };
+    }
+
     function getAssistantSubjectLabel(context) {
       var activeContext = context || state.context;
       if (!activeContext) {
@@ -789,11 +1037,11 @@
       }
 
       if (activeContext.scope === 'field' && activeContext.field === 'excerpt') {
-        return lowerFirst(String(i18n.fieldSubjectExcerpt || activeContext.label || '').trim());
+        return getAssistantSubjectFromI18n(activeContext.field, i18n.fieldSubjectExcerpt || activeContext.label);
       }
 
       if (activeContext.scope === 'field' && activeContext.label !== '') {
-        return lowerFirst(activeContext.label);
+        return getAssistantSubjectFromI18n(activeContext.field, activeContext.label);
       }
 
       if (activeContext.block_label !== '') {
@@ -983,9 +1231,7 @@
           return String(i18n.greetingProposalFieldFeaturedImage || '').trim();
         }
 
-        return template(i18n.greetingProposalFieldDefault || '', {
-          label: subjectLabel
-        }).trim();
+        return template(i18n.greetingProposalFieldDefault || '', getAssistantSubjectReplacements(subjectLabel)).trim();
       }
 
       if (activeContext.block === 'seo') {
@@ -996,9 +1242,7 @@
         return String(i18n.greetingProposalBlockContent || '').trim();
       }
 
-      return template(i18n.greetingProposalBlockDefault || '', {
-        label: subjectLabel
-      }).trim();
+      return template(i18n.greetingProposalBlockDefault || '', getAssistantSubjectReplacements(subjectLabel)).trim();
     }
 
     function getAssistantQuestionMessage(context, navigation, greetingTurn, entityAlreadyIntroduced) {
@@ -1018,36 +1262,42 @@
       if (hasField) {
         if (isReturn) {
           return renderGreetingVariant('greetingQuestionFieldReturn', {
-            label: subjectLabel
+            label: subjectLabel,
+            label_after_de: getAssistantSubjectAfterDe(subjectLabel)
           }, seed);
         }
 
         if (isCreate) {
           return renderGreetingVariant('greetingQuestionFieldNew', {
-            label: subjectLabel
+            label: subjectLabel,
+            label_after_de: getAssistantSubjectAfterDe(subjectLabel)
           }, seed);
         }
 
         return renderGreetingVariant('greetingQuestionField', {
-          label: subjectLabel
+          label: subjectLabel,
+          label_after_de: getAssistantSubjectAfterDe(subjectLabel)
         }, seed);
       }
 
       if (hasLabel) {
         if (isReturn) {
           return renderGreetingVariant('greetingQuestionBlockReturn', {
-            label: subjectLabel
+            label: subjectLabel,
+            label_after_de: getAssistantSubjectAfterDe(subjectLabel)
           }, seed);
         }
 
         if (isCreate) {
           return renderGreetingVariant('greetingQuestionBlockNew', {
-            label: subjectLabel
+            label: subjectLabel,
+            label_after_de: getAssistantSubjectAfterDe(subjectLabel)
           }, seed);
         }
 
         return renderGreetingVariant('greetingQuestionBlock', {
-          label: subjectLabel
+          label: subjectLabel,
+          label_after_de: getAssistantSubjectAfterDe(subjectLabel)
         }, seed);
       }
 
@@ -1364,6 +1614,14 @@
       floatingHideTimer = window.setTimeout(function() {
         hideFloating();
       }, floatingHideDelayMs);
+    }
+
+    function hideFloatingForWorkspaceMove() {
+      if (!state.miniOpen || state.open || floatingDragState) {
+        return;
+      }
+
+      hideFloating();
     }
 
     function renderFloatingCard() {
@@ -2290,16 +2548,26 @@
 
     var floatingDragState = null;
 
-    Array.prototype.forEach.call(document.querySelectorAll('[data-ai-agent-target]'), function(target) {
+    function bindAiAgentTarget(target) {
       if (!(target instanceof HTMLElement)) {
         return;
       }
+
+      if (target.getAttribute('data-ai-agent-bound') === '1') {
+        return;
+      }
+
+      target.setAttribute('data-ai-agent-bound', '1');
 
       target.addEventListener('mouseenter', function() {
         scheduleFloatingShow(target, floatingHoverDelayMs);
       });
 
       target.addEventListener('focusin', function() {
+        if (state.currentTarget instanceof HTMLElement && state.currentTarget !== target) {
+          hideFloatingForWorkspaceMove();
+        }
+
         scheduleFloatingShow(target, floatingFocusDelayMs);
       });
 
@@ -2315,7 +2583,35 @@
 
         scheduleFloatingHide();
       });
-    });
+    }
+
+    function bindAiAgentTargets(container) {
+      var rootNode = container instanceof HTMLElement || container instanceof Document ? container : document;
+      if (rootNode instanceof HTMLElement && rootNode.matches('[data-ai-agent-target]')) {
+        bindAiAgentTarget(rootNode);
+      }
+
+      Array.prototype.forEach.call(rootNode.querySelectorAll('[data-ai-agent-target]'), bindAiAgentTarget);
+    }
+
+    bindAiAgentTargets(document);
+
+    if (typeof MutationObserver === 'function') {
+      var targetObserver = new MutationObserver(function(mutations) {
+        Array.prototype.forEach.call(mutations, function(mutation) {
+          Array.prototype.forEach.call(mutation.addedNodes || [], function(node) {
+            if (node instanceof HTMLElement) {
+              bindAiAgentTargets(node);
+            }
+          });
+        });
+      });
+
+      targetObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    }
 
     floating.addEventListener('mouseenter', function() {
       clearFloatingShowTimer();
@@ -2426,6 +2722,8 @@
         renderFloatingCard();
       }
     });
+
+    window.addEventListener('scroll', hideFloatingForWorkspaceMove, { passive: true });
 
     sendButton.addEventListener('click', function() {
       sendMessage('', '');
