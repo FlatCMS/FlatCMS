@@ -147,8 +147,8 @@
             }
 
             candidate.value = nextHtml;
-            if (candidate.__pageSunEditorHandle && candidate.__pageSunEditorHandle.editor && typeof candidate.__pageSunEditorHandle.editor.setContents === 'function') {
-                candidate.__pageSunEditorHandle.editor.setContents(nextHtml);
+            if (candidate.__pageSunEditorHandle && typeof candidate.__pageSunEditorHandle.setHtml === 'function') {
+                candidate.__pageSunEditorHandle.setHtml(nextHtml);
             }
             candidate.dispatchEvent(new Event('input', { bubbles: true }));
         });
@@ -328,6 +328,9 @@
                 textarea.value = typeof editor.getContents === 'function'
                     ? String(editor.getContents() || '')
                     : String(textarea.value || '');
+                if (textarea.__pageSunEditorHandle && typeof textarea.__pageSunEditorHandle.markDirty === 'function') {
+                    textarea.__pageSunEditorHandle.markDirty(textarea.value);
+                }
                 propagateMediaReplacementToTranslations(textarea, previousSrc, src);
                 textarea.dispatchEvent(new Event('input', { bubbles: true }));
             }

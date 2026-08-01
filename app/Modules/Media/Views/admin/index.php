@@ -14,6 +14,9 @@ $totalFiles = $totalFiles ?? 0;
 $directoryTree = $directoryTree ?? ['name' => 'uploads', 'path' => '', 'type' => 'directory', 'count' => 0, 'children' => []];
 $publicUrl = $publicUrl ?? '';
 $aiAgentEnabled = (bool) ($aiAgentEnabled ?? false);
+$canUploadMedia = can('media.upload');
+$canEditMedia = can('media.edit');
+$canDeleteMedia = can('media.delete');
 
 // Dossiers réservés (non affichés) - gérés par d'autres modules
 $reservedFolders = ['cache', 'files', 'logo', 'media', 'personal'];
@@ -55,12 +58,18 @@ $mediaConfig = [
     'apiFilesUrl' => $adminFront . '?path=admin/media/api/files',
     'apiDirectoriesUrl' => $adminFront . '?path=admin/media/api/directories',
     'apiMoveUrl' => $adminFront . '?path=admin/media/api/move',
+    'renameUrl' => url('/admin/media/rename'),
     'apiStatsUrl' => $adminFront . '?path=admin/media/api/stats',
     'createDirectoryUrl' => $adminFront . '?path=admin/media/api/directories',
     'deleteUrl' => url('/admin/media'),
     'deletePathUrl' => url('/admin/media/delete-path'),
     'batchDeleteUrl' => url('/admin/media/batch-delete'),
     'csrfToken' => csrf_token(),
+    'permissions' => [
+        'upload' => $canUploadMedia,
+        'edit' => $canEditMedia,
+        'delete' => $canDeleteMedia,
+    ],
     'folders' => $publicFolders,
     'directoryTree' => $directoryTree,
     'labels' => [
@@ -96,16 +105,18 @@ $uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
         <p class="page-subtitle"><?= __('subtitle', 'Media') ?></p>
     </div>
     <div class="page-header-actions" data-tour-target="media-toolbar">
-        <?php if ($aiAgentEnabled): ?>
+        <?php if ($aiAgentEnabled && $canUploadMedia): ?>
             <button type="button" class="btn btn-secondary" data-action="media-ai-index" data-ai-scope="all">
                 <i class="fas fa-robot"></i>
                 <?= __('media_ai_index', 'Media') ?>
             </button>
         <?php endif; ?>
-        <button type="button" class="btn btn-secondary" data-action="media-sync-open">
-            <i class="fas fa-sync-alt"></i>
-            <?= __('sync', 'Media') ?>
-        </button>
+        <?php if ($canDeleteMedia): ?>
+            <button type="button" class="btn btn-secondary" data-action="media-sync-open">
+                <i class="fas fa-sync-alt"></i>
+                <?= __('sync', 'Media') ?>
+            </button>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -273,13 +284,15 @@ $uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
             <button type="button" class="media-toolbar-icon" title="<?= __('media_infos', 'Media') ?>" data-toolbar-action="infobar-toggle">
                 <i class="fas fa-info-circle"></i>
             </button>
-            <div class="media-toolbar-divider"></div>
-            <button type="button" class="media-toolbar-icon" title="<?= __('upload_files', 'Media') ?>" data-file-target="fileInput">
-                <i class="fas fa-cloud-upload-alt"></i>
-            </button>
-            <button type="button" class="media-toolbar-icon" title="<?= __('media_empty_action_create_directory', 'Media') ?>" data-action="media-directory-create-open">
-                <i class="fas fa-folder-plus"></i>
-            </button>
+            <?php if ($canUploadMedia): ?>
+                <div class="media-toolbar-divider"></div>
+                <button type="button" class="media-toolbar-icon" title="<?= __('upload_files', 'Media') ?>" data-file-target="fileInput">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </button>
+                <button type="button" class="media-toolbar-icon" title="<?= __('media_empty_action_create_directory', 'Media') ?>" data-action="media-directory-create-open">
+                    <i class="fas fa-folder-plus"></i>
+                </button>
+            <?php endif; ?>
         </div>
 
         <!-- Recherche -->
@@ -300,6 +313,7 @@ $uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
                     <div class="media-files-header">
                         <h3><span id="filesCount">0</span> <span id="filesInLabel"><?= __('files_in', 'Media') ?></span> <span id="mediaBreadcrumb" class="media-breadcrumb-inline"></span></h3>
                     </div>
+                    <?php if ($canDeleteMedia): ?>
                     <form
                         method="POST"
                         action="<?= url('/admin/media/batch-delete') ?>"
@@ -328,6 +342,7 @@ $uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
                         </div>
                         <div data-media-batch-paths></div>
                     </form>
+                    <?php endif; ?>
 
                     <!-- Grille de fichiers (Joomla media-browser) -->
                     <div class="media-browser">
@@ -373,6 +388,7 @@ $uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
         </div>
     </div>
 
+<?php if ($canUploadMedia): ?>
 <!-- Directory Modal -->
 <div id="directoryModal" class="modal-overlay hidden">
     <div class="modal-container modal-sm">
@@ -399,7 +415,9 @@ $uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
         </div>
     </div>
 </div>
+<?php endif; ?>
 
+<?php if ($canEditMedia): ?>
 <!-- Rename Modal -->
 <div id="renameModal" class="modal-overlay hidden">
     <div class="modal-container modal-sm">
@@ -423,7 +441,9 @@ $uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
         </div>
     </div>
 </div>
+<?php endif; ?>
 
+<?php if ($canDeleteMedia): ?>
 <!-- Delete Modal -->
 <div id="deleteModal" class="modal-overlay hidden">
     <div class="modal-container modal-sm">
@@ -446,6 +466,7 @@ $uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- Preview Modal -->
 <div id="previewModal" class="modal-overlay hidden">

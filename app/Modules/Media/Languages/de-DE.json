@@ -163,5 +163,11 @@
     "media_move_invalid": "Ungültiges Element.",
     "media_move_not_found": "Element nicht gefunden.",
     "media_move_target_exists": "Ein Element mit diesem Namen existiert bereits am Zielort.",
-    "media_move_mkdir_failed": "Der Zielordner konnte nicht erstellt werden."
+    "media_move_mkdir_failed": "Der Zielordner konnte nicht erstellt werden.",
+  "media_rename_success": "Die Mediendatei wurde umbenannt und ihre Verweise wurden aktualisiert.",
+  "media_rename_invalid": "Der Medienname oder -pfad ist ungültig.",
+    "media_rename_extension_mismatch": "Die Dateierweiterung kann beim Umbenennen nicht geändert werden.",
+  "media_operation_failed": "Der Vorgang ist fehlgeschlagen. Es wurden keine unvollständigen Änderungen beibehalten.",
+  "media_operation_rollback_failed": "Der Vorgang ist fehlgeschlagen und die automatische Wiederherstellung konnte nicht abgeschlossen werden.",
+  "media_directory_delete_disabled": "Das Löschen von Ordnern ist deaktiviert, bis eine vollständige Wiederherstellung aus dem Papierkorb verfügbar ist."
 }

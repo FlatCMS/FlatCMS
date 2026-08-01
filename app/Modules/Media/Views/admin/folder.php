@@ -13,6 +13,9 @@ $stats = $stats ?? [];
 $folderConfig = $folderConfig ?? [];
 $publicUrl = $publicUrl ?? '';
 $aiAgentEnabled = (bool) ($aiAgentEnabled ?? false);
+$canUploadMedia = can('media.upload');
+$canEditMedia = can('media.edit');
+$canDeleteMedia = can('media.delete');
 
 // Couleurs par dossier
 $folderColors = [
@@ -26,10 +29,16 @@ $color = $folderColors[$folder] ?? 'blue';
 $mediaConfig = [
     'uploadUrl' => url('/admin/media/upload'),
     'aiIndexUrl' => url('/admin/media/ai-index'),
+    'renameUrl' => url('/admin/media/rename'),
     'deleteUrl' => url('/admin/media'),
     'deletePathUrl' => url('/admin/media/delete-path'),
     'batchDeleteUrl' => url('/admin/media/batch-delete'),
     'csrfToken' => csrf_token(),
+    'permissions' => [
+        'upload' => $canUploadMedia,
+        'edit' => $canEditMedia,
+        'delete' => $canDeleteMedia,
+    ],
     'currentFolder' => $folder,
     'folderConfig' => $folderConfig,
     'i18n' => \App\Core\I18n::all('Media'),
@@ -57,16 +66,18 @@ $mediaConfigJson = e(json_encode($mediaConfig));
         <p class="page-subtitle"><?= count($files) ?> <?= __('files', 'Media') ?></p>
     </div>
     <div class="page-header-actions">
-        <?php if ($aiAgentEnabled): ?>
+        <?php if ($aiAgentEnabled && $canUploadMedia): ?>
             <button type="button" class="btn btn-secondary" data-action="media-ai-index" data-ai-scope="folder" data-folder="<?= e($folder) ?>">
                 <i class="fas fa-robot"></i>
                 <?= __('media_ai_index', 'Media') ?>
             </button>
         <?php endif; ?>
-        <button type="button" class="btn btn-primary" data-action="media-upload-open">
-            <i class="fas fa-plus"></i>
-            <?= __('upload', 'Media') ?>
-        </button>
+        <?php if ($canUploadMedia): ?>
+            <button type="button" class="btn btn-primary" data-action="media-upload-open">
+                <i class="fas fa-plus"></i>
+                <?= __('upload', 'Media') ?>
+            </button>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -104,12 +115,15 @@ $mediaConfigJson = e(json_encode($mediaConfig));
             </div>
             <h3 class="media-empty-title"><?= __('empty_folder', 'Media') ?></h3>
             <p class="media-empty-text"><?= __('empty_folder_message', 'Media') ?></p>
-            <button type="button" class="btn btn-primary" data-action="media-upload-open">
-                <i class="fas fa-plus"></i>
-                <?= __('upload_first', 'Media') ?>
-            </button>
+            <?php if ($canUploadMedia): ?>
+                <button type="button" class="btn btn-primary" data-action="media-upload-open">
+                    <i class="fas fa-plus"></i>
+                    <?= __('upload_first', 'Media') ?>
+                </button>
+            <?php endif; ?>
         </div>
         <?php else: ?>
+        <?php if ($canDeleteMedia): ?>
         <form
             method="POST"
             action="<?= url('/admin/media/batch-delete') ?>"
@@ -137,6 +151,7 @@ $mediaConfigJson = e(json_encode($mediaConfig));
             </div>
             <div data-media-batch-paths></div>
         </form>
+        <?php endif; ?>
 
         <!-- Media Grid -->
         <div class="media-grid">
@@ -144,9 +159,11 @@ $mediaConfigJson = e(json_encode($mediaConfig));
             <div class="media-item" data-id="<?= $file['id'] ?? 0 ?>" data-path="<?= e($file['path'] ?? '') ?>">
                 <!-- Preview -->
                 <div class="media-item-preview">
-                    <label class="media-item-select-toggle" aria-label="<?= e(__('select', 'Media')) ?>">
-                        <input type="checkbox" class="form-checkbox media-item-select-checkbox" data-media-select value="<?= e((string) ($file['path'] ?? '')) ?>">
-                    </label>
+                    <?php if ($canDeleteMedia): ?>
+                        <label class="media-item-select-toggle" aria-label="<?= e(__('select', 'Media')) ?>">
+                            <input type="checkbox" class="form-checkbox media-item-select-checkbox" data-media-select value="<?= e((string) ($file['path'] ?? '')) ?>">
+                        </label>
+                    <?php endif; ?>
                     <?php if (str_starts_with($file['mime'] ?? '', 'image/')): ?>
                     <img src="<?= e($file['url'] ?? '') ?>" alt="<?= e($file['original_name'] ?? '') ?>" loading="lazy">
                     <?php elseif (str_starts_with($file['mime'] ?? '', 'video/')): ?>
@@ -168,9 +185,11 @@ $mediaConfigJson = e(json_encode($mediaConfig));
                         <button type="button" class="media-item-action" data-action="media-copy-url" data-url="<?= e($file['url'] ?? '') ?>" title="<?= __('copy_url', 'Media') ?>">
                             <i class="fas fa-clipboard"></i>
                         </button>
-                        <button type="button" class="media-item-action delete" data-action="media-delete-open" data-id="<?= $file['id'] ?? 0 ?>" data-name="<?= e($file['original_name'] ?? '') ?>" data-path="<?= e($file['path'] ?? '') ?>" title="<?= __('delete', 'Core') ?>">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                        <?php if ($canDeleteMedia): ?>
+                            <button type="button" class="media-item-action delete" data-action="media-delete-open" data-id="<?= $file['id'] ?? 0 ?>" data-name="<?= e($file['original_name'] ?? '') ?>" data-path="<?= e($file['path'] ?? '') ?>" title="<?= __('delete', 'Core') ?>">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </div>
                 
@@ -193,6 +212,7 @@ $mediaConfigJson = e(json_encode($mediaConfig));
     </div>
 </div>
 
+<?php if ($canUploadMedia): ?>
 <!-- Upload Modal -->
 <div id="uploadModal" class="modal-overlay hidden">
     <div class="modal-container modal-md">
@@ -242,7 +262,9 @@ $mediaConfigJson = e(json_encode($mediaConfig));
         </div>
     </div>
 </div>
+<?php endif; ?>
 
+<?php if ($canDeleteMedia): ?>
 <!-- Delete Confirmation Modal -->
 <div id="deleteModal" class="modal-overlay hidden">
     <div class="modal-container modal-sm">
@@ -272,5 +294,6 @@ $mediaConfigJson = e(json_encode($mediaConfig));
         </form>
     </div>
 </div>
+<?php endif; ?>
 
 <script src="<?= module_asset('Media', 'js/media.js') ?>?v=<?= filemtime(BASE_PATH . '/app/Modules/Media/Assets/js/media.js') ?>"></script>

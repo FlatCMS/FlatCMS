@@ -1140,9 +1140,16 @@ class AdminController extends BaseController
             $entry = is_array($input[$locale] ?? null) ? $input[$locale] : [];
             $title = trim((string) ($entry['title'] ?? ''));
             $slug = trim((string) ($entry['slug'] ?? ''));
-            $content = (string) ($entry['content'] ?? '');
             $metaTitle = trim((string) ($entry['meta_title'] ?? ''));
             $metaDescription = trim((string) ($entry['meta_description'] ?? ''));
+
+            $existing = is_array($existingTranslations[$locale] ?? null)
+                ? $this->translations->normalizePage($existingTranslations[$locale])
+                : null;
+            $content = flatcms_reconcile_editor_html(
+                (string) ($entry['content'] ?? ''),
+                is_array($existing) ? (string) ($existing['content'] ?? '') : null
+            );
             $submitted[$locale] = [
                 'title' => $title,
                 'slug' => $slug,
@@ -1150,10 +1157,6 @@ class AdminController extends BaseController
                 'meta_title' => $metaTitle,
                 'meta_description' => $metaDescription,
             ];
-
-            $existing = is_array($existingTranslations[$locale] ?? null)
-                ? $this->translations->normalizePage($existingTranslations[$locale])
-                : null;
 
             $hasInput = $title !== '' || $slug !== '' || trim($content) !== '' || $metaTitle !== '' || $metaDescription !== '';
             $mustPersist = $locale === $sourceLocale || $hasInput || is_array($existing);

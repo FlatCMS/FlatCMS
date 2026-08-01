@@ -826,6 +826,17 @@
             charCounterType: 'char',
             defaultStyle: 'font-family: inherit; font-size: 14px; line-height: 1.65;',
             allowedClassNames: '.*',
+            addTagsWhitelist: [
+                'address', 'article', 'aside', 'button', 'caption', 'dd', 'dl', 'dt',
+                'footer', 'header', 'main', 'mark', 'nav', 'picture', 'section',
+                'small', 'time', '//'
+            ].join('|'),
+            attributesWhitelist: {
+                all: [
+                    'id', 'style', 'title', 'dir', 'lang', 'role', 'tabindex',
+                    'aria-[a-z0-9\\-]+', 'data-[a-z0-9\\-]+'
+                ].join('|')
+            },
             formats: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'],
             buttonList: Array.isArray(cfg.buttonList) && cfg.buttonList.length ? cfg.buttonList : getDefaultButtonList(),
         };
@@ -837,6 +848,7 @@
             options.placeholder = cfg.placeholder.trim();
         }
 
+        var initialHtml = String(textarea.value || '');
         var editor = window.SUNEDITOR.create(textarea, options);
         if (!editor) {
             return null;
@@ -860,16 +872,23 @@
         var onInput = typeof cfg.onInput === 'function' ? cfg.onInput : null;
         var onChange = typeof cfg.onChange === 'function' ? cfg.onChange : null;
         var onPaste = typeof cfg.onPaste === 'function' ? cfg.onPaste : null;
+        var onToggleCodeView = typeof cfg.onToggleCodeView === 'function' ? cfg.onToggleCodeView : null;
+        var canonicalHtml = initialHtml;
+        var dirty = false;
+        var codeViewActive = false;
+        var codeViewDirty = false;
+        var lastCodeHtml = '';
+        var suppressChange = false;
 
-        var readHtml = function () {
+        var readEditorHtml = function () {
             try {
                 if (editor && typeof editor.getContents === 'function') {
                     return normalizeFlatCmsContent(editor.getContents());
                 }
             } catch (error) {
-                return normalizeFlatCmsContent(textarea.value);
+                return normalizeFlatCmsContent(canonicalHtml);
             }
-            return normalizeFlatCmsContent(textarea.value);
+            return normalizeFlatCmsContent(canonicalHtml);
         };
 
         var syncValue = function (nextHtml, emitInput, emitChange) {
@@ -883,9 +902,69 @@
             }
         };
 
+        var editorContext = null;
+        try {
+            editorContext = typeof editor.getContext === 'function' ? editor.getContext() : null;
+        } catch (error) {
+            editorContext = null;
+        }
+        var codeElement = editorContext && editorContext.element
+            ? editorContext.element.code
+            : null;
+        var visualBaseline = readEditorHtml();
+
+        var commitVisual = function (contents, emitInput, emitChange) {
+            if (suppressChange) {
+                return canonicalHtml;
+            }
+
+            canonicalHtml = normalizeFlatCmsContent(
+                typeof contents === 'string' ? contents : readEditorHtml()
+            );
+            visualBaseline = readEditorHtml();
+            dirty = true;
+            codeViewDirty = false;
+            syncValue(canonicalHtml, emitInput, emitChange);
+            return canonicalHtml;
+        };
+
+        var commitCode = function (emitInput, emitChange) {
+            if (codeElement && typeof codeElement.value !== 'undefined') {
+                lastCodeHtml = String(codeElement.value || '');
+            }
+            canonicalHtml = lastCodeHtml;
+            dirty = true;
+            codeViewDirty = true;
+            syncValue(canonicalHtml, emitInput, emitChange);
+            return canonicalHtml;
+        };
+
+        var handleCodeInput = function () {
+            if (codeViewActive) {
+                commitCode(true, cfg.emitChangeOnInput === true);
+            }
+        };
+
+        if (codeElement && typeof codeElement.addEventListener === 'function') {
+            codeElement.addEventListener('input', handleCodeInput, false);
+        }
+
+        var readHtml = function () {
+            if (codeViewActive) {
+                return codeViewDirty ? commitCode(false, false) : canonicalHtml;
+            }
+
+            var currentVisual = readEditorHtml();
+            if (currentVisual !== visualBaseline) {
+                return commitVisual(currentVisual, false, false);
+            }
+
+            return canonicalHtml;
+        };
+
         editor.onPaste = function (event, cleanData, maxCharCount, core) {
             if (replacePlaceholderTableFromPaste(editor, cleanData)) {
-                syncValue(readHtml(), true, true);
+                commitVisual(null, true, true);
                 return false;
             }
 
@@ -897,11 +976,45 @@
         };
 
         editor.onChange = function (contents) {
-            syncValue(String(contents || ''), true, cfg.emitChangeOnInput === true);
+            if (suppressChange) {
+                return;
+            }
+            if (codeViewActive) {
+                commitCode(true, cfg.emitChangeOnInput === true);
+                return;
+            }
+            commitVisual(String(contents || ''), true, cfg.emitChangeOnInput === true);
         };
 
         editor.onBlur = function () {
-            syncValue(readHtml(), false, true);
+            if (codeViewActive && codeViewDirty) {
+                commitCode(false, true);
+                return;
+            }
+            if (dirty || readEditorHtml() !== visualBaseline) {
+                syncValue(readHtml(), false, true);
+            }
+        };
+
+        editor.toggleCodeView = function (isCodeView, core) {
+            codeViewActive = isCodeView === true;
+            if (codeViewActive) {
+                codeViewDirty = false;
+                lastCodeHtml = codeElement && typeof codeElement.value !== 'undefined'
+                    ? String(codeElement.value || '')
+                    : canonicalHtml;
+            } else {
+                if (codeViewDirty) {
+                    canonicalHtml = lastCodeHtml;
+                    dirty = true;
+                    syncValue(canonicalHtml, false, true);
+                }
+                visualBaseline = readEditorHtml();
+            }
+
+            if (onToggleCodeView) {
+                onToggleCodeView(codeViewActive, core);
+            }
         };
 
         if (typeof cfg.onReady === 'function') {
@@ -915,18 +1028,42 @@
         return {
             editor: editor,
             getHtml: readHtml,
+            isDirty: function () {
+                return dirty;
+            },
+            markDirty: function (nextHtml) {
+                if (typeof nextHtml === 'string') {
+                    canonicalHtml = normalizeFlatCmsContent(nextHtml);
+                    visualBaseline = readEditorHtml();
+                    dirty = true;
+                    syncValue(canonicalHtml, true, cfg.emitChangeOnInput === true);
+                    return canonicalHtml;
+                }
+                return commitVisual(null, true, cfg.emitChangeOnInput === true);
+            },
             setHtml: function (nextHtml) {
                 var html = String(nextHtml || '');
+                suppressChange = true;
                 try {
                     if (editor && typeof editor.setContents === 'function') {
                         editor.setContents(html);
                     }
                 } catch (error) {
                     textarea.value = html;
+                } finally {
+                    suppressChange = false;
                 }
+                canonicalHtml = html;
+                dirty = false;
+                codeViewDirty = false;
+                lastCodeHtml = '';
+                visualBaseline = readEditorHtml();
                 syncValue(html, false, false);
             },
             destroy: function () {
+                if (codeElement && typeof codeElement.removeEventListener === 'function') {
+                    codeElement.removeEventListener('input', handleCodeInput, false);
+                }
                 try {
                     if (editor && typeof editor.destroy === 'function') {
                         editor.destroy();

@@ -163,5 +163,11 @@
     "media_move_invalid": "Elemento non valido.",
     "media_move_not_found": "Elemento non trovato.",
     "media_move_target_exists": "Esiste già un elemento con questo nome nella destinazione.",
-    "media_move_mkdir_failed": "Impossibile creare la cartella di destinazione."
+    "media_move_mkdir_failed": "Impossibile creare la cartella di destinazione.",
+  "media_rename_success": "Il file multimediale è stato rinominato e i suoi riferimenti sono stati aggiornati.",
+  "media_rename_invalid": "Il nome o il percorso del file multimediale non è valido.",
+    "media_rename_extension_mismatch": "L’estensione del file non può essere modificata durante la rinomina.",
+  "media_operation_failed": "L’operazione non è riuscita. Nessuna modifica incompleta è stata conservata.",
+  "media_operation_rollback_failed": "L’operazione non è riuscita e il ripristino automatico non è stato completato.",
+  "media_directory_delete_disabled": "L’eliminazione delle cartelle è disattivata finché non sarà disponibile un ripristino completo dal cestino."
 }

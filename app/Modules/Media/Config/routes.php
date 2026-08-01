@@ -29,6 +29,9 @@ $router->group(['prefix' => 'admin', 'middleware' => 'auth'], function (Router $
     // API - Création d'un sous-répertoire média
     $router->post('/media/api/directories', [\App\Modules\Media\Controllers\AdminController::class, 'createDirectory'])->name('admin.media.api.directories.create');
 
+    // Renommage transactionnel d'un média
+    $router->post('/media/rename', [\App\Modules\Media\Controllers\AdminController::class, 'rename'])->name('admin.media.rename');
+
     // Suppression d'un média par ID
     $router->post('/media/{id}/delete', [\App\Modules\Media\Controllers\AdminController::class, 'delete'])->name('admin.media.delete');
 

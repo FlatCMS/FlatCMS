@@ -12,10 +12,12 @@ declare(strict_types=1);
 namespace App\Modules\Media\Models;
 
 use App\Modules\Media\Repositories\MediaRepository;
+use App\Modules\Media\Services\MediaReferenceService;
 
 class MediaModel
 {
     private MediaRepository $repository;
+    private MediaReferenceService $referenceService;
     private string $uploadPath;
 
     /**
@@ -77,10 +79,16 @@ class MediaModel
      */
     public const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
-    public function __construct()
-    {
-        $this->repository = new MediaRepository();
-        $this->uploadPath = $this->resolveUploadPath();
+    public function __construct(
+        ?MediaRepository $repository = null,
+        ?MediaReferenceService $referenceService = null,
+        ?string $uploadPath = null
+    ) {
+        $this->repository = $repository ?? new MediaRepository();
+        $this->referenceService = $referenceService ?? new MediaReferenceService();
+        $this->uploadPath = $uploadPath !== null
+            ? rtrim(str_replace('\\', '/', $uploadPath), '/')
+            : $this->resolveUploadPath();
         $this->ensureDirectories();
     }
 
@@ -220,7 +228,7 @@ class MediaModel
         }
 
         $filePath = $this->uploadPath . '/' . $normalizedPath;
-        if (!is_file($filePath)) {
+        if (!is_file($filePath) || is_link($filePath) || $this->hasSymlinkInPath($normalizedPath)) {
             return null;
         }
 
@@ -321,9 +329,14 @@ class MediaModel
 
         // Génération du nom de fichier unique
         $filename = $this->generateUniqueFilename($originalName, $folder, $context);
+        $relativeDirectory = $folder . ($context !== '' ? '/' . $context : '');
+        if ($this->hasSymlinkInPath($relativeDirectory)) {
+            return ['success' => false, 'error' => 'invalid_path'];
+        }
+
         $targetDir = rtrim($this->uploadPath . '/' . $folder . '/' . $context, '/');
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0755, true);
+        if (!is_dir($targetDir) && !mkdir($targetDir, 0755, true) && !is_dir($targetDir)) {
+            return ['success' => false, 'error' => 'move_failed'];
         }
         $targetPath = $targetDir . '/' . $filename;
         $relativePath = $folder . '/' . ($context !== '' ? $context . '/' : '') . $filename;
@@ -362,6 +375,12 @@ class MediaModel
             'ai_metadata' => [],
         ]);
 
+        if ($media === []) {
+            $rolledBack = @unlink($targetPath);
+            $this->removeEmptyDirectory($targetDir);
+            return ['success' => false, 'error' => $rolledBack ? 'repository_failed' : 'rollback_failed'];
+        }
+
         return ['success' => true, 'media' => $media];
     }
 
@@ -384,20 +403,24 @@ class MediaModel
         }
 
         if ($context === '') {
+            $persisted = $this->ensurePersisted($source);
             return [
-                'success' => true,
-                'media' => $this->ensurePersisted($source) ?? $source,
+                'success' => is_array($persisted),
+                'media' => $persisted,
                 'created' => false,
+                'error' => is_array($persisted) ? null : 'repository_failed',
             ];
         }
 
         $sourcePath = trim((string) ($source['path'] ?? $normalizedPath), '/');
         $targetPrefix = $folder . '/' . $context . '/';
         if (str_starts_with($sourcePath, $targetPrefix)) {
+            $persisted = $this->ensurePersisted($source);
             return [
-                'success' => true,
-                'media' => $this->ensurePersisted($source) ?? $source,
+                'success' => is_array($persisted),
+                'media' => $persisted,
                 'created' => false,
+                'error' => is_array($persisted) ? null : 'repository_failed',
             ];
         }
 
@@ -418,13 +441,21 @@ class MediaModel
             return ['success' => false, 'error' => 'invalid_extension'];
         }
 
-        $targetDir = rtrim($this->uploadPath . '/' . $folder . '/' . $context, '/');
+        $relativeDirectory = $folder . '/' . $context;
+        if ($this->hasSymlinkInPath($relativeDirectory)) {
+            return ['success' => false, 'error' => 'invalid_path'];
+        }
+
+        $targetDir = rtrim($this->uploadPath . '/' . $relativeDirectory, '/');
         if (!is_dir($targetDir) && !mkdir($targetDir, 0755, true)) {
             return ['success' => false, 'error' => 'move_failed'];
         }
 
         $targetPath = $targetDir . '/' . $filename;
         $relativePath = $targetPrefix . $filename;
+        if (is_link($targetPath)) {
+            return ['success' => false, 'error' => 'invalid_path'];
+        }
         if (is_file($targetPath)) {
             $existing = $this->findByPath($relativePath);
             if (is_array($existing)) {
@@ -449,6 +480,12 @@ class MediaModel
         $media = $this->repository->create(
             $this->buildFileRecord($targetPath, $relativePath, $folder, $filename, $uploadedBy, $source)
         );
+
+        if ($media === []) {
+            $rolledBack = @unlink($targetPath);
+            $this->removeEmptyDirectory($targetDir);
+            return ['success' => false, 'error' => $rolledBack ? 'repository_failed' : 'rollback_failed'];
+        }
 
         return ['success' => true, 'media' => $media, 'created' => true];
     }
@@ -491,146 +528,339 @@ class MediaModel
         return $this->repository->deleteByPath($path);
     }
 
+    public function isDirectoryPath(string $path): bool
+    {
+        $normalized = $this->normalizeOperationPath($path);
+        return $normalized !== null && is_dir($this->uploadPath . '/' . $normalized);
+    }
+
     public function deleteDirectory(string $path): bool
     {
-        $path = trim(str_replace('\\', '/', $path), '/');
-        if ($path === '') {
-            return false;
+        unset($path);
+        // Neutralisé : aucune suppression récursive sans restauration atomique depuis la corbeille.
+        return false;
+    }
+
+    /**
+     * Renomme un fichier média sans changer son extension.
+     *
+     * @return array<string, mixed>
+     */
+    public function rename(string $path, string $newName, int $id = 0): array
+    {
+        $sourceRelative = $this->normalizeOperationPath($path);
+        if ($sourceRelative === null) {
+            return ['success' => false, 'error' => 'invalid_path'];
         }
 
-        $segments = explode('/', $path);
-        $folder = array_shift($segments) ?? '';
-        if ($folder === '' || !isset(self::FOLDERS[$folder])) {
-            return false;
+        $rawName = trim($newName);
+        if ($rawName === '' || $rawName !== basename($rawName) || str_contains($rawName, "\0")) {
+            return ['success' => false, 'error' => 'invalid_name'];
         }
 
-        $context = $this->sanitizeSubdirectory(implode('/', $segments));
-        if ($context === '') {
-            return false;
+        $safeName = $this->sanitizeFilename($rawName);
+        if ($safeName !== $rawName) {
+            return ['success' => false, 'error' => 'invalid_name'];
         }
 
-        $relativePath = $folder . '/' . $context;
-        $dir = $this->resolveSafeUploadDirectory($relativePath);
-        if ($dir === null) {
-            return false;
+        $oldName = basename($sourceRelative);
+        $oldExtension = strtolower(pathinfo($oldName, PATHINFO_EXTENSION));
+        $newExtension = strtolower(pathinfo($safeName, PATHINFO_EXTENSION));
+        $folder = explode('/', $sourceRelative, 2)[0] ?? '';
+
+        if ($oldExtension === '' || $newExtension !== $oldExtension) {
+            return ['success' => false, 'error' => 'extension_mismatch'];
+        }
+        if (!isset(self::FOLDERS[$folder]) || !in_array($newExtension, self::FOLDERS[$folder], true)) {
+            return ['success' => false, 'error' => 'invalid_extension'];
         }
 
-        if (!$this->removeDirectoryRecursive($dir)) {
-            return false;
+        $directory = dirname($sourceRelative);
+        $destinationRelative = ($directory === '.' ? '' : $directory . '/') . $safeName;
+        if ($destinationRelative === $sourceRelative) {
+            return [
+                'success' => true,
+                'type' => 'file',
+                'old_path' => $sourceRelative,
+                'new_path' => $destinationRelative,
+                'references' => 0,
+            ];
         }
 
-        foreach ($this->repository->all() as $media) {
-            $mediaPath = trim((string) ($media['path'] ?? ''), '/');
-            if ($mediaPath === $relativePath || str_starts_with($mediaPath, $relativePath . '/')) {
-                $this->repository->delete((int) ($media['id'] ?? 0));
-            }
-        }
-
-        return true;
+        return $this->relocate($sourceRelative, $destinationRelative, 'file', $id, true);
     }
 
     /**
      * Déplace un fichier ou dossier vers un autre sous-dossier.
      *
-     * @param string $folder     Famille (images, documents, etc.)
-     * @param string $context    Contexte actuel du fichier/dossier source
-     * @param string $itemName   Nom du fichier ou dossier à déplacer
-     * @param string $targetContext  Contexte de destination
-     * @param string $type       'file' ou 'directory'
      * @return array<string, mixed>
      */
     public function move(string $folder, string $context, string $itemName, string $targetContext, string $type): array
     {
-        $folder = basename($folder);
-        if ($folder === '' || $folder === '.' || $folder === '..' || !isset(self::FOLDERS[$folder])) {
+        $rawFolder = trim(str_replace('\\', '/', $folder), '/');
+        if ($rawFolder === '' || $rawFolder !== basename($rawFolder) || !isset(self::FOLDERS[$rawFolder])) {
             return ['success' => false, 'error' => 'invalid_folder'];
         }
 
-        $context = $this->sanitizeSubdirectory($context);
-        $targetContext = $this->sanitizeSubdirectory($targetContext);
-        $itemName = basename($itemName);
-        if ($itemName === '' || $itemName === '.' || $itemName === '..') {
-            return ['success' => false, 'error' => 'invalid_name'];
+        $sourceContext = $this->normalizeOperationContext($context);
+        $destinationContext = $this->normalizeOperationContext($targetContext);
+        if ($sourceContext === null || $destinationContext === null) {
+            return ['success' => false, 'error' => 'invalid_path'];
         }
 
+        $itemName = trim($itemName);
+        if ($itemName === '' || $itemName !== basename($itemName) || str_contains($itemName, "\0")) {
+            return ['success' => false, 'error' => 'invalid_name'];
+        }
         if (!in_array($type, ['file', 'directory'], true)) {
             return ['success' => false, 'error' => 'invalid_type'];
         }
 
-        $sourcePath = rtrim($this->uploadPath . '/' . $folder . '/' . ($context !== '' ? $context . '/' : ''), '/') . '/' . $itemName;
-        $destPath = rtrim($this->uploadPath . '/' . $folder . '/' . ($targetContext !== '' ? $targetContext . '/' : ''), '/') . '/' . $itemName;
+        $sourceRelative = $rawFolder . '/' . ($sourceContext !== '' ? $sourceContext . '/' : '') . $itemName;
+        $destinationRelative = $rawFolder . '/' . ($destinationContext !== '' ? $destinationContext . '/' : '') . $itemName;
 
+        if ($type === 'directory') {
+            $sourceDirectory = trim(($sourceContext !== '' ? $sourceContext . '/' : '') . $itemName, '/');
+            if ($destinationContext === $sourceDirectory || str_starts_with($destinationContext . '/', $sourceDirectory . '/')) {
+                return ['success' => false, 'error' => 'invalid_path'];
+            }
+        }
+
+        return $this->relocate($sourceRelative, $destinationRelative, $type, 0, false);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function relocate(
+        string $sourceRelative,
+        string $destinationRelative,
+        string $type,
+        int $expectedId = 0,
+        bool $renameDisplayName = false
+    ): array {
+        $sourceRelative = $this->normalizeOperationPath($sourceRelative);
+        $destinationRelative = $this->normalizeOperationPath($destinationRelative);
+        if ($sourceRelative === null || $destinationRelative === null || $sourceRelative === $destinationRelative) {
+            return ['success' => false, 'error' => 'invalid_path'];
+        }
+
+        $sourcePath = $this->uploadPath . '/' . $sourceRelative;
+        $destinationPath = $this->uploadPath . '/' . $destinationRelative;
         if (!file_exists($sourcePath)) {
             return ['success' => false, 'error' => 'source_not_found'];
         }
-
-        if (file_exists($destPath)) {
+        if ($this->hasSymlinkInPath($sourceRelative) || $this->hasSymlinkInPath($destinationRelative)) {
+            return ['success' => false, 'error' => 'invalid_path'];
+        }
+        if (($type === 'file' && !is_file($sourcePath)) || ($type === 'directory' && !is_dir($sourcePath))) {
+            return ['success' => false, 'error' => 'invalid_type'];
+        }
+        if ($type === 'directory' && $this->directoryContainsSymlink($sourcePath)) {
+            return ['success' => false, 'error' => 'invalid_path'];
+        }
+        if (file_exists($destinationPath) || is_link($destinationPath)) {
             return ['success' => false, 'error' => 'target_exists'];
         }
 
-        if ($type === 'file') {
-            $destDir = dirname($destPath);
-            if (!is_dir($destDir)) {
-                if (!mkdir($destDir, 0755, true)) {
-                    return ['success' => false, 'error' => 'mkdir_failed'];
-                }
-            }
-
-            if (!rename($sourcePath, $destPath)) {
-                return ['success' => false, 'error' => 'rename_failed'];
-            }
-
-            $sourceRelative = $folder . '/' . ($context !== '' ? $context . '/' : '') . $itemName;
-            $relativePath = $folder . '/' . ($targetContext !== '' ? $targetContext . '/' : '') . $itemName;
-            $existing = $this->repository->findByPath($sourceRelative);
-            if ($existing) {
-                $url = $this->normalizeMediaUrl('/uploads/' . $relativePath, $folder, $itemName);
-                $this->repository->update((int) ($existing['id'] ?? 0), [
-                    'path' => $relativePath,
-                    'url' => $url,
-                ]);
-            }
-
-            return ['success' => true, 'type' => 'file'];
-        }
-
-        // Directory move
-        $sourceContext = trim(($context !== '' ? $context . '/' : '') . $itemName, '/');
-        if ($targetContext === $sourceContext || str_starts_with($targetContext . '/', $sourceContext . '/')) {
-            return ['success' => false, 'error' => 'invalid_name'];
-        }
-
-        if (!is_dir($sourcePath)) {
-            return ['success' => false, 'error' => 'source_not_directory'];
-        }
-
-        $destDir = dirname($destPath);
-        if (!is_dir($destDir)) {
-            if (!mkdir($destDir, 0755, true)) {
-                return ['success' => false, 'error' => 'mkdir_failed'];
+        $snapshot = $this->repository->all();
+        foreach ($snapshot as $record) {
+            $recordPath = trim((string) ($record['path'] ?? ''), '/');
+            if ($recordPath === $destinationRelative || ($type === 'directory' && str_starts_with($recordPath, $destinationRelative . '/'))) {
+                return ['success' => false, 'error' => 'target_exists'];
             }
         }
 
-        if (!rename($sourcePath, $destPath)) {
+        $records = $snapshot;
+        $sourceRecordFound = false;
+        $now = date('Y-m-d H:i:s');
+        foreach ($records as $key => $record) {
+            $recordPath = trim((string) ($record['path'] ?? ''), '/');
+            $matches = $type === 'file'
+                ? $recordPath === $sourceRelative
+                : ($recordPath === $sourceRelative || str_starts_with($recordPath, $sourceRelative . '/'));
+            if (!$matches) {
+                continue;
+            }
+
+            if ($type === 'file' && $expectedId > 0 && (int) ($record['id'] ?? 0) !== $expectedId) {
+                return ['success' => false, 'error' => 'media_mismatch'];
+            }
+
+            $sourceRecordFound = true;
+            $suffix = $type === 'directory' ? substr($recordPath, strlen($sourceRelative)) : '';
+            $newPath = $destinationRelative . $suffix;
+            $record['path'] = $newPath;
+            $record['url'] = $this->normalizeMediaUrl('/uploads/' . $newPath, (string) ($record['folder'] ?? ''), basename($newPath));
+            $record['name'] = basename($newPath);
+            if ($renameDisplayName && $type === 'file') {
+                $record['original_name'] = basename($newPath);
+            }
+            $record['ai_metadata'] = $this->referenceService->replaceValue(
+                $record['ai_metadata'] ?? [],
+                $sourceRelative,
+                $destinationRelative
+            );
+            $record['updated_at'] = $now;
+            $records[$key] = $record;
+        }
+
+        if ($type === 'file' && !$sourceRecordFound) {
+            $folder = explode('/', $sourceRelative, 2)[0] ?? '';
+            $record = $this->buildFileRecord($sourcePath, $sourceRelative, $folder, basename($sourceRelative), 1);
+            $record['id'] = $this->nextRepositoryId($records);
+            $record['created_at'] = $now;
+            $record['updated_at'] = $now;
+            $record['path'] = $destinationRelative;
+            $record['url'] = $this->normalizeMediaUrl('/uploads/' . $destinationRelative, $folder, basename($destinationRelative));
+            $record['name'] = basename($destinationRelative);
+            if ($renameDisplayName) {
+                $record['original_name'] = basename($destinationRelative);
+            }
+            $records[] = $record;
+        }
+
+        $referencePlan = $this->referenceService->plan($sourceRelative, $destinationRelative);
+        $destinationDirectory = dirname($destinationPath);
+        $createdDestinationDirectory = !is_dir($destinationDirectory);
+        if ($createdDestinationDirectory && !@mkdir($destinationDirectory, 0755, true) && !is_dir($destinationDirectory)) {
+            return ['success' => false, 'error' => 'mkdir_failed'];
+        }
+
+        if (!@rename($sourcePath, $destinationPath)) {
+            $this->removeEmptyDirectory($destinationDirectory);
             return ['success' => false, 'error' => 'rename_failed'];
         }
 
-        $oldPrefix = $folder . '/' . ($context !== '' ? $context . '/' : '') . $itemName;
-        $newPrefix = $folder . '/' . ($targetContext !== '' ? $targetContext . '/' : '') . $itemName;
+        $this->sortRepositoryRecords($records);
+        if (!$this->repository->replaceAll($records)) {
+            $rolledBack = @rename($destinationPath, $sourcePath);
+            $this->removeEmptyDirectory($destinationDirectory);
+            return ['success' => false, 'error' => $rolledBack ? 'repository_failed' : 'rollback_failed'];
+        }
 
-        foreach ($this->repository->all() as $media) {
-            $path = (string) ($media['path'] ?? '');
-            if (str_starts_with($path, $oldPrefix . '/') || $path === $oldPrefix) {
-                $newPath = str_replace($oldPrefix, $newPrefix, $path);
-                $url = $this->normalizeMediaUrl('/uploads/' . $newPath, $folder, basename($newPath));
-                $this->repository->update((int) ($media['id'] ?? 0), [
-                    'path' => $newPath,
-                    'url' => $url,
-                ]);
+        if (!$this->referenceService->apply($referencePlan)) {
+            $repositoryRolledBack = $this->repository->replaceAll($snapshot);
+            $fileRolledBack = @rename($destinationPath, $sourcePath);
+            $this->removeEmptyDirectory($destinationDirectory);
+            return [
+                'success' => false,
+                'error' => ($repositoryRolledBack && $fileRolledBack) ? 'references_failed' : 'rollback_failed',
+            ];
+        }
+
+        return [
+            'success' => true,
+            'type' => $type,
+            'old_path' => $sourceRelative,
+            'new_path' => $destinationRelative,
+            'references' => (int) ($referencePlan['replacements'] ?? 0),
+            'files_updated' => count($referencePlan['files'] ?? []),
+        ];
+    }
+
+    private function normalizeOperationPath(string $path): ?string
+    {
+        $path = trim(str_replace('\\', '/', $path));
+        $path = preg_replace('#^(?:public/)?uploads/#', '', ltrim($path, '/')) ?? '';
+        $path = trim($path, '/');
+        if ($path === '' || str_contains($path, "\0")) {
+            return null;
+        }
+
+        $segments = explode('/', $path);
+        $folder = array_shift($segments) ?? '';
+        if (!isset(self::FOLDERS[$folder]) || $segments === []) {
+            return null;
+        }
+        foreach ($segments as $segment) {
+            if ($segment === '' || in_array($segment, ['.', '..'], true)) {
+                return null;
             }
         }
 
-        return ['success' => true, 'type' => 'directory'];
+        return $folder . '/' . implode('/', $segments);
+    }
+
+    private function normalizeOperationContext(string $context): ?string
+    {
+        $raw = trim(str_replace('\\', '/', $context), '/');
+        if ($raw === '') {
+            return '';
+        }
+        if (str_contains($raw, "\0") || str_contains('/' . $raw . '/', '/../') || str_contains('/' . $raw . '/', '/./')) {
+            return null;
+        }
+
+        $safe = $this->sanitizeSubdirectory($raw);
+        return $safe === $raw ? $safe : null;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $records
+     */
+    private function nextRepositoryId(array $records): int
+    {
+        $max = 0;
+        foreach ($records as $record) {
+            $max = max($max, (int) ($record['id'] ?? 0));
+        }
+        return $max + 1;
+    }
+
+    private function removeEmptyDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+        $items = array_values(array_diff(scandir($directory) ?: [], ['.', '..']));
+        if ($items === []) {
+            @rmdir($directory);
+        }
+    }
+
+    private function hasSymlinkInPath(string $relativePath): bool
+    {
+        $current = $this->uploadPath;
+        foreach (explode('/', trim($relativePath, '/')) as $segment) {
+            $current .= '/' . $segment;
+            if (is_link($current)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function directoryContainsSymlink(string $directory): bool
+    {
+        try {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+            foreach ($iterator as $item) {
+                if ($item instanceof \SplFileInfo && $item->isLink()) {
+                    return true;
+                }
+            }
+        } catch (\UnexpectedValueException) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $records
+     */
+    private function sortRepositoryRecords(array &$records): void
+    {
+        usort($records, static function (array $left, array $right): int {
+            $idComparison = (int) ($left['id'] ?? 0) <=> (int) ($right['id'] ?? 0);
+            return $idComparison !== 0
+                ? $idComparison
+                : strcmp((string) ($left['path'] ?? ''), (string) ($right['path'] ?? ''));
+        });
     }
 
     /**
@@ -646,7 +876,8 @@ class MediaModel
 
         $context = $this->sanitizeSubdirectory($context);
         $folderPath = rtrim($this->uploadPath . '/' . $folder . '/' . $context, '/');
-        if (!is_dir($folderPath)) {
+        $relativeFolderPath = $folder . ($context !== '' ? '/' . $context : '');
+        if (!is_dir($folderPath) || $this->hasSymlinkInPath($relativeFolderPath)) {
             return [];
         }
 
@@ -654,13 +885,18 @@ class MediaModel
         $isConfigured = isset(self::FOLDERS[$folder]);
         $allowedExtensions = $isConfigured ? self::FOLDERS[$folder] : null;
 
-        foreach (scandir($folderPath) as $filename) {
+        $entries = scandir($folderPath);
+        if (!is_array($entries)) {
+            return [];
+        }
+
+        foreach ($entries as $filename) {
             if ($filename === '.' || $filename === '..' || $filename === '.gitkeep') {
                 continue;
             }
 
             $filePath = $folderPath . '/' . $filename;
-            if (!is_file($filePath)) {
+            if (!is_file($filePath) || is_link($filePath)) {
                 continue;
             }
 
@@ -727,7 +963,7 @@ class MediaModel
         }
 
         $rootPath = $this->uploadPath . '/' . $folder;
-        if (!is_dir($rootPath)) {
+        if (!is_dir($rootPath) || $this->hasSymlinkInPath($folder)) {
             return [];
         }
 
@@ -735,13 +971,17 @@ class MediaModel
             $this->buildDirectoryRecord($folder, ''),
         ];
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($rootPath, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::SELF_FIRST
-        );
+        try {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($rootPath, \FilesystemIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+        } catch (\UnexpectedValueException) {
+            return [];
+        }
 
         foreach ($iterator as $item) {
-            if (!$item instanceof \SplFileInfo || !$item->isDir()) {
+            if (!$item instanceof \SplFileInfo || !$item->isDir() || $item->isLink()) {
                 continue;
             }
 
@@ -787,7 +1027,12 @@ class MediaModel
             return ['success' => false, 'error' => 'directory_invalid'];
         }
 
-        $targetPath = $this->uploadPath . '/' . $folder . '/' . $context;
+        $relativePath = $folder . '/' . $context;
+        if ($this->hasSymlinkInPath($relativePath)) {
+            return ['success' => false, 'error' => 'directory_invalid'];
+        }
+
+        $targetPath = $this->uploadPath . '/' . $relativePath;
         if (!is_dir($targetPath) && !mkdir($targetPath, 0755, true)) {
             return ['success' => false, 'error' => 'directory_create_error'];
         }
@@ -819,28 +1064,97 @@ class MediaModel
      */
     public function sync(): array
     {
-        $result = ['added' => 0, 'removed' => 0];
-        
-        // Synchroniser le repository
-        $syncResult = $this->repository->sync($this->uploadPath);
-        $result['removed'] = count($syncResult['removed']);
-        
-        // Ajouter les fichiers physiques manquants dans le repository
-        foreach (array_keys(self::FOLDERS) as $folder) {
-            foreach ($this->listDirectories($folder) as $directory) {
-                $files = $this->scanFolder($folder, (string) ($directory['path'] ?? ''));
-                foreach ($files as $file) {
-                    if (($file['id'] ?? 0) === 0) {
-                        // Fichier sans ID = pas dans le repository
-                        unset($file['id']);
-                        $this->repository->create($file);
-                        $result['added']++;
-                    }
-                }
+        $snapshot = $this->repository->all();
+        $existingByPath = [];
+        $nextId = 1;
+        foreach ($snapshot as $record) {
+            $nextId = max($nextId, (int) ($record['id'] ?? 0) + 1);
+            $path = trim((string) ($record['path'] ?? ''), '/');
+            if ($path !== '' && !isset($existingByPath[$path])) {
+                $existingByPath[$path] = $record;
             }
         }
-        
-        return $result;
+
+        $records = [];
+        $seenPaths = [];
+        $added = 0;
+        $retained = 0;
+
+        foreach (self::FOLDERS as $folder => $allowedExtensions) {
+            $root = $this->uploadPath . '/' . $folder;
+            if (!is_dir($root)) {
+                continue;
+            }
+
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $item) {
+                if (
+                    !$item instanceof \SplFileInfo
+                    || !$item->isFile()
+                    || $item->isLink()
+                    || $item->getFilename() === '.gitkeep'
+                ) {
+                    continue;
+                }
+
+                $extension = strtolower(pathinfo($item->getFilename(), PATHINFO_EXTENSION));
+                if (!in_array($extension, $allowedExtensions, true)) {
+                    continue;
+                }
+
+                $relativeInsideFolder = str_replace('\\', '/', substr($item->getPathname(), strlen($root) + 1));
+                $relativePath = $folder . '/' . ltrim($relativeInsideFolder, '/');
+                if (isset($seenPaths[$relativePath])) {
+                    continue;
+                }
+                $seenPaths[$relativePath] = true;
+
+                $existing = $existingByPath[$relativePath] ?? null;
+                if (is_array($existing)) {
+                    $physical = $this->buildFileRecord(
+                        $item->getPathname(),
+                        $relativePath,
+                        $folder,
+                        $item->getFilename(),
+                        $existing['uploaded_by'] ?? 1,
+                        $existing
+                    );
+                    foreach (['name', 'path', 'url', 'folder', 'type', 'mime', 'extension', 'size', 'dimensions'] as $key) {
+                        $existing[$key] = $physical[$key] ?? null;
+                    }
+                    $records[] = $existing;
+                    $retained++;
+                    continue;
+                }
+
+                $createdAt = date('Y-m-d H:i:s', (int) $item->getMTime());
+                $record = $this->buildFileRecord(
+                    $item->getPathname(),
+                    $relativePath,
+                    $folder,
+                    $item->getFilename(),
+                    1
+                );
+                $record['id'] = $nextId++;
+                $record['created_at'] = $createdAt;
+                $record['updated_at'] = $createdAt;
+                $records[] = $record;
+                $added++;
+            }
+        }
+
+        $this->sortRepositoryRecords($records);
+        if (!$this->repository->replaceAll($records)) {
+            return ['success' => false, 'added' => 0, 'removed' => 0];
+        }
+
+        return [
+            'success' => true,
+            'added' => $added,
+            'removed' => max(0, count($snapshot) - $retained),
+        ];
     }
 
     /**
@@ -878,7 +1192,7 @@ class MediaModel
         }
 
         $absolutePath = $this->uploadPath . '/' . $normalized;
-        if (!is_file($absolutePath)) {
+        if (!is_file($absolutePath) || is_link($absolutePath) || $this->hasSymlinkInPath($normalized)) {
             return null;
         }
 
@@ -911,7 +1225,8 @@ class MediaModel
         $payload['ai_last_error'] = null;
         $payload['ai_metadata'] = [];
 
-        return $this->repository->create($payload);
+        $created = $this->repository->create($payload);
+        return $created === [] ? null : $created;
     }
 
     /**
@@ -945,7 +1260,7 @@ class MediaModel
                     continue;
                 }
                 $full = $directoryPath . '/' . $entry;
-                if (is_dir($full)) {
+                if (is_dir($full) && !is_link($full)) {
                     $subdirCount++;
                     $subdirNames[] = $entry;
                 }
@@ -980,7 +1295,7 @@ class MediaModel
             }
 
             $filePath = $directoryPath . '/' . $filename;
-            if (!is_file($filePath)) {
+            if (!is_file($filePath) || is_link($filePath)) {
                 continue;
             }
 
@@ -1000,7 +1315,7 @@ class MediaModel
         }
 
         $rootPath = $this->uploadPath . '/' . $folder;
-        if (!is_dir($rootPath)) {
+        if (!is_dir($rootPath) || $this->hasSymlinkInPath($folder)) {
             return 0;
         }
 
@@ -1011,7 +1326,7 @@ class MediaModel
         );
 
         foreach ($iterator as $item) {
-            if (!$item instanceof \SplFileInfo || !$item->isFile()) {
+            if (!$item instanceof \SplFileInfo || !$item->isFile() || $item->isLink()) {
                 continue;
             }
 
@@ -1035,7 +1350,7 @@ class MediaModel
                 continue;
             }
 
-            if (is_dir($directoryPath . '/' . $filename)) {
+            if (is_dir($directoryPath . '/' . $filename) && !is_link($directoryPath . '/' . $filename)) {
                 return true;
             }
         }
@@ -1138,56 +1453,6 @@ class MediaModel
         }
 
         return substr(implode('/', $safeSegments), 0, 160);
-    }
-
-    private function resolveSafeUploadDirectory(string $relativePath): ?string
-    {
-        $normalized = trim(str_replace('\\', '/', $relativePath), '/');
-        if ($normalized === '' || str_contains($normalized, "\0")) {
-            return null;
-        }
-
-        $root = realpath($this->uploadPath);
-        $directory = realpath($this->uploadPath . '/' . $normalized);
-        if ($root === false || $directory === false || !is_dir($directory)) {
-            return null;
-        }
-
-        $root = rtrim(str_replace('\\', '/', $root), '/');
-        $directory = rtrim(str_replace('\\', '/', $directory), '/');
-        if ($directory === $root || !str_starts_with($directory . '/', $root . '/')) {
-            return null;
-        }
-
-        return $directory;
-    }
-
-    private function removeDirectoryRecursive(string $directory): bool
-    {
-        $items = scandir($directory);
-        if ($items === false) {
-            return false;
-        }
-
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
-
-            $itemPath = $directory . '/' . $item;
-            if (is_dir($itemPath) && !is_link($itemPath)) {
-                if (!$this->removeDirectoryRecursive($itemPath)) {
-                    return false;
-                }
-                continue;
-            }
-
-            if (!@unlink($itemPath)) {
-                return false;
-            }
-        }
-
-        return @rmdir($directory);
     }
 
     /**

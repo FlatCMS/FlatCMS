@@ -1689,6 +1689,146 @@ if (!function_exists('footer_default_config')) {
     }
 }
 
+if (!function_exists('flatcms_sanitize_editor_html')) {
+    /**
+     * Remove active HTML without reserializing safe editor markup.
+     */
+    function flatcms_sanitize_editor_html(string $html): string
+    {
+        if ($html === '') {
+            return '';
+        }
+
+        $clean = str_replace("\0", '', $html);
+        $clean = preg_replace(
+            '#<\s*(script|style|object)\b[^>]*>.*?<\s*/\s*\1\s*>#is',
+            '',
+            $clean
+        ) ?? '';
+        $clean = preg_replace(
+            '#<\s*/?\s*(script|style|object|embed|base|meta|link)\b[^>]*>#is',
+            '',
+            $clean
+        ) ?? '';
+
+        $attributeValue = '(?:"[^"]*"|\'[^\']*\'|[^\s>]+)';
+        $clean = preg_replace('/\s+on[a-z0-9:_-]+\s*=\s*' . $attributeValue . '/i', '', $clean) ?? '';
+        $clean = preg_replace('/\s+srcdoc\s*=\s*' . $attributeValue . '/i', '', $clean) ?? '';
+
+        $clean = preg_replace_callback(
+            '/\s+(href|src|action|formaction|poster|xlink:href)\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i',
+            static function (array $matches): string {
+                $value = (string) ($matches[3] !== '' ? $matches[3] : ($matches[4] !== '' ? $matches[4] : $matches[5]));
+                $decoded = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $normalized = strtolower((string) preg_replace('/[\x00-\x20\x7f]+/', '', $decoded));
+                $dangerous = str_starts_with($normalized, 'javascript:')
+                    || str_starts_with($normalized, 'vbscript:')
+                    || (str_starts_with($normalized, 'data:')
+                        && preg_match('#^data:image/(?:png|gif|jpe?g|webp|avif);base64,#i', $normalized) !== 1);
+
+                return $dangerous ? '' : (string) $matches[0];
+            },
+            $clean
+        ) ?? '';
+
+        $clean = preg_replace_callback(
+            '/\s+style\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i',
+            static function (array $matches): string {
+                $value = (string) ($matches[2] !== '' ? $matches[2] : ($matches[3] !== '' ? $matches[3] : $matches[4]));
+                $decoded = strtolower(html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                $dangerous = preg_match('/(?:expression\s*\(|javascript\s*:|vbscript\s*:|-moz-binding\s*:|behavior\s*:|data\s*:\s*text\/html)/i', $decoded) === 1;
+
+                return $dangerous ? '' : (string) $matches[0];
+            },
+            $clean
+        ) ?? '';
+
+        return $clean;
+    }
+}
+
+if (!function_exists('flatcms_reconcile_editor_html')) {
+    /**
+     * Keep the exact stored markup when a browser only normalized line endings.
+     */
+    function flatcms_reconcile_editor_html(string $submittedHtml, ?string $existingHtml = null): string
+    {
+        $submittedHtml = flatcms_sanitize_editor_html($submittedHtml);
+        $normalizeLineEndings = static fn (string $html): string => str_replace(["\r\n", "\r"], "\n", $html);
+
+        if ($existingHtml === null) {
+            return $normalizeLineEndings($submittedHtml);
+        }
+
+        $safeExistingHtml = flatcms_sanitize_editor_html($existingHtml);
+
+        if (
+            $safeExistingHtml === $existingHtml
+            && $normalizeLineEndings($submittedHtml) === $normalizeLineEndings($safeExistingHtml)
+        ) {
+            return $existingHtml;
+        }
+
+        if ($safeExistingHtml === $existingHtml) {
+            $tokenize = static function (string $html): array {
+                $tokens = preg_split(
+                    '/(<!--.*?-->|<![^>]*>|<[^>]+>)/s',
+                    $html,
+                    -1,
+                    PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
+                );
+
+                return is_array($tokens) ? $tokens : [];
+            };
+            $isMarkup = static fn (string $token): bool => str_starts_with($token, '<');
+            $isMeaningfulText = static fn (string $token): bool => preg_match('/^\s*$/u', $token) !== 1;
+            $normalizeMarkup = static function (string $token): string {
+                if (str_starts_with($token, '<!--')) {
+                    return '<!--' . trim(substr($token, 4, -3)) . '-->';
+                }
+
+                return strtolower((string) preg_replace('/\s+/u', ' ', trim($token)));
+            };
+
+            $submittedTokens = $tokenize($submittedHtml);
+            $existingTokens = $tokenize($safeExistingHtml);
+            $submittedStructure = [];
+            $existingStructure = [];
+            $submittedText = [];
+
+            foreach ($submittedTokens as $token) {
+                if ($isMarkup($token)) {
+                    $submittedStructure[] = $normalizeMarkup($token);
+                } elseif ($isMeaningfulText($token)) {
+                    $submittedText[] = $token;
+                }
+            }
+
+            $existingTextCount = 0;
+            foreach ($existingTokens as $token) {
+                if ($isMarkup($token)) {
+                    $existingStructure[] = $normalizeMarkup($token);
+                } elseif ($isMeaningfulText($token)) {
+                    $existingTextCount++;
+                }
+            }
+
+            if ($submittedStructure === $existingStructure && count($submittedText) === $existingTextCount) {
+                $textIndex = 0;
+                foreach ($existingTokens as $index => $token) {
+                    if (!$isMarkup($token) && $isMeaningfulText($token)) {
+                        $existingTokens[$index] = $submittedText[$textIndex++] ?? $token;
+                    }
+                }
+
+                return implode('', $existingTokens);
+            }
+        }
+
+        return $normalizeLineEndings($submittedHtml);
+    }
+}
+
 if (!function_exists('footer_sanitize_fragment')) {
     function footer_sanitize_fragment(string $html): string
     {

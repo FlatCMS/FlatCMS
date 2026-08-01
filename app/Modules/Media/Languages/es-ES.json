@@ -163,5 +163,11 @@
     "media_move_invalid": "Elemento no válido.",
     "media_move_not_found": "Elemento no encontrado.",
     "media_move_target_exists": "Ya existe un elemento con ese nombre en el destino.",
-    "media_move_mkdir_failed": "No se pudo crear la carpeta de destino."
+    "media_move_mkdir_failed": "No se pudo crear la carpeta de destino.",
+  "media_rename_success": "El archivo multimedia se ha renombrado y sus referencias se han actualizado.",
+  "media_rename_invalid": "El nombre o la ruta del archivo multimedia no es válido.",
+    "media_rename_extension_mismatch": "La extensión del archivo no se puede cambiar al renombrarlo.",
+  "media_operation_failed": "La operación ha fallado. No se ha conservado ningún cambio incompleto.",
+  "media_operation_rollback_failed": "La operación ha fallado y no se pudo completar la restauración automática.",
+  "media_directory_delete_disabled": "La eliminación de carpetas está desactivada hasta que exista una restauración completa desde la papelera."
 }

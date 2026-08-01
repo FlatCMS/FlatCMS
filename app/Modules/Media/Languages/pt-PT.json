@@ -163,5 +163,11 @@
     "media_move_invalid": "Elemento inválido.",
     "media_move_not_found": "Elemento não encontrado.",
     "media_move_target_exists": "Já existe um elemento com esse nome no destino.",
-    "media_move_mkdir_failed": "Não foi possível criar a pasta de destino."
+    "media_move_mkdir_failed": "Não foi possível criar a pasta de destino.",
+  "media_rename_success": "O ficheiro multimédia foi renomeado e as suas referências foram atualizadas.",
+  "media_rename_invalid": "O nome ou o caminho do ficheiro multimédia é inválido.",
+  "media_rename_extension_mismatch": "A extensão do ficheiro não pode ser alterada durante a mudança de nome.",
+  "media_operation_failed": "A operação falhou. Nenhuma alteração incompleta foi mantida.",
+  "media_operation_rollback_failed": "A operação falhou e a reposição automática não pôde ser concluída.",
+  "media_directory_delete_disabled": "A eliminação de pastas está desativada até estar disponível uma reposição completa a partir do lixo."
 }

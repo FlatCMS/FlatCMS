@@ -163,5 +163,11 @@
     "media_move_invalid": "Invalid item.",
     "media_move_not_found": "Item not found.",
     "media_move_target_exists": "An item with that name already exists in the destination.",
-    "media_move_mkdir_failed": "Could not create the destination folder."
+    "media_move_mkdir_failed": "Could not create the destination folder.",
+  "media_rename_success": "The media file was renamed and its references were updated.",
+  "media_rename_invalid": "The media name or path is invalid.",
+    "media_rename_extension_mismatch": "The file extension cannot be changed while renaming.",
+  "media_operation_failed": "The operation failed. No incomplete change was kept.",
+  "media_operation_rollback_failed": "The operation failed and the automatic rollback could not be completed.",
+  "media_directory_delete_disabled": "Folder deletion is disabled until complete Trash restoration is available."
 }

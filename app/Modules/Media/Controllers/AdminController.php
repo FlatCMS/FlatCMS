@@ -284,6 +284,59 @@ class AdminController extends BaseController
     }
 
     /**
+     * Renomme un média et ses références de façon transactionnelle.
+     */
+    public function rename(): void
+    {
+        if (!$this->authorize('media.edit')) {
+            return;
+        }
+
+        $token = $this->request->input('_token') ?? $this->request->header('X-CSRF-TOKEN');
+        if (!$token || !$this->session->verifyToken($token)) {
+            json_error(__('csrf_error', 'Core'));
+            return;
+        }
+
+        $id = (int) $this->request->input('id', 0);
+        $path = trim((string) $this->request->input('path', ''));
+        $newName = trim((string) $this->request->input('new_name', ''));
+        if ($path === '' || $newName === '') {
+            json_error(__('media_rename_invalid', 'Media'));
+            return;
+        }
+
+        $result = $this->mediaModel->rename($path, $newName, $id);
+        if (!($result['success'] ?? false)) {
+            $error = (string) ($result['error'] ?? 'rename_failed');
+            $errorMap = [
+                'source_not_found' => __('media_move_not_found', 'Media'),
+                'target_exists' => __('media_move_target_exists', 'Media'),
+                'extension_mismatch' => __('media_rename_extension_mismatch', 'Media'),
+                'invalid_extension' => __('media_rename_extension_mismatch', 'Media'),
+                'invalid_path' => __('media_rename_invalid', 'Media'),
+                'invalid_name' => __('media_rename_invalid', 'Media'),
+                'invalid_type' => __('media_rename_invalid', 'Media'),
+                'media_mismatch' => __('media_rename_invalid', 'Media'),
+                'rollback_failed' => __('media_operation_rollback_failed', 'Media'),
+                'repository_failed' => __('media_operation_failed', 'Media'),
+                'references_failed' => __('media_operation_failed', 'Media'),
+            ];
+            json_error($errorMap[$error] ?? __('media_rename_error', 'Media'));
+            return;
+        }
+
+        json_response([
+            'success' => true,
+            'message' => __('media_rename_success', 'Media'),
+            'old_path' => $result['old_path'] ?? $path,
+            'new_path' => $result['new_path'] ?? $path,
+            'references' => (int) ($result['references'] ?? 0),
+            'files_updated' => (int) ($result['files_updated'] ?? 0),
+        ]);
+    }
+
+    /**
      * Suppression d'un média
      */
     public function delete(int $id): void
@@ -361,20 +414,13 @@ class AdminController extends BaseController
 
         $media = $this->mediaModel->findByPath($path);
         if (!is_array($media)) {
-            // Not in repository — try directory deletion
-            $deleted = $this->mediaModel->deleteDirectory($path);
-            if ($deleted) {
-                if ($this->request->isAjax()) {
-                    json_success(__('delete_success', 'Media'));
-                }
-                $this->session->flash('success', __('delete_success', 'Media'));
-                $this->redirect(url('/admin/media/folder/' . $folder));
-                return;
-            }
+            $message = $this->mediaModel->isDirectoryPath($path)
+                ? __('media_directory_delete_disabled', 'Media')
+                : __('media_not_found', 'Media');
             if ($this->request->isAjax()) {
-                json_error(__('media_not_found', 'Media'));
+                json_error($message);
             }
-            $this->session->flash('error', __('media_not_found', 'Media'));
+            $this->session->flash('error', $message);
             $this->redirect(url('/admin/media/folder/' . $folder));
             return;
         }
@@ -509,8 +555,16 @@ class AdminController extends BaseController
         }
 
         $result = $this->mediaModel->sync();
+        if (($result['success'] ?? true) !== true) {
+            if ($this->request->isAjax()) {
+                json_error(__('media_operation_failed', 'Media'));
+            }
+            $this->session->flash('error', __('media_operation_failed', 'Media'));
+            $this->redirect(url('/admin/media'));
+            return;
+        }
+
         hook_run('media.synced', $result);
-        
         $message = sprintf(__('sync_result', 'Media'), $result['added'], $result['removed']);
 
         if ($this->request->isAjax()) {
@@ -734,21 +788,33 @@ class AdminController extends BaseController
         $result = $this->mediaModel->move($folder, $context, $itemName, $targetContext, $type);
 
         if ($result['success'] ?? false) {
-            json_response(['success' => true, 'type' => $result['type'] ?? 'file']);
-        } else {
-            $errorKey = $result['error'] ?? 'move_failed';
-            $errorMap = [
-                'source_not_found' => __('media_move_not_found', 'Media'),
-                'target_exists' => __('media_move_target_exists', 'Media'),
-                'mkdir_failed' => __('media_move_mkdir_failed', 'Media'),
-                'rename_failed' => __('media_move_failed', 'Media'),
-                'source_not_directory' => __('media_move_invalid', 'Media'),
-                'invalid_folder' => __('media_move_invalid', 'Media'),
-                'invalid_name' => __('media_move_invalid', 'Media'),
-                'invalid_type' => __('media_move_invalid', 'Media'),
-            ];
-            json_error($errorMap[$errorKey] ?? __('media_move_failed', 'Media'));
+            json_response([
+                'success' => true,
+                'message' => __('media_move_success', 'Media'),
+                'type' => $result['type'] ?? 'file',
+                'old_path' => $result['old_path'] ?? '',
+                'new_path' => $result['new_path'] ?? '',
+                'references' => (int) ($result['references'] ?? 0),
+                'files_updated' => (int) ($result['files_updated'] ?? 0),
+            ]);
+            return;
         }
+
+        $errorKey = (string) ($result['error'] ?? 'move_failed');
+        $errorMap = [
+            'source_not_found' => __('media_move_not_found', 'Media'),
+            'target_exists' => __('media_move_target_exists', 'Media'),
+            'mkdir_failed' => __('media_move_mkdir_failed', 'Media'),
+            'rename_failed' => __('media_move_failed', 'Media'),
+            'invalid_path' => __('media_move_invalid', 'Media'),
+            'invalid_folder' => __('media_move_invalid', 'Media'),
+            'invalid_name' => __('media_move_invalid', 'Media'),
+            'invalid_type' => __('media_move_invalid', 'Media'),
+            'repository_failed' => __('media_operation_failed', 'Media'),
+            'references_failed' => __('media_operation_failed', 'Media'),
+            'rollback_failed' => __('media_operation_rollback_failed', 'Media'),
+        ];
+        json_error($errorMap[$errorKey] ?? __('media_move_failed', 'Media'));
     }
 
     /**

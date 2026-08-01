@@ -9,6 +9,17 @@
 
 declare(strict_types=1);
 
+hook_register('auth.permissions.extend', static function (): array {
+    return [
+        'permissions' => ['media.edit'],
+        'role_permissions' => [
+            'super_admin' => ['media.edit'],
+            'admin' => ['media.edit'],
+            'editor' => ['media.edit'],
+        ],
+    ];
+}, ['module' => 'Media', 'priority' => 20]);
+
 hook_register('admin.guided_tour.module_tours', static function (): array {
     return [
         'media' => [

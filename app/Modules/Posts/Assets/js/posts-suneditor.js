@@ -218,6 +218,9 @@
                 textarea.value = typeof editor.getContents === 'function'
                     ? String(editor.getContents() || '')
                     : String(textarea.value || '');
+                if (textarea.__postSunEditorHandle && typeof textarea.__postSunEditorHandle.markDirty === 'function') {
+                    textarea.__postSunEditorHandle.markDirty(textarea.value);
+                }
                 textarea.dispatchEvent(new Event('input', { bubbles: true }));
             }
             closeMediaModal(modal);

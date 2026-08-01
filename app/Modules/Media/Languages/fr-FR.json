@@ -163,5 +163,11 @@
     "media_move_invalid": "Élément invalide.",
     "media_move_not_found": "Élément introuvable.",
     "media_move_target_exists": "Un élément portant ce nom existe déjà dans la destination.",
-    "media_move_mkdir_failed": "Impossible de créer le dossier de destination."
+    "media_move_mkdir_failed": "Impossible de créer le dossier de destination.",
+  "media_rename_success": "Le média a été renommé et ses références ont été mises à jour.",
+  "media_rename_invalid": "Le nom ou le chemin du média est invalide.",
+    "media_rename_extension_mismatch": "L’extension du fichier ne peut pas être modifiée lors du renommage.",
+  "media_operation_failed": "L’opération a échoué. Aucun changement incomplet n’a été conservé.",
+  "media_operation_rollback_failed": "L’opération a échoué et la restauration automatique n’a pas pu être terminée.",
+  "media_directory_delete_disabled": "La suppression des dossiers est désactivée tant qu’une restauration complète depuis la corbeille n’est pas disponible."
 }

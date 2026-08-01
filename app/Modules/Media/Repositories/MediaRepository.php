@@ -15,10 +15,13 @@ class MediaRepository
 {
     private string $dataFile;
     private array $data = [];
+    private ?string $sourceHash = null;
 
-    public function __construct()
+    public function __construct(?string $basePath = null)
     {
-        $basePath = $this->resolveBasePath();
+        $basePath = $basePath !== null
+            ? rtrim(str_replace('\\', '/', $basePath), '/')
+            : $this->resolveBasePath();
         $this->dataFile = $basePath . '/data/core/media/media.json';
         $this->ensureDirectory();
         $this->load();
@@ -60,7 +63,8 @@ class MediaRepository
     private function load(): void
     {
         $content = file_get_contents($this->dataFile);
-        $this->data = json_decode($content, true) ?: [];
+        $this->sourceHash = is_string($content) ? hash('sha256', $content) : null;
+        $this->data = is_string($content) ? (json_decode($content, true) ?: []) : [];
     }
 
     /**
@@ -68,10 +72,57 @@ class MediaRepository
      */
     private function save(): bool
     {
-        return file_put_contents(
-            $this->dataFile, 
-            json_encode($this->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-        ) !== false;
+        $json = json_encode($this->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            return false;
+        }
+
+        if (is_link($this->dataFile)) {
+            return false;
+        }
+        $current = @file_get_contents($this->dataFile);
+        if (!is_string($current) || ($this->sourceHash !== null && hash('sha256', $current) !== $this->sourceHash)) {
+            return false;
+        }
+
+        $payload = $json . PHP_EOL;
+
+        $directory = dirname($this->dataFile);
+        try {
+            $suffix = bin2hex(random_bytes(6));
+        } catch (\Throwable) {
+            $suffix = str_replace('.', '', uniqid('', true));
+        }
+        $temp = $directory . '/.' . basename($this->dataFile) . '.' . $suffix . '.tmp';
+        if (@file_put_contents($temp, $payload, LOCK_EX) === false) {
+            return false;
+        }
+
+        $permissions = @fileperms($this->dataFile);
+        if (is_int($permissions)) {
+            @chmod($temp, $permissions & 0777);
+        }
+
+        if (@rename($temp, $this->dataFile)) {
+            $this->sourceHash = hash('sha256', $payload);
+            return true;
+        }
+
+        $backup = $directory . '/.' . basename($this->dataFile) . '.' . $suffix . '.bak';
+        if (!@rename($this->dataFile, $backup)) {
+            @unlink($temp);
+            return false;
+        }
+
+        if (@rename($temp, $this->dataFile)) {
+            @unlink($backup);
+            $this->sourceHash = hash('sha256', $payload);
+            return true;
+        }
+
+        @rename($backup, $this->dataFile);
+        @unlink($temp);
+        return false;
     }
 
     /**
@@ -133,13 +184,17 @@ class MediaRepository
      */
     public function create(array $data): array
     {
+        $before = $this->data;
         $data['id'] = $this->getNextId();
         $data['created_at'] = date('Y-m-d H:i:s');
         $data['updated_at'] = date('Y-m-d H:i:s');
-        
+
         $this->data[] = $data;
-        $this->save();
-        
+        if (!$this->save()) {
+            $this->data = $before;
+            return [];
+        }
+
         return $data;
     }
 
@@ -149,12 +204,19 @@ class MediaRepository
     public function update(int $id, array $data): ?array
     {
         foreach ($this->data as $key => $item) {
-            if (($item['id'] ?? 0) === $id) {
-                $data['updated_at'] = date('Y-m-d H:i:s');
-                $this->data[$key] = array_merge($item, $data);
-                $this->save();
-                return $this->data[$key];
+            if (($item['id'] ?? 0) !== $id) {
+                continue;
             }
+
+            $before = $this->data;
+            $data['updated_at'] = date('Y-m-d H:i:s');
+            $this->data[$key] = array_merge($item, $data);
+            if (!$this->save()) {
+                $this->data = $before;
+                return null;
+            }
+
+            return $this->data[$key];
         }
         return null;
     }
@@ -165,11 +227,18 @@ class MediaRepository
     public function delete(int $id): bool
     {
         foreach ($this->data as $key => $item) {
-            if (($item['id'] ?? 0) === $id) {
-                unset($this->data[$key]);
-                $this->data = array_values($this->data);
-                return $this->save();
+            if (($item['id'] ?? 0) !== $id) {
+                continue;
             }
+
+            $before = $this->data;
+            unset($this->data[$key]);
+            $this->data = array_values($this->data);
+            if (!$this->save()) {
+                $this->data = $before;
+                return false;
+            }
+            return true;
         }
         return false;
     }
@@ -180,13 +249,31 @@ class MediaRepository
     public function deleteByPath(string $path): bool
     {
         foreach ($this->data as $key => $item) {
-            if (($item['path'] ?? '') === $path) {
-                unset($this->data[$key]);
-                $this->data = array_values($this->data);
-                return $this->save();
+            if (($item['path'] ?? '') !== $path) {
+                continue;
             }
+
+            $before = $this->data;
+            unset($this->data[$key]);
+            $this->data = array_values($this->data);
+            if (!$this->save()) {
+                $this->data = $before;
+                return false;
+            }
+            return true;
         }
         return false;
+    }
+
+    public function replaceAll(array $data): bool
+    {
+        $before = $this->data;
+        $this->data = array_values($data);
+        if (!$this->save()) {
+            $this->data = $before;
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -259,10 +346,10 @@ class MediaRepository
      */
     public function sync(string $uploadPath): array
     {
+        $before = $this->data;
         $removed = [];
         $added = [];
-        
-        // Supprimer les entrées sans fichier physique
+
         foreach ($this->data as $key => $item) {
             $relativePath = trim((string) ($item['path'] ?? ''), '/');
             if ($relativePath === '') {
@@ -275,14 +362,14 @@ class MediaRepository
                 unset($this->data[$key]);
             }
         }
-        
+
         $this->data = array_values($this->data);
-        $this->save();
-        
-        return [
-            'removed' => $removed,
-            'added' => $added
-        ];
+        if (!$this->save()) {
+            $this->data = $before;
+            return ['removed' => [], 'added' => [], 'success' => false];
+        }
+
+        return ['removed' => $removed, 'added' => $added, 'success' => true];
     }
 
     /**
