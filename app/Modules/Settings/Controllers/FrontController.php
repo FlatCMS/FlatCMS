@@ -170,4 +170,16 @@ class FrontController extends BaseController
         return strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? '')) === 'https';
     }
 
+    private function isAbsoluteUrl(string $url): bool
+    {
+        $parts = parse_url(trim($url));
+        if (!is_array($parts)) {
+            return false;
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        return in_array($scheme, ['http', 'https'], true)
+            && trim((string) ($parts['host'] ?? '')) !== '';
+    }
+
 }

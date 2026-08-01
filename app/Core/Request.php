@@ -111,6 +111,11 @@ class Request
 
     private function detectDefaultLocale(array $supportedLocales): string
     {
+        $browserLocale = $this->detectBrowserLocale($supportedLocales);
+        if ($browserLocale !== null) {
+            return $browserLocale;
+        }
+
         $settingsPath = BASE_PATH . '/data/settings.json';
 
         if (file_exists($settingsPath)) {
@@ -126,6 +131,65 @@ class Request
         }
 
         return $supportedLocales[0] ?? 'fr-FR';
+    }
+
+    private function detectBrowserLocale(array $supportedLocales): ?string
+    {
+        $acceptLanguage = trim((string) ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''));
+        if ($acceptLanguage === '' || $supportedLocales === []) {
+            return null;
+        }
+
+        $preferences = [];
+        foreach (explode(',', $acceptLanguage) as $position => $entry) {
+            $parts = array_map('trim', explode(';', $entry));
+            $locale = str_replace('_', '-', (string) ($parts[0] ?? ''));
+            if ($locale === '' || $locale === '*') {
+                continue;
+            }
+
+            $quality = 1.0;
+            foreach (array_slice($parts, 1) as $parameter) {
+                if (preg_match('/^q=([01](?:\.\d{1,3})?)$/i', $parameter, $matches) === 1) {
+                    $quality = (float) $matches[1];
+                    break;
+                }
+            }
+
+            if ($quality <= 0) {
+                continue;
+            }
+
+            $preferences[] = [
+                'locale' => $locale,
+                'quality' => $quality,
+                'position' => $position,
+            ];
+        }
+
+        usort($preferences, static function (array $left, array $right): int {
+            $qualityOrder = $right['quality'] <=> $left['quality'];
+            return $qualityOrder !== 0 ? $qualityOrder : ($left['position'] <=> $right['position']);
+        });
+
+        foreach ($preferences as $preference) {
+            $preferredLocale = strtolower((string) $preference['locale']);
+            foreach ($supportedLocales as $supportedLocale) {
+                if (strtolower((string) $supportedLocale) === $preferredLocale) {
+                    return (string) $supportedLocale;
+                }
+            }
+
+            $preferredLanguage = explode('-', $preferredLocale, 2)[0];
+            foreach ($supportedLocales as $supportedLocale) {
+                $supportedLanguage = explode('-', strtolower((string) $supportedLocale), 2)[0];
+                if ($supportedLanguage === $preferredLanguage) {
+                    return (string) $supportedLocale;
+                }
+            }
+        }
+
+        return null;
     }
 
     public function method(): string

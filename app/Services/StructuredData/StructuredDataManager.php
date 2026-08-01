@@ -82,7 +82,10 @@ class StructuredDataManager
         $locale = trim((string) ($viewData['locale'] ?? locale()));
         $page = is_array($viewData['page'] ?? null) ? $viewData['page'] : null;
         $post = is_array($viewData['post'] ?? null) ? $viewData['post'] : null;
-        $currentUrl = $this->currentUrl();
+        $currentUrl = trim((string) ($viewData['canonicalUrl'] ?? ''));
+        if ($currentUrl === '') {
+            $currentUrl = $this->currentUrl();
+        }
         $siteUrl = $this->siteUrl($settings);
         $siteName = trim((string) ($settings['site_name'] ?? ''));
         $siteDescription = trim((string) ($settings['site_description'] ?? $settings['meta_description'] ?? ''));

@@ -41,20 +41,23 @@ final class SiteMapService
         $categories = new CategoryTranslationService();
         $entries = [];
         $seen = [];
-        $locales = I18n::getSupportedLocales();
+        $locales = $this->publishedContentLocales($pages, $posts, $categories);
 
         foreach ($locales as $locale) {
             $homePage = $siteRouting->resolveHomepagePage($locale);
-            $homeLastmod = is_array($homePage) ? $this->lastmodFromRecord($homePage) : '';
-            $this->addEntry($entries, $seen, [
-                'loc' => $this->localizedHomeUrl($locale),
-                'lastmod' => $homeLastmod,
-                'changefreq' => 'weekly',
-                'priority' => '1.0',
-                'locale' => $locale,
-                'type' => 'home',
-                'label' => \__('sitemap_entry_home', 'SiteMap'),
-            ]);
+            $homeLocale = is_array($homePage) ? trim((string) ($homePage['locale'] ?? '')) : '';
+            if (!is_array($homePage) || $homeLocale === '' || $homeLocale === $locale) {
+                $homeLastmod = is_array($homePage) ? $this->lastmodFromRecord($homePage) : '';
+                $this->addEntry($entries, $seen, [
+                    'loc' => $this->localizedHomeUrl($locale),
+                    'lastmod' => $homeLastmod,
+                    'changefreq' => 'weekly',
+                    'priority' => '1.0',
+                    'locale' => $locale,
+                    'type' => 'home',
+                    'label' => \__('sitemap_entry_home', 'SiteMap'),
+                ]);
+            }
 
             $hasPostsForLocale = false;
             foreach ($posts->all() as $post) {
@@ -173,6 +176,55 @@ final class SiteMapService
         usort($entries, static fn (array $left, array $right): int => strcmp($left['loc'], $right['loc']));
 
         return $entries;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function publishedContentLocales(
+        PageTranslationService $pages,
+        PostTranslationService $posts,
+        CategoryTranslationService $categories
+    ): array {
+        $locales = [];
+
+        foreach ($pages->all() as $page) {
+            if ($pages->resolveEffectiveStatus($page) === 'published') {
+                $locale = trim((string) ($page['locale'] ?? ''));
+                if ($locale !== '') {
+                    $locales[$locale] = true;
+                }
+            }
+        }
+
+        foreach ($posts->all() as $post) {
+            if ($posts->resolveEffectiveStatus($post) === 'published') {
+                $locale = trim((string) ($post['locale'] ?? ''));
+                if ($locale !== '') {
+                    $locales[$locale] = true;
+                }
+            }
+        }
+
+        foreach ($categories->all() as $category) {
+            if ($categories->resolveEffectiveStatus($category) === 'active') {
+                $locale = trim((string) ($category['locale'] ?? ''));
+                if ($locale !== '') {
+                    $locales[$locale] = true;
+                }
+            }
+        }
+
+        if ($locales === []) {
+            $fallback = trim((string) (FlatFile::settings()['default_language'] ?? I18n::getLocale()));
+            if ($fallback !== '') {
+                $locales[$fallback] = true;
+            }
+        }
+
+        $resolved = array_keys($locales);
+        sort($resolved, SORT_STRING);
+        return $resolved;
     }
 
     public function buildXml(): string
