@@ -13,12 +13,13 @@
     const permissions = config.permissions && typeof config.permissions === 'object' ? config.permissions : {};
     const canUploadMedia = permissions.upload === true;
     const canEditMedia = permissions.edit === true;
-    const canDeleteMedia = permissions.delete === true;
+    const canDeleteMedia = permissions.delete === true && permissions.trash === true;
     let currentFolder = config.currentFolder || null;
     let currentContext = '';
 
     let deleteMediaId = null;
     let deleteMediaPath = null;
+    let deleteMediaType = 'file';
     let renameMediaId = null;
     let renameMediaPath = null;
     let allowMediaLeave = false;
@@ -590,13 +591,13 @@
                 ? '<button type="button" class="table-action table-action-edit" data-action="media-rename" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '" title="' + escapeAttribute(getLabel('media_rename', 'Rename')) + '"><i class="fas fa-i-cursor"></i></button>'
                 : '';
             var deleteListAction = canDeleteMedia
-                ? '<button type="button" class="table-action table-action-delete" data-action="media-delete-open" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '" title="' + escapeAttribute(getLabel('delete', 'Delete')) + '"><i class="fas fa-trash"></i></button>'
+                ? '<button type="button" class="table-action table-action-delete" data-action="media-delete-open" data-type="file" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '" title="' + escapeAttribute(getLabel('delete', 'Delete')) + '"><i class="fas fa-trash"></i></button>'
                 : '';
             var renameGridAction = canEditMedia
                 ? '<button data-action="media-rename" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '"><i class="fas fa-i-cursor"></i><span>' + escapeAttribute(getLabel('media_rename', 'Rename')) + '</span></button>'
                 : '';
             var deleteGridAction = canDeleteMedia
-                ? '<div class="media-browser-actions-divider"></div><button class="action-delete" data-action="media-delete-open" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '"><i class="fas fa-trash"></i><span>' + escapeAttribute(getLabel('delete', 'Delete')) + '</span></button>'
+                ? '<div class="media-browser-actions-divider"></div><button class="action-delete" data-action="media-delete-open" data-type="file" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '"><i class="fas fa-trash"></i><span>' + escapeAttribute(getLabel('delete', 'Delete')) + '</span></button>'
                 : '';
 
             if (currentViewMode === 'list') {
@@ -1056,7 +1057,8 @@
                         openDeleteModal(
                             Number(actionEl.dataset.id || 0),
                             actionEl.dataset.name || '',
-                            actionEl.dataset.path || ''
+                            actionEl.dataset.path || '',
+                            actionEl.dataset.type || 'file'
                         );
                     }
                     break;
@@ -1606,6 +1608,14 @@
             var count = Number(directory.files_count || 0);
             var subdirCount = Number(directory.subdir_count || 0);
             var subdirNames = Array.isArray(directory.subdirs) ? directory.subdirs : [];
+            var fullDirectoryPath = currentFolder ? currentFolder + '/' + path : '';
+            var canDeleteDirectory = canDeleteMedia && fullDirectoryPath !== '';
+            var deleteListAction = canDeleteDirectory
+                ? '<button type="button" class="table-action table-action-delete" data-action="media-delete-open" data-type="directory" data-id="0" data-name="' + escapeAttribute(directoryName) + '" data-path="' + escapeAttribute(fullDirectoryPath) + '" title="' + escapeAttribute(getLabel('delete', 'Delete')) + '"><i class="fas fa-trash"></i></button>'
+                : '';
+            var deleteGridAction = canDeleteDirectory
+                ? '<div class="media-browser-actions-divider"></div><button class="action-delete" data-action="media-delete-open" data-type="directory" data-id="0" data-name="' + escapeAttribute(directoryName) + '" data-path="' + escapeAttribute(fullDirectoryPath) + '"><i class="fas fa-trash"></i><span>' + escapeAttribute(getLabel('delete', 'Delete')) + '</span></button>'
+                : '';
             var metaHtml = '';
             if (count > 0) {
                 metaHtml = count + ' ' + escapeHtml(getFileLabel(count, 'label'));
@@ -1631,6 +1641,7 @@
                     '<td>' + metaHtml + '</td>' +
                     '<td><div class="table-actions table-actions-compact">' +
                         '<button type="button" class="table-action table-action-view" data-action="media-directory-open" data-path="' + escapeAttribute(path) + '" title="' + escapeAttribute(getLabel('media_open', 'Open')) + '"><i class="fas fa-folder-open"></i></button>' +
+                        deleteListAction +
                     '</div></td>';
             } else {
                 item.innerHTML =
@@ -1639,6 +1650,7 @@
                         '<div class="media-browser-actions-list">' +
                             '<span class="media-browser-actions-item-name"><strong>' + escapeHtml(directoryName) + '</strong></span>' +
                             '<button data-action="media-directory-open" data-path="' + escapeAttribute(path) + '"><i class="fas fa-folder-open"></i><span>' + escapeAttribute(getLabel('media_open', 'Open')) + '</span></button>' +
+                            deleteGridAction +
                         '</div>' +
                     '</div>' +
                     '<div class="media-directory-item-preview"><i class="fas fa-folder"></i></div>' +
@@ -2226,13 +2238,30 @@
     /**
      * Suppression
      */
-    function openDeleteModal(id, name, path) {
+    function openDeleteModal(id, name, path, type) {
         if (!canDeleteMedia) return;
         deleteMediaId = id;
         deleteMediaPath = path;
+        deleteMediaType = type === 'directory' ? 'directory' : 'file';
         
         const fileNameEl = document.getElementById('deleteFileName');
         if (fileNameEl) fileNameEl.textContent = name;
+
+        const promptEl = document.getElementById('deletePrompt');
+        if (promptEl) {
+            promptEl.textContent = getLabel(
+                deleteMediaType === 'directory' ? 'media_directory_delete_confirm' : 'confirm_delete',
+                ''
+            );
+        }
+
+        const warningEl = document.getElementById('deleteWarning');
+        if (warningEl) {
+            warningEl.textContent = getLabel(
+                deleteMediaType === 'directory' ? 'media_directory_delete_warning' : 'delete_warning',
+                ''
+            );
+        }
 
         const deleteForm = document.getElementById('deleteForm');
         if (deleteForm) {
@@ -2252,10 +2281,14 @@
         closeModal('deleteModal');
         deleteMediaId = null;
         deleteMediaPath = null;
+        deleteMediaType = 'file';
     }
 
     function confirmDeleteMedia() {
         if (!canDeleteMedia || (!deleteMediaId && !deleteMediaPath)) return;
+
+        const operationType = deleteMediaType;
+        const operationPath = deleteMediaPath;
         
         const formData = new FormData();
         formData.append('_token', config.csrfToken);
@@ -2277,18 +2310,23 @@
         .then(data => {
             closeDeleteModal();
             if (data.success) {
-                removePendingAiPaths([deleteMediaPath]);
-                showToast(data.message || 'Fichier supprimé', 'success');
+                if (operationType === 'file') {
+                    removePendingAiPaths([operationPath]);
+                }
+                showToast(data.message || getLabel(
+                    operationType === 'directory' ? 'media_directory_delete_success' : 'delete_success',
+                    ''
+                ), 'success');
                 loadDirectories(currentFolder);
                 loadFiles(currentFolder, currentContext);
                 updateTabCount(currentFolder);
             } else {
-                showToast(data.message || 'Erreur', 'error');
+                showToast(data.message || getLabel('delete_error', ''), 'error');
             }
         })
         .catch(error => {
             closeDeleteModal();
-            showToast('Erreur réseau', 'error');
+            showToast(getLabel('delete_error', ''), 'error');
         });
     }
 

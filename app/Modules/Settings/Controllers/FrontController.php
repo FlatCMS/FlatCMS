@@ -90,6 +90,33 @@ class FrontController extends BaseController
         $lines[] = __('llms_source_sitemap', 'Settings', ['url' => $sitemapUrl]);
         $lines[] = __('llms_source_robots', 'Settings', ['url' => $robotsUrl]);
 
+        $publishedEntries = array_values(array_filter(
+            (new SiteMapService())->buildEntries(),
+            static fn (array $entry): bool => (string) ($entry['locale'] ?? '') === $locale
+                && in_array((string) ($entry['type'] ?? ''), ['page', 'post', 'category'], true)
+        ));
+        if ($publishedEntries !== []) {
+            $lines[] = '';
+            $lines[] = __('llms_content_heading', 'Settings');
+            foreach (['page' => 'pages', 'post' => 'posts', 'category' => 'categories'] as $type => $labelKey) {
+                $typeEntries = array_values(array_filter(
+                    $publishedEntries,
+                    static fn (array $entry): bool => (string) ($entry['type'] ?? '') === $type
+                ));
+                if ($typeEntries === []) {
+                    continue;
+                }
+
+                $lines[] = __('llms_content_' . $labelKey, 'Settings');
+                foreach ($typeEntries as $entry) {
+                    $lines[] = __('llms_content_item', 'Settings', [
+                        'title' => trim((string) ($entry['label'] ?? '')),
+                        'url' => trim((string) ($entry['loc'] ?? '')),
+                    ]);
+                }
+            }
+        }
+
         I18n::setLocale($previousLocale);
         I18n::load('Settings');
 

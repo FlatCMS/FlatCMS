@@ -169,5 +169,9 @@
     "media_rename_extension_mismatch": "L’estensione del file non può essere modificata durante la rinomina.",
   "media_operation_failed": "L’operazione non è riuscita. Nessuna modifica incompleta è stata conservata.",
   "media_operation_rollback_failed": "L’operazione non è riuscita e il ripristino automatico non è stato completato.",
-  "media_directory_delete_disabled": "L’eliminazione delle cartelle è disattivata finché non sarà disponibile un ripristino completo dal cestino."
+  "media_directory_delete_disabled": "L’eliminazione delle cartelle è disattivata finché non sarà disponibile un ripristino completo dal cestino.",
+  "media_directory_delete_confirm": "Spostare questa cartella e tutto il suo contenuto nel cestino?",
+  "media_directory_delete_warning": "La cartella, le sottocartelle e i file potranno essere ripristinati insieme finché non verranno eliminati definitivamente.",
+  "media_directory_delete_success": "Cartella spostata nel cestino.",
+  "media_trash_unavailable": "Il modulo Cestino deve essere attivato per eliminare i media."
 }

@@ -169,5 +169,9 @@
     "media_rename_extension_mismatch": "La extensión del archivo no se puede cambiar al renombrarlo.",
   "media_operation_failed": "La operación ha fallado. No se ha conservado ningún cambio incompleto.",
   "media_operation_rollback_failed": "La operación ha fallado y no se pudo completar la restauración automática.",
-  "media_directory_delete_disabled": "La eliminación de carpetas está desactivada hasta que exista una restauración completa desde la papelera."
+  "media_directory_delete_disabled": "La eliminación de carpetas está desactivada hasta que exista una restauración completa desde la papelera.",
+  "media_directory_delete_confirm": "¿Enviar esta carpeta y todo su contenido a la papelera?",
+  "media_directory_delete_warning": "La carpeta, sus subcarpetas y sus archivos podrán restaurarse juntos mientras no se eliminen definitivamente.",
+  "media_directory_delete_success": "Carpeta enviada a la papelera.",
+  "media_trash_unavailable": "El módulo Papelera debe estar activado para eliminar medios."
 }

@@ -169,5 +169,9 @@
     "media_rename_extension_mismatch": "L’extension du fichier ne peut pas être modifiée lors du renommage.",
   "media_operation_failed": "L’opération a échoué. Aucun changement incomplet n’a été conservé.",
   "media_operation_rollback_failed": "L’opération a échoué et la restauration automatique n’a pas pu être terminée.",
-  "media_directory_delete_disabled": "La suppression des dossiers est désactivée tant qu’une restauration complète depuis la corbeille n’est pas disponible."
+  "media_directory_delete_disabled": "La suppression des dossiers est désactivée tant qu’une restauration complète depuis la corbeille n’est pas disponible.",
+  "media_directory_delete_confirm": "Envoyer ce dossier et tout son contenu dans la corbeille ?",
+  "media_directory_delete_warning": "Le dossier, ses sous-dossiers et ses fichiers pourront être restaurés ensemble tant qu’ils ne sont pas supprimés définitivement.",
+  "media_directory_delete_success": "Dossier envoyé dans la corbeille.",
+  "media_trash_unavailable": "Le module Corbeille doit être activé pour supprimer des médias."
 }

@@ -14,16 +14,6 @@ $themeCustomizationService = new \App\Modules\Themes\Services\ThemeCustomization
 $themeCustomizationAsset = $themeCustomizationService->assetForActiveTheme('frontend', $settings ?? null);
 $promoBannerService = new \App\Modules\Settings\Services\PromoBannerService();
 $promoBannerAsset = $promoBannerService->assetForSettings($settings ?? null);
-$structuredDataManager = new \App\Services\StructuredData\StructuredDataManager();
-$structuredDataPayload = $structuredDataManager->payloadForView([
-    'settings' => $settings ?? [],
-    'locale' => $locale ?? locale(),
-    'page' => $page ?? null,
-    'post' => $post ?? null,
-    'pageTitle' => $pageTitle ?? '',
-    'postCategories' => $postCategories ?? [],
-    'currentCategory' => $currentCategory ?? null,
-]);
 $siteFavicon = trim((string) ($settings['site_favicon'] ?? ''));
 $siteFaviconUrl = $siteFavicon !== '' ? site_media_url($siteFavicon) : '';
 if ($siteFaviconUrl === '') {
@@ -55,6 +45,30 @@ if ($documentTitle === '') {
 ) {
     $documentTitle .= ' - ' . $siteName;
 }
+$seoMetadata = (new \App\Services\Seo\SeoMetadataService())->build([
+    'settings' => $settings ?? [],
+    'locale' => $locale ?? locale(),
+    'page' => $page ?? null,
+    'post' => $post ?? null,
+    'currentCategory' => $currentCategory ?? null,
+    'sitemap_page' => $sitemap_page ?? false,
+    'pageTitle' => $pageTitleValue,
+    'metaDescription' => $metaDescription,
+]);
+$seoHeadHtml = (new \App\Services\Seo\SeoHeadRenderer())->render($seoMetadata);
+$canonicalUrl = trim((string) ($seoMetadata['canonical_url'] ?? ''));
+$contentLocale = trim((string) ($seoMetadata['content_locale'] ?? ($locale ?? locale())));
+$structuredDataManager = new \App\Services\StructuredData\StructuredDataManager();
+$structuredDataPayload = $structuredDataManager->payloadForView([
+    'settings' => $settings ?? [],
+    'locale' => $contentLocale,
+    'page' => $page ?? null,
+    'post' => $post ?? null,
+    'pageTitle' => $pageTitle ?? '',
+    'postCategories' => $postCategories ?? [],
+    'currentCategory' => $currentCategory ?? null,
+    'canonicalUrl' => $canonicalUrl,
+]);
 ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -62,6 +76,7 @@ if ($documentTitle === '') {
     <meta name="author" content="Alain BROYE">
     <meta name="csrf-token" content="<?= e((string) ($csrf_token ?? '')) ?>">
     <meta name="description" content="<?= e($metaDescription) ?>">
+<?= $seoHeadHtml !== '' ? $seoHeadHtml . PHP_EOL : '' ?>
 <?php if ($metaKeywords !== ''): ?>
     <meta name="keywords" content="<?= e($metaKeywords) ?>">
 <?php endif; ?>

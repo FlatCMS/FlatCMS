@@ -29,7 +29,11 @@ final class SiteMapService
      *     priority:string,
      *     locale:string,
      *     type:string,
-     *     label:string
+     *     label:string,
+     *     translation_key:string,
+     *     source_locale:string,
+     *     alternates:array<string,string>,
+     *     x_default:string
      * }>
      */
     public function buildEntries(): array
@@ -42,6 +46,7 @@ final class SiteMapService
         $entries = [];
         $seen = [];
         $locales = $this->publishedContentLocales($pages, $posts, $categories);
+        $defaultLocale = trim((string) ($settings['default_language'] ?? I18n::getLocale()));
 
         foreach ($locales as $locale) {
             $homePage = $siteRouting->resolveHomepagePage($locale);
@@ -56,6 +61,8 @@ final class SiteMapService
                     'locale' => $locale,
                     'type' => 'home',
                     'label' => \__('sitemap_entry_home', 'SiteMap'),
+                    'translation_key' => 'home',
+                    'source_locale' => $defaultLocale,
                 ]);
             }
 
@@ -79,6 +86,8 @@ final class SiteMapService
                     'locale' => $locale,
                     'type' => 'blog',
                     'label' => \__('sitemap_entry_blog', 'SiteMap'),
+                    'translation_key' => 'blog',
+                    'source_locale' => $defaultLocale,
                 ]);
             }
         }
@@ -112,6 +121,8 @@ final class SiteMapService
                 'locale' => $locale,
                 'type' => 'page',
                 'label' => $label,
+                'translation_key' => 'page:' . trim((string) ($page['translation_group'] ?? $page['id'] ?? $slug)),
+                'source_locale' => trim((string) ($page['source_locale'] ?? $locale)),
             ]);
         }
 
@@ -139,6 +150,8 @@ final class SiteMapService
                 'locale' => $locale,
                 'type' => 'post',
                 'label' => $label,
+                'translation_key' => 'post:' . trim((string) ($post['translation_group'] ?? $post['id'] ?? $slug)),
+                'source_locale' => trim((string) ($post['source_locale'] ?? $locale)),
             ]);
         }
 
@@ -170,12 +183,14 @@ final class SiteMapService
                 'locale' => $locale,
                 'type' => 'category',
                 'label' => $label,
+                'translation_key' => 'category:' . trim((string) ($category['translation_group'] ?? $category['id'] ?? $slug)),
+                'source_locale' => trim((string) ($category['source_locale'] ?? $locale)),
             ]);
         }
 
         usort($entries, static fn (array $left, array $right): int => strcmp($left['loc'], $right['loc']));
 
-        return $entries;
+        return $this->attachAlternates($entries);
     }
 
     /**
@@ -232,11 +247,22 @@ final class SiteMapService
         $entries = $this->buildEntries();
         $xml = [];
         $xml[] = '<?xml version="1.0" encoding="UTF-8"?>';
-        $xml[] = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+        $xml[] = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">';
 
         foreach ($entries as $entry) {
             $xml[] = '  <url>';
             $xml[] = '    <loc>' . $this->xml((string) ($entry['loc'] ?? '')) . '</loc>';
+
+            $alternates = is_array($entry['alternates'] ?? null) ? $entry['alternates'] : [];
+            foreach ($alternates as $locale => $url) {
+                $xml[] = '    <xhtml:link rel="alternate" hreflang="' . $this->xml((string) $locale)
+                    . '" href="' . $this->xml((string) $url) . '" />';
+            }
+            $xDefault = trim((string) ($entry['x_default'] ?? ''));
+            if ($xDefault !== '') {
+                $xml[] = '    <xhtml:link rel="alternate" hreflang="x-default" href="'
+                    . $this->xml($xDefault) . '" />';
+            }
 
             $lastmod = trim((string) ($entry['lastmod'] ?? ''));
             if ($lastmod !== '') {
@@ -555,6 +581,48 @@ final class SiteMapService
     }
 
     /**
+     * @param array<int, array<string, mixed>> $entries
+     * @return array<int, array<string, mixed>>
+     */
+    private function attachAlternates(array $entries): array
+    {
+        $groups = [];
+        foreach ($entries as $entry) {
+            $key = trim((string) ($entry['translation_key'] ?? ''));
+            $locale = trim((string) ($entry['locale'] ?? ''));
+            $loc = trim((string) ($entry['loc'] ?? ''));
+            if ($key === '' || $locale === '' || $loc === '') {
+                continue;
+            }
+
+            $groups[$key]['urls'][$locale] = $loc;
+            $sourceLocale = trim((string) ($entry['source_locale'] ?? ''));
+            if ($sourceLocale !== '' && empty($groups[$key]['source_locale'])) {
+                $groups[$key]['source_locale'] = $sourceLocale;
+            }
+        }
+
+        foreach ($groups as &$group) {
+            if (is_array($group['urls'] ?? null)) {
+                ksort($group['urls'], SORT_STRING);
+            }
+        }
+        unset($group);
+
+        foreach ($entries as &$entry) {
+            $key = trim((string) ($entry['translation_key'] ?? ''));
+            $group = is_array($groups[$key] ?? null) ? $groups[$key] : [];
+            $urls = is_array($group['urls'] ?? null) ? $group['urls'] : [];
+            $sourceLocale = trim((string) ($group['source_locale'] ?? $entry['source_locale'] ?? ''));
+            $entry['alternates'] = $urls;
+            $entry['x_default'] = trim((string) ($urls[$sourceLocale] ?? $entry['loc'] ?? ''));
+        }
+        unset($entry);
+
+        return $entries;
+    }
+
+    /**
      * @param array<int, array{
      *     loc:string,
      *     lastmod:string,
@@ -562,7 +630,9 @@ final class SiteMapService
      *     priority:string,
      *     locale:string,
      *     type:string,
-     *     label:string
+     *     label:string,
+     *     translation_key?:string,
+     *     source_locale?:string
      * }> $entries
      * @param array<string, bool> $seen
      * @param array{
@@ -572,7 +642,9 @@ final class SiteMapService
      *     priority:string,
      *     locale:string,
      *     type:string,
-     *     label:string
+     *     label:string,
+     *     translation_key?:string,
+     *     source_locale?:string
      * } $entry
      */
     private function addEntry(array &$entries, array &$seen, array $entry): void

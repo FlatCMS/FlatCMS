@@ -14,9 +14,10 @@ $totalFiles = $totalFiles ?? 0;
 $directoryTree = $directoryTree ?? ['name' => 'uploads', 'path' => '', 'type' => 'directory', 'count' => 0, 'children' => []];
 $publicUrl = $publicUrl ?? '';
 $aiAgentEnabled = (bool) ($aiAgentEnabled ?? false);
+$trashEnabled = (bool) ($trashEnabled ?? false);
 $canUploadMedia = can('media.upload');
 $canEditMedia = can('media.edit');
-$canDeleteMedia = can('media.delete');
+$canDeleteMedia = can('media.delete') && $trashEnabled;
 
 // Dossiers réservés (non affichés) - gérés par d'autres modules
 $reservedFolders = ['cache', 'files', 'logo', 'media', 'personal'];
@@ -69,6 +70,7 @@ $mediaConfig = [
         'upload' => $canUploadMedia,
         'edit' => $canEditMedia,
         'delete' => $canDeleteMedia,
+        'trash' => $trashEnabled,
     ],
     'folders' => $publicFolders,
     'directoryTree' => $directoryTree,
@@ -452,10 +454,10 @@ $uploadAccept = $publicFolders['images']['accept'] ?? 'image/*';
             <button type="button" class="modal-close" data-modal-close="deleteModal">&times;</button>
         </div>
         <div class="modal-body media-modal-body-center">
-            <p class="media-modal-text">
+            <p class="media-modal-text" id="deletePrompt">
                 <?= __('confirm_delete', 'Media') ?>
             </p>
-            <p class="media-modal-warning"><?= __('delete_warning', 'Media') ?></p>
+            <p class="media-modal-warning" id="deleteWarning"><?= __('delete_warning', 'Media') ?></p>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-modal-close="deleteModal"><?= __('cancel', 'Core') ?></button>

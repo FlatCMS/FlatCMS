@@ -169,5 +169,9 @@
     "media_rename_extension_mismatch": "The file extension cannot be changed while renaming.",
   "media_operation_failed": "The operation failed. No incomplete change was kept.",
   "media_operation_rollback_failed": "The operation failed and the automatic rollback could not be completed.",
-  "media_directory_delete_disabled": "Folder deletion is disabled until complete Trash restoration is available."
+  "media_directory_delete_disabled": "Folder deletion is disabled until complete Trash restoration is available.",
+  "media_directory_delete_confirm": "Send this folder and all its contents to Trash?",
+  "media_directory_delete_warning": "The folder, its subfolders, and its files can be restored together until they are permanently deleted.",
+  "media_directory_delete_success": "Folder moved to Trash.",
+  "media_trash_unavailable": "The Trash module must be enabled to delete media."
 }

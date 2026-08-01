@@ -169,5 +169,9 @@
     "media_rename_extension_mismatch": "Die Dateierweiterung kann beim Umbenennen nicht geändert werden.",
   "media_operation_failed": "Der Vorgang ist fehlgeschlagen. Es wurden keine unvollständigen Änderungen beibehalten.",
   "media_operation_rollback_failed": "Der Vorgang ist fehlgeschlagen und die automatische Wiederherstellung konnte nicht abgeschlossen werden.",
-  "media_directory_delete_disabled": "Das Löschen von Ordnern ist deaktiviert, bis eine vollständige Wiederherstellung aus dem Papierkorb verfügbar ist."
+  "media_directory_delete_disabled": "Das Löschen von Ordnern ist deaktiviert, bis eine vollständige Wiederherstellung aus dem Papierkorb verfügbar ist.",
+  "media_directory_delete_confirm": "Diesen Ordner und seinen gesamten Inhalt in den Papierkorb verschieben?",
+  "media_directory_delete_warning": "Der Ordner, seine Unterordner und Dateien können gemeinsam wiederhergestellt werden, solange sie nicht endgültig gelöscht wurden.",
+  "media_directory_delete_success": "Ordner in den Papierkorb verschoben.",
+  "media_trash_unavailable": "Das Papierkorb-Modul muss aktiviert sein, um Medien zu löschen."
 }

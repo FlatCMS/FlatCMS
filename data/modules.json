@@ -55,6 +55,10 @@
         "enabled": true,
         "sidebar_visible": true
     },
+    "SiteMap": {
+        "enabled": true,
+        "sidebar_visible": true
+    },
     "Languages": {
         "enabled": true,
         "sidebar_visible": true

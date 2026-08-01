@@ -169,5 +169,9 @@
   "media_rename_extension_mismatch": "A extensão do ficheiro não pode ser alterada durante a mudança de nome.",
   "media_operation_failed": "A operação falhou. Nenhuma alteração incompleta foi mantida.",
   "media_operation_rollback_failed": "A operação falhou e a reposição automática não pôde ser concluída.",
-  "media_directory_delete_disabled": "A eliminação de pastas está desativada até estar disponível uma reposição completa a partir do lixo."
+  "media_directory_delete_disabled": "A eliminação de pastas está desativada até estar disponível uma reposição completa a partir do lixo.",
+  "media_directory_delete_confirm": "Enviar esta pasta e todo o seu conteúdo para o lixo?",
+  "media_directory_delete_warning": "A pasta, as subpastas e os ficheiros poderão ser restaurados em conjunto enquanto não forem eliminados definitivamente.",
+  "media_directory_delete_success": "Pasta enviada para o lixo.",
+  "media_trash_unavailable": "O módulo Lixo deve estar ativado para eliminar ficheiros multimédia."
 }

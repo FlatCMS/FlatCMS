@@ -13,9 +13,10 @@ $stats = $stats ?? [];
 $folderConfig = $folderConfig ?? [];
 $publicUrl = $publicUrl ?? '';
 $aiAgentEnabled = (bool) ($aiAgentEnabled ?? false);
+$trashEnabled = (bool) ($trashEnabled ?? false);
 $canUploadMedia = can('media.upload');
 $canEditMedia = can('media.edit');
-$canDeleteMedia = can('media.delete');
+$canDeleteMedia = can('media.delete') && $trashEnabled;
 
 // Couleurs par dossier
 $folderColors = [
@@ -38,6 +39,7 @@ $mediaConfig = [
         'upload' => $canUploadMedia,
         'edit' => $canEditMedia,
         'delete' => $canDeleteMedia,
+        'trash' => $trashEnabled,
     ],
     'currentFolder' => $folder,
     'folderConfig' => $folderConfig,
@@ -186,7 +188,7 @@ $mediaConfigJson = e(json_encode($mediaConfig));
                             <i class="fas fa-clipboard"></i>
                         </button>
                         <?php if ($canDeleteMedia): ?>
-                            <button type="button" class="media-item-action delete" data-action="media-delete-open" data-id="<?= $file['id'] ?? 0 ?>" data-name="<?= e($file['original_name'] ?? '') ?>" data-path="<?= e($file['path'] ?? '') ?>" title="<?= __('delete', 'Core') ?>">
+                            <button type="button" class="media-item-action delete" data-action="media-delete-open" data-type="file" data-id="<?= $file['id'] ?? 0 ?>" data-name="<?= e($file['original_name'] ?? '') ?>" data-path="<?= e($file['path'] ?? '') ?>" title="<?= __('delete', 'Core') ?>">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         <?php endif; ?>
@@ -276,10 +278,10 @@ $mediaConfigJson = e(json_encode($mediaConfig));
             <div class="media-delete-icon-box">
                 <i class="fas fa-trash-alt fa-2x media-delete-icon"></i>
             </div>
-            <p class="media-modal-text">
+            <p class="media-modal-text" id="deletePrompt">
                 <?= __('confirm_delete', 'Media') ?>
             </p>
-            <p class="media-modal-warning"><?= __('delete_warning', 'Media') ?></p>
+            <p class="media-modal-warning" id="deleteWarning"><?= __('delete_warning', 'Media') ?></p>
         </div>
         <form id="deleteForm" method="POST">
             <?= csrf_field() ?>

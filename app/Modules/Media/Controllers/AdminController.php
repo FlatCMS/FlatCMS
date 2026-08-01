@@ -54,6 +54,7 @@ class AdminController extends BaseController
             'totalFiles' => $this->mediaModel->getTotalFileCount(),
             'publicUrl' => url(''),
             'aiAgentEnabled' => $this->isAiIndexAvailable(),
+            'trashEnabled' => $this->isTrashAvailable(),
         ], 'admin.main');
     }
 
@@ -88,6 +89,7 @@ class AdminController extends BaseController
             'foldersConfig' => $foldersConfig,
             'publicUrl' => url(''),
             'aiAgentEnabled' => $this->isAiIndexAvailable(),
+            'trashEnabled' => $this->isTrashAvailable(),
         ], 'admin.main');
     }
 
@@ -368,7 +370,11 @@ class AdminController extends BaseController
         }
 
         $folder = $media['folder'] ?? 'images';
-        $trash = new TrashService();
+        $trash = $this->trashService();
+        if ($trash === null) {
+            $this->respondDeleteError(__('media_trash_unavailable', 'Media'), $folder);
+            return;
+        }
         $archived = $trash->archiveMedia($media, $this->resolveDeletedBy());
         if (is_array($archived)) {
             hook_run('media.deleted', $media);
@@ -412,37 +418,33 @@ class AdminController extends BaseController
             $folder = 'images';
         }
 
+        $trash = $this->trashService();
+        if ($trash === null) {
+            $this->respondDeleteError(__('media_trash_unavailable', 'Media'), $folder);
+            return;
+        }
+
+        $isDirectory = $this->mediaModel->isDirectoryPath($path);
         $media = $this->mediaModel->findByPath($path);
-        if (!is_array($media)) {
-            $message = $this->mediaModel->isDirectoryPath($path)
-                ? __('media_directory_delete_disabled', 'Media')
-                : __('media_not_found', 'Media');
-            if ($this->request->isAjax()) {
-                json_error($message);
-            }
-            $this->session->flash('error', $message);
-            $this->redirect(url('/admin/media/folder/' . $folder));
-            return;
-        }
-
-        $trash = new TrashService();
-        $archived = $trash->archiveMedia($media, $this->resolveDeletedBy());
+        $archived = $isDirectory
+            ? $trash->archiveMediaDirectory($path, $this->resolveDeletedBy())
+            : $trash->archiveMediaPath($path, $this->resolveDeletedBy());
         if (!is_array($archived)) {
-            if ($this->request->isAjax()) {
-                json_error(__('delete_error', 'Media'));
-            }
-            $this->session->flash('error', __('delete_error', 'Media'));
-            $this->redirect(url('/admin/media/folder/' . $folder));
+            $this->respondDeleteError(__('delete_error', 'Media'), $folder);
             return;
         }
 
-        hook_run('media.deleted', $media);
+        hook_run('media.deleted', is_array($media) ? $media : [
+            'path' => $path,
+            'folder' => $folder,
+            'type' => $isDirectory ? 'directory' : 'file',
+        ]);
 
         if ($this->request->isAjax()) {
-            json_success(__('delete_success', 'Media'));
+            json_success($isDirectory ? __('media_directory_delete_success', 'Media') : __('delete_success', 'Media'));
         }
         
-        $this->session->flash('success', __('delete_success', 'Media'));
+        $this->session->flash('success', $isDirectory ? __('media_directory_delete_success', 'Media') : __('delete_success', 'Media'));
         $this->redirect(url('/admin/media/folder/' . $folder));
     }
 
@@ -464,7 +466,12 @@ class AdminController extends BaseController
             return;
         }
 
-        $trash = new TrashService();
+        $trash = $this->trashService();
+        if ($trash === null) {
+            $this->session->flash('error', __('media_trash_unavailable', 'Media'));
+            $this->redirect(url('/admin/media/folder/' . $folder));
+            return;
+        }
         $deletedBy = $this->resolveDeletedBy();
         $successCount = 0;
         $errorCount = 0;
@@ -505,6 +512,15 @@ class AdminController extends BaseController
         }
 
         return trim((string) ($user['name'] ?? $user['email'] ?? ''));
+    }
+
+    private function respondDeleteError(string $message, string $folder): void
+    {
+        if ($this->request->isAjax()) {
+            json_error($message);
+        }
+        $this->session->flash('error', $message);
+        $this->redirect(url('/admin/media/folder/' . $folder));
     }
 
     /**
@@ -688,6 +704,21 @@ class AdminController extends BaseController
         ], BASE_PATH . '/data/modules.json');
 
         return $manager->isEnabled('AiAgent');
+    }
+
+    private function isTrashAvailable(): bool
+    {
+        $manager = new ModuleManager([
+            BASE_PATH . '/app/Modules',
+            BASE_PATH . '/app/Extensions',
+        ], BASE_PATH . '/data/modules.json');
+
+        return $manager->isEnabled('Trash');
+    }
+
+    private function trashService(): ?TrashService
+    {
+        return $this->isTrashAvailable() ? new TrashService() : null;
     }
 
     /**
