@@ -124,5 +124,6 @@
         "url": "The :field must be a valid URL."
     },
     "admin_tour_step_branding_title": "Site identity",
-    "admin_tour_step_branding_content": "This area shows the active logo, site name, and slogan. It also reflects the branding currently configured for the admin."
+    "admin_tour_step_branding_content": "This area shows the active logo, site name, and slogan. It also reflects the branding currently configured for the admin.",
+    "status": "Status"
 }

@@ -73,6 +73,7 @@ $pagesLocaleFlag = static function (string $locale): string {
 
     return html_entity_decode('&#' . $first . ';&#' . $second . ';', ENT_QUOTES | ENT_HTML5, 'UTF-8');
 };
+
 ?>
 
 <link rel="stylesheet" href="<?= module_asset('Pages', 'css/pages.css') ?>">
@@ -263,11 +264,10 @@ $pagesLocaleFlag = static function (string $locale): string {
                                     name="translations[<?= e($localeCode) ?>][content]"
                                     class="form-input"
                                     rows="15"
-                                    data-page-suneditor
-                                    data-suneditor-media-context="<?= e($pagesMediaContext($tabValues)) ?>"
-                                    data-suneditor-toolbar-expand="<?= e($pagesPanelLabel($panelLabels, 'suneditor_toolbar_expand', __('suneditor_toolbar_expand', 'Pages'))) ?>"
-                                    data-suneditor-toolbar-collapse="<?= e($pagesPanelLabel($panelLabels, 'suneditor_toolbar_collapse', __('suneditor_toolbar_collapse', 'Pages'))) ?>"
-                                    data-suneditor-media-modal-error="<?= e($pagesPanelLabel($panelLabels, 'suneditor_media_modal_unavailable', __('suneditor_media_modal_unavailable', 'Pages'))) ?>"
+                                    data-ckeditor
+                                    data-ckeditor-locale="<?= e($localeCode) ?>"
+                                    data-media-context="<?= e($pagesMediaContext($tabValues)) ?>"
+                                    data-media-modal-error="<?= e($pagesPanelLabel($panelLabels, 'suneditor_media_modal_unavailable', __('suneditor_media_modal_unavailable', 'Pages'))) ?>"
                                 ><?= e((string) ($tabValues['content'] ?? '')) ?></textarea>
                             </div>
                         </section>
@@ -336,11 +336,10 @@ $pagesLocaleFlag = static function (string $locale): string {
                             name="content"
                             class="form-input"
                             rows="15"
-                            data-page-suneditor
-                            data-suneditor-media-context="<?= e($pagesMediaContext(['slug' => old('slug', $page['slug'] ?? '')])) ?>"
-                            data-suneditor-toolbar-expand="<?= e($pageLabel('suneditor_toolbar_expand', __('suneditor_toolbar_expand', 'Pages'))) ?>"
-                            data-suneditor-toolbar-collapse="<?= e($pageLabel('suneditor_toolbar_collapse', __('suneditor_toolbar_collapse', 'Pages'))) ?>"
-                            data-suneditor-media-modal-error="<?= e($pageLabel('suneditor_media_modal_unavailable', __('suneditor_media_modal_unavailable', 'Pages'))) ?>"
+                            data-ckeditor
+                            data-ckeditor-locale="<?= e($activeLocale !== '' ? $activeLocale : locale()) ?>"
+                            data-media-context="<?= e($pagesMediaContext(['slug' => old('slug', $page['slug'] ?? '')])) ?>"
+                            data-media-modal-error="<?= e($pageLabel('suneditor_media_modal_unavailable', __('suneditor_media_modal_unavailable', 'Pages'))) ?>"
                         ><?= e(old('content', $page['content'] ?? '')) ?></textarea>
                     </div>
                 </div>
@@ -482,7 +481,6 @@ $pagesLocaleFlag = static function (string $locale): string {
     </div>
 </form>
 
-<script src="<?= module_asset('Pages', 'js/pages-suneditor.js') ?>"></script>
 <script src="<?= module_asset('Pages', 'js/pages.js') ?>"></script>
 
 <?php

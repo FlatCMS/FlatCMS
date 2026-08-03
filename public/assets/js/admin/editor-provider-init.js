@@ -6,6 +6,14 @@
  * See LICENSE, LICENSING.md and TRADEMARK.md.
  */
 
+/**
+ * Rich-text provider dispatcher.
+ *
+ * The default provider is CKEditor 5 (GPL), loaded globally through
+ * ckeditor-provider-init.js which auto-bootstraps every editable textarea. When
+ * TINYMCE_ENABLED is on, the TinyMCE Cloud build is used instead and the
+ * CKEditor provider is disabled for the current page.
+ */
 (function() {
     'use strict';
 
@@ -31,17 +39,26 @@
 
     // Builders manage their own editor lifecycle per widget field.
     if (isBuilderRoute || hasBuilderConfigNode || isBuilderMode) {
+        if (window.FlatCMSCKEditor && typeof window.FlatCMSCKEditor.setProviderDisabled === 'function') {
+            window.FlatCMSCKEditor.setProviderDisabled(true);
+        }
         return;
+    }
+
+    const providerRaw = String(root.getAttribute('data-wysiwyg-provider') || 'ckeditor').toLowerCase();
+    const provider = providerRaw === 'tinymce' ? 'tinymce' : 'ckeditor';
+
+    if (provider !== 'tinymce') {
+        // CKEditor 5 auto-bootstraps through ckeditor-provider-init.js.
+        return;
+    }
+
+    if (window.FlatCMSCKEditor && typeof window.FlatCMSCKEditor.setProviderDisabled === 'function') {
+        window.FlatCMSCKEditor.setProviderDisabled(true);
     }
 
     const selector = 'textarea.form-input:not([data-no-editor])';
     const candidates = Array.from(document.querySelectorAll(selector));
-    if (!candidates.length) {
-        return;
-    }
-
-    const providerRaw = String(root.getAttribute('data-wysiwyg-provider') || 'suneditor').toLowerCase();
-    const provider = providerRaw === 'tinymce' ? 'tinymce' : 'suneditor';
 
     function parseMediaConfig() {
         const modal = document.getElementById('mediaModal');
@@ -193,75 +210,22 @@
                 });
             });
         } catch (error) {
-            console.warn('FlatCMS: TinyMCE bootstrap failed, fallback to SunEditor.', error);
-            return false;
-        }
-
-        return true;
-    }
-
-    function initSunEditor(textareas) {
-        const sun = window.FlatCMSSunEditor;
-        if (!sun || typeof sun.create !== 'function') {
-            return false;
-        }
-
-        markAsExternalEditor(textareas);
-
-        try {
-            textareas.forEach((textarea) => {
-                if (!(textarea instanceof HTMLTextAreaElement)) {
-                    return;
-                }
-
-                if (textarea.getAttribute('data-editor-instance-initialized') === '1') {
-                    return;
-                }
-
-                if (textarea.__flatcmsSunEditorHandle && typeof textarea.__flatcmsSunEditorHandle.destroy === 'function') {
-                    textarea.__flatcmsSunEditorHandle.destroy();
-                }
-
-                textarea.__flatcmsSunEditorHandle = sun.create(textarea, {
-                    minHeight: '220px',
-                    height: 320,
-                    applyAccordion: true,
-                    onInput: function(nextHtml) {
-                        textarea.value = String(nextHtml || '');
-                    },
-                    onChange: function(nextHtml) {
-                        textarea.value = String(nextHtml || '');
-                    },
-                });
-
-                if (!textarea.__flatcmsSunEditorHandle) {
-                    return;
-                }
-
-                textarea.setAttribute('data-editor-instance-initialized', '1');
-            });
-        } catch (error) {
-            console.warn('FlatCMS: SunEditor bootstrap failed.', error);
-            return false;
-        }
-
-        return true;
-    }
-
-    if (provider === 'tinymce') {
-        const initialized = initTinyMce(candidates);
-        if (!initialized) {
-            const fallbackInitialized = initSunEditor(candidates);
-            if (!fallbackInitialized) {
-                clearExternalEditorMarks(candidates);
+            console.warn('FlatCMS: TinyMCE bootstrap failed, falling back to CKEditor.', error);
+            clearExternalEditorMarks(textareas);
+            if (window.FlatCMSCKEditor && typeof window.FlatCMSCKEditor.setProviderDisabled === 'function') {
+                window.FlatCMSCKEditor.setProviderDisabled(false);
             }
+            if (window.FlatCMSCKEditor && typeof window.FlatCMSCKEditor.bootstrap === 'function') {
+                window.FlatCMSCKEditor.bootstrap();
+            }
+            return false;
         }
-        return;
+
+        return true;
     }
 
-    const initialized = initSunEditor(candidates);
+    const initialized = initTinyMce(candidates);
     if (!initialized) {
         clearExternalEditorMarks(candidates);
     }
-
 })();

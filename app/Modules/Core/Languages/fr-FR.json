@@ -124,5 +124,6 @@
         "url": "Le champ :field doit être une URL valide."
     },
     "admin_tour_step_branding_title": "Identité du site",
-    "admin_tour_step_branding_content": "Cette zone affiche le logo, le nom du site et le slogan actifs. Elle reflète aussi le branding configuré pour l'administration."
+    "admin_tour_step_branding_content": "Cette zone affiche le logo, le nom du site et le slogan actifs. Elle reflète aussi le branding configuré pour l'administration.",
+    "status": "Statut"
 }

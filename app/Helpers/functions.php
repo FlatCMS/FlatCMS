@@ -1563,6 +1563,91 @@ if (!function_exists('menu_front_render_icon_html')) {
     }
 }
 
+if (!function_exists('menu_front_normalize_path')) {
+    function menu_front_normalize_path(string $url): string
+    {
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        if ($path === '') {
+            return '/';
+        }
+
+        $path = '/' . ltrim(rawurldecode($path), '/');
+        $path = preg_replace('#/+#', '/', $path) ?: '/';
+
+        return $path === '/' ? '/' : rtrim($path, '/');
+    }
+}
+
+if (!function_exists('menu_front_canonical_route_path')) {
+    /**
+     * Return the functional route path independently of its optional locale
+     * prefix. A neutral internal link and its localized counterpart must mark
+     * the same menu item as current.
+     */
+    function menu_front_canonical_route_path(string $url): string
+    {
+        $path = menu_front_normalize_path($url);
+        if ($path === '/') {
+            return '/';
+        }
+
+        $segments = explode('/', ltrim($path, '/'));
+        $firstSegment = (string) ($segments[0] ?? '');
+        static $supportedLocales = null;
+        if (!is_array($supportedLocales)) {
+            $supportedLocales = class_exists(\App\Core\I18n::class)
+                ? \App\Core\I18n::getSupportedLocales()
+                : [];
+        }
+
+        if (in_array($firstSegment, $supportedLocales, true)) {
+            array_shift($segments);
+            $path = '/' . implode('/', $segments);
+        }
+
+        return menu_front_normalize_path($path);
+    }
+}
+
+if (!function_exists('menu_front_is_current_url')) {
+    function menu_front_is_current_url(string $url): bool
+    {
+        if ($url === '' || preg_match('#^(?:https?:)?//#i', $url) === 1) {
+            return false;
+        }
+
+        $current = menu_front_canonical_route_path((string) ($_SERVER['REQUEST_URI'] ?? '/'));
+        $target = menu_front_canonical_route_path($url);
+
+        return $current === $target;
+    }
+}
+
+if (!function_exists('menu_front_items_contain_current_url')) {
+    function menu_front_items_contain_current_url(array $items, string $locale): bool
+    {
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $item = menu_front_resolve_reference_item($item, $locale);
+            $item = menu_front_apply_item_translation($item, $locale);
+            $href = menu_front_resolve_url((string) ($item['url'] ?? ''), $locale);
+            if (menu_front_is_current_url($href)) {
+                return true;
+            }
+
+            $children = is_array($item['children'] ?? null) ? $item['children'] : [];
+            if ($children !== [] && menu_front_items_contain_current_url($children, $locale)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
 if (!function_exists('menu_front_render_menu')) {
     function menu_front_render_menu(array $items, string $locale, array $context = []): string
     {
@@ -1630,20 +1715,36 @@ if (!function_exists('menu_front_render_menu')) {
             $target = (string) ($item['target'] ?? '');
             $children = $item['children'] ?? [];
             $hasChildren = is_array($children) && $children !== [];
+            $hoverOnly = $hasChildren && !empty($item['hoverOnly']);
             $href = menu_front_resolve_url($itemUrl, $locale);
             $resolvedTarget = menu_front_resolve_target($target, $itemUrl);
 
-            $itemClass = $hasChildren ? 'nav-item has-children' : 'nav-item';
+            $isCurrent = menu_front_is_current_url($href);
+            $hasActiveChild = $hasChildren && menu_front_items_contain_current_url($children, $locale);
+            $itemClasses = ['nav-item'];
+            if ($hasChildren) {
+                $itemClasses[] = 'has-children';
+                if ($hoverOnly) {
+                    $itemClasses[] = 'submenu-hover-only';
+                }
+            }
+            if ($isCurrent || $hasActiveChild) {
+                $itemClasses[] = 'is-active';
+            }
+            $itemClass = implode(' ', $itemClasses);
             $targetAttr = $resolvedTarget === '_blank' ? ' target="_blank" rel="noopener noreferrer"' : '';
+            $currentAttr = $isCurrent ? ' aria-current="page"' : '';
             $iconHtml = menu_front_render_icon_html($item);
 
             $lines[] = $indent($depth + 1) . '<li class="' . $itemClass . '">';
-            $lines[] = $indent($depth + 2) . '<a class="nav-link" href="' . e($href) . '"' . $targetAttr . '>' . $iconHtml . e($label) . '</a>';
+            $lines[] = $indent($depth + 2) . '<a class="nav-link" href="' . e($href) . '"' . $targetAttr . $currentAttr . '>' . $iconHtml . e($label) . '</a>';
 
             if ($hasChildren) {
-                $lines[] = $indent($depth + 2) . '<button type="button" class="submenu-toggle" aria-expanded="false" aria-label="' . e($toggleLabel . ' - ' . $label) . '">';
-                $lines[] = $indent($depth + 3) . '<i class="fas fa-chevron-down"></i>';
-                $lines[] = $indent($depth + 2) . '</button>';
+                if (!$hoverOnly) {
+                    $lines[] = $indent($depth + 2) . '<button type="button" class="submenu-toggle" aria-expanded="false" aria-label="' . e($toggleLabel . ' - ' . $label) . '">';
+                    $lines[] = $indent($depth + 3) . '<i class="fas fa-chevron-down"></i>';
+                    $lines[] = $indent($depth + 2) . '</button>';
+                }
                 $lines[] = menu_front_render_menu($children, $locale, [
                     'toggleLabel' => $toggleLabel,
                     'isSub' => true,
@@ -1689,6 +1790,83 @@ if (!function_exists('footer_default_config')) {
     }
 }
 
+if (!function_exists('flatcms_content_is_theme_structured')) {
+    /**
+     * Detect theme-authored structural markers only: structural tags and
+     * theme-specific classes. SunEditor round-trip artifacts (se-component,
+     * __se__) are a damage signal, not a structure signal.
+     */
+    function flatcms_content_is_theme_structured(string $html): bool
+    {
+        $html = (string) $html;
+        if (trim($html) === '') {
+            return false;
+        }
+
+        if (preg_match('#<\s*(section|article|figure|aside|main|nav|picture|template|header|footer|summary|details)\b#i', $html) === 1) {
+            return true;
+        }
+
+        if (preg_match('#class\s*=\s*(["\'])[^"\']*?\b(creations-|project-|architecture-|fco-|code-window|reveal|manifesto|eyebrow|wrap)\b#i', $html) === 1) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('flatcms_count_structural_tags')) {
+    /**
+     * Count opening structural tags that SunEditor's bundled build would drop
+     * on a DOM round-trip. A drop to zero is the signature of a flattened
+     * visual-editor save.
+     */
+    function flatcms_count_structural_tags(string $html): int
+    {
+        $count = preg_match_all(
+            '#<\s*(section|article|figure|aside|main|nav|picture|template|header|footer|summary|details)\b(?!/)#i',
+            $html
+        );
+
+        return $count === false ? 0 : $count;
+    }
+}
+
+if (!function_exists('flatcms_strip_suneditor_artifacts')) {
+    /**
+     * Remove SunEditor-internal class tokens (se-component, __se__*) that get
+     * persisted when a WYSIWYG round-trip re-serializes structured content.
+     */
+    function flatcms_strip_suneditor_artifacts(string $html): string
+    {
+        return preg_replace_callback(
+            '/\sclass\s*=\s*("[^"]*"|\'[^\']*\')/i',
+            static function (array $matches): string {
+                $quote = (string) ($matches[1][0] ?? '"');
+                $raw = trim(substr($matches[1], 1, -1));
+                if ($raw === '') {
+                    return $matches[0];
+                }
+
+                $tokens = preg_split('/\s+/', $raw) ?: [];
+                $kept = array_values(array_filter($tokens, static function (string $token): bool {
+                    return $token !== 'se-component'
+                        && $token !== 'se-image-container'
+                        && $token !== 'se-video-container'
+                        && strpos($token, '__se__') !== 0;
+                }));
+
+                if ($kept === $tokens) {
+                    return $matches[0];
+                }
+
+                return ' class=' . $quote . implode(' ', $kept) . $quote;
+            },
+            $html
+        ) ?? $html;
+    }
+}
+
 if (!function_exists('flatcms_sanitize_editor_html')) {
     /**
      * Remove active HTML without reserializing safe editor markup.
@@ -1718,7 +1896,7 @@ if (!function_exists('flatcms_sanitize_editor_html')) {
         $clean = preg_replace_callback(
             '/\s+(href|src|action|formaction|poster|xlink:href)\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i',
             static function (array $matches): string {
-                $value = (string) ($matches[3] !== '' ? $matches[3] : ($matches[4] !== '' ? $matches[4] : $matches[5]));
+                $value = (string) (($matches[3] ?? '') !== '' ? $matches[3] : (($matches[4] ?? '') !== '' ? $matches[4] : ($matches[5] ?? '')));
                 $decoded = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
                 $normalized = strtolower((string) preg_replace('/[\x00-\x20\x7f]+/', '', $decoded));
                 $dangerous = str_starts_with($normalized, 'javascript:')
@@ -1734,7 +1912,7 @@ if (!function_exists('flatcms_sanitize_editor_html')) {
         $clean = preg_replace_callback(
             '/\s+style\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i',
             static function (array $matches): string {
-                $value = (string) ($matches[2] !== '' ? $matches[2] : ($matches[3] !== '' ? $matches[3] : $matches[4]));
+                $value = (string) (($matches[2] ?? '') !== '' ? $matches[2] : (($matches[3] ?? '') !== '' ? $matches[3] : ($matches[4] ?? '')));
                 $decoded = strtolower(html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                 $dangerous = preg_match('/(?:expression\s*\(|javascript\s*:|vbscript\s*:|-moz-binding\s*:|behavior\s*:|data\s*:\s*text\/html)/i', $decoded) === 1;
 
@@ -1743,16 +1921,825 @@ if (!function_exists('flatcms_sanitize_editor_html')) {
             $clean
         ) ?? '';
 
-        return $clean;
+        return flatcms_strip_suneditor_artifacts($clean);
+    }
+}
+
+if (!function_exists('flatcms_merge_submitted_text_into_structure')) {
+    /**
+     * Keep the theme-authored structure and apply the editor's text edits on
+     * top of it. Used when a visual-editor round-trip flattened the structural
+     * tags (section/article/...): instead of reverting the save silently, the
+     * meaningful texts submitted in document order are injected back into the
+     * original structure.
+     */
+    function flatcms_merge_submitted_text_into_structure(string $existingHtml, string $submittedHtml): string
+    {
+        $existingHtml = (string) $existingHtml;
+        $submittedHtml = (string) $submittedHtml;
+
+        $tokenize = static function (string $html): array {
+            $tokens = preg_split(
+                '/(<!--.*?-->|<![^>]*>|<[^>]+>)/s',
+                $html,
+                -1,
+                PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
+            );
+
+            return is_array($tokens) ? $tokens : [];
+        };
+        $isMarkup = static fn (string $token): bool => str_starts_with($token, '<');
+        $isMeaningfulText = static fn (string $token): bool => preg_match('/^\s*$/u', $token) !== 1;
+        $normalizeText = static fn (string $token): string => preg_replace('/\s+/u', ' ', trim($token)) ?? '';
+
+        $existingTokens = $tokenize($existingHtml);
+        $submittedTexts = [];
+        foreach ($tokenize($submittedHtml) as $token) {
+            if (!$isMarkup($token) && $isMeaningfulText($token)) {
+                $submittedTexts[] = $token;
+            }
+        }
+        if ($submittedTexts === []) {
+            return $existingHtml;
+        }
+
+        $existingSlots = [];
+        foreach ($existingTokens as $index => $token) {
+            if (!$isMarkup($token) && $isMeaningfulText($token)) {
+                $existingSlots[] = $index;
+            }
+        }
+        if ($existingSlots === []) {
+            return $existingHtml;
+        }
+
+        $submittedCandidates = [];
+        foreach ($submittedTexts as $position => $token) {
+            $submittedCandidates[] = [
+                'position' => $position,
+                'raw' => $token,
+                'normalized' => $normalizeText($token),
+            ];
+        }
+        $used = array_fill(0, count($submittedCandidates), false);
+
+        $assignments = array_fill(0, count($existingSlots), null);
+
+        foreach ($existingSlots as $slot => $index) {
+            $existingNormalized = $normalizeText($existingTokens[$index]);
+            if ($existingNormalized === '') {
+                continue;
+            }
+            foreach ($submittedCandidates as $position => $candidate) {
+                if ($used[$position] || $candidate['normalized'] !== $existingNormalized) {
+                    continue;
+                }
+                $assignments[$slot] = $position;
+                $used[$position] = true;
+                break;
+            }
+        }
+
+        foreach ($existingSlots as $slot => $index) {
+            if ($assignments[$slot] !== null) {
+                continue;
+            }
+            $existingNormalized = $normalizeText($existingTokens[$index]);
+            if ($existingNormalized === '') {
+                continue;
+            }
+            $bestPosition = null;
+            $bestDistance = PHP_INT_MAX;
+            foreach ($submittedCandidates as $position => $candidate) {
+                if ($used[$position] || $candidate['normalized'] === '') {
+                    continue;
+                }
+                $distance = function_exists('levenshtein')
+                    ? levenshtein($existingNormalized, $candidate['normalized'])
+                    : PHP_INT_MAX;
+                if ($distance !== -1 && $distance < $bestDistance) {
+                    $bestDistance = $distance;
+                    $bestPosition = $position;
+                }
+            }
+            if ($bestPosition !== null) {
+                $assignments[$slot] = $bestPosition;
+                $used[$bestPosition] = true;
+            }
+        }
+
+        foreach ($existingSlots as $slot => $index) {
+            $position = $assignments[$slot];
+            if ($position !== null) {
+                $existingTokens[$index] = $submittedTexts[$position];
+            }
+        }
+
+        return str_replace(["\r\n", "\r"], "\n", implode('', $existingTokens));
+    }
+}
+
+if (!function_exists('flatcms_unwrap_editor_inline_wrappers')) {
+    /**
+     * Remove paragraph wrappers that CKEditor 5's model layer synthesizes
+     * around generic inline elements (span/a/strong/...) placed as direct
+     * children of block containers (div/section/article/...). The editor's
+     * schema has no generic inline element, so such an inline child is moved
+     * into a <p> on load. This restores the theme-authored structure at save
+     * time so child combinators like "> .eyebrow" keep working.
+     *
+     * Only a <p> whose direct content is exclusively inline elements (no
+     * direct text, no block children) is unwrapped, so real paragraphs are
+     * never touched. Also strips CKEditor's list bookkeeping attribute
+     * (data-list-item-id) added to <li> elements.
+     */
+    function flatcms_unwrap_editor_inline_wrappers(string $html): string
+    {
+        $tokens = preg_split(
+            '/(<!--.*?-->|<![^>]*>|<[^>]+>)/s',
+            $html,
+            -1,
+            PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
+        );
+
+        if (!is_array($tokens) || $tokens === []) {
+            return $html;
+        }
+
+        $inline = [
+            'a', 'abbr', 'audio', 'b', 'bdi', 'bdo', 'button', 'canvas', 'cite', 'code', 'data',
+            'del', 'dfn', 'em', 'i', 'ins', 'kbd', 'label', 'mark', 'meter', 'output', 'picture',
+            'progress', 'q', 'ruby', 's', 'samp', 'select', 'small', 'span', 'strong', 'sub',
+            'sup', 'textarea', 'time', 'u', 'var', 'video',
+        ];
+        $void = ['area', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'svg', 'track', 'wbr'];
+        $containers = [
+            'address', 'article', 'aside', 'blockquote', 'dd', 'details', 'div', 'dl', 'dt',
+            'figcaption', 'figure', 'footer', 'form', 'header', 'li', 'main', 'nav', 'section',
+            'summary', 'td', 'th', 'tr',
+        ];
+
+        $isInline = static fn (string $name): bool => in_array($name, $inline, true) || in_array($name, $void, true);
+        $isContainer = static fn (string $name): bool => in_array($name, $containers, true);
+
+        $rangesByOpen = [];
+        $syntheticByOpen = [];
+        $stack = [];
+        $parents = [];
+
+        foreach ($tokens as $index => $token) {
+            if (preg_match('#^<([a-zA-Z0-9]+)[\s/>]#', $token, $matches) === 1) {
+                $name = strtolower($matches[1]);
+                $parents[$index] = $stack === [] ? null : $stack[count($stack) - 1]['name'];
+                $stack[] = ['name' => $name, 'index' => $index];
+                continue;
+            }
+
+            if (preg_match('#^</\s*([a-zA-Z0-9]+)\s*>#', $token, $matches) === 1) {
+                $name = strtolower($matches[1]);
+                for ($i = count($stack) - 1; $i >= 0; $i--) {
+                    if ($stack[$i]['name'] !== $name) {
+                        continue;
+                    }
+
+                    $openIndex = $stack[$i]['index'];
+                    array_splice($stack, $i);
+                    if ($name !== 'p') {
+                        break;
+                    }
+
+                    $rangesByOpen[$openIndex] = $index;
+                    $parent = $parents[$openIndex] ?? null;
+                    if ($parent === null || !$isContainer($parent)) {
+                        break;
+                    }
+
+                    $hasInline = false;
+                    $hasBlock = false;
+                    $directText = false;
+                    $depth = 0;
+
+                    for ($j = $openIndex + 1; $j < $index; $j++) {
+                        $inner = $tokens[$j];
+                        if (str_starts_with($inner, '<')) {
+                            if (preg_match('#^<([a-zA-Z0-9]+)[\s/>]#', $inner, $innerMatches) === 1) {
+                                $innerName = strtolower($innerMatches[1]);
+                                if ($depth === 0) {
+                                    if ($isInline($innerName)) {
+                                        $hasInline = true;
+                                    } else {
+                                        $hasBlock = true;
+                                    }
+                                } elseif (!$isInline($innerName)) {
+                                    $hasBlock = true;
+                                }
+                                if ($isInline($innerName) && !in_array($innerName, $void, true)) {
+                                    $depth++;
+                                }
+                            } elseif (preg_match('#^</\s*([a-zA-Z0-9]+)\s*>#', $inner, $innerMatches) === 1) {
+                                $innerName = strtolower($innerMatches[1]);
+                                if ($isInline($innerName) && $depth > 0) {
+                                    $depth--;
+                                }
+                            }
+                        } elseif ($depth === 0 && preg_match('/\S/u', $inner) === 1) {
+                            $directText = true;
+                        }
+                    }
+
+                    if ($hasInline && !$hasBlock && !$directText) {
+                        $syntheticByOpen[$openIndex] = true;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        $stripListIds = static fn (string $token): string => (string) preg_replace(
+            '/\s+data-list-item-id\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i',
+            '',
+            $token
+        );
+
+        $output = [];
+        $count = count($tokens);
+        for ($i = 0; $i < $count; $i++) {
+            if (isset($syntheticByOpen[$i])) {
+                $close = $rangesByOpen[$i];
+                for ($j = $i + 1; $j < $close; $j++) {
+                    $output[] = $stripListIds($tokens[$j]);
+                }
+                $i = $close;
+                continue;
+            }
+            $output[] = $stripListIds($tokens[$i]);
+        }
+
+        return implode('', $output);
+    }
+}
+
+if (!function_exists('flatcms_editor_html_tokens')) {
+    /**
+     * Tokenize HTML without reserializing it. Whitespace and indentation remain
+     * attached to their original text tokens.
+     *
+     * @return array<int, string>
+     */
+    function flatcms_editor_html_tokens(string $html): array
+    {
+        $tokens = preg_split(
+            '/(<!--.*?-->|<![^>]*>|<[^>]+>)/s',
+            $html,
+            -1,
+            PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
+        );
+
+        return is_array($tokens) ? $tokens : [];
+    }
+}
+
+if (!function_exists('flatcms_editor_text_nodes')) {
+    /**
+     * @return array<int, array{token_index:int, raw:string, normalized:string}>
+     */
+    function flatcms_editor_text_nodes(string $html): array
+    {
+        $nodes = [];
+        foreach (flatcms_editor_html_tokens($html) as $index => $token) {
+            if (str_starts_with($token, '<') || preg_match('/^\s*$/u', $token) === 1) {
+                continue;
+            }
+
+            $decoded = html_entity_decode($token, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $normalized = preg_replace('/\s+/u', ' ', trim($decoded)) ?? '';
+            $nodes[] = [
+                'token_index' => $index,
+                'raw' => $token,
+                'normalized' => $normalized,
+            ];
+        }
+
+        return $nodes;
+    }
+}
+
+if (!function_exists('flatcms_editor_tag_skeleton')) {
+    /**
+     * Compare editor structures while ignoring attribute serialization changes.
+     *
+     * @return array<int, string>
+     */
+    function flatcms_editor_tag_skeleton(string $html): array
+    {
+        $skeleton = [];
+        foreach (flatcms_editor_html_tokens($html) as $token) {
+            if (!str_starts_with($token, '<')) {
+                continue;
+            }
+            if (str_starts_with($token, '<!--')) {
+                $skeleton[] = '#comment';
+                continue;
+            }
+            if (preg_match('/^<\s*(\/?)\s*([a-zA-Z0-9:_-]+)/', $token, $matches) === 1) {
+                $skeleton[] = ($matches[1] === '/' ? '/' : '') . strtolower($matches[2]);
+            }
+        }
+
+        return $skeleton;
+    }
+}
+
+if (!function_exists('flatcms_editor_lcs_pairs')) {
+    /**
+     * Ordered exact matches used to align CKEditor's normalized text nodes with
+     * the original human-authored source nodes.
+     *
+     * @param array<int, string> $left
+     * @param array<int, string> $right
+     * @return array<int, array{0:int,1:int}>
+     */
+    function flatcms_editor_lcs_pairs(array $left, array $right): array
+    {
+        $leftCount = count($left);
+        $rightCount = count($right);
+        $matrix = array_fill(0, $leftCount + 1, array_fill(0, $rightCount + 1, 0));
+
+        for ($i = $leftCount - 1; $i >= 0; $i--) {
+            for ($j = $rightCount - 1; $j >= 0; $j--) {
+                $matrix[$i][$j] = $left[$i] === $right[$j]
+                    ? 1 + $matrix[$i + 1][$j + 1]
+                    : max($matrix[$i + 1][$j], $matrix[$i][$j + 1]);
+            }
+        }
+
+        $pairs = [];
+        $i = 0;
+        $j = 0;
+        while ($i < $leftCount && $j < $rightCount) {
+            if ($left[$i] === $right[$j]) {
+                $pairs[] = [$i, $j];
+                $i++;
+                $j++;
+                continue;
+            }
+            if ($matrix[$i + 1][$j] >= $matrix[$i][$j + 1]) {
+                $i++;
+            } else {
+                $j++;
+            }
+        }
+
+        return $pairs;
+    }
+}
+
+if (!function_exists('flatcms_apply_text_value_delta')) {
+    /**
+     * Apply a CKEditor text-node change to the original raw text while keeping
+     * unchanged entity spellings such as &egrave; and surrounding whitespace.
+     */
+    function flatcms_apply_text_value_delta(string $existingRaw, string $baselineRaw, string $submittedRaw): string
+    {
+        $decode = static fn (string $value): string => html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $splitWhitespace = static function (string $value): array {
+            if (preg_match('/^(\s*)(.*?)(\s*)$/su', $value, $matches) !== 1) {
+                return ['', $value, ''];
+            }
+            return [$matches[1], $matches[2], $matches[3]];
+        };
+
+        [$existingLeading, $existingCore, $existingTrailing] = $splitWhitespace($existingRaw);
+        [, $baselineCore] = $splitWhitespace($baselineRaw);
+        [, $submittedCore] = $splitWhitespace($submittedRaw);
+
+        $existingDecoded = $decode($existingCore);
+        $baselineDecoded = $decode($baselineCore);
+        $submittedDecoded = $decode($submittedCore);
+
+        if ($existingDecoded !== $baselineDecoded) {
+            return $existingLeading . $submittedCore . $existingTrailing;
+        }
+
+        $toChars = static fn (string $value): array => preg_split('//u', $value, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $existingChars = $toChars($existingDecoded);
+        $baselineChars = $toChars($baselineDecoded);
+        $submittedChars = $toChars($submittedDecoded);
+
+        $rawSegments = [];
+        if (preg_match_all('/&(?:#[0-9]+|#x[0-9a-f]+|[a-z][a-z0-9]+);|./isu', $existingCore, $matches) === 1 || !empty($matches[0])) {
+            foreach ($matches[0] as $segment) {
+                $decodedSegment = $decode($segment);
+                $segmentChars = $toChars($decodedSegment);
+                if (count($segmentChars) === 1) {
+                    $rawSegments[] = $segment;
+                    continue;
+                }
+                foreach ($segmentChars as $position => $char) {
+                    $rawSegments[] = $position === 0 ? $segment : '';
+                }
+            }
+        }
+
+        if (count($rawSegments) !== count($existingChars)) {
+            return $existingLeading . $submittedCore . $existingTrailing;
+        }
+
+        $prefix = 0;
+        $prefixLimit = min(count($baselineChars), count($submittedChars));
+        while ($prefix < $prefixLimit && $baselineChars[$prefix] === $submittedChars[$prefix]) {
+            $prefix++;
+        }
+
+        $suffix = 0;
+        while (
+            $suffix < count($baselineChars) - $prefix
+            && $suffix < count($submittedChars) - $prefix
+            && $baselineChars[count($baselineChars) - 1 - $suffix] === $submittedChars[count($submittedChars) - 1 - $suffix]
+        ) {
+            $suffix++;
+        }
+
+        $rawPrefix = implode('', array_slice($rawSegments, 0, $prefix));
+        $rawSuffix = $suffix > 0 ? implode('', array_slice($rawSegments, -$suffix)) : '';
+        $submittedMiddleLength = count($submittedChars) - $prefix - $suffix;
+        $submittedMiddle = $submittedMiddleLength > 0
+            ? implode('', array_slice($submittedChars, $prefix, $submittedMiddleLength))
+            : '';
+
+        return $existingLeading . $rawPrefix . $submittedMiddle . $rawSuffix . $existingTrailing;
+    }
+}
+
+if (!function_exists('flatcms_editor_tag_attributes')) {
+    /**
+     * Parse one opening tag without normalizing the original HTML source.
+     *
+     * @return array<string, string>
+     */
+    function flatcms_editor_tag_attributes(string $tag): array
+    {
+        $attributes = [];
+        $count = preg_match_all(
+            '/\s+([a-zA-Z_:][a-zA-Z0-9:._-]*)(?:\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+)))?/s',
+            $tag,
+            $matches,
+            PREG_SET_ORDER
+        );
+        if ($count === false || $count === 0) {
+            return $attributes;
+        }
+
+        foreach ($matches as $match) {
+            $name = strtolower((string) ($match[1] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $value = '';
+            if (array_key_exists(2, $match) && $match[2] !== '') {
+                $value = (string) $match[2];
+            } elseif (array_key_exists(3, $match) && $match[3] !== '') {
+                $value = (string) $match[3];
+            } elseif (array_key_exists(4, $match)) {
+                $value = (string) $match[4];
+            }
+            $attributes[$name] = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+
+        return $attributes;
+    }
+}
+
+if (!function_exists('flatcms_editor_style_declarations')) {
+    /** @return array<string, string> */
+    function flatcms_editor_style_declarations(string $style): array
+    {
+        $declarations = [];
+        foreach (preg_split('/;/', $style) ?: [] as $declaration) {
+            $declaration = trim($declaration);
+            if ($declaration === '' || !str_contains($declaration, ':')) {
+                continue;
+            }
+            [$name, $value] = array_map('trim', explode(':', $declaration, 2));
+            $name = strtolower($name);
+            if ($name !== '') {
+                $declarations[$name] = $value;
+            }
+        }
+
+        return $declarations;
+    }
+}
+
+if (!function_exists('flatcms_editor_valid_image_width')) {
+    function flatcms_editor_valid_image_width(string $width): bool
+    {
+        $width = trim($width);
+        if (preg_match('/^(?:100(?:\.0+)?|(?:[1-9]?\d)(?:\.\d+)?)%$/', $width) !== 1) {
+            return false;
+        }
+
+        $numeric = (float) rtrim($width, '%');
+        return $numeric > 0.0 && $numeric <= 100.0;
+    }
+}
+
+if (!function_exists('flatcms_editor_update_tag_width')) {
+    function flatcms_editor_update_tag_width(string $tag, ?string $width): string
+    {
+        $width = $width !== null ? trim($width) : null;
+        $stylePattern = '/\s+style\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i';
+        if (preg_match($stylePattern, $tag, $match, PREG_OFFSET_CAPTURE) === 1) {
+            $style = (string) (($match[2][0] ?? '') !== ''
+                ? $match[2][0]
+                : (($match[3][0] ?? '') !== '' ? $match[3][0] : ($match[4][0] ?? '')));
+            $declarations = flatcms_editor_style_declarations(
+                html_entity_decode($style, ENT_QUOTES | ENT_HTML5, 'UTF-8')
+            );
+            unset($declarations['width']);
+            if ($width !== null) {
+                $declarations['width'] = $width;
+            }
+
+            $replacement = '';
+            if ($declarations !== []) {
+                $parts = [];
+                foreach ($declarations as $name => $value) {
+                    $parts[] = $name . ': ' . $value;
+                }
+                $replacement = ' ' . 'style' . '="' . htmlspecialchars(
+                    implode('; ', $parts) . ';',
+                    ENT_QUOTES | ENT_HTML5,
+                    'UTF-8'
+                ) . '"';
+            }
+
+            return substr_replace(
+                $tag,
+                $replacement,
+                (int) $match[0][1],
+                strlen((string) $match[0][0])
+            );
+        }
+
+        if ($width === null) {
+            return $tag;
+        }
+
+        $position = strrpos($tag, '/>');
+        if ($position === false) {
+            $position = strrpos($tag, '>');
+        }
+        if ($position === false) {
+            return $tag;
+        }
+
+        return substr($tag, 0, $position)
+            . ' ' . 'style' . '="width: '
+            . htmlspecialchars($width, ENT_QUOTES | ENT_HTML5, 'UTF-8')
+            . ';"'
+            . substr($tag, $position);
+    }
+}
+
+if (!function_exists('flatcms_apply_editor_image_width_delta_to_source')) {
+    /**
+     * Reapply only image width changes produced by the FlatCMS CKEditor control.
+     * Other attributes and the surrounding human-authored source stay untouched.
+     */
+    function flatcms_apply_editor_image_width_delta_to_source(
+        string $existingHtml,
+        string $baselineHtml,
+        string $submittedHtml
+    ): ?string {
+        $collect = static function (string $html): array {
+            $tokens = flatcms_editor_html_tokens($html);
+            $images = [];
+            foreach ($tokens as $tokenIndex => $token) {
+                if (preg_match('/^<\s*img\b/i', $token) !== 1) {
+                    continue;
+                }
+                $attributes = flatcms_editor_tag_attributes($token);
+                $styles = flatcms_editor_style_declarations((string) ($attributes['style'] ?? ''));
+                unset($attributes['style']);
+                $width = $styles['width'] ?? null;
+                unset($styles['width']);
+                ksort($attributes);
+                ksort($styles);
+                $images[] = [
+                    'token_index' => $tokenIndex,
+                    'src' => (string) ($attributes['src'] ?? ''),
+                    'alt' => (string) ($attributes['alt'] ?? ''),
+                    'attributes' => $attributes,
+                    'styles' => $styles,
+                    'width' => $width !== null ? trim((string) $width) : null,
+                ];
+            }
+
+            return [$tokens, $images];
+        };
+
+        [$existingTokens, $existingImages] = $collect($existingHtml);
+        [, $baselineImages] = $collect($baselineHtml);
+        [, $submittedImages] = $collect($submittedHtml);
+        if (count($baselineImages) !== count($submittedImages)) {
+            return null;
+        }
+        if ($baselineImages === []) {
+            return $existingHtml;
+        }
+
+        $usedExisting = [];
+        foreach ($baselineImages as $index => $baselineImage) {
+            $submittedImage = $submittedImages[$index];
+            if (
+                $baselineImage['attributes'] !== $submittedImage['attributes']
+                || $baselineImage['styles'] !== $submittedImage['styles']
+            ) {
+                return null;
+            }
+
+            $baselineWidth = $baselineImage['width'];
+            $submittedWidth = $submittedImage['width'];
+            if ($baselineWidth === $submittedWidth) {
+                continue;
+            }
+            if ($submittedWidth !== null && !flatcms_editor_valid_image_width($submittedWidth)) {
+                return null;
+            }
+
+            $existingIndex = null;
+            foreach ($existingImages as $candidateIndex => $candidate) {
+                if (isset($usedExisting[$candidateIndex])) {
+                    continue;
+                }
+                if (
+                    $candidate['src'] === $baselineImage['src']
+                    && ($baselineImage['alt'] === '' || $candidate['alt'] === $baselineImage['alt'])
+                ) {
+                    $existingIndex = $candidateIndex;
+                    break;
+                }
+            }
+            if ($existingIndex === null && isset($existingImages[$index]) && !isset($usedExisting[$index])) {
+                $existingIndex = $index;
+            }
+            if ($existingIndex === null || !isset($existingImages[$existingIndex])) {
+                return null;
+            }
+
+            $usedExisting[$existingIndex] = true;
+            $tokenIndex = $existingImages[$existingIndex]['token_index'];
+            $existingTokens[$tokenIndex] = flatcms_editor_update_tag_width(
+                $existingTokens[$tokenIndex],
+                $submittedWidth
+            );
+        }
+
+        return implode('', $existingTokens);
+    }
+}
+
+if (!function_exists('flatcms_apply_editor_delta_to_source')) {
+    /**
+     * Reapply real CKEditor text changes to the original source instead of
+     * storing CKEditor's normalized/minified round-trip representation.
+     */
+    function flatcms_apply_editor_delta_to_source(
+        string $existingHtml,
+        string $baselineHtml,
+        string $submittedHtml
+    ): ?string {
+        if (flatcms_editor_tag_skeleton($baselineHtml) !== flatcms_editor_tag_skeleton($submittedHtml)) {
+            return null;
+        }
+
+        $existingHtml = flatcms_apply_editor_image_width_delta_to_source(
+            $existingHtml,
+            $baselineHtml,
+            $submittedHtml
+        );
+        if ($existingHtml === null) {
+            return null;
+        }
+
+        $existingNodes = flatcms_editor_text_nodes($existingHtml);
+        $baselineNodes = flatcms_editor_text_nodes($baselineHtml);
+        $submittedNodes = flatcms_editor_text_nodes($submittedHtml);
+        $existingValues = array_column($existingNodes, 'normalized');
+        $baselineValues = array_column($baselineNodes, 'normalized');
+        $submittedValues = array_column($submittedNodes, 'normalized');
+
+        $baselineToExisting = [];
+        foreach (flatcms_editor_lcs_pairs($existingValues, $baselineValues) as [$existingIndex, $baselineIndex]) {
+            $baselineToExisting[$baselineIndex] = $existingIndex;
+        }
+
+        $anchors = [[-1, -1]];
+        foreach (flatcms_editor_lcs_pairs($baselineValues, $submittedValues) as $pair) {
+            $anchors[] = $pair;
+        }
+        $anchors[] = [count($baselineNodes), count($submittedNodes)];
+
+        $changes = [];
+        for ($anchorIndex = 1; $anchorIndex < count($anchors); $anchorIndex++) {
+            [$previousBaseline, $previousSubmitted] = $anchors[$anchorIndex - 1];
+            [$nextBaseline, $nextSubmitted] = $anchors[$anchorIndex];
+            $baselineStart = $previousBaseline + 1;
+            $submittedStart = $previousSubmitted + 1;
+            $baselineLength = $nextBaseline - $baselineStart;
+            $submittedLength = $nextSubmitted - $submittedStart;
+
+            if ($baselineLength === 0 && $submittedLength === 0) {
+                continue;
+            }
+            if ($baselineLength === $submittedLength) {
+                for ($offset = 0; $offset < $baselineLength; $offset++) {
+                    $changes[] = [
+                        'type' => 'replace',
+                        'baseline' => $baselineStart + $offset,
+                        'submitted' => $submittedStart + $offset,
+                    ];
+                }
+                continue;
+            }
+            if ($submittedLength === 0) {
+                for ($offset = 0; $offset < $baselineLength; $offset++) {
+                    $changes[] = [
+                        'type' => 'delete',
+                        'baseline' => $baselineStart + $offset,
+                        'submitted' => null,
+                    ];
+                }
+                continue;
+            }
+
+            return null;
+        }
+
+        if ($changes === []) {
+            return $existingHtml;
+        }
+
+        $existingTokens = flatcms_editor_html_tokens($existingHtml);
+        $usedExisting = array_fill_keys(array_values($baselineToExisting), true);
+        foreach ($changes as $change) {
+            $baselineIndex = $change['baseline'];
+            $existingIndex = $baselineToExisting[$baselineIndex] ?? null;
+            if ($existingIndex === null) {
+                $target = $baselineNodes[$baselineIndex]['normalized'] ?? '';
+                $bestIndex = null;
+                $bestDistance = PHP_INT_MAX;
+                foreach ($existingNodes as $candidateIndex => $candidate) {
+                    if (isset($usedExisting[$candidateIndex]) || $candidate['normalized'] !== $target) {
+                        continue;
+                    }
+                    $distance = abs($candidateIndex - $baselineIndex);
+                    if ($distance < $bestDistance) {
+                        $bestDistance = $distance;
+                        $bestIndex = $candidateIndex;
+                    }
+                }
+                $existingIndex = $bestIndex;
+            }
+            if ($existingIndex === null || !isset($existingNodes[$existingIndex])) {
+                return null;
+            }
+            $usedExisting[$existingIndex] = true;
+            $tokenIndex = $existingNodes[$existingIndex]['token_index'];
+
+            if ($change['type'] === 'delete') {
+                $existingTokens[$tokenIndex] = '';
+                continue;
+            }
+
+            $submittedIndex = $change['submitted'];
+            if (!is_int($submittedIndex) || !isset($submittedNodes[$submittedIndex])) {
+                return null;
+            }
+            $existingTokens[$tokenIndex] = flatcms_apply_text_value_delta(
+                $existingNodes[$existingIndex]['raw'],
+                $baselineNodes[$baselineIndex]['raw'],
+                $submittedNodes[$submittedIndex]['raw']
+            );
+        }
+
+        return implode('', $existingTokens);
     }
 }
 
 if (!function_exists('flatcms_reconcile_editor_html')) {
     /**
-     * Keep the exact stored markup when a browser only normalized line endings.
+     * Preserve the human-authored content.html source. When CKEditor supplies
+     * its normalized baseline, only real text edits are reapplied to the
+     * original tokens; indentation, entities and structural markup stay intact.
      */
-    function flatcms_reconcile_editor_html(string $submittedHtml, ?string $existingHtml = null): string
-    {
+    function flatcms_reconcile_editor_html(
+        string $submittedHtml,
+        ?string $existingHtml = null,
+        ?string $editorBaselineHtml = null
+    ): string {
         $submittedHtml = flatcms_sanitize_editor_html($submittedHtml);
         $normalizeLineEndings = static fn (string $html): string => str_replace(["\r\n", "\r"], "\n", $html);
 
@@ -1761,6 +2748,32 @@ if (!function_exists('flatcms_reconcile_editor_html')) {
         }
 
         $safeExistingHtml = flatcms_sanitize_editor_html($existingHtml);
+        $safeBaselineHtml = $editorBaselineHtml !== null
+            ? flatcms_sanitize_editor_html($editorBaselineHtml)
+            : '';
+        if ($safeBaselineHtml !== '') {
+            $reconciled = flatcms_apply_editor_delta_to_source(
+                $safeExistingHtml,
+                $safeBaselineHtml,
+                $submittedHtml
+            );
+            if ($reconciled !== null) {
+                return $normalizeLineEndings($reconciled);
+            }
+        }
+        $existingStructured = flatcms_content_is_theme_structured($safeExistingHtml);
+        if ($existingStructured) {
+            $submittedHtml = flatcms_unwrap_editor_inline_wrappers($submittedHtml);
+
+            $existingTags = flatcms_count_structural_tags($safeExistingHtml);
+            $submittedTags = flatcms_count_structural_tags($submittedHtml);
+            $tagsFlattened = $existingTags > 0 && $submittedTags === 0;
+            $markersLost = !flatcms_content_is_theme_structured($submittedHtml);
+            $effectivelyEmpty = trim((string) strip_tags($submittedHtml)) === '';
+            if (($tagsFlattened || $markersLost) && !$effectivelyEmpty) {
+                return flatcms_merge_submitted_text_into_structure($safeExistingHtml, $submittedHtml);
+            }
+        }
 
         if (
             $safeExistingHtml === $existingHtml
@@ -1823,6 +2836,10 @@ if (!function_exists('flatcms_reconcile_editor_html')) {
 
                 return implode('', $existingTokens);
             }
+        }
+
+        if ($existingStructured) {
+            return $safeExistingHtml;
         }
 
         return $normalizeLineEndings($submittedHtml);

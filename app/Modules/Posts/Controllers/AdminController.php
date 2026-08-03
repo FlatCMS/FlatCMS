@@ -128,7 +128,11 @@ class AdminController extends BaseController
         if (!$this->verifyCsrf()) return;
 
         $data = $this->request->only(['title', 'slug', 'excerpt', 'content', 'featured_image', 'meta_title', 'meta_description', 'status']);
-        $data['content'] = flatcms_sanitize_editor_html((string) ($data['content'] ?? ''));
+        $data['content'] = flatcms_reconcile_editor_html(
+            (string) ($data['content'] ?? ''),
+            (string) ($post['content'] ?? ''),
+            (string) $this->request->input('content__editor_baseline', '')
+        );
         $data['categories'] = $this->isCategoriesEnabled()
             ? $this->normalizeCategoryIds($this->request->input('categories', []))
             : [];
@@ -252,7 +256,8 @@ class AdminController extends BaseController
         $data = $this->request->only(['title', 'slug', 'excerpt', 'content', 'featured_image', 'meta_title', 'meta_description', 'status']);
         $data['content'] = flatcms_reconcile_editor_html(
             (string) ($data['content'] ?? ''),
-            (string) ($post['content'] ?? '')
+            null,
+            (string) $this->request->input('content__editor_baseline', '')
         );
         $data['categories'] = $this->isCategoriesEnabled()
             ? $this->normalizeCategoryIds($this->request->input('categories', []))

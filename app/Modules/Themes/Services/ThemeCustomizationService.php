@@ -140,14 +140,26 @@ final class ThemeCustomizationService
         );
 
         $blocks = [];
-        $baseBlock = $this->buildScopedCssVariableBlock('body.admin-body .sun-editor .sun-editor-editable', $baseVariables);
+        $baseSelector = 'body.admin-body .sun-editor .sun-editor-editable, '
+            . 'body.admin-body .ck.ck-editor__editable.ck-content';
+        $baseBlock = $this->buildScopedCssVariableBlock($baseSelector, $baseVariables);
         if ($baseBlock !== '') {
             $blocks[] = $baseBlock;
         }
 
-        $lightBlock = $this->buildScopedCssVariableBlock('body.admin-body.light-mode .sun-editor .sun-editor-editable, html.theme-light-init body.admin-body .sun-editor .sun-editor-editable', $lightVariables);
+        $lightSelector = 'body.admin-body.light-mode .sun-editor .sun-editor-editable, '
+            . 'html.theme-light-init body.admin-body .sun-editor .sun-editor-editable, '
+            . 'body.admin-body.light-mode .ck.ck-editor__editable.ck-content, '
+            . 'html.theme-light-init body.admin-body .ck.ck-editor__editable.ck-content';
+        $lightBlock = $this->buildScopedCssVariableBlock($lightSelector, $lightVariables);
         if ($lightBlock !== '') {
             $blocks[] = $lightBlock;
+        }
+
+        $editorStylePath = $this->resolveThemeEditorStylePath('frontend', $name);
+        $editorCss = is_file($editorStylePath) ? trim((string) @file_get_contents($editorStylePath)) : '';
+        if ($editorCss !== '') {
+            $blocks[] = $editorCss;
         }
 
         return implode("\n\n", $blocks);
@@ -548,6 +560,16 @@ final class ThemeCustomizationService
         }
 
         return BASE_PATH . '/public/themes/' . $type . '/' . $name . '/assets/css/style.css';
+    }
+
+    private function resolveThemeEditorStylePath(string $type, string $name): string
+    {
+        $rootPath = BASE_PATH . '/themes/' . $type . '/' . $name . '/assets/css/editor.css';
+        if (is_file($rootPath)) {
+            return $rootPath;
+        }
+
+        return BASE_PATH . '/public/themes/' . $type . '/' . $name . '/assets/css/editor.css';
     }
 
     private function extractCssVariablesForSelectors(string $css, array $selectors): array

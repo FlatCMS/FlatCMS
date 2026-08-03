@@ -124,5 +124,6 @@
         "url": "O :field deve ser um URL válido."
     },
     "admin_tour_step_branding_title": "Identidade do site",
-    "admin_tour_step_branding_content": "Esta área mostra o logótipo ativo, o nome do site e o slogan. Também reflete a identidade visual atualmente configurada para a administração."
+    "admin_tour_step_branding_content": "Esta área mostra o logótipo ativo, o nome do site e o slogan. Também reflete a identidade visual atualmente configurada para a administração.",
+    "status": "Status"
 }

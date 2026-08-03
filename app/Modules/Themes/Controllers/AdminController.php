@@ -694,7 +694,7 @@ class AdminController extends BaseController
             $publicThemeDir = $this->publicThemesPath . "/{$type}/{$name}";
 
             foreach (
-                ['screenshot.png', 'screenshot.jpg', 'preview.png', 'preview.jpg']
+                ['screenshot.png', 'screenshot.webp', 'screenshot.jpg', 'preview.png', 'preview.webp', 'preview.jpg']
                 as $img
             ) {
                 if (file_exists($publicThemeDir . '/assets/' . $img)) {
@@ -791,7 +791,7 @@ class AdminController extends BaseController
         }
 
         foreach (
-            ['screenshot.png', 'screenshot.jpg', 'preview.png', 'preview.jpg']
+            ['screenshot.png', 'screenshot.webp', 'screenshot.jpg', 'preview.png', 'preview.webp', 'preview.jpg']
             as $img
         ) {
             $source = $rootThemeDir . '/' . $img;

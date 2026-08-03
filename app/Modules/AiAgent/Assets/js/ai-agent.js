@@ -274,11 +274,11 @@
       }
 
       if (context.module === 'pages' && key === 'content') {
-        return readFieldValue(field, '__pageSunEditorHandle');
+        return readFieldValue(field, '__flatcmsCkEditorHandle');
       }
 
       if (context.module === 'posts' && key === 'content') {
-        return readFieldValue(field, '__postSunEditorHandle');
+        return readFieldValue(field, '__flatcmsCkEditorHandle');
       }
 
       return readFieldValue(field, '');
@@ -596,12 +596,12 @@
       }
 
       if (context.module === 'pages' && key === 'content') {
-        setTextareaValue(field, value, '__pageSunEditorHandle');
+        setTextareaValue(field, value, '__flatcmsCkEditorHandle');
         return;
       }
 
       if (context.module === 'posts' && key === 'content') {
-        setTextareaValue(field, value, '__postSunEditorHandle');
+        setTextareaValue(field, value, '__flatcmsCkEditorHandle');
         return;
       }
 

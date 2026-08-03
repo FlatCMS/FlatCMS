@@ -10,7 +10,6 @@
 ?>
 
 <link rel="stylesheet" href="<?= module_asset('Posts', 'css/posts.css') ?>">
-<link rel="stylesheet" href="<?= module_asset('Posts', 'css/posts-suneditor.css') ?>?v=<?= filemtime(BASE_PATH . '/app/Modules/Posts/Assets/css/posts-suneditor.css') ?>">
 
 <?php
 $categories = $categories ?? [];
@@ -237,11 +236,10 @@ $postsLocaleFlag = static function (string $locale): string {
                         name="content"
                         class="form-input"
                         rows="15"
-                        data-post-suneditor
-                        data-suneditor-media-context="<?= e($postMediaContext) ?>"
-                        data-suneditor-media-modal-error="<?= e($postLabel('featured_image_modal_unavailable', __('featured_image_modal_unavailable', 'Posts'))) ?>"
-                        data-suneditor-toolbar-expand="<?= e($postLabel('suneditor_toolbar_expand', __('suneditor_toolbar_expand', 'Posts'))) ?>"
-                        data-suneditor-toolbar-collapse="<?= e($postLabel('suneditor_toolbar_collapse', __('suneditor_toolbar_collapse', 'Posts'))) ?>"
+                        data-ckeditor
+                        data-ckeditor-locale="<?= e((string) ($translationUi['active_locale'] ?? locale())) ?>"
+                        data-media-context="<?= e($postMediaContext) ?>"
+                        data-media-modal-error="<?= e($postLabel('featured_image_modal_unavailable', __('featured_image_modal_unavailable', 'Posts'))) ?>"
                     ><?= e(old('content', $formData['content'] ?? '')) ?></textarea>
                 </div>
             </div>
@@ -364,7 +362,6 @@ $postsLocaleFlag = static function (string $locale): string {
     </div>
 </form>
 
-<script src="<?= module_asset('Posts', 'js/posts-suneditor.js') ?>?v=<?= filemtime(BASE_PATH . '/app/Modules/Posts/Assets/js/posts-suneditor.js') ?>"></script>
 <script src="<?= module_asset('Posts', 'js/posts.js') ?>"></script>
 
 <?php if ($mediaEnabled): ?>

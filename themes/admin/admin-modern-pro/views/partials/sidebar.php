@@ -28,8 +28,17 @@ $showSiteSlogan = !array_key_exists('site_slogan_enabled', $settings ?? [])
     : ((int) ($settings['site_slogan_enabled'] ?? 0) === 1);
 $renderSiteName = $showSiteName && $siteName !== '';
 $renderSiteSlogan = $showSiteSlogan && $siteSlogan !== '';
-$siteLogo = trim((string) ($settings['site_logo'] ?? ''));
-$siteLogoUrl = $siteLogo !== '' ? site_media_url($siteLogo) : '';
+$siteLogoService = new \App\Modules\Settings\Services\SiteLogoService();
+$siteLogoState = $siteLogoService->resolveLogoUrls($settings ?? []);
+$siteLogoUrl = trim((string) ($siteLogoState['default'] ?? ''));
+$siteLogoLightUrl = trim((string) ($siteLogoState['light'] ?? ''));
+$siteLogoDarkUrl = trim((string) ($siteLogoState['dark'] ?? ''));
+if ($siteLogoLightUrl === '') {
+    $siteLogoLightUrl = $siteLogoUrl;
+}
+if ($siteLogoDarkUrl === '') {
+    $siteLogoDarkUrl = $siteLogoLightUrl;
+}
 $siteLogoVariantDefault = (!$renderSiteName && !$renderSiteSlogan) ? 'banner' : 'compact';
 $siteLogoVariant = trim((string) ($settings['site_logo_variant'] ?? $siteLogoVariantDefault));
 if (!in_array($siteLogoVariant, ['compact', 'banner', 'banner_framed'], true)) {
@@ -37,10 +46,14 @@ if (!in_array($siteLogoVariant, ['compact', 'banner', 'banner_framed'], true)) {
 }
 $sidebarHeaderClasses = ['sidebar-header'];
 $sidebarLogoClasses = ['sidebar-logo'];
+$sidebarLogoMediaClasses = ['sidebar-logo-media'];
 $sidebarLogoImageClasses = ['sidebar-logo-image'];
 if ($siteLogoUrl !== '' && $siteLogoVariant !== 'compact' && !$renderSiteName && !$renderSiteSlogan) {
     $sidebarHeaderClasses[] = 'sidebar-header--banner-logo';
     $sidebarLogoClasses[] = 'sidebar-logo--banner';
+    $sidebarLogoMediaClasses[] = $siteLogoVariant === 'banner_framed'
+        ? 'sidebar-logo-media--banner-framed'
+        : 'sidebar-logo-media--banner';
     $sidebarLogoImageClasses[] = $siteLogoVariant === 'banner_framed'
         ? 'sidebar-logo-image--banner-framed'
         : 'sidebar-logo-image--banner';
@@ -94,7 +107,10 @@ $resolveSectionLabel = static function (array $sectionItem): string {
             <div class="<?= e(implode(' ', $sidebarHeaderClasses)) ?>">
                 <a href="<?= url('/admin') ?>" class="<?= e(implode(' ', $sidebarLogoClasses)) ?>" data-tour-target="sidebar-branding">
                     <?php if ($siteLogoUrl !== ''): ?>
-                        <img src="<?= e($siteLogoUrl) ?>" alt="<?= e($siteName) ?>" class="<?= e(implode(' ', $sidebarLogoImageClasses)) ?>" loading="lazy" decoding="async">
+                        <span class="<?= e(implode(' ', $sidebarLogoMediaClasses)) ?>" role="img" aria-label="<?= e($siteName) ?>">
+                            <img src="<?= e($siteLogoLightUrl) ?>" alt="" class="<?= e(implode(' ', $sidebarLogoImageClasses)) ?> sidebar-logo-image--appearance-light" loading="eager" decoding="async">
+                            <img src="<?= e($siteLogoDarkUrl) ?>" alt="" class="<?= e(implode(' ', $sidebarLogoImageClasses)) ?> sidebar-logo-image--appearance-dark" loading="eager" decoding="async">
+                        </span>
                     <?php else: ?>
                         <span class="logo-icon">◆</span>
                     <?php endif; ?>

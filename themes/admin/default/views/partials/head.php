@@ -33,8 +33,8 @@
     <?php if ($themeCustomizationAsset !== ''): ?>
         <link rel="stylesheet" href="<?= e($themeCustomizationAsset) ?>">
     <?php endif; ?>
-    <link rel="stylesheet" href="<?= asset('dists/suneditor/suneditor.min.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/admin/suneditor.css') ?>">
+    <link rel="stylesheet" href="<?= asset('dists/ckeditor5/ckeditor5.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/admin/ckeditor.css') ?>">
     <?php if ($editorPreviewThemeAsset !== ''): ?>
         <link rel="stylesheet" href="<?= e($editorPreviewThemeAsset) ?>">
     <?php endif; ?>

@@ -1,0 +1,460 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+/*
+ * CKEditor 5 admin theme.
+ *
+ * Scoped to body.admin-body so the public site is never affected. Colors are
+ * driven by the admin theme CSS custom properties (--color-*, --radius-*, ...)
+ * which automatically switch between the dark (default) and light
+ * (body.light-mode) admin themes.
+ */
+
+body.admin-body .ck.ck-editor,
+body.admin-body .ck-body {
+  --ck-color-base-background: var(--color-input-bg);
+  --ck-color-base-foreground: var(--color-text-primary);
+  --ck-color-base-text: var(--color-text-primary);
+  --ck-color-base-border: var(--color-input-border);
+  --ck-color-base-active: var(--color-primary);
+  --ck-color-base-active-focus: var(--color-primary);
+  --ck-color-base-error: var(--color-danger-border, #ef4444);
+  --ck-color-base-focus: var(--color-input-focus);
+  --ck-color-focus-border: var(--color-input-focus);
+  --ck-color-focus-outer-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 22%, transparent);
+  --ck-color-focus-disabled-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 10%, transparent);
+
+  --ck-color-button-default-background: transparent;
+  --ck-color-button-default-hover-background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --ck-color-button-default-active-background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --ck-color-button-on-background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --ck-color-button-on-hover-background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  --ck-color-button-on-active-background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  --ck-color-button-on-color: var(--color-primary);
+  --ck-color-button-save: #15803d;
+  --ck-color-button-cancel: #b91c1c;
+
+  --ck-color-toolbar-background: var(--color-card-bg);
+  --ck-color-toolbar-border: var(--color-input-border);
+  --ck-color-toolbar-box-shadow: 0 2px 4px -2px rgba(2, 6, 23, 0.25);
+
+  --ck-color-dropdown-panel-background: var(--color-card-bg);
+  --ck-color-dropdown-panel-border: var(--color-input-border);
+  --ck-color-list-background: var(--color-card-bg);
+  --ck-color-list-button-hover-background: var(--color-bg-hover);
+  --ck-color-list-button-on-background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --ck-color-list-button-on-background-focus: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  --ck-color-list-button-on-text: var(--color-primary);
+
+  --ck-color-input-background: var(--color-input-bg);
+  --ck-color-input-border: var(--color-input-border);
+  --ck-color-input-error-border: var(--color-danger-border, #ef4444);
+  --ck-color-input-text: var(--color-text-primary);
+  --ck-color-input-disabled-background: var(--color-bg-secondary);
+  --ck-color-input-disabled-border: var(--color-border);
+  --ck-color-input-disabled-text: var(--color-text-muted);
+
+  --ck-color-labeled-field-label-background: var(--color-input-bg);
+  --ck-color-labeled-field-label-text: var(--color-text-secondary);
+  --ck-color-text: var(--color-text-primary);
+  --ck-color-link-default: var(--color-primary);
+  --ck-color-link-selected-background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  --ck-color-link-fake-selection: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  --ck-color-editable-blur-selection: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  --ck-color-engine-placeholder-text: var(--color-text-muted);
+
+  --ck-color-grid-tile-size: 22px;
+  --ck-border-radius: var(--radius-lg, 0.5rem);
+  --ck-border-width: 1px;
+  --ck-color-split-button-hover-background: var(--color-bg-hover);
+}
+
+/* Toolbar */
+body.admin-body .ck.ck-editor__top .ck.ck-toolbar {
+  border: 1px solid var(--color-input-border);
+  border-bottom: 0;
+  border-radius: var(--radius-lg, 0.5rem) var(--radius-lg, 0.5rem) 0 0;
+  background: var(--color-card-bg);
+  color: var(--color-text-primary);
+  overflow: visible;
+}
+
+/*
+ * Let the toolbar items wrap onto several rows when the editor is too narrow.
+ * Without this, CKEditor's ToolbarView removes (not just hides) the items that
+ * do not fit — the flatcmsImage/flatcmsVideo buttons are the last in the list,
+ * so they silently disappeared on smaller windows.
+ */
+body.admin-body .ck.ck-editor__top .ck.ck-toolbar .ck.ck-toolbar__items {
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+body.admin-body .ck.ck-editor__top .ck.ck-toolbar .ck.ck-toolbar__separator {
+  background: var(--color-input-border);
+}
+
+body.admin-body .ck.ck-editor__top .ck.ck-toolbar .ck.ck-button {
+  color: var(--color-text-secondary);
+  border-radius: 8px;
+}
+
+body.admin-body .ck.ck-editor__top .ck.ck-toolbar .ck.ck-button:hover,
+body.admin-body .ck.ck-editor__top .ck.ck-toolbar .ck.ck-button:focus,
+body.admin-body .ck.ck-editor__top .ck.ck-toolbar .ck.ck-button.ck-on {
+  color: var(--color-text-primary);
+}
+
+body.admin-body .ck.ck-editor__top .ck.ck-toolbar .ck.ck-button.ck-on {
+  color: var(--color-primary);
+}
+
+body.admin-body .ck.ck-editor__top .ck.ck-dropdown__button .ck-button__label {
+  color: var(--color-text-secondary);
+}
+
+/*
+ * Some Chromium builds resolve an SVG presentation attribute fill="currentColor"
+ * against the initial color (black) instead of the inherited button color,
+ * making toolbar icons invisible on dark themes. Force the fill to follow the
+ * icon color (same effect as the bundled .ck-icon_inherit-color rules).
+ */
+body.admin-body svg.ck.ck-button__icon path[fill="currentColor"] {
+  fill: currentColor !important;
+}
+
+body.admin-body .ck.ck-editor__top .ck.ck-toolbar .ck.ck-toolbar__items .ck.ck-button:disabled {
+  color: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+/* Editable */
+body.admin-body .ck.ck-editor__main > .ck-editor__editable {
+  border: 1px solid var(--color-input-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-lg, 0.5rem) var(--radius-lg, 0.5rem);
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
+}
+
+body.admin-body .ck.ck-editor__main > .ck-editor__editable_inline {
+  min-height: 260px;
+  padding: 16px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base, 0.9375rem);
+  line-height: 1.65;
+  caret-color: var(--color-primary);
+}
+
+body.admin-body .ck.ck-editor__main > .ck-editor__editable_inline.ck-focused {
+  border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 22%, transparent);
+}
+
+body.admin-body .ck.ck-editor__editable:focus {
+  outline: none;
+}
+
+/* Content typography inside the editable */
+body.admin-body .ck.ck-editor__editable .ck-content h1,
+body.admin-body .ck.ck-editor__editable .ck-content h2,
+body.admin-body .ck.ck-editor__editable .ck-content h3,
+body.admin-body .ck.ck-editor__editable .ck-content h4 {
+  color: var(--color-text-primary);
+  margin: 1.25em 0 0.55em;
+  line-height: 1.25;
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content h1 { font-size: 1.75rem; }
+body.admin-body .ck.ck-editor__editable .ck-content h2 { font-size: 1.5rem; }
+body.admin-body .ck.ck-editor__editable .ck-content h3 { font-size: 1.25rem; }
+body.admin-body .ck.ck-editor__editable .ck-content h4 { font-size: 1.1rem; }
+
+body.admin-body .ck.ck-editor__editable .ck-content a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 3px solid color-mix(in srgb, var(--color-primary) 60%, var(--color-border));
+  background: color-mix(in srgb, var(--color-bg-secondary) 55%, transparent);
+  color: var(--color-text-secondary);
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content pre {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg, 0.5rem);
+  color: var(--color-text-primary);
+  padding: 0.75em 1em;
+  overflow: auto;
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content code {
+  background: color-mix(in srgb, var(--color-bg-hover) 55%, transparent);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content table {
+  border-collapse: collapse;
+  border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, var(--color-card-bg) 76%, var(--color-input-bg));
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content table th {
+  background: color-mix(in srgb, var(--color-card-bg) 68%, var(--color-bg-tertiary) 32%);
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content table td,
+body.admin-body .ck.ck-editor__editable .ck-content table th {
+  border-color: color-mix(in srgb, var(--color-border) 78%, transparent);
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content video {
+  max-width: 100%;
+  height: auto;
+}
+
+body.admin-body .ck.ck-editor__editable .ck-content .fc-se-placeholder,
+body.admin-body .ck.ck-editor__editable .ck-content p,
+body.admin-body .ck.ck-editor__editable .ck-content ul,
+body.admin-body .ck.ck-editor__editable .ck-content ol {
+  color: var(--color-text-primary);
+}
+
+/* Source editing area */
+body.admin-body .ck.ck-source-editing-area {
+  border: 1px solid var(--color-input-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-lg, 0.5rem) var(--radius-lg, 0.5rem);
+  background: var(--color-bg-primary);
+}
+
+body.admin-body .ck.ck-source-editing-area textarea {
+  background: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: var(--font-size-sm, 0.875rem) !important;
+  line-height: 1.5 !important;
+  padding: 12px !important;
+}
+
+/* Dropdown panels / balloons (rendered inside the ck-body wrapper) */
+body.admin-body .ck.ck-balloon-panel,
+body.admin-body .ck.ck-dropdown .ck.ck-dropdown__panel {
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg, 0.5rem);
+  background: var(--color-card-bg);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.3));
+  z-index: 1080;
+}
+
+body.admin-body .ck.ck-dropdown__panel .ck.ck-list {
+  background: var(--color-card-bg);
+}
+
+body.admin-body .ck.ck-dropdown__panel .ck.ck-button {
+  color: var(--color-text-secondary);
+  border-radius: 6px;
+}
+
+body.admin-body .ck.ck-dropdown__panel .ck.ck-button:hover,
+body.admin-body .ck.ck-dropdown__panel .ck.ck-button.ck-on {
+  color: var(--color-text-primary);
+}
+
+body.admin-body .ck.ck-dropdown__panel .ck.ck-button.ck-on {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary);
+}
+
+body.admin-body .ck.ck-dropdown__panel .ck.ck-color-grid__tile {
+  border: 1px solid var(--color-input-border);
+  border-radius: 6px;
+}
+
+/* Dialog / link form */
+body.admin-body .ck.ck-form__header .ck.ck-form__header__label,
+body.admin-body .ck.ck-input-text,
+body.admin-body .ck.ck-input-number {
+  color: var(--color-text-primary);
+}
+
+body.admin-body .ck.ck-input-text,
+body.admin-body .ck.ck-input-number {
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md, 0.375rem);
+}
+
+body.admin-body .ck.ck-input-text:focus,
+body.admin-body .ck.ck-input-number:focus {
+  border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 22%, transparent);
+}
+
+/* Table tools */
+body.admin-body .ck.ck-table-form,
+body.admin-body .ck.ck-table-properties-form,
+body.admin-body .ck.ck-table-cell-properties-form {
+  background: var(--color-card-bg);
+  color: var(--color-text-primary);
+}
+
+/* HTML object widgets in Modern Pro dark mode */
+body.admin-body[data-theme="modern-pro"]:not(.light-mode)
+  .ck.ck-editor__editable .ck-widget.html-object-embed {
+  background-color: var(--color-input-bg);
+  color: var(--color-text-primary);
+}
+
+body.admin-body[data-theme="modern-pro"]:not(.light-mode)
+  .ck.ck-editor__editable .ck-widget.html-object-embed .html-object-embed__content {
+  background-color: transparent;
+}
+
+/* ---------------------------- Studio inline editor ----------------------- */
+
+body.admin-body .sfc-studio-inline-editor .ck.ck-editor__top .ck.ck-toolbar {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--sfc-studio-border, #cfd7e3);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 18px 34px rgba(15, 23, 40, 0.14);
+}
+
+body.admin-body .sfc-studio-inline-editor .ck.ck-editor__top .ck.ck-toolbar .ck.ck-toolbar__items {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+body.admin-body .sfc-studio-inline-editor .ck.ck-editor__top .ck.ck-toolbar .ck.ck-button {
+  color: #111827;
+}
+
+body.admin-body .sfc-studio-inline-editor .ck.ck-editor__main > .ck-editor__editable_inline {
+  min-height: 0;
+  border: 1px solid var(--sfc-studio-border, #cfd7e3);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  padding: 12px;
+  font-size: 14px;
+}
+
+body.admin-body .sfc-studio-inline-editor .ck.ck-editor__main > .ck-editor__editable_inline.ck-focused {
+  border-color: var(--color-input-focus, #4f46e5);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus, #4f46e5) 22%, transparent);
+}
+
+/* Contextual width control for generic GHS images. */
+body.admin-body .flatcms-ckeditor-image-size-host {
+  position: relative;
+}
+
+body.admin-body .flatcms-ckeditor-image-size[hidden] {
+  display: none !important;
+}
+
+body.admin-body .flatcms-ckeditor-image-size {
+  position: absolute;
+  z-index: 1090;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 16px);
+  padding: 8px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-lg, 0.5rem);
+  background: var(--color-card-bg);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.3));
+}
+
+body.admin-body .flatcms-ckeditor-image-size__title {
+  padding-inline: 4px;
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+body.admin-body .flatcms-ckeditor-image-size__button,
+body.admin-body .flatcms-ckeditor-image-size__apply {
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md, 0.375rem);
+  background: var(--color-input-bg);
+  color: var(--color-text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+body.admin-body .flatcms-ckeditor-image-size__button:hover,
+body.admin-body .flatcms-ckeditor-image-size__button.is-active,
+body.admin-body .flatcms-ckeditor-image-size__apply:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+body.admin-body .flatcms-ckeditor-image-size__button.is-active {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+body.admin-body .flatcms-ckeditor-image-size__custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body.admin-body .flatcms-ckeditor-image-size__custom input {
+  width: 64px;
+  min-height: 30px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md, 0.375rem);
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+body.admin-body .flatcms-ckeditor-image-size__custom input:focus {
+  border-color: var(--color-input-focus);
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 22%, transparent);
+}
+
+@media (max-width: 640px) {
+  body.admin-body .flatcms-ckeditor-image-size {
+    right: 8px;
+    left: 8px !important;
+  }
+}

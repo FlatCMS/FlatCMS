@@ -376,8 +376,13 @@ class AdminController extends BaseController
             $data['slug'] .= '-' . time();
         }
 
-        $data['editor_mode'] = 'classic';
-        $data['render_mode'] = 'classic';
+        $data['content'] = flatcms_reconcile_editor_html(
+            (string) ($data['content'] ?? ''),
+            (string) ($page['content'] ?? ''),
+            (string) $this->request->input('content__editor_baseline', '')
+        );
+        $data['editor_mode'] = (string) ($page['editor_mode'] ?? 'classic');
+        $data['render_mode'] = (string) ($page['render_mode'] ?? 'classic');
 
         $payload = array_merge($page, $data);
         hook_run('pages.before_save', $payload);
@@ -1148,7 +1153,8 @@ class AdminController extends BaseController
                 : null;
             $content = flatcms_reconcile_editor_html(
                 (string) ($entry['content'] ?? ''),
-                is_array($existing) ? (string) ($existing['content'] ?? '') : null
+                is_array($existing) ? (string) ($existing['content'] ?? '') : null,
+                (string) ($entry['content__editor_baseline'] ?? '')
             );
             $submitted[$locale] = [
                 'title' => $title,
@@ -1187,8 +1193,14 @@ class AdminController extends BaseController
                 'source_locale' => $sourceLocale,
                 'translation_group' => $translationGroup,
                 'status' => $globalStatus,
-                'editor_mode' => 'classic',
-                'render_mode' => 'classic',
+                'editor_mode' => (string) (
+                    (is_array($existing) ? ($existing['editor_mode'] ?? null) : null)
+                    ?? ($sourcePage['editor_mode'] ?? 'classic')
+                ),
+                'render_mode' => (string) (
+                    (is_array($existing) ? ($existing['render_mode'] ?? null) : null)
+                    ?? ($sourcePage['render_mode'] ?? 'classic')
+                ),
             ];
 
             if (is_array($existing)) {

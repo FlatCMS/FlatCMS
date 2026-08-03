@@ -111,11 +111,6 @@ class Request
 
     private function detectDefaultLocale(array $supportedLocales): string
     {
-        $browserLocale = $this->detectBrowserLocale($supportedLocales);
-        if ($browserLocale !== null) {
-            return $browserLocale;
-        }
-
         $settingsPath = BASE_PATH . '/data/settings.json';
 
         if (file_exists($settingsPath)) {
@@ -123,11 +118,16 @@ class Request
             $settings = json_decode($content, true);
 
             if (is_array($settings) && !empty($settings['default_language'])) {
-                $lang = $settings['default_language'];
-                if (in_array($lang, $supportedLocales)) {
+                $lang = (string) $settings['default_language'];
+                if (in_array($lang, $supportedLocales, true)) {
                     return $lang;
                 }
             }
+        }
+
+        $browserLocale = $this->detectBrowserLocale($supportedLocales);
+        if ($browserLocale !== null) {
+            return $browserLocale;
         }
 
         return $supportedLocales[0] ?? 'fr-FR';

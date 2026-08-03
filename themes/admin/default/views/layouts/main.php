@@ -12,7 +12,7 @@ $flatcmsEditorTruthy = static function ($value): bool {
 };
 
 $flatcmsTinyMceEnabled = $flatcmsEditorTruthy(env('TINYMCE_ENABLED', '0'));
-$flatcmsWysiwygProvider = $flatcmsTinyMceEnabled ? 'tinymce' : 'suneditor';
+$flatcmsWysiwygProvider = $flatcmsTinyMceEnabled ? 'tinymce' : 'ckeditor';
 ?>
 
 <!DOCTYPE html>

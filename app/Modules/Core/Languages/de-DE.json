@@ -124,5 +124,6 @@
         "url": "Das Feld :field muss eine gültige URL sein."
     },
     "admin_tour_step_branding_title": "Website-Identität",
-    "admin_tour_step_branding_content": "Dieser Bereich zeigt das aktive Logo, den Seitennamen und den Slogan. Er spiegelt außerdem das aktuell für die Administration konfigurierte Branding wider."
+    "admin_tour_step_branding_content": "Dieser Bereich zeigt das aktive Logo, den Seitennamen und den Slogan. Er spiegelt außerdem das aktuell für die Administration konfigurierte Branding wider.",
+    "status": "Status"
 }

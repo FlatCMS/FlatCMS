@@ -26,9 +26,9 @@ $adminToastConfig = [
 <script src="<?= asset('js/core/components-password-toggle.js') ?>" defer></script>
 <script src="<?= asset('dists/jquery/jquery.min.js') ?>"></script>
 <?php
-$activeWysiwygProvider = in_array((string) ($flatcmsWysiwygProvider ?? ''), ['suneditor', 'tinymce'], true)
+$activeWysiwygProvider = in_array((string) ($flatcmsWysiwygProvider ?? ''), ['ckeditor', 'tinymce'], true)
     ? (string) $flatcmsWysiwygProvider
-    : 'suneditor';
+    : 'ckeditor';
 $tinyApiKeyRaw = trim((string) env('TINYMCE_API_KEY', ''));
 $tinyApiKeySafe = preg_replace('/[^a-zA-Z0-9_-]/', '', $tinyApiKeyRaw) ?? '';
 $tinyApiKeyForCdn = $tinyApiKeySafe !== '' ? $tinyApiKeySafe : 'no-api-key';
@@ -36,14 +36,12 @@ $tinyApiKeyForCdn = $tinyApiKeySafe !== '' ? $tinyApiKeySafe : 'no-api-key';
 <?php if ($activeWysiwygProvider === 'tinymce'): ?>
     <script src="https://cdn.tiny.cloud/1/<?= e($tinyApiKeyForCdn) ?>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <?php endif; ?>
-<script src="<?= asset('dists/suneditor/suneditor.min.js') ?>"></script>
-<script src="<?= asset('dists/suneditor/lang/en.min.js') ?>"></script>
-<script src="<?= asset('dists/suneditor/lang/fr.min.js') ?>"></script>
-<script src="<?= asset('dists/suneditor/lang/de.min.js') ?>"></script>
-<script src="<?= asset('dists/suneditor/lang/es.min.js') ?>"></script>
-<script src="<?= asset('dists/suneditor/lang/it.min.js') ?>"></script>
-<script src="<?= asset('dists/suneditor/lang/pt_br.min.js') ?>"></script>
-<script src="<?= asset('js/admin/suneditor-utils.js') ?>"></script>
+<script src="<?= asset('dists/ckeditor5/ckeditor5.umd.js') ?>"></script>
+<?php foreach (['de', 'en', 'es', 'fr', 'it', 'pt'] as $ckeditorLocale): ?>
+    <script src="<?= asset('dists/ckeditor5/translations/' . $ckeditorLocale . '.umd.js') ?>"></script>
+<?php endforeach; ?>
+<script src="<?= asset('dists/ckeditor5/translations/flatcms.umd.js') ?>"></script>
+<script src="<?= asset('js/admin/ckeditor-provider-init.js') ?>"></script>
 <script src="<?= asset('js/admin/flatcms-ui-primitives.js') ?>"></script>
 <script src="<?= asset('js/admin/editor-provider-init.js') ?>"></script>
 <?php

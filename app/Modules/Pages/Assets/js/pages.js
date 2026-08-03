@@ -123,12 +123,6 @@
                 return;
             }
 
-            var pagesSunEditor = window.FlatCMSPagesSunEditor || null;
-
-            if (pagesSunEditor && typeof pagesSunEditor.destroy === 'function' && root.__pageActiveEditorTextarea instanceof HTMLTextAreaElement) {
-                pagesSunEditor.destroy(root.__pageActiveEditorTextarea);
-            }
-
             activeLocaleInput.value = targetLocale;
             var activeButton = buttons.find(function(button) {
                 return String(button.getAttribute('data-tab') || '') === targetLocale;
@@ -147,10 +141,6 @@
                 panel.classList.toggle('is-active', isActive);
                 panel.hidden = !isActive;
             });
-
-            if (pagesSunEditor && typeof pagesSunEditor.init === 'function') {
-                pagesSunEditor.init();
-            }
 
             document.dispatchEvent(new CustomEvent('pages:locale-changed', {
                 detail: {
@@ -298,9 +288,6 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         initPagesTranslationTabs();
-        if (!getTranslationRoot() && window.FlatCMSPagesSunEditor && typeof window.FlatCMSPagesSunEditor.init === 'function') {
-            window.FlatCMSPagesSunEditor.init();
-        }
         initPagesBatchActions();
     });
 })();
