@@ -199,49 +199,6 @@
                     <?= __('register_button', 'Auth') ?>
                 </button>
             </form>
-
-            <!-- Social Auth Divider -->
-            <div class="auth-divider">
-                <span><?= __('or_continue_with', 'Auth') ?></span>
-            </div>
-
-            <!-- Social Auth Buttons -->
-            <div class="social-grid">
-                <a href="<?= url('/auth/social/google') ?>" class="btn-social btn-google">
-                    <span class="social-icon">
-                        <svg viewBox="0 0 24 24" width="20" height="20">
-                            <path fill="#ea4335" d="M5.27 9.76A7.08 7.08 0 0 1 12 5.48c1.68 0 3.19.58 4.38 1.53l3.24-3.24A11.96 11.96 0 0 0 12 .5a11.98 11.98 0 0 0-10.71 6.59l3.98 3.09Z"/>
-                            <path fill="#34a853" d="M16.04 18.01A7.4 7.4 0 0 1 12 19.26 7.08 7.08 0 0 1 5.27 14l-3.97 3.09A11.98 11.98 0 0 0 12 23.5a11.45 11.45 0 0 0 7.84-3.03l-3.8-2.46Z"/>
-                            <path fill="#4a90d9" d="M19.84 20.47A11.82 11.82 0 0 0 23.54 12c0-.82-.1-1.68-.29-2.5H12v5.04h6.47a5.56 5.56 0 0 1-2.43 3.63l3.8 2.3Z"/>
-                            <path fill="#fbbc05" d="M5.27 14a7.08 7.08 0 0 1 0-4.24L1.29 6.67A11.98 11.98 0 0 0 0 12c0 1.93.47 3.76 1.29 5.38L5.27 14Z"/>
-                        </svg>
-                    </span>
-                    Google
-                </a>
-                <a href="<?= url('/auth/social/microsoft') ?>" class="btn-social btn-microsoft">
-                    <span class="social-icon">
-                        <svg viewBox="0 0 21 21" width="18" height="18">
-                            <rect fill="#f25022" x="1" y="1" width="9" height="9"/>
-                            <rect fill="#00a4ef" x="1" y="11" width="9" height="9"/>
-                            <rect fill="#7fba00" x="11" y="1" width="9" height="9"/>
-                            <rect fill="#ffb900" x="11" y="11" width="9" height="9"/>
-                        </svg>
-                    </span>
-                    Microsoft
-                </a>
-                <a href="<?= url('/auth/social/linkedin') ?>" class="btn-social btn-linkedin">
-                    <span class="social-icon"><i class="fab fa-linkedin-in social-icon--linkedin"></i></span>
-                    LinkedIn
-                </a>
-                <a href="<?= url('/auth/social/facebook') ?>" class="btn-social btn-facebook">
-                    <span class="social-icon"><i class="fab fa-facebook-f social-icon--facebook"></i></span>
-                    Facebook
-                </a>
-                <a href="<?= url('/auth/social/github') ?>" class="btn-social btn-github btn-full">
-                    <span class="social-icon"><i class="fab fa-github social-icon--github"></i></span>
-                    GitHub
-                </a>
-            </div>
         </div>
 
         <!-- Login link -->
