@@ -183,6 +183,9 @@
         if (attrs.id) {
             script.setAttribute('data-flatcms-runtime-id', String(attrs.id));
         }
+        if (toBool(attrs.essential)) {
+            script.setAttribute('data-flatcms-consent-essential', '1');
+        }
 
         state.loadedScripts[targetSrc] = true;
         (document.head || document.body || document.documentElement).appendChild(script);
@@ -219,17 +222,44 @@
         });
     };
 
+    const googleConsentValues = () => {
+        const analyticsGranted = !state.required || hasConsent([
+            'analytics',
+            'statistics',
+            'measurement',
+            'ga4',
+            'google_analytics',
+        ]);
+        const advertisingGranted = !state.required || hasConsent([
+            'marketing',
+            'advertising',
+            'ads',
+            'google_ads',
+            'ad_storage',
+        ]);
+
+        return {
+            analytics_storage: analyticsGranted ? 'granted' : 'denied',
+            ad_storage: advertisingGranted ? 'granted' : 'denied',
+            ad_user_data: advertisingGranted ? 'granted' : 'denied',
+            ad_personalization: advertisingGranted ? 'granted' : 'denied',
+        };
+    };
+
     const initGoogleAnalytics = () => {
-        if (!cfg.googleAnalyticsEnabled || analyticsState.googleAnalyticsInitialized) {
+        if (!cfg.googleAnalyticsEnabled) {
             return;
         }
 
         const measurementId = String(cfg.googleAnalyticsMeasurementId || '').trim();
-        if (measurementId === '') {
+        if (!/^G-[A-Z0-9]+$/i.test(measurementId)) {
             return;
         }
 
-        if (state.required && !hasConsent(['analytics', 'statistics', 'measurement', 'ga4', 'google_analytics'])) {
+        if (analyticsState.googleAnalyticsInitialized) {
+            if (typeof window.gtag === 'function') {
+                window.gtag('consent', 'update', googleConsentValues());
+            }
             return;
         }
 
@@ -241,6 +271,12 @@
                 window.dataLayer.push(arguments);
             };
 
+        const defaultConsent = googleConsentValues();
+        if (state.required) {
+            defaultConsent.wait_for_update = 500;
+        }
+
+        window.gtag('consent', 'default', defaultConsent);
         window.gtag('js', new Date());
         window.gtag('config', measurementId);
 
@@ -248,6 +284,7 @@
             id: 'flatcms-ga4',
             async: true,
             defer: false,
+            essential: true,
         });
     };
 
@@ -735,6 +772,7 @@
     window.FlatCMSConsent = consentApi;
 
     installDynamicScriptGuard();
+    initGoogleAnalytics();
 
     if (!axeptioEnabled) {
         state.ready = true;
@@ -780,7 +818,7 @@
     }
 
     const sdk = document.createElement('script');
-    sdk.src = '//static.axept.io/sdk.js';
+    sdk.src = 'https://static.axept.io/sdk.js';
     sdk.async = true;
     sdk.defer = true;
     sdk.setAttribute('data-flatcms-axeptio-sdk', '1');

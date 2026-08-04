@@ -318,6 +318,8 @@ function flatcms_content_security_policy(): string
         flatcms_csp_directive('style-src', array_merge([
             "'self'",
             "'unsafe-inline'",
+            'https://fonts.axept.io',
+            'https://fonts.googleapis.com',
             'https://cdn.tiny.cloud',
             'https://*.tiny.cloud',
         ], flatcms_csp_env_sources('FLATCMS_CSP_STYLE_EXTRA'))),
@@ -330,6 +332,8 @@ function flatcms_content_security_policy(): string
         flatcms_csp_directive('font-src', array_merge([
             "'self'",
             'data:',
+            'https://fonts.axept.io',
+            'https://fonts.gstatic.com',
             'https://cdn.tiny.cloud',
             'https://*.tiny.cloud',
         ], flatcms_csp_env_sources('FLATCMS_CSP_FONT_EXTRA'))),
@@ -339,6 +343,8 @@ function flatcms_content_security_policy(): string
             'https://challenges.cloudflare.com',
             'https://static.axept.io',
             'https://*.axept.io',
+            'https://*.axeptio.eu',
+            'https://*.axeptio.tech',
             'https://cdn.tiny.cloud',
             'https://*.tiny.cloud',
         ], $analyticsSources['connect'], flatcms_csp_env_sources('FLATCMS_CSP_CONNECT_EXTRA'))),
