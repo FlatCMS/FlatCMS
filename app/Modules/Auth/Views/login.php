@@ -114,10 +114,12 @@
                 </button>
             </form>
 
-            <p class="auth-center-text">
-                <?= __('no_account', 'Auth') ?>
-                <a href="<?= url('/register') ?>" class="auth-link"><?= __('register_link', 'Auth') ?></a>
-            </p>
+            <?php if (!empty($registrationEnabled)): ?>
+                <p class="auth-center-text">
+                    <?= __('no_account', 'Auth') ?>
+                    <a href="<?= url('/register') ?>" class="auth-link"><?= __('register_link', 'Auth') ?></a>
+                </p>
+            <?php endif; ?>
 
             <p class="auth-center-text auth-center-text--compact">
                 <a href="<?= url('/') ?>" class="auth-back-link"><?= __('back_to_site', 'Auth') ?></a>

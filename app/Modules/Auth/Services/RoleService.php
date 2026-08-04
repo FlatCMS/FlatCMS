@@ -64,7 +64,7 @@ class RoleService
             'color' => '#95a5a6',
             'badge_class' => 'badge-secondary',
             'description' => 'Private member area',
-            'registerable' => false,
+            'registerable' => true,
         ],
     ];
 

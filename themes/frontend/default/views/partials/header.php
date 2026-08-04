@@ -46,7 +46,12 @@
     }
     $accountUrl = url('/admin/profile');
     $accountLabel = __('my_profile', 'Users');
-    $registrationEnabled = false;
+    $registrationEnabledValue = env('FRONTEND_REGISTRATION_ENABLED', true);
+$registrationEnabled = filter_var(
+    $registrationEnabledValue,
+    FILTER_VALIDATE_BOOLEAN,
+    FILTER_NULL_ON_FAILURE
+) ?? true;
     ?>
     <header class="<?= e(implode(' ', $headerClasses)) ?>">
         <div class="container">

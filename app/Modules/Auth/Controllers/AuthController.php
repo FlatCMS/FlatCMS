@@ -159,7 +159,16 @@ class AuthController extends BaseController
 
     private function frontendRegistrationEnabled(): bool
     {
-        return false;
+        $value = env('FRONTEND_REGISTRATION_ENABLED', true);
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return match (strtolower(trim((string) $value))) {
+            '1', 'true', 'yes', 'on' => true,
+            '0', 'false', 'no', 'off' => false,
+            default => true,
+        };
     }
 
     // --- Login ---
