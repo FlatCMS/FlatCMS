@@ -246,6 +246,14 @@
         };
     };
 
+    const googleConsentDefaults = () => ({
+        analytics_storage: 'denied',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        wait_for_update: 500,
+    });
+
     const initGoogleAnalytics = () => {
         if (!cfg.googleAnalyticsEnabled) {
             return;
@@ -257,9 +265,6 @@
         }
 
         if (analyticsState.googleAnalyticsInitialized) {
-            if (typeof window.gtag === 'function') {
-                window.gtag('consent', 'update', googleConsentValues());
-            }
             return;
         }
 
@@ -271,10 +276,9 @@
                 window.dataLayer.push(arguments);
             };
 
-        const defaultConsent = googleConsentValues();
-        if (state.required) {
-            defaultConsent.wait_for_update = 500;
-        }
+        const defaultConsent = state.required
+            ? googleConsentDefaults()
+            : googleConsentValues();
 
         window.gtag('consent', 'default', defaultConsent);
         window.gtag('js', new Date());
@@ -368,8 +372,18 @@
             return true;
         }
 
-        if (/static\.axept\.io\/sdk\.js/i.test(source)) {
-            return true;
+        try {
+            const sourceUrl = new URL(source, window.location.href);
+            const axeptioScriptHosts = [
+                'static.axept.io',
+                'static.axeptio.eu',
+            ];
+
+            if (axeptioScriptHosts.indexOf(String(sourceUrl.hostname || '').toLowerCase()) !== -1) {
+                return true;
+            }
+        } catch (error) {
+            // An invalid external URL remains subject to the consent guard.
         }
 
         return false;
@@ -772,7 +786,6 @@
     window.FlatCMSConsent = consentApi;
 
     installDynamicScriptGuard();
-    initGoogleAnalytics();
 
     if (!axeptioEnabled) {
         state.ready = true;
@@ -785,6 +798,9 @@
     const axeptioSettings = {
         clientId: cfg.axeptioClientId,
         cookiesVersion: cfg.axeptioCookiesVersion,
+        googleConsentMode: {
+            default: googleConsentDefaults(),
+        },
     };
 
     window.axeptioSettings = axeptioSettings;
@@ -814,18 +830,20 @@
     }
 
     if (document.querySelector('script[data-flatcms-axeptio-sdk]')) {
+        initGoogleAnalytics();
         return;
     }
 
     const sdk = document.createElement('script');
     sdk.src = 'https://static.axept.io/sdk.js';
     sdk.async = true;
-    sdk.defer = true;
     sdk.setAttribute('data-flatcms-axeptio-sdk', '1');
+    sdk.setAttribute('data-flatcms-consent-essential', '1');
 
     const firstScript = document.getElementsByTagName('script')[0];
     if (firstScript && firstScript.parentNode) {
         firstScript.parentNode.insertBefore(sdk, firstScript);
+        initGoogleAnalytics();
         if (!state.required) {
             state.ready = true;
             loadDeferredScripts();
@@ -836,6 +854,7 @@
     }
 
     (document.head || document.body || document.documentElement).appendChild(sdk);
+    initGoogleAnalytics();
     if (!state.required) {
         state.ready = true;
         loadDeferredScripts();
