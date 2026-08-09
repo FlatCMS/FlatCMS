@@ -13,6 +13,12 @@ namespace App\Core;
 
 final class ContentDocumentStore
 {
+    /** @var array<string, array<int, array<string, mixed>>> */
+    private static array $documentCache = [];
+
+    /** @var array<string, array<string, array<string, mixed>>> */
+    private static array $documentByIdCache = [];
+
     private string $basePath;
     private string $entity;
 
@@ -36,8 +42,13 @@ final class ContentDocumentStore
      */
     public function all(): array
     {
+        if (array_key_exists($this->basePath, self::$documentCache)) {
+            return self::$documentCache[$this->basePath];
+        }
+
         $items = [];
         $seen = [];
+        $itemsById = [];
 
         foreach ($this->documentDirectories() as $directory) {
             $source = $this->readDocument($directory . '/index.json', $directory . '/content.html');
@@ -46,6 +57,7 @@ final class ContentDocumentStore
                 if ($sourceId !== '') {
                     $items[] = $source;
                     $seen[$sourceId] = true;
+                    $itemsById[$sourceId] = $source;
                 }
             }
 
@@ -70,6 +82,7 @@ final class ContentDocumentStore
 
                 $items[] = $translation;
                 $seen[$translationId] = true;
+                $itemsById[$translationId] = $translation;
             }
         }
 
@@ -86,23 +99,46 @@ final class ContentDocumentStore
 
             $items[] = $legacy;
             $seen[$legacyId] = true;
+            $itemsById[$legacyId] = $legacy;
         }
 
-        return $items;
+        self::$documentCache[$this->basePath] = $items;
+        self::$documentByIdCache[$this->basePath] = $itemsById;
+
+        return self::$documentCache[$this->basePath];
     }
 
     public function find(string $id): ?array
     {
+        $safeId = $this->sanitizeId($id);
+        if ($safeId === '') {
+            return null;
+        }
+
+        if (isset(self::$documentCache[$this->basePath])) {
+            return self::$documentByIdCache[$this->basePath][$safeId] ?? null;
+        }
+
+        if (isset(self::$documentByIdCache[$this->basePath][$safeId])) {
+            return self::$documentByIdCache[$this->basePath][$safeId];
+        }
+
         $location = $this->locate($id);
         if (!is_array($location)) {
             return null;
         }
 
         if (($location['type'] ?? '') === 'legacy') {
-            return $this->readLegacyDocument((string) $location['index']);
+            $document = $this->readLegacyDocument((string) $location['index']);
+        } else {
+            $document = $this->readDocument((string) $location['index'], (string) $location['content']);
         }
 
-        return $this->readDocument((string) $location['index'], (string) $location['content']);
+        if (is_array($document)) {
+            self::$documentByIdCache[$this->basePath][$safeId] = $document;
+        }
+
+        return $document;
     }
 
     public function findBy(string $field, mixed $value): ?array
@@ -173,7 +209,12 @@ final class ContentDocumentStore
         }
 
         if (($location['type'] ?? '') === 'legacy') {
-            return is_file((string) $location['index']) && unlink((string) $location['index']);
+            $removed = is_file((string) $location['index']) && unlink((string) $location['index']);
+            if ($removed) {
+                $this->invalidateCache();
+            }
+
+            return $removed;
         }
 
         $removed = false;
@@ -187,6 +228,10 @@ final class ContentDocumentStore
         $directory = (string) ($location['directory'] ?? '');
         if ($directory !== '') {
             $this->removeEmptyDirectories($directory);
+        }
+
+        if ($removed) {
+            $this->invalidateCache();
         }
 
         return $removed;
@@ -253,6 +298,8 @@ final class ContentDocumentStore
      */
     private function saveDocument(array $data, ?array $existingLocation = null): void
     {
+        $this->invalidateCache();
+
         $location = $this->resolveWriteLocation($data, $existingLocation);
         $directory = (string) $location['directory'];
 
@@ -534,5 +581,11 @@ final class ContentDocumentStore
             rmdir($directory);
             $directory = dirname($directory);
         }
+    }
+
+    private function invalidateCache(): void
+    {
+        unset(self::$documentCache[$this->basePath]);
+        unset(self::$documentByIdCache[$this->basePath]);
     }
 }

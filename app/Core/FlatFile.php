@@ -13,6 +13,9 @@ namespace App\Core;
 
 class FlatFile
 {
+    /** @var array<string, array<string, mixed>> */
+    private static array $settingsCache = [];
+
     private string $basePath;
     private string $entity;
 
@@ -276,16 +279,22 @@ class FlatFile
     // Settings helper - for single config files
     public static function settings(string $name = 'settings'): array
     {
+        if (array_key_exists($name, self::$settingsCache)) {
+            return self::$settingsCache[$name];
+        }
+
         $path = self::resolveSettingsReadPath($name);
 
         if (!file_exists($path)) {
-            return [];
+            self::$settingsCache[$name] = [];
+            return self::$settingsCache[$name];
         }
 
         $content = file_get_contents($path);
         $data = json_decode($content, true);
 
-        return json_last_error() === JSON_ERROR_NONE ? $data : [];
+        self::$settingsCache[$name] = json_last_error() === JSON_ERROR_NONE && is_array($data) ? $data : [];
+        return self::$settingsCache[$name];
     }
 
     public static function saveSettings(array $data, string $name = 'settings'): bool
@@ -301,6 +310,7 @@ class FlatFile
         $saved = file_put_contents($path, $json, LOCK_EX) !== false;
         if ($saved) {
             self::cleanupLegacySettingsPath($name, $path);
+            self::$settingsCache[$name] = $data;
         }
         return $saved;
     }

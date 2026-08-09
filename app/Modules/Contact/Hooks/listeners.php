@@ -12,6 +12,10 @@ declare(strict_types=1);
 use App\Modules\Contact\Support\ContactFormRenderer;
 
  $contactAssetsRequired = static function (array $payload = []): bool {
+    if (!empty($payload['contact_assets_required'])) {
+        return true;
+    }
+
     $extractContent = static function (mixed $entry): string {
         if (!is_array($entry)) {
             return '';

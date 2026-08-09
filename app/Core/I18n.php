@@ -17,6 +17,8 @@ class I18n
     private static string $fallbackLocale = 'en-US';
     private static array $translations = [];
     private static array $loadedModules = [];
+    private static ?array $supportedLocales = null;
+    private static array $directions = [];
 
     public static function init(?string $locale = null): void
     {
@@ -228,6 +230,10 @@ class I18n
 
     public static function getSupportedLocales(): array
     {
+        if (self::$supportedLocales !== null) {
+            return self::$supportedLocales;
+        }
+
         $locales = [];
         $langDir = BASE_PATH . '/data/languages';
 
@@ -239,10 +245,12 @@ class I18n
 
         if (!empty($locales)) {
             sort($locales);
-            return $locales;
+            self::$supportedLocales = $locales;
+            return self::$supportedLocales;
         }
 
-        return config('app.locales', ['fr-FR', 'en-US']);
+        self::$supportedLocales = config('app.locales', ['fr-FR', 'en-US']);
+        return self::$supportedLocales;
     }
 
     public static function localizeLanguageCatalog(array $languages, ?string $uiLocale = null): array
@@ -323,13 +331,18 @@ class I18n
     public static function getDirection(): string
     {
         $locale = self::$locale;
+        if (isset(self::$directions[$locale])) {
+            return self::$directions[$locale];
+        }
+
         $configPath = BASE_PATH . "/data/languages/{$locale}.json";
 
         if (file_exists($configPath)) {
             $content = file_get_contents($configPath);
             $config = json_decode($content, true);
             if (is_array($config) && isset($config['direction'])) {
-                return $config['direction'];
+                self::$directions[$locale] = (string) $config['direction'];
+                return self::$directions[$locale];
             }
         }
 
@@ -337,10 +350,12 @@ class I18n
         $rtlLanguages = ['ar', 'he', 'fa', 'ur'];
         $langPrefix = substr($locale, 0, 2);
         if (in_array($langPrefix, $rtlLanguages, true)) {
-            return 'rtl';
+            self::$directions[$locale] = 'rtl';
+            return self::$directions[$locale];
         }
 
-        return 'ltr';
+        self::$directions[$locale] = 'ltr';
+        return self::$directions[$locale];
     }
 
     public static function isRtl(): bool

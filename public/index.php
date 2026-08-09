@@ -500,6 +500,13 @@ function flatcms_ensure_uploads_alias(): void
         return;
     }
 
+    if (is_dir($alias)) {
+        $entries = @scandir($alias);
+        if ($entries !== false && array_diff($entries, ['.', '..']) === []) {
+            @rmdir($alias);
+        }
+    }
+
     if (!is_dir($alias)) {
         $linked = false;
         if (function_exists('symlink')) {

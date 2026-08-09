@@ -20,6 +20,9 @@ final class ModuleManager
         'Install' => true,
     ];
 
+    /** @var array<string, array{modules: array<string, array<string, mixed>>, resolved_enabled: array<string, array<string, mixed>>|null}> */
+    private static array $catalogCache = [];
+
     private array $modulesPaths;
     private string $statePath;
     private array $modules = [];
@@ -41,7 +44,19 @@ final class ModuleManager
         $this->modulesPaths = array_values(array_unique($paths));
         $this->statePath = $statePath ?? (BASE_PATH . '/data/modules.json');
         $this->loadState();
+
+        $cacheKey = $this->catalogCacheKey();
+        if (isset(self::$catalogCache[$cacheKey])) {
+            $this->modules = self::$catalogCache[$cacheKey]['modules'];
+            $this->resolvedEnabled = self::$catalogCache[$cacheKey]['resolved_enabled'];
+            return;
+        }
+
         $this->loadModules();
+        self::$catalogCache[$cacheKey] = [
+            'modules' => $this->modules,
+            'resolved_enabled' => $this->resolvedEnabled,
+        ];
     }
 
     public function all(): array
@@ -128,6 +143,15 @@ final class ModuleManager
         $content = file_get_contents($this->statePath);
         $data = json_decode($content, true);
         $this->state = is_array($data) ? $data : [];
+    }
+
+    private function catalogCacheKey(): string
+    {
+        return hash('sha256', serialize([
+            $this->modulesPaths,
+            $this->statePath,
+            $this->state,
+        ]));
     }
 
     private function loadModules(): void
