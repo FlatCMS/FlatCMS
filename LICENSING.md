@@ -13,10 +13,9 @@ The full text of that license is available in [LICENSE](LICENSE).
 
 ## This Repository
 
-`FlatCMS LTS Core` is intended to ship the stable open-source core line.
-
-At the time of writing, this repository does not intentionally carry premium
-code directories as part of its supported runtime scope.
+This repository ships the stable open-source FlatCMS runtime. Premium,
+internal and hosted-service components are developed and distributed outside
+this repository.
 
 If a file header and this document ever differ, the file header is
 authoritative.
