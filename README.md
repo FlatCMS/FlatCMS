@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://flat-cms.fr/">Official website</a> ·
-  <a href="https://wiki.flat-cms.fr/">Documentation</a> ·
+  <a href="https://www.flat-cms.fr/fr-FR/wiki/">Documentation</a> ·
   <a href="https://github.com/FlatCMS/FlatCMS/releases/tag/v1.0.0">Download v1.0.0 LTS</a>
 </p>
 
