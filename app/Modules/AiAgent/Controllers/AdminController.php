@@ -38,7 +38,7 @@ final class AdminController extends BaseController
 
         $user = $this->session->get('user');
         $role = RoleService::normalizeRole((string) ($user['role'] ?? 'member'));
-        if (!$user || !RoleService::canAccessAdmin($role)) {
+        if (!$user || !RoleService::canAccessAdmin($role) || !RoleService::hasPermission($role, 'ai.use')) {
             $this->json([
                 'success' => false,
                 'message' => __('error.unauthorized', 'Core'),
@@ -109,6 +109,9 @@ final class AdminController extends BaseController
         }
         if ($normalized === 'provider_refusal') {
             return __('ai_error_provider_refusal', 'Settings');
+        }
+        if ($normalized === 'content_out_of_scope') {
+            return __('assistant_error_content_out_of_scope', 'AiAgent');
         }
 
         return __('assistant_error_unavailable', 'AiAgent');

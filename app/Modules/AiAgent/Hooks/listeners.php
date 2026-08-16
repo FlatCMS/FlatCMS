@@ -9,7 +9,32 @@
 
 declare(strict_types=1);
 
-hook_register('admin.assets.head', static function (): array {
+$aiAgentCanUse = static function (): bool {
+    $user = auth();
+    if (!is_array($user)) {
+        return false;
+    }
+
+    $role = \App\Modules\Auth\Services\RoleService::normalizeRole((string) ($user['role'] ?? 'member'));
+    return \App\Modules\Auth\Services\RoleService::hasPermission($role, 'ai.use');
+};
+
+hook_register('auth.permissions.extend', static function (): array {
+    return [
+        'permissions' => ['ai.use'],
+        'role_permissions' => [
+            'super_admin' => ['ai.use'],
+            'admin' => ['ai.use'],
+            'editor' => ['ai.use'],
+        ],
+    ];
+}, ['module' => 'AiAgent', 'priority' => 20]);
+
+hook_register('admin.assets.head', static function () use ($aiAgentCanUse): array {
+    if (!$aiAgentCanUse()) {
+        return [];
+    }
+
     return [[
         'id' => 'ai-agent.admin.css',
         'type' => 'css',
@@ -18,7 +43,11 @@ hook_register('admin.assets.head', static function (): array {
     ]];
 }, ['module' => 'AiAgent', 'priority' => 20]);
 
-hook_register('admin.assets.footer', static function (): array {
+hook_register('admin.assets.footer', static function () use ($aiAgentCanUse): array {
+    if (!$aiAgentCanUse()) {
+        return [];
+    }
+
     return [[
         'id' => 'ai-agent.admin.js',
         'type' => 'js',
@@ -27,7 +56,11 @@ hook_register('admin.assets.footer', static function (): array {
     ]];
 }, ['module' => 'AiAgent', 'priority' => 20]);
 
-hook_register('admin.layout.modals', static function (): ?array {
+hook_register('admin.layout.modals', static function () use ($aiAgentCanUse): ?array {
+    if (!$aiAgentCanUse()) {
+        return null;
+    }
+
     ob_start();
     include BASE_PATH . '/app/Modules/AiAgent/Views/admin/partials/drawer.php';
     $html = trim((string) ob_get_clean());

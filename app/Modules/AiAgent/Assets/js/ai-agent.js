@@ -1831,9 +1831,7 @@
       }
 
       if (proposalType === 'content_block') {
-        return context.module === 'posts'
-          ? ['title', 'slug', 'excerpt', 'categories', 'featured_image', 'content']
-          : ['title', 'slug', 'content'];
+        return ['content'];
       }
 
       if (context.scope === 'field' && context.field !== '') {

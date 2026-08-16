@@ -30,12 +30,18 @@ final class AdminAssistantService
     private AIManager $ai;
     private EditorialAssistant $editorial;
     private FormService $contactForms;
+    private EditorialScopePolicy $scopePolicy;
 
-    public function __construct(?AIManager $ai = null, ?EditorialAssistant $editorial = null, ?FormService $contactForms = null)
-    {
+    public function __construct(
+        ?AIManager $ai = null,
+        ?EditorialAssistant $editorial = null,
+        ?FormService $contactForms = null,
+        ?EditorialScopePolicy $scopePolicy = null
+    ) {
         $this->ai = $ai ?? new AIManager();
         $this->editorial = $editorial ?? new EditorialAssistant($this->ai);
         $this->contactForms = $contactForms ?? new FormService();
+        $this->scopePolicy = $scopePolicy ?? new EditorialScopePolicy();
     }
 
     /**
@@ -49,6 +55,10 @@ final class AdminAssistantService
         }
 
         $ctx = $this->normalizeContext($context);
+        if ($this->scopePolicy->isLayoutRequest($message)) {
+            return $this->buildScopeInfoProposal('assistant_scope_layout');
+        }
+
         $intent = $this->resolveIntent($ctx, $message, $action);
         $entityType = $ctx['entity'];
         $locale = $ctx['locale'];
@@ -72,27 +82,39 @@ final class AdminAssistantService
                 ];
 
             case 'block_generate':
+                if (($blocked = $this->blockRewriteGuard($ctx, $intent)) !== null) {
+                    return $blocked;
+                }
+
                 return $this->buildContentBlockResponse(
                     $intent,
                     $ctx,
                     $message,
-                    $this->editorial->generateContent($entityType, $locale, $current, $message, $ctx['has_excerpt'], $editorialContext)
+                    $this->generateScopedContent($intent, $ctx, $message, $editorialContext)
                 );
 
             case 'block_improve':
+                if (($blocked = $this->blockRewriteGuard($ctx, $intent)) !== null) {
+                    return $blocked;
+                }
+
                 return $this->buildContentBlockResponse(
                     $intent,
                     $ctx,
                     $message,
-                    $this->editorial->reviseContent($entityType, $locale, $current, 'enhance', $message, $ctx['has_excerpt'], $editorialContext)
+                    $this->generateScopedContent($intent, $ctx, $message, $editorialContext)
                 );
 
             case 'block_proofread':
+                if (($blocked = $this->blockRewriteGuard($ctx, $intent)) !== null) {
+                    return $blocked;
+                }
+
                 return $this->buildContentBlockResponse(
                     $intent,
                     $ctx,
                     $message,
-                    $this->editorial->reviseContent($entityType, $locale, $current, 'proofread', $message, $ctx['has_excerpt'], $editorialContext)
+                    $this->generateScopedContent($intent, $ctx, $message, $editorialContext)
                 );
 
             case 'block_translate':
@@ -100,12 +122,15 @@ final class AdminAssistantService
                     throw new RuntimeException('same_locale');
                 }
 
-                $source = $this->resolveSourceFields($ctx);
+                if (($blocked = $this->blockRewriteGuard($ctx, $intent)) !== null) {
+                    return $blocked;
+                }
+
                 return $this->buildContentBlockResponse(
                     $intent,
                     $ctx,
                     $message,
-                    $this->editorial->translate($entityType, $sourceLocale, $locale, $source, $ctx['has_excerpt'], $message, $editorialContext)
+                    $this->generateScopedContent($intent, $ctx, $message, $editorialContext)
                 );
 
             case 'block_summary':
@@ -456,12 +481,101 @@ final class AdminAssistantService
 
     /**
      * @param array<string, mixed> $ctx
+     * @return array{intent:string,proposal_type:string,proposal:array<string,mixed>,chips:array<int,string>}|null
+     */
+    private function blockRewriteGuard(array $ctx, string $intent): ?array
+    {
+        $fields = $intent === 'block_translate' ? $this->resolveSourceFields($ctx) : $ctx['current'];
+        $content = trim((string) ($fields['content'] ?? ''));
+
+        if ($this->scopePolicy->isProtectedContent($content)) {
+            return $this->buildScopeInfoProposal('assistant_scope_structured');
+        }
+
+        if ($this->scopePolicy->isTooLargeForRewrite($content)) {
+            return $this->buildScopeInfoProposal('assistant_scope_too_large');
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $ctx
+     * @param array<string, mixed> $editorialContext
+     * @return array{content:string}
+     */
+    private function generateScopedContent(string $intent, array $ctx, string $message, array $editorialContext): array
+    {
+        $fields = $intent === 'block_translate' ? $this->resolveSourceFields($ctx) : $ctx['current'];
+        $content = trim((string) ($fields['content'] ?? ''));
+        $instruction = match ($intent) {
+            'block_generate' => 'Draft a complete editorial text from the brief.',
+            'block_proofread' => 'Correct spelling, grammar, punctuation, and minor style issues without changing the meaning.',
+            'block_translate' => 'Translate the editorial text into the target locale without adding new information.',
+            default => 'Improve clarity, rhythm, and readability without changing the core meaning.',
+        };
+
+        $safeContext = array_intersect_key($editorialContext, array_flip([
+            'site_name',
+            'site_description',
+            'site_slogan',
+            'assistant_persona',
+        ]));
+
+        $payload = $this->requestJson(
+            instructions: FlattyPersona::promptPreamble()
+                . ' Return only valid JSON with the single key content. '
+                . $instruction
+                . ' Flatty is an editorial copilot, not a page builder. Use only paragraphs, h2 to h4 headings, lists, strong, emphasis, blockquotes, links, code, pre, br, and hr when useful. '
+                . 'Never create layouts, heroes, banners, cards, grids, columns, responsive structures, buttons, forms, images, CSS, classes, IDs, styles, data attributes, scripts, shortcodes, or full HTML documents. '
+                . 'Never alter or return the title, slug, excerpt, categories, featured image, SEO fields, or any field other than content. No markdown, commentary, or code fences.',
+            input: [
+                'task' => $intent,
+                'entity_type' => $ctx['entity'],
+                'source_locale' => $ctx['source_locale'],
+                'target_locale' => $ctx['locale'],
+                'title_context' => trim((string) ($fields['title'] ?? '')),
+                'excerpt_context' => trim((string) ($fields['excerpt'] ?? '')),
+                'content' => $content,
+                'editorial_context' => $safeContext,
+                'user_instruction' => trim($message),
+            ],
+            maxOutputTokens: 2600
+        );
+
+        $generated = $this->scopePolicy->sanitizeGeneratedContent((string) ($payload['content'] ?? ''));
+        if ($generated === '') {
+            throw new RuntimeException('content_out_of_scope');
+        }
+
+        return ['content' => $generated];
+    }
+
+    /**
+     * @return array{intent:string,proposal_type:string,proposal:array<string,mixed>,chips:array<int,string>}
+     */
+    private function buildScopeInfoProposal(string $keyPrefix): array
+    {
+        return $this->buildInfoProposal(
+            'editorial_scope',
+            $this->translate('assistant_scope_reply'),
+            $this->translate($keyPrefix . '_title'),
+            $this->translate($keyPrefix . '_message'),
+            '',
+            ''
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $ctx
      * @param array<string, mixed> $values
      * @return array{intent:string,proposal_type:string,proposal:array<string,mixed>,chips:array<int,string>}
      */
     private function buildContentBlockResponse(string $intent, array $ctx, string $message, array $values): array
     {
-        $preparedValues = $this->finalizePostContentValues($ctx, $values);
+        $preparedValues = [
+            'content' => trim((string) ($values['content'] ?? '')),
+        ];
         $proposal = [
             'values' => $preparedValues,
         ];
@@ -1040,73 +1154,6 @@ final class AdminAssistantService
         }
 
         return $recent;
-    }
-
-    /**
-     * @param array<string, mixed> $ctx
-     * @param array<string, mixed> $values
-     * @return array<string, mixed>
-     */
-    private function finalizePostContentValues(array $ctx, array $values): array
-    {
-        if (($ctx['module'] ?? '') !== 'posts') {
-            return $values;
-        }
-
-        $categoriesById = $this->buildLocalizedCategoryMap((string) ($ctx['locale'] ?? ''));
-        $categoryIds = $this->resolveSuggestedCategoryIds($values['categories'] ?? [], $categoriesById);
-        if ($categoryIds === []) {
-            $categoryIds = $this->normalizeStringList($ctx['selected_category_ids'] ?? []);
-        }
-
-        $values['categories'] = $categoryIds;
-        return $values;
-    }
-
-    /**
-     * @param mixed $suggested
-     * @param array<string, string> $categoriesById
-     * @return array<int, string>
-     */
-    private function resolveSuggestedCategoryIds(mixed $suggested, array $categoriesById): array
-    {
-        $requested = $this->normalizeStringList($suggested);
-        if ($requested === []) {
-            return [];
-        }
-
-        $resolved = [];
-        foreach ($requested as $candidate) {
-            $candidate = trim($candidate);
-            if ($candidate === '') {
-                continue;
-            }
-
-            if (isset($categoriesById[$candidate])) {
-                if (!in_array($candidate, $resolved, true)) {
-                    $resolved[] = $candidate;
-                }
-                continue;
-            }
-
-            $needle = mb_strtolower($candidate);
-            if ($needle === '') {
-                continue;
-            }
-
-            foreach ($categoriesById as $id => $name) {
-                if (mb_strtolower(trim($name)) !== $needle) {
-                    continue;
-                }
-
-                if (!in_array($id, $resolved, true)) {
-                    $resolved[] = $id;
-                }
-                break;
-            }
-        }
-
-        return array_slice($resolved, 0, 3);
     }
 
     /**
