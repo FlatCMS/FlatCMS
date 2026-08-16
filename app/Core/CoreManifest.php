@@ -22,7 +22,7 @@ final class CoreManifest
         'vendor' => 'flatcms',
         'official' => true,
         'signature' => '',
-        'requires_php' => '8.1',
+        'requires_php' => '8.3',
     ];
 
     private static ?array $cached = null;

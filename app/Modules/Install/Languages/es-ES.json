@@ -63,7 +63,7 @@
     "subtitle": "Compatibilidad de su servidor",
     "missing_requirements": "Requisitos faltantes",
     "php_version": "Versión de PHP",
-    "php_version_msg": "Se requiere PHP 8.2+",
+    "php_version_msg": "Se requiere PHP 8.3+",
     "ext_json": "Extensión JSON",
     "ext_json_msg": "Requerido para almacenamiento",
     "ext_mbstring": "Extensión mbstring",

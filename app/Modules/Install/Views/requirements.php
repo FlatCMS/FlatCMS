@@ -14,7 +14,7 @@
 // Récupérer les requirements si pas déjà définis
 if (!isset($requirements)) {
     $requirements = [
-        ['name' => \App\Modules\Install\Support\Lang::get('requirements.php_version'), 'required' => true, 'passed' => version_compare(PHP_VERSION, '8.2.0', '>='), 'current' => PHP_VERSION, 'minimum' => '8.2.0', 'message' => \App\Modules\Install\Support\Lang::get('requirements.php_version_msg')],
+        ['name' => \App\Modules\Install\Support\Lang::get('requirements.php_version'), 'required' => true, 'passed' => version_compare(PHP_VERSION, '8.3.0', '>='), 'current' => PHP_VERSION, 'minimum' => '8.3.0', 'message' => \App\Modules\Install\Support\Lang::get('requirements.php_version_msg')],
         ['name' => \App\Modules\Install\Support\Lang::get('requirements.ext_json'), 'required' => true, 'passed' => extension_loaded('json'), 'message' => \App\Modules\Install\Support\Lang::get('requirements.ext_json_msg')],
         ['name' => \App\Modules\Install\Support\Lang::get('requirements.ext_mbstring'), 'required' => true, 'passed' => extension_loaded('mbstring'), 'message' => \App\Modules\Install\Support\Lang::get('requirements.ext_mbstring_msg')],
         ['name' => \App\Modules\Install\Support\Lang::get('requirements.ext_session'), 'required' => true, 'passed' => extension_loaded('session'), 'message' => \App\Modules\Install\Support\Lang::get('requirements.ext_session_msg')],

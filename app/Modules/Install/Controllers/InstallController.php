@@ -2780,7 +2780,7 @@ server {
         # Example TCP (common):
         # fastcgi_pass 127.0.0.1:9000;
         # Example Unix socket:
-        # fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        # fastcgi_pass unix:/run/php/php8.3-fpm.sock;
         fastcgi_pass 127.0.0.1:9000;
     }
 
@@ -2916,9 +2916,9 @@ NGINX;
             [
                 'name' => Lang::get('requirements.php_version'),
                 'required' => true,
-                'passed' => version_compare(PHP_VERSION, '8.2.0', '>='),
+                'passed' => version_compare(PHP_VERSION, '8.3.0', '>='),
                 'current' => PHP_VERSION,
-                'minimum' => '8.2.0',
+                'minimum' => '8.3.0',
                 'message' => Lang::get('requirements.php_version_msg'),
             ],
             [

@@ -61,6 +61,7 @@ This repository is intended to ship the open-source core line. See:
 
 - [LICENSE](LICENSE)
 - [LICENSING.md](LICENSING.md)
+- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 - [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md)
 - [TRADEMARK.md](TRADEMARK.md)
 - [CLA.md](CLA.md)

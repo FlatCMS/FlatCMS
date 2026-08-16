@@ -32,6 +32,10 @@ licenses. This includes, for example:
 
 Those parts are not relicensed by FlatCMS.
 
+The versions, license modes, copyright notices, and bundled license files for
+the dependencies shipped with a FlatCMS release are listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ## Trademarks
 
 Code licenses do not grant trademark rights. Brand usage is governed

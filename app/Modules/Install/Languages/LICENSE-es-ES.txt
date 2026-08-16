@@ -1,9 +1,9 @@
 Aviso de licencia de FlatCMS
 
-El núcleo de FlatCMS se distribuye bajo la GNU Affero General Public License v3.0 o posterior.
-Algunos componentes premium incluidos en esta distribución se identifican en sus encabezados fuente con `LicenseRef-FlatCMS-Commercial` y no están cubiertos por la GNU AGPL.
-Su uso requiere una licencia comercial válida concedida por Alain BROYE / FlatCMS.
-El texto oficial de la GNU AGPL v3.0 aparece a continuación. Consulte LICENSE, LICENSING.md, COMMERCIAL_LICENSE.md y TRADEMARK.md para más detalles.
+Esta distribución contiene únicamente la línea Core de código abierto de FlatCMS, publicada bajo la GNU Affero General Public License v3.0 o posterior.
+Los componentes premium adquiridos por separado se rigen por sus encabezados de código y su acuerdo comercial; no forman parte de este paquete Core.
+El software de terceros incluido conserva sus propias licencias, enumeradas en THIRD_PARTY_NOTICES.md.
+El texto oficial de la GNU AGPL v3.0 aparece a continuación. Consulte LICENSE, LICENSING.md, THIRD_PARTY_NOTICES.md, COMMERCIAL_LICENSE.md y TRADEMARK.md para más detalles.
 
 GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007

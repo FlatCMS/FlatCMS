@@ -10,7 +10,7 @@
       "channel": "stable",
       "vendor": "flatcms",
       "official": true,
-      "requires_php": "8.1",
+      "requires_php": "8.3",
       "sha256": "c77a92d17fc2e545501910b230dbf8674469d91c9236530844b36991a40418eb",
       "signature": "",
       "min_core_version": "",
