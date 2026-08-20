@@ -14,16 +14,19 @@ namespace App\Modules\Backups\Controllers;
 use App\Core\BaseController;
 use App\Core\I18n;
 use App\Modules\Backups\Services\SiteBackupService;
+use App\Modules\Backups\Services\FullBackupService;
 
 final class AdminController extends BaseController
 {
     private SiteBackupService $service;
+    private FullBackupService $fullService;
 
     public function __construct()
     {
         parent::__construct();
         I18n::load('Backups');
         $this->service = new SiteBackupService();
+        $this->fullService = new FullBackupService();
     }
 
     public function index(): void
@@ -32,7 +35,13 @@ final class AdminController extends BaseController
             return;
         }
 
-        $backups = $this->service->listBackups();
+        $backups = array_merge(
+            $this->service->listBackups(),
+            $this->fullService->listBackups()
+        );
+        usort($backups, static fn (array $left, array $right): int =>
+            ((int) ($right['created_ts'] ?? 0)) <=> ((int) ($left['created_ts'] ?? 0))
+        );
         $totalSize = 0;
         foreach ($backups as $backup) {
             $totalSize += (int) ($backup['size_bytes'] ?? 0);
@@ -46,6 +55,9 @@ final class AdminController extends BaseController
             'backupStoragePath' => defined('STORAGE_PATH')
                 ? rtrim((string) STORAGE_PATH, '/') . '/backups/site'
                 : BASE_PATH . '/storage/backups/site',
+            'fullBackupStoragePath' => defined('STORAGE_PATH')
+                ? rtrim((string) STORAGE_PATH, '/') . '/backups/full'
+                : BASE_PATH . '/storage/backups/full',
             'totalBackupSize' => $totalSize,
         ], 'admin.main');
     }
@@ -78,7 +90,8 @@ final class AdminController extends BaseController
             return;
         }
 
-        $path = $this->service->resolveStoredBackupPath($filename);
+        $path = $this->service->resolveStoredBackupPath($filename)
+            ?? $this->fullService->resolveStoredBackupPath($filename);
         if ($path === null) {
             $this->session->flash('error', __('backups_archive_not_found', 'Backups'));
             $this->redirect(url('/admin/backups'));
@@ -99,7 +112,11 @@ final class AdminController extends BaseController
         }
 
         try {
-            $result = $this->service->restoreStoredBackup($filename, $this->backupContext('restore'));
+            if ($this->fullService->resolveStoredBackupPath($filename) !== null) {
+                $result = $this->fullService->restoreStoredBackup($filename, $this->backupContext('restore'));
+            } else {
+                $result = $this->service->restoreStoredBackup($filename, $this->backupContext('restore'));
+            }
             $rollbackName = (string) (($result['rollback']['filename'] ?? ''));
             $this->session->flash('success', __('backups_restore_success', 'Backups', [
                 'count' => (string) ((int) ($result['restored_files_count'] ?? 0)),
@@ -147,7 +164,11 @@ final class AdminController extends BaseController
         }
 
         try {
-            $this->service->deleteStoredBackup($filename);
+            if ($this->fullService->resolveStoredBackupPath($filename) !== null) {
+                $this->fullService->deleteStoredBackup($filename);
+            } else {
+                $this->service->deleteStoredBackup($filename);
+            }
             $this->session->flash('success', __('backups_delete_success', 'Backups', [
                 'backup' => $filename,
             ]));

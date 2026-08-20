@@ -37,6 +37,7 @@ final class ModuleManager
         $paths = $modulesPath ?? [
             BASE_PATH . '/app/Modules',
             BASE_PATH . '/app/Extensions',
+            BASE_PATH . '/app/Plugins',
         ];
         if (!is_array($paths)) {
             $paths = [$paths];
@@ -161,7 +162,11 @@ final class ModuleManager
                 continue;
             }
 
-            $location = strtolower(basename($basePath)) === 'extensions' ? 'extension' : 'module';
+            $location = match (strtolower(basename($basePath))) {
+                'extensions' => 'extension',
+                'plugins' => 'plugin',
+                default => 'module',
+            };
 
             foreach (glob($basePath . '/*', GLOB_ONLYDIR) as $dir) {
                 $name = basename($dir);
@@ -220,9 +225,11 @@ final class ModuleManager
 
     private function resolveManifestContract(string $dir, string $location): array
     {
-        $candidates = $location === 'extension'
-            ? [$dir . '/extension.json']
-            : [$dir . '/module.json'];
+        $candidates = match ($location) {
+            'extension' => [$dir . '/extension.json'],
+            'plugin' => [$dir . '/plugin.json'],
+            default => [$dir . '/module.json'],
+        };
 
         foreach ($candidates as $candidate) {
             if (is_file($candidate)) {
@@ -241,10 +248,22 @@ final class ModuleManager
             'description' => '',
             'dependencies' => [],
             'enabled' => true,
-            'type' => $location === 'extension' ? 'extension' : 'module',
-            'tier' => $location === 'extension' ? 'extension' : 'standard',
-            'official' => $location !== 'extension',
-            'manifest_name' => $location === 'extension' ? 'extension.json' : 'module.json',
+            'type' => match ($location) {
+                'extension' => 'extension',
+                'plugin' => 'plugin',
+                default => 'module',
+            },
+            'tier' => match ($location) {
+                'extension' => 'extension',
+                'plugin' => 'plugin',
+                default => 'standard',
+            },
+            'official' => $location === 'module',
+            'manifest_name' => match ($location) {
+                'extension' => 'extension.json',
+                'plugin' => 'plugin.json',
+                default => 'module.json',
+            },
             'manifest_path' => '',
             'routes' => 'Config/routes.php',
             'hooks' => 'Hooks/listeners.php',
@@ -266,8 +285,16 @@ final class ModuleManager
         $normalized = $meta;
         $normalized['name'] = trim((string) ($normalized['name'] ?? '')) !== '' ? (string) $normalized['name'] : $name;
         $normalized['key'] = $this->normalizeKey((string) ($normalized['key'] ?? $normalized['name'] ?? $name));
-        $normalized['type'] = $this->normalizeStringOrDefault($normalized['type'] ?? null, $location === 'extension' ? 'extension' : 'module');
-        $normalized['tier'] = $this->normalizeStringOrDefault($normalized['tier'] ?? null, $location === 'extension' ? 'extension' : 'standard');
+        $normalized['type'] = $this->normalizeStringOrDefault($normalized['type'] ?? null, match ($location) {
+            'extension' => 'extension',
+            'plugin' => 'plugin',
+            default => 'module',
+        });
+        $normalized['tier'] = $this->normalizeStringOrDefault($normalized['tier'] ?? null, match ($location) {
+            'extension' => 'extension',
+            'plugin' => 'plugin',
+            default => 'standard',
+        });
         $normalized['official'] = $this->resolveOfficialFlag($normalized, $location);
         $normalized['routes_declared'] = array_key_exists('routes', $meta);
         $normalized['hooks_declared'] = array_key_exists('hooks', $meta);
@@ -341,7 +368,7 @@ final class ModuleManager
             return true;
         }
 
-        return $location !== 'extension';
+        return $location === 'module';
     }
 
     private function normalizeKey(string $value): string
@@ -361,7 +388,11 @@ final class ModuleManager
 
     private function normalizePublicAssetsBase(mixed $value, string $location): string
     {
-        $default = $location === 'extension' ? 'assets/extensions' : 'modules';
+        $default = match ($location) {
+            'extension' => 'assets/extensions',
+            'plugin' => 'assets/plugins',
+            default => 'modules',
+        };
         $candidate = trim(str_replace('\\', '/', (string) $value), '/');
         if ($candidate === '') {
             return $default;
@@ -584,7 +615,7 @@ final class ModuleManager
 
         if ($manifestStatus === 'invalid') {
             $issues[] = 'manifest_invalid';
-        } elseif ($manifestStatus === 'missing' && $location === 'extension') {
+        } elseif ($manifestStatus === 'missing' && in_array($location, ['extension', 'plugin'], true)) {
             $issues[] = 'manifest_missing';
         }
 
@@ -721,7 +752,7 @@ final class ModuleManager
         string $location
     ): array {
         $contract = is_array($value) ? $value : [];
-        $requiredByDefault = $location === 'extension' && $tier === 'premium';
+        $requiredByDefault = in_array($location, ['extension', 'plugin'], true) && $tier === 'premium';
         $required = array_key_exists('required', $contract) ? (bool) $contract['required'] : $requiredByDefault;
         $gate = strtolower(trim((string) ($contract['gate'] ?? 'authoring')));
         if (!in_array($gate, ['authoring'], true)) {

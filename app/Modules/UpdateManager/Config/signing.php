@@ -1,0 +1,61 @@
+<?php
+/** FlatCMS Update Manager signing trust anchors. */
+declare(strict_types=1);
+
+return [
+    'algorithm' => 'sha256',
+    'public_key_fingerprint_sha256' => '3b221efe577f4221e9bd6b463b8c6fcc2d1da4857f2904393f2f168a5236b34c',
+    'legacy_public_key_fingerprints_sha256' => [
+        '841c02a4fe07040dc61305fea45c2ac277e3741010d47b7e95ca00dc8d4ff913',
+    ],
+    'public_key' => trim(<<<'KEY'
+-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAtOMWlP3vPyJC/AAT4Bav
+aPlbaJ6vWNX/WmrL/DvL/gUzxSwockLsSggc/cn1V/1Sceb3wu5KpKcd8O9lwGIa
+2t0PujmuEkHmyL2vIkboGmu7huDzRkc0wupBMg5NhNq4JAnrHt1vJvC5jRWqpVDP
+G2v2i4lTDt0/hWKhfBwQ8/xVxqmWT5jrFkgPwTiJwFDYvw8LlAYBnBaLj878XzCW
+YbCBVjFkUmm7UuO9APCiQoEOKurSP2HH31+S8muzFs3JUjo7QJtTI4QiCWNyPftk
+3WS2qI0vlmaqfCQNwN2QEIOAjsB4xPBP/0vYgvlMrf6ak2IfMQjkhYBpk7XL6kBh
+5HXYEGJp6LEa9xrszE55RQwGA/g0SlR/srhS3ycXdcdE2C6uuTsU3e5K4MVwN8ye
+fr41TLTanM3Fdy7kDgnIpLLQS9b5ewSWPKuvDRBiM5+5bxvpJOb3Xb3rYipg5SUW
+cvF5hPSeOHgTNCTcIr9Dfm04ByTzp58nXIWFAZxlw8WTq0uWRFbN6YMfKzHvp/g2
+8E5f/JarpoBzvOd3lepwRp3XUMuoKcXf2uaSoo0C+F8WGTh+wNHFbsPQ+DCE4ze4
+bma2ZFATlQC80uOlcD8zI+KXPdlK8rkqbRnpyBzrhKo9aC6UECmhi1G1u8gplDG3
+1NHlItaqmPr9tZxTolae06ECAwEAAQ==
+-----END PUBLIC KEY-----
+KEY),
+    'public_keys' => [
+        trim(<<<'ACTIVE'
+-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAtOMWlP3vPyJC/AAT4Bav
+aPlbaJ6vWNX/WmrL/DvL/gUzxSwockLsSggc/cn1V/1Sceb3wu5KpKcd8O9lwGIa
+2t0PujmuEkHmyL2vIkboGmu7huDzRkc0wupBMg5NhNq4JAnrHt1vJvC5jRWqpVDP
+G2v2i4lTDt0/hWKhfBwQ8/xVxqmWT5jrFkgPwTiJwFDYvw8LlAYBnBaLj878XzCW
+YbCBVjFkUmm7UuO9APCiQoEOKurSP2HH31+S8muzFs3JUjo7QJtTI4QiCWNyPftk
+3WS2qI0vlmaqfCQNwN2QEIOAjsB4xPBP/0vYgvlMrf6ak2IfMQjkhYBpk7XL6kBh
+5HXYEGJp6LEa9xrszE55RQwGA/g0SlR/srhS3ycXdcdE2C6uuTsU3e5K4MVwN8ye
+fr41TLTanM3Fdy7kDgnIpLLQS9b5ewSWPKuvDRBiM5+5bxvpJOb3Xb3rYipg5SUW
+cvF5hPSeOHgTNCTcIr9Dfm04ByTzp58nXIWFAZxlw8WTq0uWRFbN6YMfKzHvp/g2
+8E5f/JarpoBzvOd3lepwRp3XUMuoKcXf2uaSoo0C+F8WGTh+wNHFbsPQ+DCE4ze4
+bma2ZFATlQC80uOlcD8zI+KXPdlK8rkqbRnpyBzrhKo9aC6UECmhi1G1u8gplDG3
+1NHlItaqmPr9tZxTolae06ECAwEAAQ==
+-----END PUBLIC KEY-----
+ACTIVE),
+        trim(<<<'LEGACY'
+-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAx5xkJyDBeXE8Enl3Tj96
+PcDWzLJFXVzKIVprKYVwgyw4UkG9jEr1MFaq7/Fm3H5z1eGQw4097HbVFe+Ca4LH
+h16ivs6ZlG4MQl6HoZS50x4d1O8p5cY+LTDn8W7cwtNNubkawhv4FTk+vObeeCYd
+V6D2tXQ9ZCvDVmSLJ6BifaKxVdYlprRw1b/r5LWOXssqly/nzSlya2er/OrGHCin
+CDhYaG6tuqQLoAQ/7EuK9odZzKf/FC8u+4EOznS92OT1y6kRo8xHfP3hCnM0oPI/
+FHjKojMCqBr1O928iyxZInVtPs1zBrNjKkA4gSNcgB8faPsvBOmK6UpE97/u1Yd4
+KeZ4yy+JjDuQNb0a58aTh1ob9OZ6mqGjFjNz4MO0nSWeZkkBvweBiw95EnZXIzl6
+/4Lk7UBse06Ubu3ikYyP0SCe+DV6ALQUauesuGQbPXcdLF+/peAcGBdj5+rAK+mJ
+eLbwZyAB7fMnj2Fyg3f+fu/7WxnzGKyU8f5SsKKI+w//oNPfrs/0kmnLWNtSp4uZ
+Bm2uUoMR8nHPoyx3mZYc7PNpCWvMF4BTob+vaQOGGJ/OSo/0bTGpA5wjnw2OOclx
+URcYBjlYQXfr+e93y/2zr80vpPPCmTqpvXXA87ShOu1k0t8L1pJJu8VeEsQhoDHE
+p8BhDiok4yZm2t6rDNWk990CAwEAAQ==
+-----END PUBLIC KEY-----
+LEGACY),
+    ],
+];

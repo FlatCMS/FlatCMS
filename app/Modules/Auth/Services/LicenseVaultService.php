@@ -178,7 +178,24 @@ final class LicenseVaultService
 
         $domain = normalize_host((string) ($summary['domain'] ?? ''));
         $targetHost = normalize_host($host ?? ($_SERVER['HTTP_HOST'] ?? ''));
-        return $domain !== '' && $targetHost !== '' && $domain === $targetHost && (($summary['status'] ?? '') === 'active');
+        return $this->licenseHostsMatch($domain, $targetHost) && (($summary['status'] ?? '') === 'active');
+    }
+
+    private function licenseHostsMatch(string $licensedHost, string $targetHost): bool
+    {
+        if ($licensedHost === '' || $targetHost === '') {
+            return false;
+        }
+
+        if ($licensedHost === $targetHost) {
+            return true;
+        }
+
+        $canonicalize = static fn (string $value): string => str_starts_with($value, 'www.')
+            ? substr($value, 4)
+            : $value;
+
+        return $canonicalize($licensedHost) === $canonicalize($targetHost);
     }
 
     public function decryptModuleLicenseKey(string $module): string

@@ -100,6 +100,10 @@ class I18n
             return BASE_PATH . "/app/Extensions/{$module}/Languages/" . $locale . '.json';
         }
 
+        if (self::isRealPluginNamespace($module)) {
+            return BASE_PATH . "/app/Plugins/{$module}/Languages/" . $locale . '.json';
+        }
+
         return BASE_PATH . "/app/Modules/{$module}/Languages/" . $locale . '.json';
     }
 
@@ -116,6 +120,11 @@ class I18n
     private static function isRealExtensionNamespace(string $module): bool
     {
         return self::isRealModuleLikeNamespace(BASE_PATH . "/app/Extensions/{$module}", ['extension.json', 'module.json']);
+    }
+
+    private static function isRealPluginNamespace(string $module): bool
+    {
+        return self::isRealModuleLikeNamespace(BASE_PATH . "/app/Plugins/{$module}", ['plugin.json']);
     }
 
     private static function isRealModuleLikeNamespace(string $root, array $manifests): bool

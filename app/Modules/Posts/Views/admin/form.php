@@ -32,6 +32,7 @@ $postMediaContext = 'posts/' . ($postMediaSlug !== '' ? $postMediaSlug : 'draft'
 $mediaEnabled = (new \App\Core\ModuleManager([
     BASE_PATH . '/app/Modules',
     BASE_PATH . '/app/Extensions',
+    BASE_PATH . '/app/Plugins',
 ], BASE_PATH . '/data/modules.json'))->isEnabled('Media');
 $postsAiActiveLocaleLabel = (string) ($translationUi['active_locale_label'] ?? '');
 $postsAiSourceLocaleLabel = (string) ($translationUi['source_locale_label'] ?? '');
@@ -246,24 +247,19 @@ $postsLocaleFlag = static function (string $locale): string {
         </div>
         <div data-tour-target="posts-form-sidebar">
             <div class="card" data-tour-target="posts-form-status">
-                <h3 class="card-title card-title-spaced"><?= e($postLabel('status', __('status', 'Posts'))) ?></h3>
-                <div class="form-group">
-                    <?php if (!empty($translationUi['active_is_source'])): ?>
-                        <select id="status" name="status" class="form-select">
-                            <option value="draft" <?= selected('draft', old('status', $formData['status'] ?? 'draft')) ?>><?= e($postLabel('status_draft', __('status_draft', 'Posts'))) ?></option>
-                            <option value="published" <?= selected('published', old('status', $formData['status'] ?? '')) ?>><?= e($postLabel('status_published', __('status_published', 'Posts'))) ?></option>
-                        </select>
-                    <?php else: ?>
-                        <?php $sourceStatus = (string) old('status', $translationUi['source_status'] ?? 'draft'); ?>
-                        <input type="hidden" name="status" value="<?= e($sourceStatus) ?>">
-                        <div class="posts-status-lock">
-                            <span class="badge <?= $sourceStatus === 'published' ? 'badge-success' : 'badge-warning' ?>">
-                                <?= e($postLabel('status_' . $sourceStatus, __('status_' . $sourceStatus, 'Posts'))) ?>
-                            </span>
-                            <div class="form-hint"><?= e($postLabel('translation_status_follow_source', __('translation_status_follow_source', 'Posts'))) ?></div>
-                        </div>
-                    <?php endif; ?>
-                </div>
+                <?php
+                $postsStatusOverride = \App\Core\HookSlots::resolve('posts.form.status', [
+                    'post' => is_array($post ?? null) ? $post : null,
+                    'formData' => $formData,
+                    'formLabels' => $formLabels,
+                    'translationUi' => $translationUi,
+                ]);
+                if ($postsStatusOverride !== '') {
+                    echo $postsStatusOverride;
+                } else {
+                    include __DIR__ . '/partials/status.php';
+                }
+                ?>
                 <button type="submit" class="btn btn-primary btn-block" data-tour-target="posts-form-save"><?= e($postLabel('save', __('save', 'Core'))) ?></button>
             </div>
             <div class="card" data-tour-target="posts-form-media">

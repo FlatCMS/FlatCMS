@@ -225,11 +225,18 @@ $postsLocaleFlag = static function (string $locale): string {
                                 </div>
                             </td>
                             <td data-label="<?= __('status', 'Posts') ?>">
-                                <?php if (($p['status'] ?? 'draft') === 'published'): ?>
-                                    <span class="badge badge-success"><?= __('status_published', 'Posts') ?></span>
-                                <?php else: ?>
-                                    <span class="badge badge-warning"><?= __('status_draft', 'Posts') ?></span>
-                                <?php endif; ?>
+                                <?php
+                                $postsListStatusOverride = \App\Core\HookSlots::resolve('posts.list.status', [
+                                    'post' => $p,
+                                ]);
+                                if ($postsListStatusOverride !== '') {
+                                    echo $postsListStatusOverride;
+                                } elseif (($p['status'] ?? 'draft') === 'published') {
+                                    echo '<span class="badge badge-success">' . e(__('status_published', 'Posts')) . '</span>';
+                                } else {
+                                    echo '<span class="badge badge-warning">' . e(__('status_draft', 'Posts')) . '</span>';
+                                }
+                                ?>
                             </td>
                             <?php if ($categoriesEnabled): ?>
                                 <td data-label="<?= __('categories', 'Posts') ?>">

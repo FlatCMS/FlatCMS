@@ -114,7 +114,7 @@ final class ExtensionLicenseService
 
     private function isLicensableExtension(array $meta): bool
     {
-        if ((string) ($meta['location'] ?? '') !== 'extension') {
+        if (!in_array((string) ($meta['location'] ?? ''), ['extension', 'plugin'], true)) {
             return false;
         }
 

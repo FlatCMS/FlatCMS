@@ -19,6 +19,7 @@ class AdminController extends BaseController
 {
     private string $modulesPath;
     private string $extensionsPath;
+    private string $pluginsPath;
     private string $statePath;
     private string $publicModulesPath;
     private string $tmpPath;
@@ -29,6 +30,7 @@ class AdminController extends BaseController
         I18n::load('Modules');
         $this->modulesPath = BASE_PATH . '/app/Modules';
         $this->extensionsPath = BASE_PATH . '/app/Extensions';
+        $this->pluginsPath = BASE_PATH . '/app/Plugins';
         $this->statePath = BASE_PATH . '/data/modules.json';
         $this->publicModulesPath = BASE_PATH . '/public/modules';
         $this->tmpPath = BASE_PATH . '/storage/tmp/extensions';
@@ -40,7 +42,7 @@ class AdminController extends BaseController
             return;
         }
 
-        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath], $this->statePath);
+        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath, $this->pluginsPath], $this->statePath);
         $modules = $manager->all();
         $enabled = $manager->enabled();
         $lockedModules = $this->resolveLockedModules($enabled);
@@ -85,7 +87,7 @@ class AdminController extends BaseController
             return;
         }
 
-        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath], $this->statePath);
+        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath, $this->pluginsPath], $this->statePath);
         $modules = $manager->all();
 
         if (!isset($modules[$name])) {
@@ -194,7 +196,7 @@ class AdminController extends BaseController
             return;
         }
 
-        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath], $this->statePath);
+        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath, $this->pluginsPath], $this->statePath);
         $modules = $manager->all();
 
         if (!isset($modules[$name])) {
@@ -366,7 +368,7 @@ class AdminController extends BaseController
                     return;
                 }
 
-                if ($packageKind === 'extension' && $this->hasInvalidOfficialOrigin($manifest)) {
+                if (in_array($packageKind, ['extension', 'plugin'], true) && $this->hasInvalidOfficialOrigin($manifest)) {
                     $this->cleanupInstall($zipPath, $extractDir);
                     $this->session->flash('error', __('extensions_manifest_official', 'Modules'));
                     $this->redirect(url('/admin/modules'));
@@ -427,7 +429,11 @@ class AdminController extends BaseController
                     }
                 }
 
-                $targetBase = $packageKind === 'extension' ? $this->extensionsPath : $this->modulesPath;
+                $targetBase = match ($packageKind) {
+                    'extension' => $this->extensionsPath,
+                    'plugin' => $this->pluginsPath,
+                    default => $this->modulesPath,
+                };
 
                 if (!is_dir($targetBase) && !mkdir($targetBase, 0755, true) && !is_dir($targetBase)) {
                     throw new \RuntimeException('Unable to create target module directory.');
@@ -435,9 +441,29 @@ class AdminController extends BaseController
 
                 $destination = $targetBase . '/' . $moduleName;
                 if (file_exists($destination)) {
+                    $update = $this->updateExistingPackage(
+                        $moduleDir,
+                        $destination,
+                        $moduleName,
+                        $packageKind,
+                        $manifest
+                    );
                     $this->cleanupInstall($zipPath, $extractDir);
-                    $this->session->flash('error', __('extensions_exists', 'Modules', ['module' => $moduleName]));
-                    $this->redirect(url('/admin/modules'));
+                    if (!$update['ok']) {
+                        $this->session->flash('error', __((string) $update['message'], 'Modules', [
+                            'module' => $moduleName,
+                            'current' => (string) ($update['current'] ?? ''),
+                            'target' => (string) ($update['target'] ?? ''),
+                        ]));
+                        $this->redirect(url('/admin/modules'));
+                        return;
+                    }
+                    $this->session->flash('success', __('extensions_update_success', 'Modules', [
+                        'module' => $moduleName,
+                        'current' => (string) ($update['current'] ?? ''),
+                        'target' => (string) ($update['target'] ?? ''),
+                    ]));
+                    $this->redirect(url('/admin/modules?status=enabled&installed=' . rawurlencode($moduleName)));
                     return;
                 }
 
@@ -487,7 +513,7 @@ class AdminController extends BaseController
             return;
         }
 
-        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath], $this->statePath);
+        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath, $this->pluginsPath], $this->statePath);
         $modules = $manager->all();
 
         if (!isset($modules[$name])) {
@@ -714,7 +740,8 @@ class AdminController extends BaseController
                 return false;
             }
             if ($entry === 'app/Modules' || str_contains($entry, 'app/Modules/')
-                || $entry === 'app/Extensions' || str_contains($entry, 'app/Extensions/')) {
+                || $entry === 'app/Extensions' || str_contains($entry, 'app/Extensions/')
+                || $entry === 'app/Plugins' || str_contains($entry, 'app/Plugins/')) {
                 return false;
             }
         }
@@ -778,6 +805,7 @@ class AdminController extends BaseController
     private function findModuleManifests(string $basePath): array
     {
         $preferred = [
+            'plugin.json',
             'extension.json',
             'module.json',
         ];
@@ -810,6 +838,7 @@ class AdminController extends BaseController
     private function resolvePackageKind(string $manifestPath): string
     {
         return match (basename($manifestPath)) {
+            'plugin.json' => 'plugin',
             'extension.json' => 'extension',
             'module.json' => 'module',
             default => '',
@@ -1009,8 +1038,15 @@ class AdminController extends BaseController
 
     private function hasInvalidNamespaceBoundary(string $moduleDir, array $manifest, string $packageKind, string $moduleName): bool
     {
-        $forbiddenRoot = $packageKind === 'extension' ? 'App\\Modules\\' : 'App\\Extensions\\';
-        $namespaceCandidates = $this->namespaceNameCandidates($moduleName, $manifest);
+        $expectedRoot = match ($packageKind) {
+            'extension' => 'Extensions',
+            'plugin' => 'Plugins',
+            default => 'Modules',
+        };
+        $namespaceCandidates = array_map(
+            static fn (string $value): string => strtolower($value),
+            $this->namespaceNameCandidates($moduleName, $manifest)
+        );
 
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($moduleDir, \RecursiveDirectoryIterator::SKIP_DOTS)
@@ -1026,12 +1062,39 @@ class AdminController extends BaseController
                 return true;
             }
 
-            if (preg_match('/\\bnamespace\\s+' . preg_quote($forbiddenRoot, '/') . '/', $contents) === 1) {
-                return true;
-            }
+            $tokens = token_get_all($contents);
+            $tokenCount = count($tokens);
+            for ($index = 0; $index < $tokenCount; $index++) {
+                $token = $tokens[$index];
+                if (!is_array($token) || $token[0] !== T_NAMESPACE) {
+                    continue;
+                }
 
-            foreach ($namespaceCandidates as $namespaceCandidate) {
-                if (str_contains($contents, $forbiddenRoot . $namespaceCandidate . '\\')) {
+                $namespace = '';
+                for ($cursor = $index + 1; $cursor < $tokenCount; $cursor++) {
+                    $part = $tokens[$cursor];
+                    if (is_string($part)) {
+                        if ($part === ';' || $part === '{') {
+                            break;
+                        }
+                        continue;
+                    }
+                    if (in_array($part[0], [T_STRING, T_NAME_QUALIFIED, T_NS_SEPARATOR], true)) {
+                        $namespace .= $part[1];
+                    }
+                }
+
+                $segments = array_values(array_filter(explode('\\', trim($namespace, '\\')), 'strlen'));
+                if (count($segments) < 3 || $segments[0] !== 'App') {
+                    continue;
+                }
+                if (!in_array($segments[1], ['Modules', 'Extensions', 'Plugins'], true)) {
+                    continue;
+                }
+                if (!in_array(strtolower($segments[2]), $namespaceCandidates, true)) {
+                    continue;
+                }
+                if ($segments[1] !== $expectedRoot) {
                     return true;
                 }
             }
@@ -1097,6 +1160,100 @@ class AdminController extends BaseController
         return true;
     }
 
+    /** @return array{ok:bool,message:string,current:string,target:string} */
+    private function updateExistingPackage(
+        string $source,
+        string $destination,
+        string $moduleName,
+        string $packageKind,
+        array $candidateManifest
+    ): array {
+        $manifestName = match ($packageKind) {
+            'extension' => 'extension.json',
+            'plugin' => 'plugin.json',
+            default => 'module.json',
+        };
+        $installedManifestPath = rtrim($destination, '/\\') . '/' . $manifestName;
+        $installedManifest = is_file($installedManifestPath) ? $this->readManifest($installedManifestPath) : [];
+        $current = trim((string) ($installedManifest['version'] ?? ''));
+        $target = trim((string) ($candidateManifest['version'] ?? ''));
+        $result = static fn(bool $ok, string $message): array => [
+            'ok' => $ok,
+            'message' => $message,
+            'current' => $current,
+            'target' => $target,
+        ];
+
+        if ($installedManifest === [] || $current === '' || $target === '') {
+            return $result(false, 'extensions_update_manifest_invalid');
+        }
+        $installedName = $this->resolveModuleName($installedManifest);
+        if ($installedName !== '' && strcasecmp($installedName, $moduleName) !== 0) {
+            return $result(false, 'extensions_update_identity_mismatch');
+        }
+        if (version_compare($target, $current, '<=')) {
+            return $result(false, 'extensions_update_version_invalid');
+        }
+
+        $targetBase = dirname($destination);
+        $suffix = date('YmdHis') . '-' . bin2hex(random_bytes(5));
+        $stage = $targetBase . '/.flatcms-update-' . $moduleName . '-' . $suffix;
+        $rollback = $targetBase . '/.flatcms-rollback-' . $moduleName . '-' . $suffix;
+        $backupRoot = BASE_PATH . '/storage/backups/modules';
+        $backup = $backupRoot . '/' . $moduleName . '-' . $current . '-pre-' . $target . '-' . $suffix;
+
+        if ((!is_dir($backupRoot) && !@mkdir($backupRoot, 0750, true) && !is_dir($backupRoot))
+            || !$this->copyDirectory($destination, $backup)) {
+            $this->removeDirectory($backup);
+            return $result(false, 'extensions_update_backup_failed');
+        }
+        if (!$this->copyDirectory($source, $stage)) {
+            $this->removeDirectory($stage);
+            return $result(false, 'extensions_update_stage_failed');
+        }
+
+        $swapped = false;
+        try {
+            if (!@rename($destination, $rollback)) {
+                return $result(false, 'extensions_update_swap_failed');
+            }
+            if (!@rename($stage, $destination)) {
+                @rename($rollback, $destination);
+                return $result(false, 'extensions_update_swap_failed');
+            }
+            $swapped = true;
+
+            if (!$this->createAssetsSymlink($moduleName, $destination)) {
+                throw new \RuntimeException('extensions_update_assets_failed');
+            }
+
+            $this->removeDirectory($rollback);
+            return $result(true, 'extensions_update_success');
+        } catch (\Throwable $exception) {
+            if ($swapped && is_dir($destination)) {
+                $failed = $targetBase . '/.flatcms-failed-' . $moduleName . '-' . $suffix;
+                @rename($destination, $failed);
+                if (is_dir($rollback)) {
+                    @rename($rollback, $destination);
+                }
+                if (is_dir($failed)) {
+                    $this->removeDirectory($failed);
+                }
+                if (is_dir($destination)) {
+                    $this->createAssetsSymlink($moduleName, $destination);
+                }
+            }
+            return $result(false, $exception->getMessage() !== '' ? $exception->getMessage() : 'extensions_update_swap_failed');
+        } finally {
+            if (is_dir($stage)) {
+                $this->removeDirectory($stage);
+            }
+            if (is_dir($rollback) && is_dir($destination)) {
+                $this->removeDirectory($rollback);
+            }
+        }
+    }
+
     private function copyDirectory(string $source, string $destination): bool
     {
         $sourceReal = realpath($source);
@@ -1154,8 +1311,7 @@ class AdminController extends BaseController
         }
 
         if (is_link($linkPath)) {
-            $currentTarget = @readlink($linkPath);
-            $currentReal = $currentTarget !== false ? realpath(dirname($linkPath) . '/' . $currentTarget) : false;
+            $currentReal = realpath($linkPath);
             $expectedReal = realpath($assetsPath);
             if ($currentReal === $expectedReal && $expectedReal !== false) {
                 return true;
@@ -1232,8 +1388,10 @@ class AdminController extends BaseController
         $expectedTargets = [
             realpath($this->modulesPath . '/' . $sanitized . '/Assets'),
             realpath($this->extensionsPath . '/' . $sanitized . '/Assets'),
+            realpath($this->pluginsPath . '/' . $sanitized . '/Assets'),
             realpath($this->modulesPath . '/' . $moduleName . '/Assets'),
             realpath($this->extensionsPath . '/' . $moduleName . '/Assets'),
+            realpath($this->pluginsPath . '/' . $moduleName . '/Assets'),
         ];
         $expectedTargets = array_values(array_filter(array_unique($expectedTargets)));
         if (empty($expectedTargets)) {
@@ -1248,46 +1406,39 @@ class AdminController extends BaseController
             if (!is_link($path)) {
                 continue;
             }
-            $target = @readlink($path);
-            if ($target === false) {
-                continue;
-            }
-            $targetReal = realpath(dirname($path) . '/' . $target);
+            $targetReal = realpath($path);
             if ($targetReal !== false && in_array($targetReal, $expectedTargets, true)) {
                 @unlink($path);
             }
         }
 
-        $extensionAssetsRoot = BASE_PATH . '/public/assets/extensions';
-        if (!is_dir($extensionAssetsRoot)) {
-            return;
-        }
-
-        $iterator = scandir($extensionAssetsRoot);
-        if ($iterator === false) {
-            return;
-        }
-
-        foreach ($iterator as $entry) {
-            if ($entry === '.' || $entry === '..') {
+        foreach ([BASE_PATH . '/public/assets/extensions', BASE_PATH . '/public/assets/plugins'] as $extensionAssetsRoot) {
+            if (!is_dir($extensionAssetsRoot)) {
                 continue;
             }
 
-            $path = $extensionAssetsRoot . '/' . $entry;
-            if (is_link($path)) {
-                $target = @readlink($path);
-                if ($target === false) {
+            $iterator = scandir($extensionAssetsRoot);
+            if ($iterator === false) {
+                continue;
+            }
+
+            foreach ($iterator as $entry) {
+                if ($entry === '.' || $entry === '..') {
                     continue;
                 }
-                $targetReal = realpath(dirname($path) . '/' . $target);
-                if ($targetReal !== false && in_array($targetReal, $expectedTargets, true)) {
-                    @unlink($path);
-                }
-                continue;
-            }
 
-            if (is_dir($path) && in_array(realpath($path), $expectedTargets, true)) {
-                $this->removeDirectory($path);
+                $path = $extensionAssetsRoot . '/' . $entry;
+                if (is_link($path)) {
+                    $targetReal = realpath($path);
+                    if ($targetReal !== false && in_array($targetReal, $expectedTargets, true)) {
+                        @unlink($path);
+                    }
+                    continue;
+                }
+
+                if (is_dir($path) && in_array(realpath($path), $expectedTargets, true)) {
+                    $this->removeDirectory($path);
+                }
             }
         }
     }
@@ -1298,6 +1449,7 @@ class AdminController extends BaseController
         $paths = [
             $this->modulesPath . '/' . $moduleName . '/Languages',
             $this->extensionsPath . '/' . $moduleName . '/Languages',
+            $this->pluginsPath . '/' . $moduleName . '/Languages',
         ];
 
         foreach ($paths as $langDir) {
@@ -1375,10 +1527,14 @@ class AdminController extends BaseController
         }
         $modulesRoot = realpath($this->modulesPath);
         $extensionsRoot = realpath($this->extensionsPath);
+        $pluginsRoot = realpath($this->pluginsPath);
         if ($modulesRoot && str_starts_with($realPath, $modulesRoot)) {
             return true;
         }
         if ($extensionsRoot && str_starts_with($realPath, $extensionsRoot)) {
+            return true;
+        }
+        if ($pluginsRoot && str_starts_with($realPath, $pluginsRoot)) {
             return true;
         }
         return false;

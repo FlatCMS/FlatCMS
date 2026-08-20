@@ -701,6 +701,7 @@ class AdminController extends BaseController
         $manager = new ModuleManager([
             BASE_PATH . '/app/Modules',
             BASE_PATH . '/app/Extensions',
+        BASE_PATH . '/app/Plugins',
         ], BASE_PATH . '/data/modules.json');
 
         return $manager->isEnabled('AiAgent');
@@ -711,6 +712,7 @@ class AdminController extends BaseController
         $manager = new ModuleManager([
             BASE_PATH . '/app/Modules',
             BASE_PATH . '/app/Extensions',
+        BASE_PATH . '/app/Plugins',
         ], BASE_PATH . '/data/modules.json');
 
         return $manager->isEnabled('Trash');

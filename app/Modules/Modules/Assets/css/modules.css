@@ -239,7 +239,7 @@
 }
 
 .modules-column-card > .card-body {
-  padding-top: 0;
+  padding-top: var(--spacing-4);
 }
 
 .module-installer-hint {

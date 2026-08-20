@@ -1,7 +1,7 @@
 <?php
 /**
- * FlatCMS v1.0.0 - Système de Gestion de Contenu Flat-File
- * @project     FlatCMS v1.0.0
+ * FlatCMS - Système de Gestion de Contenu Flat-File
+ * @project     FlatCMS
  * @author      Alain BROYE
  * @version     1.0.0
  * @last_update 2026-02-03

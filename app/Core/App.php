@@ -152,8 +152,13 @@ class App
             return;
         }
 
-        // Allow admin routes, login and logout
+        // Keep the read-only update distribution API available while the site is in maintenance.
         $uri = $this->request->uri();
+        if ($uri === '/api/updates' || str_starts_with($uri, '/api/updates/')) {
+            return;
+        }
+
+        // Allow admin routes, login and logout.
         if (str_starts_with($uri, '/admin') || str_starts_with($uri, '/login') || str_starts_with($uri, '/logout')) {
             return;
         }
@@ -190,6 +195,7 @@ class App
         $manager = new ModuleManager([
             BASE_PATH . '/app/Modules',
             BASE_PATH . '/app/Extensions',
+            BASE_PATH . '/app/Plugins',
         ], BASE_PATH . '/data/modules.json');
 
         foreach ($manager->enabled() as $module => $meta) {
@@ -217,6 +223,7 @@ class App
         $manager = new ModuleManager([
             BASE_PATH . '/app/Modules',
             BASE_PATH . '/app/Extensions',
+            BASE_PATH . '/app/Plugins',
         ], BASE_PATH . '/data/modules.json');
 
         foreach ($manager->enabled() as $module => $meta) {
@@ -255,6 +262,15 @@ class App
 
     private function handleException(\Throwable $e): void
     {
+        error_log(sprintf(
+            '[FlatCMS] Uncaught %s: %s in %s:%d\n%s',
+            get_class($e),
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine(),
+            $e->getTraceAsString()
+        ));
+
         $debug = env('APP_DEBUG', false);
         
         if ($debug) {

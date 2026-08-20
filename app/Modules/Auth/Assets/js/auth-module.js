@@ -188,6 +188,17 @@
             document.body.style.overflow = 'hidden';
         }
 
+        function closeModal() {
+            if (window.FlatCMS && window.FlatCMS.modal && typeof window.FlatCMS.modal.close === 'function') {
+                window.FlatCMS.modal.close('licenseRevealModal');
+            } else {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
+            resetModalState();
+        }
+
         function resetModalState() {
             if (codeInput) codeInput.value = '';
             if (codeHint) codeHint.textContent = '';
@@ -273,13 +284,7 @@
                 })
                 .catch(function(error) {
                     toast((error.payload && error.payload.message) || error.message || '', 'error');
-                    if (window.FlatCMS && window.FlatCMS.modal && typeof window.FlatCMS.modal.close === 'function') {
-                        window.FlatCMS.modal.close('licenseRevealModal');
-                    } else {
-                        modal.style.display = 'none';
-                        modal.setAttribute('aria-hidden', 'true');
-                        document.body.style.overflow = '';
-                    }
+                    closeModal();
                 })
                 .finally(function() {
                     setLoading(button, false);
@@ -377,19 +382,19 @@
 
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
-                resetModalState();
+                closeModal();
             }
         });
 
         modal.addEventListener('click', function(event) {
             if (event.target === modal) {
-                resetModalState();
+                closeModal();
             }
         });
 
         document.querySelectorAll('[data-modal-close="licenseRevealModal"]').forEach(function(button) {
             button.addEventListener('click', function() {
-                resetModalState();
+                closeModal();
             });
         });
     }

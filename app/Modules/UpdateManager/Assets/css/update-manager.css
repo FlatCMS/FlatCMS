@@ -1,0 +1,215 @@
+/*
+ * FlatCMS Update Manager
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+.update-manager-header {
+  align-items: flex-start;
+  gap: var(--spacing-4);
+}
+
+.update-manager-readonly {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-5);
+}
+
+.update-manager-progress {
+  display: grid;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-5);
+  overflow: hidden;
+}
+
+.update-manager-progress-label,
+.update-manager-success,
+.update-manager-source-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.update-manager-progress-spinner {
+  animation: update-manager-spin 0.9s linear infinite;
+}
+
+.update-manager-progress-track {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.update-manager-progress-track > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 38%;
+  border-radius: inherit;
+  background: currentColor;
+  animation: update-manager-slide 1.15s ease-in-out infinite;
+}
+
+@keyframes update-manager-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes update-manager-slide {
+  0% { transform: translateX(-110%); }
+  55% { transform: translateX(120%); }
+  100% { transform: translateX(300%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-manager-progress-spinner,
+  .update-manager-progress-track > span {
+    animation: none;
+  }
+
+  .update-manager-progress-track > span {
+    width: 100%;
+  }
+}
+
+.update-manager-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-5);
+}
+
+.update-stat-card {
+  padding: var(--spacing-4);
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.update-stat-card > span {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.update-stat-card > strong {
+  color: var(--color-text-primary);
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.update-stat-card > .update-stat-date {
+  font-size: 1rem;
+}
+
+
+.update-manager-empty {
+  margin-bottom: var(--spacing-5);
+}
+
+.update-manager-empty .card-body {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.update-manager-empty .card-body > i {
+  font-size: 1.6rem;
+}
+
+.update-manager-empty h2,
+.update-manager-empty p {
+  margin: 0;
+}
+
+.update-manager-empty p {
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-1);
+}
+
+.update-catalog-list {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.update-catalog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.update-catalog-source {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  margin-top: var(--spacing-1);
+}
+
+.update-catalog-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+}
+
+.update-catalog-body {
+  padding: 0;
+}
+
+.update-catalog-placeholder {
+  padding: var(--spacing-5);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.update-table-wrap {
+  overflow-x: auto;
+}
+
+.update-table {
+  margin: 0;
+  width: 100%;
+}
+
+.update-table td strong,
+.update-table td small {
+  display: block;
+}
+
+.update-table td small {
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-1);
+}
+
+.update-compatibility-reason {
+  color: var(--color-danger, var(--color-text-secondary)) !important;
+}
+
+.update-row-action {
+  margin-top: var(--spacing-2);
+}
+
+.update-row-action .btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .update-manager-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .update-manager-header,
+  .update-catalog-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .update-manager-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .update-catalog-badges {
+    justify-content: flex-start;
+  }
+}

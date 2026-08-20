@@ -77,7 +77,11 @@ class View
             if (file_exists($modulePath)) {
                 return $modulePath;
             }
-            return BASE_PATH . "/app/Extensions/{$module}/Views/{$viewPath}.php";
+            $extensionPath = BASE_PATH . "/app/Extensions/{$module}/Views/{$viewPath}.php";
+            if (file_exists($extensionPath)) {
+                return $extensionPath;
+            }
+            return BASE_PATH . "/app/Plugins/{$module}/Views/{$viewPath}.php";
         }
 
         // Check if it's a theme view

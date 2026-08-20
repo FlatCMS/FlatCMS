@@ -743,13 +743,19 @@ if (!function_exists('flatcms_resolve_module_asset_contract')) {
             $manager = new \App\Core\ModuleManager([
                 BASE_PATH . '/app/Modules',
                 BASE_PATH . '/app/Extensions',
+                BASE_PATH . '/app/Plugins',
             ], BASE_PATH . '/data/modules.json');
             $metaCache[$module] = $manager->get($module) ?? [];
         }
 
         $meta = is_array($metaCache[$module]) ? $metaCache[$module] : [];
         $location = strtolower((string) ($meta['location'] ?? 'module'));
-        $publicBase = trim((string) ($meta['public_assets_base'] ?? ($location === 'extension' ? 'assets/extensions' : 'modules')), '/');
+        $defaultPublicBase = match ($location) {
+            'extension' => 'assets/extensions',
+            'plugin' => 'assets/plugins',
+            default => 'modules',
+        };
+        $publicBase = trim((string) ($meta['public_assets_base'] ?? $defaultPublicBase), '/');
         $publicKey = trim((string) ($meta['public_assets_key'] ?? strtolower($module)), '/');
         $sourcePath = trim((string) ($meta['assets_path'] ?? ''));
         $sourceStatus = trim((string) ($meta['assets_status'] ?? ($sourcePath !== '' ? 'ok' : 'absent')));
@@ -759,6 +765,7 @@ if (!function_exists('flatcms_resolve_module_asset_contract')) {
             $candidates = [
                 (defined('APP_PATH') ? APP_PATH : '') . '/Modules/' . $module . '/Assets',
                 (defined('APP_PATH') ? APP_PATH : '') . '/Extensions/' . $module . '/Assets',
+                (defined('APP_PATH') ? APP_PATH : '') . '/Plugins/' . $module . '/Assets',
             ];
             foreach ($candidates as $candidate) {
                 if (is_dir($candidate)) {
@@ -768,6 +775,11 @@ if (!function_exists('flatcms_resolve_module_asset_contract')) {
                         $location = 'extension';
                         if ($publicBase === 'modules') {
                             $publicBase = 'assets/extensions';
+                        }
+                    } elseif (str_contains($candidate, '/Plugins/')) {
+                        $location = 'plugin';
+                        if ($publicBase === 'modules') {
+                            $publicBase = 'assets/plugins';
                         }
                     }
                     break;
@@ -814,8 +826,7 @@ if (!function_exists('ensure_module_assets_link')) {
         $expectedReal = realpath($assetsPath);
 
         if (is_link($linkPath)) {
-            $currentTarget = @readlink($linkPath);
-            $currentReal = $currentTarget !== false ? realpath(dirname($linkPath) . '/' . $currentTarget) : false;
+            $currentReal = realpath($linkPath);
             if ($expectedReal !== false && $currentReal === $expectedReal) {
                 return;
             }
@@ -860,6 +871,7 @@ if (!function_exists('module_asset')) {
             trim((string) ($contract['public_path'] ?? '')) . '/' . $relativePath,
             (defined('APP_PATH') ? APP_PATH : '') . '/Modules/' . $module . '/Assets/' . $relativePath,
             (defined('APP_PATH') ? APP_PATH : '') . '/Extensions/' . $module . '/Assets/' . $relativePath,
+            (defined('APP_PATH') ? APP_PATH : '') . '/Plugins/' . $module . '/Assets/' . $relativePath,
         ];
 
         $filePath = '';
@@ -1070,6 +1082,7 @@ if (!function_exists('module_enabled')) {
                 $manager = new \App\Core\ModuleManager([
                     BASE_PATH . '/app/Modules',
                     BASE_PATH . '/app/Extensions',
+                    BASE_PATH . '/app/Plugins',
                 ], BASE_PATH . '/data/modules.json');
                 $enabledMap = $manager->enabled();
             } catch (\Throwable) {

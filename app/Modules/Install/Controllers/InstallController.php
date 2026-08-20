@@ -2344,7 +2344,7 @@ final class InstallController
             throw new \RuntimeException('Unable to create public/modules directory.');
         }
 
-        $roots = [APP_PATH . '/Modules', APP_PATH . '/Extensions'];
+        $roots = [APP_PATH . '/Modules', APP_PATH . '/Extensions', APP_PATH . '/Plugins'];
         foreach ($roots as $root) {
             if (!is_dir($root)) {
                 continue;
@@ -2781,6 +2781,14 @@ server {
         # fastcgi_pass 127.0.0.1:9000;
         # Example Unix socket:
         # fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_pass 127.0.0.1:9000;
+    }
+
+    # Autonomous disaster-recovery endpoint. It returns 404 unless a recovery capsule is active.
+    location = /recovery.php {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$realpath_root/recovery.php;
+        fastcgi_param DOCUMENT_ROOT \$realpath_root;
         fastcgi_pass 127.0.0.1:9000;
     }
 

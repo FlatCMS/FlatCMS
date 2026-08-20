@@ -49,10 +49,10 @@
   --fc-btn-primary-active-border: #312e81;
   --fc-btn-primary-active-color: #ffffff;
   --fc-btn-primary-active-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.48);
-  --fc-btn-secondary-bg: #8b5cf6;
-  --fc-btn-secondary-border: #8b5cf6;
+  --fc-btn-secondary-bg: #7c3aed;
+  --fc-btn-secondary-border: #7c3aed;
   --fc-btn-secondary-color: #ffffff;
-  --fc-btn-secondary-shadow: 0 10px 20px -6px rgba(139, 92, 246, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+  --fc-btn-secondary-shadow: 0 10px 20px -6px rgba(124, 58, 237, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.26);
   --fc-btn-secondary-hover-bg: linear-gradient(180deg, #6d28d9 0%, #581c87 100%);
   --fc-btn-secondary-hover-border: #7c3aed;
   --fc-btn-secondary-hover-color: #ffffff;
@@ -70,8 +70,8 @@
   --fc-btn-ghost-hover-color: #ffffff;
   --fc-btn-ghost-hover-shadow: 0 14px 26px -12px rgba(217, 70, 239, 0.54), inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 0 2px rgba(217, 70, 239, 0.24);
   --fc-btn-outline-bg: transparent;
-  --fc-btn-outline-border: rgba(99, 102, 241, 0.54);
-  --fc-btn-outline-color: #c7d2fe;
+  --fc-btn-outline-border: rgba(165, 180, 252, 0.72);
+  --fc-btn-outline-color: #e0e7ff;
   --fc-btn-outline-shadow: 0 10px 22px -14px rgba(99, 102, 241, 0.42);
   --fc-btn-outline-hover-bg: linear-gradient(180deg, #3730a3 0%, #312e81 100%);
   --fc-btn-outline-hover-border: #a5b4fc;
@@ -2390,9 +2390,9 @@ form[action*="contact/send"] button[type="submit"] {
 }
 
 .footer-content .powered a {
-  color: var(--color-primary);
+  color: #c7d2fe;
 }
 
 .footer-content .powered a:hover {
-  color: var(--color-primary-dark);
+  color: #ffffff;
 }

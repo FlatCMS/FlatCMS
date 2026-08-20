@@ -6,11 +6,141 @@
       "slug": "flatcms",
       "name": "FlatCMS",
       "type": "core",
+      "version": "1.1.5",
+      "channel": "stable",
+      "vendor": "flatcms",
+      "official": true,
+      "requires_php": "8.3",
+      "artifact": {
+        "file": "core/flatcms/1.1.5/flatcms.zip",
+        "filename": "flatcms-1.1.5.zip"
+      },
+      "sha256": "7f0ead530dc86b26c33c340927120c7732a9a02848d8e0e0a653d454e7f44810",
+      "signature": "ODLb4Bjyp64gkdMITCiGE1qVwNNVFhFIAjOZC+OIv9hUUd5FCU5yD5RjjG6YgpLW/b+UppGW9s/9fparBD9ZQSXj41WJgV+VhJbDuLti4AMA4V5VoAX8eTyyGPoiDlrqB1WE1d3pCJV6+u34twoOkzfOuujXgI8oarkUTKLMpF5eUcg7Jtre0ZqUTpVie0CsFjCqwqvjUoxXF51njAwlJBAQYn1B5v5HocQqStt0kxOkj++5PEMzp9PTUh784FfRpSGPPJI25g0ShAMl4EiN+bR0i+cdvSV9aOND0ha7hZjcFWFjlhWvyUtrOrxPdRIVeGaUa1yfCXnFWrtGEeLN0KR7f0MO3Ia8V9dVWz5tfvReWBh+yxfmvaewKQY0Xa0voQnlxnD9mBtAkMmuqFoaptYNpqk9Sce7xAZZoJ1Ujf7LIh/ipdzM3gQswj8lHZIgPgE5xpYAVMMi8gfzKao8kpSJtoXMLT5M84uSuxGMndNxSoZCg3wEOdRgg2vAWfSXznx67F15jbd5ZagbLa9MuEscKF7VauKAFe2hUwQEz5jw/pAnVngbcNAsZgCbx1KC6tIPrLHP+UyAjVyzzusKurS2kej9md/pqSJA5E579bjDZlSahhxct9vNUVciERfayr67NzE9BhJXxjay7mHcsjoaX+/4mPMn9FD13NqAz10=",
+      "min_core_version": "1.0.0",
+      "max_core_version": "",
+      "changelog": "FlatCMS 1.1.5 : isole strictement les mises à jour Core des Modules, Extensions, Plugins et Themes, ajoute les prérequis de composants signés, optimise la capsule de récupération Core et maintient l’API de distribution des mises à jour disponible pendant la maintenance.",
+      "published_at": "2026-08-20T07:25:27Z",
+      "availability": "published",
+      "size_bytes": 4525640,
+      "requires_packages": [
+        {
+          "catalog": "modules",
+          "slug": "modules",
+          "version": ">=1.0.1"
+        },
+        {
+          "catalog": "modules",
+          "slug": "backups",
+          "version": ">=1.0.1"
+        },
+        {
+          "catalog": "modules",
+          "slug": "update-manager",
+          "version": ">=0.4.4"
+        }
+      ]
+    },
+    {
+      "slug": "flatcms",
+      "name": "FlatCMS",
+      "type": "core",
+      "version": "1.1.4",
+      "channel": "stable",
+      "vendor": "flatcms",
+      "official": true,
+      "requires_php": "8.3",
+      "artifact": {
+        "file": "core/flatcms/1.1.4/flatcms.zip",
+        "filename": "flatcms-1.1.4.zip"
+      },
+      "sha256": "1594fc1b2cc5407d274281f9c46410bec07e3acde11f2efc0e94e460b78644f8",
+      "signature": "wFoaaa2TtqkuyjKEr3NfDl2IVdUBcc3OSbERQBcZNXk8XAuRCs9C7hUL8X4AyYZSZX7pymTnqUdym9JcB3qR9y0PbxJUyvMHsYzJhxy6PKOWRUBzSrzr2pveQZcHfYA6LssZ1RUtJ4HTkbLncfEvWd8/XQQobwfSNw8bKzmdZE4oerwmwvYwT636KW0bUSimyx3wynwtSYGO7NlYQi1EPasOYAe3RDXCytJAVYH2cFr57oTArdgZ2hEIWE7sxAEfsNYRilzXIxJ4Gljg6m13t6NVh/MjZQNmtAF6ZQpqArrYrPNOU23Hs/UgmBIVeTs7yMl7cFHh9NOiT8V4oq/Ub/2j0eRqC85Z5Qa8zdIQgwzVG6AvopE3+tdE5QBwtSy14FDgOIHs9Eybjy2XSF4kbInksnXuoFOdZNPiN0p8o0kESVRm0jhDVr5bCBQ4SCi61n/MAPCgiznVpOddYCwJLV768C+YGlRQCjzkjZXi0JCybJz7YqtIraxPMNumYKJ7t2FR4g8YUOCbgVywvRMKGtZ7jIqzg/Gx0/RO6s0MegBJiw8nM88Lt8O19a0kLH6bVD6OpETF81GBN3uPQdltmP7c71RRwUbBO0iNzQUT63Sww0yS9sWg/0IGL4vcyde32IGdV+fEJMKHEdB0S0pmlP1P9wCtekPzk6P8vDHaYn8=",
+      "min_core_version": "1.0.0",
+      "max_core_version": "",
+      "changelog": "FlatCMS 1.1.4 : durcit UpdateManager 0.3.3 avec préflight des permissions avant sauvegarde, rollback limité aux fichiers réellement modifiés, réautorisation sécurisée du Disaster Recovery et worker asynchrone pour éviter les timeouts HTTP sur les sites volumineux.",
+      "published_at": "2026-08-18T19:53:27Z",
+      "availability": "archived",
+      "size_bytes": 16552510
+    },
+    {
+      "slug": "flatcms",
+      "name": "FlatCMS",
+      "type": "core",
+      "version": "1.1.3",
+      "channel": "stable",
+      "vendor": "flatcms",
+      "official": true,
+      "requires_php": "8.3",
+      "artifact": {
+        "file": "core/flatcms/1.1.3/flatcms.zip",
+        "filename": "flatcms-1.1.3.zip"
+      },
+      "sha256": "66e58e2683742015dd51c7a147a6735d8c91bada07de39227377a87d92daa28e",
+      "signature": "KvlewcFeToQBDZqIHS+/NbrcsftywiJdbemQ8lu36/TaGhf4Mftz00Yb4JuA32KloxOcRbRgl9zCV8xWeAw/F94hbvGhnbzL3swCh4LG9C90o/Kq4l3KwM0j6EDC6oV+aEayAsRBBjZ8T90rjto7gCAUeyHdLEnouSKSmc8MJAVACuHU0b/1zmTIMesHcIgt8GTxJLI7fm4GSUDdisliRum6ZnhbA00NsvrNkNdGGKOIxu6bSdjn7XdB67qckd1a89PZWODAwAQTT6dAXlGShGEijohlO6+8dV47A7EQYWwRks4ku1dGpvkEW2djN3Ac3Qq8eTwYz+Na7mb9RLx4U5gZ5Vdc3wAYn+rzirXI61SKGBKTVb5X8hi7aFuKByOa9rS2uyQSzCBpKg6o1LDvKenFFXaUaVtVkNR5OZbjSi58KOWmxgc/ZdopTeGCHOAyiEETBqo0NbPKiOrOgkLKlAv3zgthu+smBj7UXPdQBE8A8ZfjKgLlIMIR7+TNjBuw/uK1trKdnGuMORZGTCJ1vrgTyl8F4ErHdN3JdkoU6awMDKTew5EBo38Pb1yaSYjyPIdt2erO/Psy8M3AiGjmjQk0zEMFI+ncu984fAswA97HBMj9z3lyGwbZWfTv1JpNfRlI++HfytNje0PYuxGX9vSeqzQDq8p2Dxf+KhH4png=",
+      "min_core_version": "1.0.0",
+      "max_core_version": "",
+      "changelog": "FlatCMS 1.1.3 : release de transition compatible UpdateManager 0.2.2, installe UpdateManager 0.3.1 et le Disaster Recovery autonome. Les entrypoints Recovery sont désormais provisionnés par UpdateManager avant toute mutation, tandis que Store et ses ressources restent exclus des mises à jour Core.",
+      "published_at": "2026-08-18T16:24:06Z",
+      "availability": "archived",
+      "size_bytes": 16549692
+    },
+    {
+      "slug": "flatcms",
+      "name": "FlatCMS",
+      "type": "core",
+      "version": "1.1.2",
+      "channel": "stable",
+      "vendor": "flatcms",
+      "official": true,
+      "requires_php": "8.3",
+      "artifact": {
+        "file": "core/flatcms/1.1.2/flatcms.zip",
+        "filename": "flatcms-1.1.2.zip"
+      },
+      "sha256": "0bb2d712335a22d62182075956802a3d32c61fb0e8d75bd3df23d9c338191ae4",
+      "signature": "IrX0UZDdsIQUk7Bft6dbrHmFqnW/CUaenXMCBXHnO9oPh/p/vNR1svOasuT2oCsJRu4w2M495AdipAte6azgeJJqp15O5W/hJzujRZ3TiZt/sWuF13aIy0kyTZrn20I8tHYz+lgcRpevjx/+IogWb8S9d65dbhHf01UOo4VAU8I3p1bUpZ+hGvlHyVDOqhBWtiyoFmynjvYQZ16KTIVrfofDfkcjtCa+pjBXRkiz0QaSrkh5MokMK0hUNYjin2j7/GLdiduW7m0pj1FZShENic80+jWD/g61qEB5JTsgNqyEkLNJAFd5lvnER7v57JJFfqY6iErMwUtDEbOhYeklM9Z0yAz2gGUOND6/l4N5yzpvz8Xfs3oM6u2dGR40+JG6jDuwfASlhg8W6eJzSK0kd7PE18BN3jIqMdKbYq6aQQS+nTc/gw/7DyqYCDJk1YWlGEqAqjaHh2s3CDUT5i/q+vh/yEA3x5cvGJ0r9PWVZ3BaivqDWXmbvOE4wGBND9tbe6Q6Uaq1kNkltTbEav312U/UUaOOwr574YBQEe3HpKS/82dCR1C2+LVMh4dLTY95YpwEA2m+CSJZKyIYSPbW3VysKud8GAr6s2kvqK6cZV5ls8FPb8fRDLkhaXLTV9tiCmf8TB8F9AdLxo5tKT3pW+sKhWmOHYOaP7F+T/XeotI=",
+      "min_core_version": "1.0.0",
+      "max_core_version": "",
+      "changelog": "FlatCMS 1.1.2 : ajoute le Disaster Recovery autonome avec point de restauration complet avant mise à jour, archive de l’état défectueux avant restauration, surveillance post-mise à jour, intégrité UpdateManager 0.3.0 et préservation des modules externes comme Store pendant les mises à jour Core.",
+      "published_at": "2026-08-18T15:57:24Z",
+      "availability": "archived",
+      "size_bytes": 16549221
+    },
+    {
+      "slug": "flatcms",
+      "name": "FlatCMS",
+      "type": "core",
+      "version": "1.1.1",
+      "channel": "stable",
+      "vendor": "flatcms",
+      "official": true,
+      "requires_php": "8.3",
+      "artifact": {
+        "file": "core/flatcms/1.1.1/flatcms.zip",
+        "filename": "flatcms-1.1.1.zip"
+      },
+      "sha256": "dd636fc6a927365fd859439ad348bccabd8fc6ed1d7bc812a193bf1b7e3ed81b",
+      "signature": "fRJLN0JGl1yVceIlrQqjMJo+zXx2yh2LT3EqCFuMMyfH5l28BNF9M0TC3R6navqqaHWqyZe4VQqtYkzAJb2ukBpNKZwhnh1Z8CM+f+ld/zH/+XPwC9tuUbLa3wrbjZvQfx1rBC7vOHT2nNpUV2t2aa7r17MeiUY5ELroKEcAHYOzgiiWV6/rLNgU+p5d3RqgM7nzVaY5nnAdhz6FifrEJKdKSwXQUHhE32846V6wfE661vKFfz7F0IhKYKMW/tuZNR/GLZTtBINtMq0EbhiIL32U0bJ+HNo+/YJ5kltu35C9g28o+zn0iVJSL1EeDk7N9+N3g6WreqiZ/u4NfeV87buDgzmQ7XBY9nEkkl+pMNzXO0MK+YTYZL9TvIhbwLwrbLwoDkC6Kwq/48sgp3r3+s5FI4CbMeUbpnWGufjy5voJPp9diHtYl5D7CyHwDVSjfnvvTLdRxMSFBIRBZiT2fIeoPlI5FAcAXPD/tCxKxDm5FxmyPb0iRWIcolhg2QRliWHxNo2fBbV23/8ienJSUa3YaZY6qx6cbFi73bO6TpVXhzsovaua6mkHOS0COYmSkZ61g+rvrdpfr5o6qG0uWVg106NlZrjAFx/11tJOvza/LTcJqKulkzOyunbpKzVukMij1LaUIKUMC17fJjCzvQqAHdQki4J+2AH+qTwKSWM=",
+      "min_core_version": "1.0.0",
+      "max_core_version": "",
+      "changelog": "FlatCMS 1.1.1: sécurise la première mise à jour avec sauvegarde Site via Backups, snapshot Core transactionnel dans un espace runtime inscriptible et libération robuste du verrou.",
+      "published_at": "2026-08-18T07:35:00Z",
+      "availability": "archived"
+    },
+    {
+      "slug": "flatcms",
+      "name": "FlatCMS",
+      "type": "core",
       "version": "1.0.0",
       "channel": "stable",
       "vendor": "flatcms",
       "official": true,
       "requires_php": "8.3",
+      "artifact": {
+        "file": "core/flatcms/1.0.0/flatcms.zip",
+        "filename": "flatcms-1.0.0.zip"
+      },
       "sha256": "c77a92d17fc2e545501910b230dbf8674469d91c9236530844b36991a40418eb",
       "signature": "",
       "min_core_version": "",
@@ -18,6 +148,28 @@
       "changelog": "First stable public release of the FlatCMS core.",
       "published_at": "2026-03-23T09:42:56Z",
       "availability": "published"
+    },
+    {
+      "slug": "flatcms",
+      "name": "FlatCMS",
+      "type": "core",
+      "version": "1.1.0",
+      "channel": "stable",
+      "vendor": "flatcms",
+      "official": true,
+      "requires_php": "8.3",
+      "artifact": {
+        "file": "core/flatcms/1.1.0/flatcms.zip",
+        "filename": "flatcms-1.1.0.zip"
+      },
+      "sha256": "c352201bc2a955e45d5f28f252dc397ad8455da64955dc5110f93d385119ba70",
+      "signature": "R14eyekbhnrCqmbtwAxsydSAGYcOCaXruLs2iXt2f4ZFe9w177WIbUXEd08luTylotSEc0oyrEBKR5kg0IqeR6unRIKR3VTp3JbrIyLNLbY8wSNOX5TfW26hxZHYV2Dofrf2iMqhGP1ShOA9CzJLKmA191UlqoZ6fVtXchxIq17NByrfZRk66Y55KXKJVzENJRSuI2alqJlVOkQG+QHHDEB+Nb+UV4TIZddc5poReGXh8dxIJGnQzgZV46jYH0zhpkE+LrebJhWf9z0KiDbKoz5tzU94AUBt56Sx1wTQ7+SngzlVk/LkT4aTQiYe42XdJcvVOPvcGIuq30rCKV2sHp3w0Bx+r0ybL/Bn071dPkaEeCOTyf8n5wrjNGp6UdMCEgx/h0uKhI2ttjS4iwFwso4yOTpzzgzsU56UuIb2CXxgrm5fMLyHRe7A7iYtDCBblbV7uqNm7jYc6jaDeiCMuy/0uaR7+mkN7t5mIoy8A/NGvxKxWbVCr5/xHBjRWoNrdbxQoNhhULzLDY916/yCvm4sg0GT8R/7n4bdkVB1ljvFQWZ9xs71azVdXAejP88RBZuCkC7jZqA85P/SOCT90QUIxog4XSUwaaFcUXo4wZ8oZ4UKSjG4vhd7AfQPstmdTXVgX2QV0DdAk3PRJbEJ0mN3yXWEquuGfXP9Hsl9TSo=",
+      "min_core_version": "1.0.0",
+      "max_core_version": "",
+      "changelog": "Provisional FlatCMS 1.1.0 test release for transactional Update Manager validation.",
+      "published_at": "2026-08-18T05:59:44Z",
+      "availability": "archived",
+      "size_bytes": 16528717
     }
   ]
 }

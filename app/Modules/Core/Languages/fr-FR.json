@@ -12,7 +12,7 @@
     "admin_tour_prompt_title": "Aide contextuelle disponible",
     "admin_tour_reset_toast": "La visite guidée se relancera automatiquement à votre prochaine connexion.",
     "admin_tour_skip": "Passer",
-    "admin_tour_step_counter": "Étape :current/:total",
+    "admin_tour_step_counter": "Étape :current\/:total",
     "admin_tour_step_navigation_content": "Utilisez cette barre latérale pour accéder rapidement aux modules et sections de gestion.",
     "admin_tour_step_navigation_title": "Navigation principale",
     "admin_tour_step_settings_content": "Depuis Paramètres, vous pouvez relancer ou réactiver cette visite guidée à tout moment.",
@@ -94,7 +94,7 @@
     "success": "Succès",
     "sending": "Envoi...",
     "system": "Système",
-    "toggle_password_visibility": "Afficher/masquer le mot de passe",
+    "toggle_password_visibility": "Afficher\/masquer le mot de passe",
     "toggle_submenu": "Ouvrir le sous-menu",
     "update": "Mettre à jour",
     "updated_at": "Mis à jour le",
@@ -125,5 +125,6 @@
     },
     "admin_tour_step_branding_title": "Identité du site",
     "admin_tour_step_branding_content": "Cette zone affiche le logo, le nom du site et le slogan actifs. Elle reflète aussi le branding configuré pour l'administration.",
-    "status": "Statut"
+    "status": "Statut",
+    "view": "Voir"
 }

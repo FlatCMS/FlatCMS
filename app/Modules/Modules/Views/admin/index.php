@@ -21,12 +21,15 @@ $moduleTypes = [];
 $moduleLocations = [];
 $modulesList = is_array($modulesList ?? null) ? $modulesList : [];
 $moduleEntries = $modulesList;
+$coreModulesList = array_filter($moduleEntries, static fn (array $meta): bool => strtolower((string) ($meta['location'] ?? 'module')) === 'module');
+$addonsList = array_filter($moduleEntries, static fn (array $meta): bool => in_array(strtolower((string) ($meta['location'] ?? 'module')), ['extension', 'plugin'], true));
 $initialStatusFilter = $initialStatusFilter ?? 'enabled';
 $autoDeleteModuleName = strtolower((string) ($autoDeleteModuleName ?? ''));
 $autoOpenModuleName = strtolower((string) ($autoOpenModuleName ?? ''));
 $resolveLocationLabel = static function (string $location): string {
     return match (strtolower($location)) {
         'extension' => __('module_location_extension', 'Modules'),
+        'plugin' => __('module_location_plugin', 'Modules'),
         default => __('module_location_module', 'Modules'),
     };
 };
@@ -88,7 +91,11 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
         $translatedType = \App\Core\I18n::has($typeKey, 'Modules') ? __($typeKey, 'Modules') : ($meta['type'] ?? '-');
         $typeSlug = strtolower((string) ($meta['type'] ?? ''));
         $location = strtolower((string) ($meta['location'] ?? 'module'));
-        $moduleIconClass = 'fas fa-puzzle-piece';
+        $moduleIconClass = match ($location) {
+            'plugin' => 'fas fa-plug',
+            'extension' => 'fas fa-puzzle-piece',
+            default => 'fas fa-cube',
+        };
         $lifecycleStatus = strtolower((string) ($meta['lifecycle_status'] ?? ($isEnabled ? 'enabled' : 'disabled')));
         $filterStatus = $lifecycleStatus === 'enabled' ? ($isRequired ? 'required' : 'enabled') : 'disabled';
         $status = $lockedBy ? 'locked' : $filterStatus;
@@ -132,6 +139,19 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
                     <?php if ($isLegacy): ?>
                         <span class="badge badge-warning"><?= __('module_legacy', 'Modules') ?></span>
                     <?php endif; ?>
+                    <?php
+                    $updateBadges = array_values(array_filter(
+                        hook_run('modules.admin.card.badges', [
+                            'name' => (string) $name,
+                            'location' => $location,
+                            'meta' => $meta,
+                        ]),
+                        static fn ($markup): bool => is_string($markup) && trim($markup) !== ''
+                    ));
+                    foreach ($updateBadges as $updateBadge):
+                    ?>
+                        <?= $updateBadge ?>
+                    <?php endforeach; ?>
                     <span class="module-card-version"><?= e($meta['version'] ?? '-') ?></span>
                     <i class="fas fa-chevron-down module-card-chevron"></i>
                 </div>
@@ -346,39 +366,65 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
     <section class="modules-column">
         <div class="card modules-column-card">
             <div class="card-header">
-                <h2 class="card-title"><?= __('module_name_modules', 'Modules') ?></h2>
+                <h2 class="card-title"><?= __('module_name_modules', 'Modules') ?> FlatCMS</h2>
             </div>
             <div class="card-body">
                 <div class="module-card-list" data-module-list="modules">
-                    <?php if (empty($modulesList)): ?>
+                    <?php if (empty($coreModulesList)): ?>
                         <div class="card module-empty" data-module-empty>
                             <div class="card-body">
                                 <div class="admin-empty-state-panel">
-                                    <div class="admin-empty-state-panel__icon" aria-hidden="true">
-                                        <i class="fas fa-box-open"></i>
-                                    </div>
+                                    <div class="admin-empty-state-panel__icon" aria-hidden="true"><i class="fas fa-box-open"></i></div>
                                     <h2 class="admin-empty-state-panel__title"><?= __('modules_empty_title', 'Modules') ?></h2>
+                                    <p class="admin-empty-state-panel__text"><?= __('modules_empty_text', 'Modules') ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <?php $renderModuleCards($coreModulesList); ?>
+                        <div class="card module-empty hidden" data-module-empty>
+                            <div class="card-body">
+                                <div class="admin-empty-state-panel">
+                                    <div class="admin-empty-state-panel__icon" aria-hidden="true"><i class="fas fa-filter-circle-xmark"></i></div>
+                                    <h2 class="admin-empty-state-panel__title"><?= __('modules_filter_empty_title', 'Modules') ?></h2>
+                                    <p class="admin-empty-state-panel__text"><?= __('modules_filter_empty_text', 'Modules') ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="modules-column">
+        <div class="card modules-column-card">
+            <div class="card-header">
+                <h2 class="card-title"><?= __('module_location_extension', 'Modules') ?> + <?= __('module_location_plugin', 'Modules') ?></h2>
+            </div>
+            <div class="card-body">
+                <div class="module-card-list" data-module-list="addons">
+                    <?php if (empty($addonsList)): ?>
+                        <div class="card module-empty" data-module-empty>
+                            <div class="card-body">
+                                <div class="admin-empty-state-panel">
+                                    <div class="admin-empty-state-panel__icon" aria-hidden="true"><i class="fas fa-puzzle-piece"></i></div>
+                                    <h2 class="admin-empty-state-panel__title"><?= __('module_location_extension', 'Modules') ?> + <?= __('module_location_plugin', 'Modules') ?></h2>
                                     <p class="admin-empty-state-panel__text"><?= __('modules_empty_text', 'Modules') ?></p>
                                     <div class="admin-empty-state-panel__actions">
                                         <a href="#modulesInstallerCard" class="btn btn-primary btn-sm"><?= __('modules_empty_action_install', 'Modules') ?></a>
-                                        <a href="#modulesToolbar" class="btn btn-ghost btn-sm"><?= __('modules_empty_action_filters', 'Modules') ?></a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     <?php else: ?>
-                        <?php $renderModuleCards($modulesList); ?>
+                        <?php $renderModuleCards($addonsList); ?>
                         <div class="card module-empty hidden" data-module-empty>
                             <div class="card-body">
                                 <div class="admin-empty-state-panel">
-                                    <div class="admin-empty-state-panel__icon" aria-hidden="true">
-                                        <i class="fas fa-filter-circle-xmark"></i>
-                                    </div>
+                                    <div class="admin-empty-state-panel__icon" aria-hidden="true"><i class="fas fa-filter-circle-xmark"></i></div>
                                     <h2 class="admin-empty-state-panel__title"><?= __('modules_filter_empty_title', 'Modules') ?></h2>
                                     <p class="admin-empty-state-panel__text"><?= __('modules_filter_empty_text', 'Modules') ?></p>
-                                    <div class="admin-empty-state-panel__actions">
-                                        <a href="#modulesToolbar" class="btn btn-primary btn-sm"><?= __('modules_empty_action_filters', 'Modules') ?></a>
-                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -1,6 +1,6 @@
 {
     "name": "Backups",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Site data backup and restore manager.",
     "type": "system",
     "author": "Alain BROYE",
@@ -14,5 +14,21 @@
     "official": true,
     "origin": "flatcms",
     "required": true,
-    "signature": "GxygKjdg0gBxQ5OA58cP8IAjRY1xoG8TpiW9TfbWzZhNL7+RsB7GHxS2VQO1C+v2TzoYbM7VObgu6oGxsWo5rLwrfNrU8uXQpV78XOW8+8mEgZntSqqcEtYQ9K2AkgBkQRuCwVjf8wedExAnQCm/3DbpLM+OVn844xXq8d6tY7EbYOwl6xNsjoGepocBh1DzOz9EGJd9+cCZ6Eo3QgbzGWJNNcxUfh/ig7bzEd811oLOqtkzx3edxZSko5cGsi4nZ5eJZQ1cxe65NzTH0xmWjEW0hloL35NZ+ELALFnMELkZm/5EjPYVFnKJHAjs8mz0DAOByCToTQUB7JFtLJNkqqUSv/s+/M900JgghitbSPDBq86eAodMk3KOqAXVyAkSny+f67NYvajW2L4z/9mu3lyCjWEUE8fDvPsYNZ+fNCbqL2wROOzKrbxAWBqIbHMWfpvLK9M68Zye1njNGy1hgO14sQcCTfUwZ5HyDk+i2ACSkfWSudA/vU76Gy3vMuZqlEi3XPQ1uzocmOIEX/y6F9V3+OMXYs81mWc1MCjbYyM+pFj+i7ydDrolblRa/AcxixYmH1pbuDZ65IRLJ/Bo2Xm5eYjbImG1GpmXXQ/vFzKIH6sh0qfy6yxjs3YsRtB0LAKYMWMt7CSKirHvyIn4XiGMQAnQ0xnit4Xlr9ggQ9w="
+    "files": {
+        "Assets/css/backups.css": "6aea2b511c1d32eb55779761d6c0bb48511ad1fc140bf1f95553daa5f9e6f40e",
+        "Config/routes.php": "2c34bea9d8998c7e6acd599988a9e550876196255287e9126ff1c46f4fec9b17",
+        "Controllers/AdminController.php": "30e72eaa74a8351ec8a6117417ebe79edf30d80d73f29209c0c73b5f0dccab77",
+        "Hooks/listeners.php": "088d67bdf0b9a0046b558e17781b7c5e94c6a41d37d271a151ee8f23c17774e5",
+        "Languages/de-DE.json": "4639c6bba56e8cc5c48020fc04d37451e2a3a605a2897e973685f7c427746d6c",
+        "Languages/en-US.json": "dcbe6629ef50882ec9375b86939bfac5499891e7e904cf6271d548d16d6b5886",
+        "Languages/es-ES.json": "54de4a2298b5b5a939448d952751f4d66ab8b1db98f1ad15fc5ddcec0fea4460",
+        "Languages/fr-FR.json": "f2feb302e4bbd8b2e1698c28b38cf881716efca3f71116d54ac4e0a6f5496cd3",
+        "Languages/it-IT.json": "9c41782a2f1c8daffe51e1fa3ad00474c8a3bc86fdcf14183e9bb68908cf147c",
+        "Languages/pt-PT.json": "bde23f7fbd19acc05f04588992c55f600c5cfb98e8bf72bc86ea053b6a8d7ed2",
+        "Services/FullBackupService.php": "8a193adfe9e605fd7f9b9fd97e586ab39ce80ad5c6e325d8be32b04def1ead67",
+        "Services/SiteBackupService.php": "9084d9cab2fef714deb28dbacd26e76dccc47e3a2fd7003ff7bfcf2b7d72a454",
+        "Views/admin/dashboard-banner.php": "61f510a7cf076151e927c1ecc2f9c912f35ed1308b59b085ed561498e42f47bf",
+        "Views/admin/index.php": "ad7f0e510b67f55c04bf6e94ba9c85c737e87d59bd6729a1b59206e8a2e654c0"
+    },
+    "signature": "EXeLNPK5qi+R8v1EmL1WKFUOfIinJNJq3kawG3f38d1sqAjV6oHbO1oDp/Cr4wMFOcc/lpO0JVSnJPxDkvq6dc8nZivM+zxReyb1BRTXyWfTahM7cyEc7yQ/GLEfmwp7qcVRYjc1p2LsFEPaS1yNARNXb+dT71+/adYdtTHFWwOsMFdMfmT/1GPVSbZcp2BctDImM2NaiyhDSyCRrpdSH8LKIKH5GbZvAg8Xj2IeVmC3lSRwuVa+dzxSDTwijBY4BoXoLMWFMZvr8w7s/2dG9oC6Op+cCRt9iot+mdHAFn/g5K78VyFInuznbOZ2d9zKsft5UqF9FWMmona/yXxEcgiC3VsCou4xWVf1WohorYvxArXvPqzbPgt5Dr6L5TE7S03ZmFGW2KcDecauI46Wg7GR7to3CF3F4tFmKxhoJbv8wY+TACwkksXU5NBkjs2YdYL6aaDKLdFu65hb2LsuiQPDFQbAPceQ6I0L9JtQ7Tiy4VqJCzKD3/M3cM9ILI6Ok8xL9VNZImJo1ccnXbr8qCM4yS4GHnx4VXrvWSCuktBSgDr6DpbF9A/6rUDEdl03opbfaY9M7DNLmcxjpex/SnTQBP3GeZaFw68Qx+HWLj8zDHKYAtApTp1qJVyRb3qwLT4d19GRxC+t07+Ng/3Y7ngcafW9mKvK+QskIRC8/rM="
 }

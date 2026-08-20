@@ -29,6 +29,12 @@ final class HookSlots
         return $fragments;
     }
 
+    public static function resolve(string $hook, array $payload = []): string
+    {
+        $fragments = self::collect($hook, $payload);
+        return $fragments[0] ?? '';
+    }
+
     public static function render(string $hook, array $payload = []): string
     {
         return implode(PHP_EOL, self::collect($hook, $payload));

@@ -249,6 +249,19 @@ ksort($categoryOptions);
                     </div>
                     <div class="theme-info">
                         <h4><?= e($theme['name']) ?></h4>
+                        <?php
+                        $themeUpdateBadges = array_values(array_filter(
+                            hook_run('themes.admin.card.badges', [
+                                'name' => (string) $name,
+                                'theme_type' => 'frontend',
+                                'theme' => $theme,
+                            ]),
+                            static fn ($markup): bool => is_string($markup) && trim($markup) !== ''
+                        ));
+                        ?>
+                        <?php if ($themeUpdateBadges !== []): ?>
+                            <div class="theme-update-badges"><?php foreach ($themeUpdateBadges as $themeUpdateBadge): ?><?= $themeUpdateBadge ?><?php endforeach; ?></div>
+                        <?php endif; ?>
                         <p class="theme-meta"><?= __('version', 'Themes') ?>: <?= e($theme['version']) ?> | <?= __('author', 'Themes') ?> : <?= e($theme['author']) ?></p>
                         <?php if (!empty($theme['description'])): ?>
                             <p class="theme-desc"><?= e($theme['description']) ?></p>
@@ -334,6 +347,19 @@ ksort($categoryOptions);
                     </div>
                     <div class="theme-info">
                         <h4><?= e($theme['name']) ?></h4>
+                        <?php
+                        $themeUpdateBadges = array_values(array_filter(
+                            hook_run('themes.admin.card.badges', [
+                                'name' => (string) $name,
+                                'theme_type' => 'admin',
+                                'theme' => $theme,
+                            ]),
+                            static fn ($markup): bool => is_string($markup) && trim($markup) !== ''
+                        ));
+                        ?>
+                        <?php if ($themeUpdateBadges !== []): ?>
+                            <div class="theme-update-badges"><?php foreach ($themeUpdateBadges as $themeUpdateBadge): ?><?= $themeUpdateBadge ?><?php endforeach; ?></div>
+                        <?php endif; ?>
                         <p class="theme-meta"><?= __('version', 'Themes') ?>: <?= e($theme['version']) ?> | <?= __('author', 'Themes') ?> : <?= e($theme['author']) ?></p>
                         <?php if (!empty($theme['description'])): ?>
                             <p class="theme-desc"><?= e($theme['description']) ?></p>

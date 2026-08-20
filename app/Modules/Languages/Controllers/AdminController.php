@@ -208,6 +208,7 @@ class AdminController extends BaseController
         $paths = [
             BASE_PATH . '/app/Modules',
             BASE_PATH . '/app/Extensions',
+        BASE_PATH . '/app/Plugins',
         ];
         foreach ($paths as $modulesPath) {
             foreach (glob($modulesPath . '/*/Languages/' . $code . '.json') as $file) {
@@ -688,6 +689,7 @@ class AdminController extends BaseController
         $manager = new \App\Core\ModuleManager([
             BASE_PATH . '/app/Modules',
             BASE_PATH . '/app/Extensions',
+        BASE_PATH . '/app/Plugins',
         ], BASE_PATH . '/data/modules.json');
         foreach ($manager->enabledNames() as $moduleName) {
             if ($moduleName === 'Core') {

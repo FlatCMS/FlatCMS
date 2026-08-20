@@ -9,6 +9,52 @@
 
 declare(strict_types=1);
 
+/*
+ * Disaster Recovery bridge.
+ * This shutdown handler deliberately uses only PHP built-ins so it can still
+ * mark a post-update fatal error even when the FlatCMS Core cannot bootstrap.
+ */
+$flatcmsRecoveryStatePath = dirname(__DIR__) . '/storage/recovery/active.json';
+if (is_file($flatcmsRecoveryStatePath)) {
+    register_shutdown_function(static function () use ($flatcmsRecoveryStatePath): void {
+        $error = error_get_last();
+        $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR];
+        if (!is_array($error) || !in_array((int) ($error['type'] ?? 0), $fatalTypes, true)) {
+            return;
+        }
+        $state = json_decode((string) @file_get_contents($flatcmsRecoveryStatePath), true);
+        if (!is_array($state) || !in_array((string) ($state['status'] ?? ''), ['updating', 'monitoring', 'backup_ready'], true)) {
+            return;
+        }
+        $state['status'] = (string) ($state['status'] ?? '') === 'monitoring' ? 'failed_post_update' : 'failed';
+        $state['failed_at'] = gmdate('c');
+        $state['updated_at'] = gmdate('c');
+        $state['error'] = 'fatal_php_after_update';
+        $state['fatal'] = [
+            'type' => (int) ($error['type'] ?? 0),
+            'message' => (string) ($error['message'] ?? ''),
+            'file' => basename((string) ($error['file'] ?? '')),
+            'line' => (int) ($error['line'] ?? 0),
+        ];
+        $json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (is_string($json)) {
+            $tmp = $flatcmsRecoveryStatePath . '.fatal.tmp';
+            if (@file_put_contents($tmp, $json, LOCK_EX) !== false) {
+                @rename($tmp, $flatcmsRecoveryStatePath);
+                @chmod($flatcmsRecoveryStatePath, 0640);
+            }
+        }
+        $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php'));
+        $base = rtrim(dirname($scriptName), '/.');
+        $recoveryUrl = ($base !== '' ? $base : '') . '/recovery.php';
+        if (!headers_sent()) {
+            header('Location: ' . $recoveryUrl, true, 302);
+            return;
+        }
+        echo '<meta http-equiv="refresh" content="0;url=' . htmlspecialchars($recoveryUrl, ENT_QUOTES, 'UTF-8') . '">';
+    });
+}
+
 /**
  * Charge un fichier .env (format simple KEY=VALUE) dans $_ENV.
  */

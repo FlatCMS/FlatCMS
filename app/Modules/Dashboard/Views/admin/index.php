@@ -27,6 +27,10 @@ function timeAgo($datetime) {
     return date('d/m/Y', $time);
 }
 
+$dashboardMetaBadges = array_values(array_filter(
+    hook_run('dashboard.admin.meta_badges'),
+    static fn ($markup): bool => is_string($markup) && trim($markup) !== ''
+));
 $dashboardBanners = array_values(array_filter(
     hook_run('dashboard.admin.banners'),
     static fn ($markup): bool => is_string($markup) && trim($markup) !== ''
@@ -54,6 +58,9 @@ if ($authGreetingName === '') {
     </div>
     <div class="welcome-meta">
         <span class="version-badge"><?= __('version_prefix', 'Core') ?><?= e($systemStats['flatcms_version']) ?></span>
+        <?php foreach ($dashboardMetaBadges as $dashboardMetaBadge): ?>
+            <?= $dashboardMetaBadge ?>
+        <?php endforeach; ?>
     </div>
 </div>
 

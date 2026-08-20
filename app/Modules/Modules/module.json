@@ -1,6 +1,6 @@
 {
     "name": "Modules",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Modules manager.",
     "type": "system",
     "author": "Alain BROYE",
@@ -13,5 +13,19 @@
     "official": true,
     "origin": "flatcms",
     "required": true,
-    "signature": "k2BLoF7OyoRz8+Hoh/RdPLGj9t5KteHxBovNl6slvPgEq01attNr+qp2jxuH6cGy0GNmtBjJjtqTnAQWz3rCjKpfzmbCx3FpIsLzhhVzvDvApKCcCariVd9XwZZ1crIHkxHhu9juuw6OM7bM4tVnyflT4gsUoGJGpLyzP6QpvYjvJoxAIhAyfKrGDKjvI8zhhsA3IDoGuOYRPbGMzy9VW01ry7p6PCmTH++HwDSktlC2vnuauT/3KMr+yWlTi+ddvfxdn/0O2UBLNCeesHPD4c1xYtTS/k3/krlRKK3bUisR8mlIUu45bt7/TaoNGr37rQsYZe4MZIGpu59/U7lyc32qiCLkpH7ZQlBMKxMtfv1/9oXfQqhTttavlWUH5S0zg+PU+SaVP5RBGKx8z0LThF3hGF8kKngpHHFZ1dbvqYHoG6INfgK+W9xo/S4TnPOsqizKuQ6UthK9ixDyk4/FhucgWIGbmAfQ5Dvq3RZKt1L4pzcK8uNUQa8fYC0MwrqgEAMqt7dyXwgnHlV7ZohtS4JZQstIcDErT8sUZhgJ0ax8yhRUiK+pp/QNOM+b7/mhG7YK6sk0leMdEiGz/akO4klrMUOPdU0ielGSU8I4bbgHIHzskS+d3aO9c20iltjVXx46DZ26wD5FrD3DFrkVp2NCM+mvnIBAOPEtaZGPHHM="
+    "files": {
+        "Assets/css/modules.css": "292185098aac9b234686d0ef13d20df5bf28247097d599545f5ff6a740f9221a",
+        "Assets/js/modules.js": "e2739922bbfd56f57e6bd594d76c1ca63aae67dad0ea42c9f55aeb873bb3a188",
+        "Config/routes.php": "e418c1bf74881a0d440d7f7fecb692420d21fe46620b2d87d8788ada35bec8a6",
+        "Controllers/AdminController.php": "8b88fe0e6ed3938de1929d94cdf922bd83e7da319053482d0a1dc4987a40890a",
+        "Hooks/listeners.php": "c7daee71c8e56203df592e797462cab5db9793fc6fcb5d5a4f4ac6911971434c",
+        "Languages/de-DE.json": "3a1677722859925790a0263bea0c8d40df43d69dae07ec07e44e79e30b048b4e",
+        "Languages/en-US.json": "e53ce350da9d97df27116a45bdead546cefd6b02c250da447bb599473eae9c53",
+        "Languages/es-ES.json": "6f22e8389025ce3a807107ef82d0ad4189aced823fa836d356778557e3240f61",
+        "Languages/fr-FR.json": "ebe72f0e55dc02f7345331aef9225dc5f4ec958df5cd8755d7b2be24aa2c8cc6",
+        "Languages/it-IT.json": "e45ed8e41ef0dc55571a38118f0d5756e31743d2263db4a06f1ebcc562209216",
+        "Languages/pt-PT.json": "f11345971e442bfaa1f92e8f9bd9140e65aff20adad3a476892b93fd34868d09",
+        "Views/admin/index.php": "6f8de9f331eb6659eacce9da574b5b1879141e7c223ac62148bb594cc9aa575c"
+    },
+    "signature": "MErUWk81RDTxTk3u8QCGJFG/6V2AV2v5Jnvjh1BZZhPmwPmwbRwvIrpMIMhVVvQieQj9V5VOerIFmVXJAFV3GdA5yyj1qj9atuUsmfRZD8QAVQqkh5QoeXA1HRZf64JzzJLQBP/181Pub5hF0xmxG0h9J68uPdd+H5cxzUAr7axbcijsnx3c4vC9xoKZ9srQTJWjtMU1mwOB1pj4ciSDqBekgRvNJMIzgJMniDOvIHwouSPJ0AZuy3Fsue8ZvfSm2YEJhu72y/R/NvtG/8kBn0/XBHITRTY52LVZ0kcHf5ppSjAGA1S050AwKtogLFI081bl97EHaahBG4JVSh1xzsFL2i7mx+mNYAuEETO4woJSIX31Jl2hSdMM7iT9JauQieSUGfMHemnwGizLqqwvbmwxV6BriYdRs+zGLIg+N3VQNUaXgUzG5SQUskCGGZ8cPXZ7FEVuchk08sTb02Pp4jq6hhWH6jV+V93w2ZhU5NCGDq1NcYufpZauSMm+/Lk1o98GdtcGDjMoiOaPfFCtRYWcY7HcyUPOQugfFZVJYk0srJELaERlhwyZS6sDBoaGmN3SvxfuUPnUm7cf4sn2ENoZxyMjjdTo45z0NU7OASf6jUCxdCZ9CqApDGQIkKS9NgZqwefY4awljzYWM62CWSZ+NX24kFB13sZDYSXRC5s="
 }

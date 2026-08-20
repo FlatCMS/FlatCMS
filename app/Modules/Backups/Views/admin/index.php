@@ -16,6 +16,7 @@ $backups = is_array($backups ?? null) ? $backups : [];
 $zipAvailable = !empty($zipAvailable);
 $canManageBackups = !empty($canManageBackups);
 $backupStoragePath = trim((string) ($backupStoragePath ?? ''));
+$fullBackupStoragePath = trim((string) ($fullBackupStoragePath ?? ''));
 $totalBackupSize = (int) ($totalBackupSize ?? 0);
 ?>
 
@@ -93,6 +94,10 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                 <div class="backups-path-row">
                     <dt><?= __('backups_storage_path', 'Backups') ?></dt>
                     <dd><?= e($backupStoragePath) ?></dd>
+                </div>
+                <div class="backups-path-row">
+                    <dt><?= __('backups_full_storage_path', 'Backups') ?></dt>
+                    <dd><?= e($fullBackupStoragePath) ?></dd>
                 </div>
                 <div class="backups-path-row">
                     <dt><?= __('backups_scope_label', 'Backups') ?></dt>
@@ -266,15 +271,22 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                     <?php foreach ($backups as $backup): ?>
                         <?php
                         $filename = (string) ($backup['filename'] ?? '');
+                        $backupType = (string) ($backup['backup_type'] ?? 'site');
+                        $isFullBackup = $backupType === 'full';
                         $reason = (string) ($backup['reason'] ?? 'manual');
                         $reasonKey = match ($reason) {
                             'pre_restore' => 'backups_reason_pre_restore',
                             'pre_reset' => 'backups_reason_pre_reset',
                             'pre_factory_reset' => 'backups_reason_pre_factory_reset',
                             'upload_restore' => 'backups_reason_upload_restore',
+                            'pre_core_update_full' => 'backups_reason_pre_core_update_full',
+                            'pre_full_restore' => 'backups_reason_pre_full_restore',
+                            'manual_full' => 'backups_reason_manual_full',
                             default => 'backups_reason_manual',
                         };
-                        $siteName = trim((string) ($backup['site_name'] ?? ''));
+                        $siteName = $isFullBackup
+                            ? 'FlatCMS ' . trim((string) ($backup['flatcms_version'] ?? ''))
+                            : trim((string) ($backup['site_name'] ?? ''));
                         $language = trim((string) ($backup['default_language'] ?? ''));
                         $createdBy = trim((string) ($backup['created_by'] ?? ''));
                         $sourceUrl = trim((string) ($backup['source_url'] ?? ''));
@@ -287,6 +299,7 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                                 <div class="backups-name">
                                     <strong><?= e($filename) ?></strong>
                                     <div class="backups-meta">
+                                        <span class="badge badge-info"><?= __($isFullBackup ? 'backups_type_full' : 'backups_type_site', 'Backups') ?></span>
                                         <span class="badge badge-info"><?= __($reasonKey, 'Backups') ?></span>
                                         <?php if ($createdBy !== ''): ?>
                                             <span><?= __('backups_created_by', 'Backups', ['name' => $createdBy]) ?></span>
@@ -314,8 +327,15 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                                 <div class="backups-files">
                                     <strong><?= __('backups_table_files_total', 'Backups', ['count' => (string) $totalFilesCount]) ?></strong>
                                     <div class="backups-meta">
-                                        <span><?= __('backups_table_files_json', 'Backups', ['count' => (string) $jsonFilesCount]) ?></span>
-                                        <span><?= __('backups_table_files_media', 'Backups', ['count' => (string) $mediaFilesCount]) ?></span>
+                                        <?php if ($isFullBackup): ?>
+                                            <span><?= __('backups_full_scope', 'Backups') ?></span>
+                                            <?php if (empty($backup['key_available'])): ?>
+                                                <span><?= __('backups_full_key_missing', 'Backups') ?></span>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span><?= __('backups_table_files_json', 'Backups', ['count' => (string) $jsonFilesCount]) ?></span>
+                                            <span><?= __('backups_table_files_media', 'Backups', ['count' => (string) $mediaFilesCount]) ?></span>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </td>
@@ -346,7 +366,7 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                                                 data-item-name="<?= e($filename) ?>"
                                                 title="<?= e(__('backups_restore_action', 'Backups')) ?>"
                                                 aria-label="<?= e(__('backups_restore_action', 'Backups')) ?>"
-                                                <?= $zipAvailable ? '' : 'disabled' ?>
+                                                <?= $zipAvailable && (!$isFullBackup || !empty($backup['key_available'])) ? '' : 'disabled' ?>
                                             >
                                                 <i class="fas fa-rotate-left" aria-hidden="true"></i>
                                                 <span class="backups-action-label"><?= __('backups_restore_action', 'Backups') ?></span>

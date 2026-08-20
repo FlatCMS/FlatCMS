@@ -1,0 +1,73 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+$base = dirname(__DIR__);
+foreach ([$base . '/.env', $base . '/.env.local'] as $envFile) {
+    if (!is_file($envFile)) {
+        continue;
+    }
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
+        $line = trim((string) $line);
+        if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
+            continue;
+        }
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value, " \t\n\r\0\x0B\"'");
+        if ($key !== '') {
+            $_ENV[$key] = $value;
+            @putenv($key . '=' . $value);
+        }
+    }
+}
+
+define('BASE_PATH', $base);
+define('APP_PATH', BASE_PATH . '/app');
+define('PUBLIC_PATH', BASE_PATH . '/public');
+define('DATA_PATH', BASE_PATH . '/data');
+define('STORAGE_PATH', BASE_PATH . '/storage');
+define('CONFIG_PATH', BASE_PATH . '/config');
+
+require_once APP_PATH . '/Bootstrap/Autoloader.php';
+date_default_timezone_set((string) env('APP_TIMEZONE', 'Europe/Paris'));
+\App\Core\I18n::init((string) env('APP_LOCALE', 'fr-FR'));
+
+$command = $argv[1] ?? '';
+
+if ($command === 'tasks:run') {
+    $result = \App\Core\TaskRunner::run();
+    fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+    $failed = array_filter($result['tasks'] ?? [], static fn (array $task): bool => empty($task['ok']));
+    exit($failed === [] ? 0 : 2);
+}
+
+if ($command === 'updates:apply') {
+    $catalog = (string) ($argv[2] ?? '');
+    $slug = (string) ($argv[3] ?? '');
+    $version = (string) ($argv[4] ?? '');
+    try {
+        $result = (new \App\Modules\UpdateManager\Services\UpdateApplyService())->apply($catalog, $slug, $version);
+        fwrite(STDOUT, json_encode(['ok' => true, 'result' => $result], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(0);
+    } catch (\Throwable $exception) {
+        fwrite(STDERR, json_encode(['ok' => false, 'error' => $exception->getMessage()], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(3);
+    }
+}
+
+if ($command === 'updates:build-core') {
+    $version = (string) ($argv[2] ?? '');
+    $output = (string) ($argv[3] ?? (STORAGE_PATH . '/update-artifacts/core/flatcms/' . $version . '/flatcms.zip'));
+    try {
+        $result = (new \App\Modules\UpdateManager\Services\UpdateCoreReleaseBuilderService())->build($version, $output);
+        fwrite(STDOUT, json_encode(['ok' => true, 'result' => $result], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(0);
+    } catch (\Throwable $exception) {
+        fwrite(STDERR, json_encode(['ok' => false, 'error' => $exception->getMessage()], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(4);
+    }
+}
+
+fwrite(STDOUT, "FlatCMS CLI\n\nUsage:\n  php bin/flatcms tasks:run\n  php bin/flatcms updates:apply core flatcms <version>\n  php bin/flatcms updates:build-core <version> [output.zip]\n");
+exit($command === '' ? 0 : 1);

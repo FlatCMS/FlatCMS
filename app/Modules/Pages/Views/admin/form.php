@@ -487,6 +487,7 @@ $pagesLocaleFlag = static function (string $locale): string {
 $mediaEnabled = (new \App\Core\ModuleManager([
     BASE_PATH . '/app/Modules',
     BASE_PATH . '/app/Extensions',
+    BASE_PATH . '/app/Plugins',
 ], BASE_PATH . '/data/modules.json'))->isEnabled('Media');
 ?>
 

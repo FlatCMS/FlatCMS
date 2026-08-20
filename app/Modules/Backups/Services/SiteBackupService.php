@@ -1076,6 +1076,7 @@ final class SiteBackupService
         $roots = [
             BASE_PATH . '/app/Modules',
             BASE_PATH . '/app/Extensions',
+        BASE_PATH . '/app/Plugins',
         ];
 
         foreach ($roots as $root) {

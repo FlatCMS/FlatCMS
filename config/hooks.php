@@ -27,6 +27,12 @@ return [
         'description' => 'Modify the final response before it is sent.',
         'params' => ['response'],
     ],
+    'tasks.run' => [
+        'label' => 'Scheduled tasks run',
+        'group' => 'system',
+        'description' => 'Run due background tasks contributed by enabled modules, extensions and plugins.',
+        'params' => ['payload'],
+    ],
 
     // UI shell
     'frontend.assets.head' => [
@@ -211,6 +217,18 @@ return [
     ],
 
     // Posts
+    'posts.form.status' => [
+        'label' => 'Posts status form slot',
+        'group' => 'ui',
+        'description' => 'Allow an enabled plugin to replace the Posts status editor block.',
+        'params' => ['payload'],
+    ],
+    'posts.list.status' => [
+        'label' => 'Posts list status slot',
+        'group' => 'ui',
+        'description' => 'Allow an enabled plugin to replace the status badge in the Posts list.',
+        'params' => ['payload'],
+    ],
     'posts.before_save' => [
         'label' => 'Posts before save',
         'group' => 'content',
@@ -233,6 +251,18 @@ return [
         'label' => 'Posts after publish',
         'group' => 'content',
         'description' => 'After a post is published.',
+        'params' => ['post'],
+    ],
+    'posts.before_unpublish' => [
+        'label' => 'Posts before unpublish',
+        'group' => 'content',
+        'description' => 'Before a published post is returned to draft.',
+        'params' => ['post'],
+    ],
+    'posts.after_unpublish' => [
+        'label' => 'Posts after unpublish',
+        'group' => 'content',
+        'description' => 'After a published post is returned to draft.',
         'params' => ['post'],
     ],
     'posts.before_archive' => [
@@ -394,7 +424,27 @@ return [
         'params' => ['payload'],
     ],
 
+    // Component management UI
+    'modules.admin.card.badges' => [
+        'label' => 'Modules admin card badges',
+        'group' => 'ui',
+        'description' => 'Render compact badges on Module, Extension and Plugin cards.',
+        'params' => ['payload'],
+    ],
+    'themes.admin.card.badges' => [
+        'label' => 'Themes admin card badges',
+        'group' => 'ui',
+        'description' => 'Render compact badges on Theme cards.',
+        'params' => ['payload'],
+    ],
+
     // Dashboard
+    'dashboard.admin.meta_badges' => [
+        'label' => 'Dashboard admin meta badges',
+        'group' => 'dashboard',
+        'description' => 'Render compact status badges next to the FlatCMS version in the welcome banner.',
+        'params' => ['payload'],
+    ],
     'dashboard.admin.banners' => [
         'label' => 'Dashboard admin banners',
         'group' => 'dashboard',

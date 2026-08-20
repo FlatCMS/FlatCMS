@@ -16,7 +16,7 @@ use App\Core\CoreManifest;
 final class UpdateCatalogService
 {
     private const API_VERSION = '1.0';
-    private const CATALOGS = ['core', 'modules', 'extensions', 'appliances'];
+    private const CATALOGS = ['core', 'modules', 'extensions', 'plugins', 'themes', 'appliances'];
 
     public function __construct(private ?UpdateArtifactService $artifacts = null)
     {
@@ -195,6 +195,7 @@ final class UpdateCatalogService
             'slug' => (string) ($package['slug'] ?? ''),
             'name' => (string) ($package['name'] ?? ''),
             'type' => (string) ($package['type'] ?? $catalog),
+            'theme_type' => (string) ($package['theme_type'] ?? ''),
             'version' => (string) ($package['version'] ?? ''),
             'channel' => (string) ($package['channel'] ?? 'stable'),
             'vendor' => (string) ($package['vendor'] ?? 'flatcms'),
@@ -206,12 +207,43 @@ final class UpdateCatalogService
             'signature' => (string) ($package['signature'] ?? ''),
             'min_core_version' => (string) ($package['min_core_version'] ?? ''),
             'max_core_version' => (string) ($package['max_core_version'] ?? ''),
+            'requires_packages' => $this->normalizePackageRequirements($package['requires_packages'] ?? []),
             'changelog_url' => $changelogUrl,
             'changelog' => (string) ($package['changelog'] ?? ''),
             'published_at' => (string) ($package['published_at'] ?? ''),
             'availability' => $availability,
             'size_bytes' => $downloadReady ? max(0, $sizeBytes) : 0,
         ];
+    }
+
+    /** @return array<int,array{catalog:string,slug:string,version:string}> */
+    private function normalizePackageRequirements(mixed $requirements): array
+    {
+        if (!is_array($requirements)) {
+            return [];
+        }
+        $normalized = [];
+        $seen = [];
+        foreach ($requirements as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $catalog = strtolower(trim((string) ($entry['catalog'] ?? '')));
+            $slug = strtolower(trim((string) ($entry['slug'] ?? '')));
+            $version = trim((string) ($entry['version'] ?? ''));
+            if (!in_array($catalog, ['modules', 'extensions', 'plugins', 'themes'], true)
+                || preg_match('/^[a-z0-9][a-z0-9._-]*$/', $slug) !== 1
+                || preg_match('/^(>=|<=|>|<|==|=)?\s*[0-9][0-9A-Za-z._+-]*$/', $version) !== 1) {
+                continue;
+            }
+            $key = $catalog . ':' . $slug;
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $normalized[] = ['catalog' => $catalog, 'slug' => $slug, 'version' => $version];
+        }
+        return $normalized;
     }
 
     /**

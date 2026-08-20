@@ -149,6 +149,7 @@ final class Hook
         $manager = new ModuleManager([
             BASE_PATH . '/app/Modules',
             BASE_PATH . '/app/Extensions',
+            BASE_PATH . '/app/Plugins',
         ], BASE_PATH . '/data/modules.json');
 
         foreach ($manager->enabled() as $module => $meta) {

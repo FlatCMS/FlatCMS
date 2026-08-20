@@ -147,11 +147,13 @@ $resolveSectionLabel = static function (array $sectionItem): string {
                         $itemUrl = (string) ($item['url'] ?? '/admin');
                         $itemModule = (string) ($item['module'] ?? 'Core');
                         $itemLabel = __((string) ($item['label'] ?? ''), $itemModule);
+                        $itemBadge = max(0, (int) ($item['badge'] ?? 0));
                         ?>
                         <li class="nav-item">
                             <a href="<?= url($itemUrl) ?>" class="nav-link <?= active_class($itemUrl, 'active') ?>" title="<?= e($itemLabel) ?>">
                                 <i class="<?= e((string) ($item['icon'] ?? 'fas fa-circle')) ?> nav-icon"></i>
-                                <span><?= $itemLabel ?></span>
+                                <span class="nav-link-label"><?= $itemLabel ?></span>
+                                <?php if ($itemBadge > 0): ?><span class="nav-item-badge"><?= $itemBadge ?></span><?php endif; ?>
                             </a>
                         </li>
                     <?php endforeach; ?>
@@ -166,11 +168,13 @@ $resolveSectionLabel = static function (array $sectionItem): string {
                             $itemUrl = (string) ($item['url'] ?? '/admin');
                             $itemModule = (string) ($item['module'] ?? 'Core');
                             $itemLabel = __((string) ($item['label'] ?? ''), $itemModule);
+                            $itemBadge = max(0, (int) ($item['badge'] ?? 0));
                             ?>
                             <li class="nav-item">
                                 <a href="<?= url($itemUrl) ?>" class="nav-link <?= active_class($itemUrl, 'active') ?>" title="<?= e($itemLabel) ?>">
                                     <i class="<?= e((string) ($item['icon'] ?? 'fas fa-circle')) ?> nav-icon"></i>
-                                    <span><?= $itemLabel ?></span>
+                                    <span class="nav-link-label"><?= $itemLabel ?></span>
+                                    <?php if ($itemBadge > 0): ?><span class="nav-item-badge"><?= $itemBadge ?></span><?php endif; ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>

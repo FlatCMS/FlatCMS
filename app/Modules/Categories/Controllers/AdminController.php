@@ -887,7 +887,7 @@ class AdminController extends BaseController
 
     private function isTrashEnabled(): bool
     {
-        $manager = new ModuleManager([BASE_PATH . '/app/Modules', BASE_PATH . '/app/Extensions'], BASE_PATH . '/data/modules.json');
+        $manager = new ModuleManager([BASE_PATH . '/app/Modules', BASE_PATH . '/app/Extensions', BASE_PATH . '/app/Plugins'], BASE_PATH . '/data/modules.json');
 
         return $manager->isEnabled('Trash');
     }
