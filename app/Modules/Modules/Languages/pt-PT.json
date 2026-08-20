@@ -143,7 +143,7 @@
   "module_name_storecarriersandbox": "Transportadora Sandbox Store",
   "module_desc_storecarriersandbox": "Fornecedor de transporte Sandbox de referência para Store.",
   "module_name_updatemanager": "Gestor de atualizações",
-  "module_desc_updatemanager": "Gestor oficial de atualizações FlatCMS com compatibilidade, transações e recuperação.",
+  "module_desc_updatemanager": "Gestor oficial de atualizações FlatCMS.",
   "extensions_update_success": "Módulo :module atualizado de :current para :target.",
   "extensions_update_manifest_invalid": "Não foi possível atualizar :module: o manifesto instalado ou a versão de destino é inválida.",
   "extensions_update_identity_mismatch": "Não foi possível atualizar :module: a identidade do pacote não corresponde ao componente instalado.",

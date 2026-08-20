@@ -1,10 +1,12 @@
 {
     "name": "Modules",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Modules manager.",
     "type": "system",
     "author": "Alain BROYE",
+    "required": true,
     "enabled": true,
+    "sidebar_visible": true,
     "dependencies": [
         "Auth",
         "Core"
@@ -12,20 +14,5 @@
     "vendor": "FlatCMS",
     "official": true,
     "origin": "flatcms",
-    "required": true,
-    "files": {
-        "Assets/css/modules.css": "292185098aac9b234686d0ef13d20df5bf28247097d599545f5ff6a740f9221a",
-        "Assets/js/modules.js": "e2739922bbfd56f57e6bd594d76c1ca63aae67dad0ea42c9f55aeb873bb3a188",
-        "Config/routes.php": "e418c1bf74881a0d440d7f7fecb692420d21fe46620b2d87d8788ada35bec8a6",
-        "Controllers/AdminController.php": "8b88fe0e6ed3938de1929d94cdf922bd83e7da319053482d0a1dc4987a40890a",
-        "Hooks/listeners.php": "c7daee71c8e56203df592e797462cab5db9793fc6fcb5d5a4f4ac6911971434c",
-        "Languages/de-DE.json": "3a1677722859925790a0263bea0c8d40df43d69dae07ec07e44e79e30b048b4e",
-        "Languages/en-US.json": "e53ce350da9d97df27116a45bdead546cefd6b02c250da447bb599473eae9c53",
-        "Languages/es-ES.json": "6f22e8389025ce3a807107ef82d0ad4189aced823fa836d356778557e3240f61",
-        "Languages/fr-FR.json": "ebe72f0e55dc02f7345331aef9225dc5f4ec958df5cd8755d7b2be24aa2c8cc6",
-        "Languages/it-IT.json": "e45ed8e41ef0dc55571a38118f0d5756e31743d2263db4a06f1ebcc562209216",
-        "Languages/pt-PT.json": "f11345971e442bfaa1f92e8f9bd9140e65aff20adad3a476892b93fd34868d09",
-        "Views/admin/index.php": "6f8de9f331eb6659eacce9da574b5b1879141e7c223ac62148bb594cc9aa575c"
-    },
-    "signature": "MErUWk81RDTxTk3u8QCGJFG/6V2AV2v5Jnvjh1BZZhPmwPmwbRwvIrpMIMhVVvQieQj9V5VOerIFmVXJAFV3GdA5yyj1qj9atuUsmfRZD8QAVQqkh5QoeXA1HRZf64JzzJLQBP/181Pub5hF0xmxG0h9J68uPdd+H5cxzUAr7axbcijsnx3c4vC9xoKZ9srQTJWjtMU1mwOB1pj4ciSDqBekgRvNJMIzgJMniDOvIHwouSPJ0AZuy3Fsue8ZvfSm2YEJhu72y/R/NvtG/8kBn0/XBHITRTY52LVZ0kcHf5ppSjAGA1S050AwKtogLFI081bl97EHaahBG4JVSh1xzsFL2i7mx+mNYAuEETO4woJSIX31Jl2hSdMM7iT9JauQieSUGfMHemnwGizLqqwvbmwxV6BriYdRs+zGLIg+N3VQNUaXgUzG5SQUskCGGZ8cPXZ7FEVuchk08sTb02Pp4jq6hhWH6jV+V93w2ZhU5NCGDq1NcYufpZauSMm+/Lk1o98GdtcGDjMoiOaPfFCtRYWcY7HcyUPOQugfFZVJYk0srJELaERlhwyZS6sDBoaGmN3SvxfuUPnUm7cf4sn2ENoZxyMjjdTo45z0NU7OASf6jUCxdCZ9CqApDGQIkKS9NgZqwefY4awljzYWM62CWSZ+NX24kFB13sZDYSXRC5s="
+    "signature": "bQsGcCbYD9G7ICtdq4DMw86t8OcFhrYZL2t/Iv69MQP63LRCdYn8NvCyo4DGtEr8Jk3E97DhgRHyWZ/VS++qc9HGCbSnM4iBWMr1l94uLnp1zoW6/MTf70USGb/DV8HDXrgOyqAqBTL/lDZ7WkPZWDh1LQkscFOoaBRqoEXt4Y6+Ad+JyJC9vU6ShA4ZtinxgK/gsbWk/oaicVb9hY2zvXlUSBHk8NFSfhwB+Afxm0ALuwvS/yDD/9obMT2fHYnQfNQl4Uif2UOP6HMsqVKEQdAsKerV8keO6eKIhfwp4GEdjtarVR7ktDoXgX2V5taxmRF3N06XCbH8/Hb2UzsYngbJ+lPTTD/D5kruhLYWUfW3l2bvy01lij+cxTLMqKRZOl5xnUVhQRLN5iYWbUjmhsPCKIz83Z/nR8nsKG4CawPxOjOzRV0yukt6vbwhuPnngWgsB6lOLLUOaABltF2YYz1wEYGoLsOsicpo/k+WflhXEf5hpTVMJmedR1hzxaYkf6c0yT0AROVSEXtympwuOahJIL3e+T/uCOPbyrGf1Vi9SkEzzXzem9O3NgEV3E4O8qv8VtKCupR5TitlByAxmOQqeQZLcRVuCf5E2MaorVbrT1gJK1fmO8SBCo61gBKDe5TLckhTJIQIdAIZD4X4J+LQf0w6m/lvyfKw/AqS228="
 }

@@ -143,7 +143,7 @@
   "module_name_storecarriersandbox": "Store Sandbox Carrier",
   "module_desc_storecarriersandbox": "Reference Sandbox carrier provider for Store.",
   "module_name_updatemanager": "Update Manager",
-  "module_desc_updatemanager": "Official FlatCMS update manager with compatibility checks, transactional updates and recovery.",
+  "module_desc_updatemanager": "Official FlatCMS update manager.",
   "extensions_update_success": "Module :module updated from :current to :target.",
   "extensions_update_manifest_invalid": "Unable to update :module: the installed manifest or target version is invalid.",
   "extensions_update_identity_mismatch": "Unable to update :module: the package identity does not match the installed component.",

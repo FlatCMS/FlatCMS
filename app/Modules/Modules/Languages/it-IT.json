@@ -143,7 +143,7 @@
   "module_name_storecarriersandbox": "Corriere Sandbox Store",
   "module_desc_storecarriersandbox": "Provider di trasporto Sandbox di riferimento per Store.",
   "module_name_updatemanager": "Gestore aggiornamenti",
-  "module_desc_updatemanager": "Gestore ufficiale degli aggiornamenti FlatCMS con compatibilità, transazioni e ripristino.",
+  "module_desc_updatemanager": "Gestore ufficiale degli aggiornamenti FlatCMS.",
   "extensions_update_success": "Modulo :module aggiornato da :current a :target.",
   "extensions_update_manifest_invalid": "Impossibile aggiornare :module: il manifest installato o la versione di destinazione non è valida.",
   "extensions_update_identity_mismatch": "Impossibile aggiornare :module: l’identità del pacchetto non corrisponde al componente installato.",
