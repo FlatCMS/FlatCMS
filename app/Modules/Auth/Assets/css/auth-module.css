@@ -136,6 +136,7 @@
 .auth-captcha {
   display: flex;
   justify-content: center;
+  align-items: center;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -147,7 +148,7 @@
 
 .auth-captcha .cf-turnstile {
   display: block;
-  width: auto;
+  width: 300px;
   min-width: 0;
   max-width: 100%;
 }

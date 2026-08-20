@@ -104,8 +104,8 @@
                 </div>
 
                 <?php if (!empty($turnstileEnabled) && !empty($turnstileSiteKey)): ?>
-                    <div class="form-group">
-                        <div class="cf-turnstile" data-sitekey="<?= e($turnstileSiteKey) ?>"></div>
+                    <div class="form-group auth-captcha">
+                        <div class="cf-turnstile" data-sitekey="<?= e($turnstileSiteKey) ?>" data-size="flexible"></div>
                     </div>
                 <?php endif; ?>
 
