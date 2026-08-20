@@ -204,6 +204,7 @@ final class RecoveryCapsuleService
         $this->ensureDirectory($runtimeRoot, 0750);
         $serviceSource = $this->basePath . '/app/Modules/Backups/Services/FullBackupService.php';
         $runtimeSource = $this->basePath . '/app/Modules/UpdateManager/Recovery/recovery-runtime.php';
+        $styleSource = $this->basePath . '/app/Modules/UpdateManager/Assets/css/recovery.css';
         foreach ([$serviceSource => $runtimeRoot . '/FullBackupService.php', $runtimeSource => $runtimeRoot . '/recovery-runtime.php'] as $source => $target) {
             if (!is_file($source) || !@copy($source, $target)) {
                 throw new \RuntimeException('update_recovery_runtime_create_failed');
@@ -227,12 +228,15 @@ final class RecoveryCapsuleService
     private function ensureEntrypoints(): void
     {
         $sourceRoot = $this->basePath . '/app/Modules/UpdateManager/Recovery/entrypoints';
+        $styleSource = $this->basePath . '/app/Modules/UpdateManager/Assets/css/recovery.css';
         $targets = [
-            $sourceRoot . '/root-recovery.php' => $this->basePath . '/recovery.php',
-            $sourceRoot . '/public-recovery.php' => $this->basePath . '/public/recovery.php',
+            [$sourceRoot . '/root-recovery.php', $this->basePath . '/recovery.php'],
+            [$sourceRoot . '/public-recovery.php', $this->basePath . '/public/recovery.php'],
+            [$styleSource, $this->basePath . '/recovery.css'],
+            [$styleSource, $this->basePath . '/public/recovery.css'],
         ];
 
-        foreach ($targets as $source => $target) {
+        foreach ($targets as [$source, $target]) {
             if (!is_file($source)) {
                 throw new \RuntimeException('update_recovery_entrypoint_source_missing');
             }

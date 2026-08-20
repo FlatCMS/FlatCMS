@@ -234,7 +234,7 @@ if (!function_exists('flatcms_recovery_run')) {
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: DENY');
-        header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
+        header("Content-Security-Policy: default-src 'none'; style-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
         header('Referrer-Policy: no-referrer');
     }
 
@@ -263,8 +263,7 @@ if (!function_exists('flatcms_recovery_run')) {
         $failedName = basename((string) ($state['failed_state_backup_path'] ?? ''));
         $localeEsc = htmlspecialchars(flatcms_recovery_locale(), ENT_QUOTES, 'UTF-8');
         echo '<!doctype html><html lang="' . $localeEsc . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">';
-        echo '<title>' . $titleEsc . ' — FlatCMS</title><style>';
-        echo ':root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0f172a;color:#e2e8f0;font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(720px,100%);background:#111c33;border:1px solid #334155;border-radius:24px;padding:34px;box-shadow:0 28px 80px #02061799}.badge{display:inline-block;padding:7px 12px;border-radius:999px;background:#312e81;color:#c7d2fe;font-weight:700;font-size:13px}.icon{font-size:42px;margin:22px 0 8px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:8px 0 16px;color:white}p{color:#cbd5e1}.versions{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}.versions span{background:#0b1220;border:1px solid #334155;padding:10px 13px;border-radius:12px}.btn{appearance:none;border:0;border-radius:14px;background:#4f46e5;color:white;font-weight:800;font-size:17px;padding:15px 20px;cursor:pointer;width:100%}.btn:hover{filter:brightness(1.08)}.note{font-size:13px;color:#94a3b8;margin-top:18px}.ok{color:#86efac}.warn{color:#fcd34d}</style></head><body><main class="card">';
+        echo '<title>' . $titleEsc . ' — FlatCMS</title><link rel="stylesheet" href="recovery.css"></head><body><main class="card">';
         echo '<span class="badge">' . htmlspecialchars($badge, ENT_QUOTES, 'UTF-8') . '</span><div class="icon">' . ($mode === 'success' ? '✅' : ($mode === 'updating' ? '⏳' : ($mode === 'monitoring' ? '🛡️' : '🛟'))) . '</div>';
         echo '<h1>' . $titleEsc . '</h1><p>' . $messageEsc . '</p>';
         if ($from !== '' || $target !== '') echo '<div class="versions"><span>' . htmlspecialchars(flatcms_recovery_t('recovery_version_before'), ENT_QUOTES, 'UTF-8') . ' : <strong>' . $from . '</strong></span><span>' . htmlspecialchars(flatcms_recovery_t('recovery_version_target'), ENT_QUOTES, 'UTF-8') . ' : <strong>' . $target . '</strong></span></div>';
@@ -272,7 +271,7 @@ if (!function_exists('flatcms_recovery_run')) {
             echo '<form method="post" action="' . $action . '"><input type="hidden" name="recovery_csrf" value="' . htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') . '"><button class="btn" type="submit">' . htmlspecialchars(flatcms_recovery_t('recovery_action_restore'), ENT_QUOTES, 'UTF-8') . '</button></form>';
             echo '<p class="note">' . htmlspecialchars(flatcms_recovery_t('recovery_diagnostic_note'), ENT_QUOTES, 'UTF-8') . '</p>';
         } elseif ($mode === 'success') {
-            echo '<p><a class="btn" style="display:block;text-align:center;text-decoration:none" href="/">' . htmlspecialchars(flatcms_recovery_t('recovery_action_return'), ENT_QUOTES, 'UTF-8') . '</a></p>';
+            echo '<p><a class="btn btn-link" href="/">' . htmlspecialchars(flatcms_recovery_t('recovery_action_return'), ENT_QUOTES, 'UTF-8') . '</a></p>';
             if ($failedName !== '') echo '<p class="note">' . htmlspecialchars(flatcms_recovery_t('recovery_failed_state_note', ['archive' => $failedName]), ENT_QUOTES, 'UTF-8') . '</p>';
         }
         echo '</main></body></html>'; exit;
