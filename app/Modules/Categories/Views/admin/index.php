@@ -96,7 +96,7 @@ $categoriesLocaleFlag = static function (string $locale): string {
         <?= csrf_field() ?>
         <div class="categories-batch-controls" data-tour-target="categories-list-batch">
             <label class="categories-batch-select-all">
-                <input type="checkbox" data-categories-select-all>
+                <input type="checkbox" class="admin-checkbox" data-categories-select-all>
                 <span><?= __('categories_batch_select_all', 'Categories') ?></span>
             </label>
             <span class="categories-batch-count" data-categories-batch-count><?= __('categories_batch_selected_count', 'Categories', ['count' => '0']) ?></span>
@@ -165,7 +165,7 @@ $categoriesLocaleFlag = static function (string $locale): string {
                         <tr>
                             <td data-label="<?= __('categories_batch_select_label', 'Categories') ?>" class="categories-select-column">
                                 <?php if ($canDeleteCategory): ?>
-                                    <input type="checkbox" class="categories-row-checkbox" data-category-select value="<?= e((string) ($cat['id'] ?? '')) ?>">
+                                    <input type="checkbox" class="admin-checkbox categories-row-checkbox" data-category-select value="<?= e((string) ($cat['id'] ?? '')) ?>">
                                 <?php else: ?>
                                     <span class="categories-row-checkbox-disabled">—</span>
                                 <?php endif; ?>

@@ -127,7 +127,7 @@ if ($trashType !== 'all') {
             <?php endif; ?>
             <div class="trash-batch-controls">
                 <label class="trash-batch-select-all">
-                    <input type="checkbox" data-trash-select-all>
+                    <input type="checkbox" class="admin-checkbox" data-trash-select-all>
                     <span><?= __('trash_batch_select_all', 'Trash') ?></span>
                 </label>
                 <span class="trash-batch-count" data-trash-batch-count><?= __('trash_batch_selected_count', 'Trash', ['count' => '0']) ?></span>
@@ -181,7 +181,7 @@ if ($trashType !== 'all') {
                         ?>
                         <tr>
                             <td data-label="<?= __('trash_batch_select_label', 'Trash') ?>" class="trash-select-column">
-                                <input type="checkbox" class="trash-row-checkbox" data-trash-select value="<?= e($trashId) ?>">
+                                <input type="checkbox" class="admin-checkbox trash-row-checkbox" data-trash-select value="<?= e($trashId) ?>">
                             </td>
                             <td data-label="<?= __('trash_type_column', 'Trash') ?>">
                                 <span class="trash-type-badge is-<?= e($entityType !== '' ? $entityType : 'page') ?>">

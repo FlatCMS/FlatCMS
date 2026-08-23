@@ -413,11 +413,77 @@ select.form-input {
   cursor: pointer;
 }
 
-.form-check-input {
+.form-check-input,
+.admin-checkbox {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-content: center;
   width: 18px;
   height: 18px;
-  accent-color: var(--color-primary);
+  margin: 0;
+  border: 1.5px solid var(--color-border-dark, var(--color-input-border));
+  border-radius: 5px;
+  background-color: var(--color-input-bg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.08);
   cursor: pointer;
+  vertical-align: middle;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.form-check-input:hover:not(:disabled),
+.admin-checkbox:hover:not(:disabled) {
+  border-color: var(--color-primary-light, var(--color-primary));
+}
+
+.form-check-input:focus-visible,
+.admin-checkbox:focus-visible {
+  outline: none;
+  border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 24%, transparent);
+}
+
+.form-check-input:checked,
+.admin-checkbox:checked {
+  border-color: transparent;
+  background-color: var(--color-primary);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.25 6.15 4.8 8.7 9.85 3.35' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    var(--gradient-primary);
+  background-size: 12px 12px, 100% 100%;
+  box-shadow: 0 6px 14px -7px color-mix(in srgb, var(--color-primary) 80%, transparent);
+}
+
+.form-check-input:indeterminate,
+.admin-checkbox:indeterminate {
+  border-color: transparent;
+  background-color: var(--color-primary);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6h6' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"),
+    var(--gradient-primary);
+  background-size: 12px 12px, 100% 100%;
+}
+
+.form-check-input:active:not(:disabled),
+.admin-checkbox:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.form-check-input:disabled,
+.admin-checkbox:disabled {
+  border-color: var(--color-border);
+  background-color: var(--color-bg-tertiary);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .form-check-label {

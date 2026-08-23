@@ -138,7 +138,7 @@ $postsLocaleFlag = static function (string $locale): string {
             <?php endif; ?>
             <div class="posts-batch-controls" data-tour-target="posts-list-batch">
                 <label class="posts-batch-select-all">
-                    <input type="checkbox" data-posts-select-all>
+                    <input type="checkbox" class="admin-checkbox" data-posts-select-all>
                     <span><?= __('posts_batch_select_all', 'Posts') ?></span>
                 </label>
                 <span class="posts-batch-count" data-posts-batch-count><?= __('posts_batch_selected_count', 'Posts', ['count' => '0']) ?></span>
@@ -189,7 +189,7 @@ $postsLocaleFlag = static function (string $locale): string {
 	                        <tr>
                                 <td data-label="<?= __('posts_batch_select_label', 'Posts') ?>" class="posts-select-column">
                                     <?php if ($canDeletePost): ?>
-                                        <input type="checkbox" class="posts-row-checkbox" data-post-select value="<?= e((string) ($p['id'] ?? '')) ?>">
+                                        <input type="checkbox" class="admin-checkbox posts-row-checkbox" data-post-select value="<?= e((string) ($p['id'] ?? '')) ?>">
                                     <?php else: ?>
                                         <span class="posts-row-checkbox-disabled">—</span>
                                     <?php endif; ?>

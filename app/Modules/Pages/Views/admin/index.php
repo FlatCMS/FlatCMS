@@ -131,7 +131,7 @@ $pagesLocaleFlag = static function (string $locale): string {
             <?php endif; ?>
             <div class="pages-batch-controls" data-tour-target="pages-list-batch">
                 <label class="pages-batch-select-all">
-                    <input type="checkbox" data-pages-select-all>
+                    <input type="checkbox" class="admin-checkbox" data-pages-select-all>
                     <span><?= __('pages_batch_select_all', 'Pages') ?></span>
                 </label>
                 <span class="pages-batch-count" data-pages-batch-count><?= __('pages_batch_selected_count', 'Pages', ['count' => '0']) ?></span>
@@ -181,7 +181,7 @@ $pagesLocaleFlag = static function (string $locale): string {
                         <tr>
                             <td data-label="<?= __('pages_batch_select_label', 'Pages') ?>" class="pages-select-column">
                                 <?php if ($canDeletePage): ?>
-                                    <input type="checkbox" class="pages-row-checkbox" data-page-select value="<?= e((string) ($p['id'] ?? '')) ?>">
+                                    <input type="checkbox" class="admin-checkbox pages-row-checkbox" data-page-select value="<?= e((string) ($p['id'] ?? '')) ?>">
                                 <?php else: ?>
                                     <span class="pages-row-checkbox-disabled">—</span>
                                 <?php endif; ?>

@@ -33,18 +33,30 @@ final class SeoMetadataService
         $requestedLocale = $this->normalizeLocale((string) ($viewData['locale'] ?? locale()));
         $document = $page ?? $post ?? $category;
         $contentLocale = $this->normalizeLocale((string) ($document['locale'] ?? $requestedLocale));
+        $explicitContentLocale = $this->normalizeLocale((string) ($viewData['seoContentLocale'] ?? ''));
+        if ($explicitContentLocale !== '') {
+            $contentLocale = $explicitContentLocale;
+        }
         if ($contentLocale === '') {
             $contentLocale = $requestedLocale !== '' ? $requestedLocale : 'fr-FR';
         }
 
         $baseUrl = $this->baseUrl($settings);
         $canonicalPath = $this->documentPath($page, $post, $category, $contentLocale, $sitemapPage);
-        $canonicalUrl = $this->absoluteUrl($canonicalPath, $baseUrl);
-        $alternates = $this->translationAlternates($page, $post, $category, $baseUrl);
-        if ($document === null && !$sitemapPage && $this->isBlogIndexPath($canonicalPath)) {
+        $explicitCanonicalUrl = trim((string) ($viewData['seoCanonicalUrl'] ?? ''));
+        $canonicalUrl = $this->absoluteUrl(
+            $explicitCanonicalUrl !== '' ? $explicitCanonicalUrl : $canonicalPath,
+            $baseUrl
+        );
+        $hasExplicitAlternates = array_key_exists('seoAlternates', $viewData)
+            && is_array($viewData['seoAlternates']);
+        $alternates = $hasExplicitAlternates
+            ? $this->explicitAlternates($viewData['seoAlternates'], $baseUrl)
+            : $this->translationAlternates($page, $post, $category, $baseUrl);
+        if (!$hasExplicitAlternates && $document === null && !$sitemapPage && $this->isBlogIndexPath($canonicalPath)) {
             $alternates = $this->blogAlternates($baseUrl);
         }
-        if ($document !== null && !isset($alternates[$contentLocale])) {
+        if (!$hasExplicitAlternates && $document !== null && !isset($alternates[$contentLocale])) {
             $alternates[$contentLocale] = $canonicalUrl;
         }
         ksort($alternates, SORT_STRING);
@@ -52,7 +64,10 @@ final class SeoMetadataService
         $blogIndex = $document === null && $this->isBlogIndexPath($canonicalPath);
         $sourceLocale = $this->normalizeLocale((string) ($document['source_locale']
             ?? ($blogIndex ? ($settings['default_language'] ?? $contentLocale) : $contentLocale)));
-        $xDefaultUrl = $alternates !== [] ? ($alternates[$sourceLocale] ?? $canonicalUrl) : '';
+        $explicitXDefaultUrl = trim((string) ($viewData['seoXDefaultUrl'] ?? ''));
+        $xDefaultUrl = $explicitXDefaultUrl !== ''
+            ? $this->absoluteUrl($explicitXDefaultUrl, $baseUrl)
+            : ($alternates !== [] ? ($alternates[$sourceLocale] ?? $canonicalUrl) : '');
         $title = trim((string) ($viewData['pageTitle']
             ?? $document['meta_title']
             ?? $this->seoValue($document, 'title')
@@ -104,6 +119,26 @@ final class SeoMetadataService
                 'image' => $imageUrl,
             ],
         ];
+    }
+
+    /**
+     * @param array<mixed> $values
+     * @return array<string, string>
+     */
+    private function explicitAlternates(array $values, string $baseUrl): array
+    {
+        $alternates = [];
+        foreach ($values as $locale => $url) {
+            $normalizedLocale = $this->normalizeLocale((string) $locale);
+            $normalizedUrl = trim((string) $url);
+            if ($normalizedLocale === '' || $normalizedUrl === '') {
+                continue;
+            }
+
+            $alternates[$normalizedLocale] = $this->absoluteUrl($normalizedUrl, $baseUrl);
+        }
+
+        return $alternates;
     }
 
     /**
