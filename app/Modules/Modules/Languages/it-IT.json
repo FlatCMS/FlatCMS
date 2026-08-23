@@ -151,5 +151,19 @@
   "extensions_update_backup_failed": "Aggiornamento di :module annullato: impossibile creare il backup di sicurezza.",
   "extensions_update_stage_failed": "Aggiornamento di :module annullato: impossibile preparare il pacchetto.",
   "extensions_update_swap_failed": "Aggiornamento di :module annullato: lo scambio transazionale non è riuscito.",
-  "extensions_update_assets_failed": "Aggiornamento di :module annullato: impossibile aggiornare le risorse pubbliche."
+  "extensions_update_assets_failed": "Aggiornamento di :module annullato: impossibile aggiornare le risorse pubbliche.",
+  "module_desc_contact": "Modulo di contatto nativo e casella dei messaggi.",
+  "module_desc_footer": "Gestione del piè di pagina del Core.",
+  "module_desc_sitemap": "Mappa del sito leggibile e generatore sitemap.xml.",
+  "module_name_contact": "Contatti",
+  "module_name_footer": "Piè di pagina",
+  "module_name_sitemap": "Mappa del sito",
+  "module_name_downloads": "Download sicuri",
+  "module_desc_downloads": "Distribuzione di download sicura e verificabile per FlatCMS.",
+  "module_name_studioflatcms": "Studio",
+  "module_desc_studioflatcms": "Modulo ufficiale FlatCMS Studio con un’area di lavoro visuale unificata.",
+  "module_name_wiki": "Wiki",
+  "module_desc_wiki": "Documentazione per sviluppatori generata da file Markdown versionati.",
+  "module_name_googleforms": "Google Forms",
+  "module_desc_googleforms": "Collega Google Forms a FlatCMS e consulta le risposte sincronizzate."
 }

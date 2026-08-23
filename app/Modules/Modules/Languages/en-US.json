@@ -151,5 +151,19 @@
   "extensions_update_backup_failed": "Update of :module cancelled: the safety backup could not be created.",
   "extensions_update_stage_failed": "Update of :module cancelled: the package could not be staged.",
   "extensions_update_swap_failed": "Update of :module cancelled: the transactional swap failed.",
-  "extensions_update_assets_failed": "Update of :module cancelled: public assets could not be refreshed."
+  "extensions_update_assets_failed": "Update of :module cancelled: public assets could not be refreshed.",
+  "module_desc_contact": "Native contact form and message inbox.",
+  "module_desc_footer": "Core footer management module.",
+  "module_desc_sitemap": "Human-readable sitemap and sitemap.xml generator.",
+  "module_name_contact": "Contact",
+  "module_name_footer": "Footer",
+  "module_name_sitemap": "Sitemap",
+  "module_name_downloads": "Secure downloads",
+  "module_desc_downloads": "Secure and auditable download delivery for FlatCMS.",
+  "module_name_studioflatcms": "Studio",
+  "module_desc_studioflatcms": "Official FlatCMS Studio module with a unified visual workspace.",
+  "module_name_wiki": "Wiki",
+  "module_desc_wiki": "Developer documentation rendered from versioned Markdown files.",
+  "module_name_googleforms": "Google Forms",
+  "module_desc_googleforms": "Connect Google Forms to FlatCMS and review synchronized responses."
 }

@@ -151,5 +151,19 @@
   "extensions_update_backup_failed": "Mise à jour de :module annulée : la sauvegarde de sécurité n’a pas pu être créée.",
   "extensions_update_stage_failed": "Mise à jour de :module annulée : le package n’a pas pu être préparé.",
   "extensions_update_swap_failed": "Mise à jour de :module annulée : la bascule transactionnelle a échoué.",
-  "extensions_update_assets_failed": "Mise à jour de :module annulée : les ressources publiques n’ont pas pu être actualisées."
+  "extensions_update_assets_failed": "Mise à jour de :module annulée : les ressources publiques n’ont pas pu être actualisées.",
+  "module_desc_contact": "Formulaire de contact natif et boîte de réception des messages.",
+  "module_desc_footer": "Gestion du pied de page du Core.",
+  "module_desc_sitemap": "Plan du site lisible et générateur sitemap.xml.",
+  "module_name_contact": "Contact",
+  "module_name_footer": "Pied de page",
+  "module_name_sitemap": "Plan du site",
+  "module_name_downloads": "Téléchargements sécurisés",
+  "module_desc_downloads": "Distribution de téléchargements sécurisée et traçable pour FlatCMS.",
+  "module_name_studioflatcms": "Studio",
+  "module_desc_studioflatcms": "Module Studio officiel de FlatCMS avec un espace de travail visuel unifié.",
+  "module_name_wiki": "Wiki",
+  "module_desc_wiki": "Documentation développeur rendue à partir de fichiers Markdown versionnés.",
+  "module_name_googleforms": "Google Forms",
+  "module_desc_googleforms": "Connectez Google Forms à FlatCMS et consultez les réponses synchronisées."
 }

@@ -151,5 +151,19 @@
   "extensions_update_backup_failed": "Aktualisierung von :module abgebrochen: die Sicherung konnte nicht erstellt werden.",
   "extensions_update_stage_failed": "Aktualisierung von :module abgebrochen: das Paket konnte nicht vorbereitet werden.",
   "extensions_update_swap_failed": "Aktualisierung von :module abgebrochen: der transaktionale Austausch ist fehlgeschlagen.",
-  "extensions_update_assets_failed": "Aktualisierung von :module abgebrochen: öffentliche Assets konnten nicht aktualisiert werden."
+  "extensions_update_assets_failed": "Aktualisierung von :module abgebrochen: öffentliche Assets konnten nicht aktualisiert werden.",
+  "module_desc_contact": "Natives Kontaktformular und Nachrichten-Posteingang.",
+  "module_desc_footer": "Verwaltung der Core-Fußzeile.",
+  "module_desc_sitemap": "Lesbare Sitemap und sitemap.xml-Generator.",
+  "module_name_contact": "Kontakt",
+  "module_name_footer": "Fußzeile",
+  "module_name_sitemap": "Sitemap",
+  "module_name_downloads": "Sichere Downloads",
+  "module_desc_downloads": "Sichere und nachvollziehbare Download-Bereitstellung für FlatCMS.",
+  "module_name_studioflatcms": "Studio",
+  "module_desc_studioflatcms": "Offizielles FlatCMS-Studio-Modul mit einem einheitlichen visuellen Arbeitsbereich.",
+  "module_name_wiki": "Wiki",
+  "module_desc_wiki": "Entwicklerdokumentation aus versionierten Markdown-Dateien.",
+  "module_name_googleforms": "Google Forms",
+  "module_desc_googleforms": "Google Forms mit FlatCMS verbinden und synchronisierte Antworten anzeigen."
 }

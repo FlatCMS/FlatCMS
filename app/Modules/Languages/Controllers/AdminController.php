@@ -39,15 +39,21 @@ class AdminController extends BaseController
         $settings = FlatFile::settings();
         $defaultLang = $settings['default_language'] ?? 'fr-FR';
 
-        // Compute completion stats per language based on code usage
+        // Compute completion stats from static usage + reference catalogs + dynamic module metadata keys.
         $completionStats = [];
         $usage = TranslationScanner::scanCodeUsage();
+        $translationModules = $this->getModulesWithTranslations();
+        $fallbackLocale = (string) config('app.fallback_locale', 'en-US');
         foreach ($languages as $code => $lang) {
             $totalUsed = 0;
             $totalDefined = 0;
+            $referenceLang = $code === $defaultLang
+                ? (($fallbackLocale !== $code && $fallbackLocale !== '') ? $fallbackLocale : 'en-US')
+                : $defaultLang;
 
-            foreach ($usage as $moduleKey => $keys) {
-                $trans = $this->loadTranslations($code, $moduleKey);
+            foreach ($translationModules as $moduleKey => $_moduleLabel) {
+                $keys = $this->getTranslationKeysForTarget((string) $moduleKey, $usage, $referenceLang);
+                $trans = $this->loadTranslations($code, (string) $moduleKey);
                 $flatTrans = $this->flattenArray($trans);
                 foreach ($keys as $key) {
                     $totalUsed++;
@@ -691,11 +697,10 @@ class AdminController extends BaseController
             BASE_PATH . '/app/Extensions',
         BASE_PATH . '/app/Plugins',
         ], BASE_PATH . '/data/modules.json');
-        foreach ($manager->enabledNames() as $moduleName) {
+        foreach ($manager->all() as $moduleName => $meta) {
             if ($moduleName === 'Core') {
                 continue;
             }
-            $meta = $manager->get($moduleName);
             $dir = $meta['path'] ?? (BASE_PATH . '/app/Modules/' . $moduleName);
             if (is_dir($dir . '/Languages')) {
                 $modules[$moduleName] = $moduleName;
@@ -722,8 +727,13 @@ class AdminController extends BaseController
      */
     private function getTranslationKeysForTarget(string $moduleKey, array $usage, string $referenceLang): array
     {
-        $keys = $usage[$moduleKey] ?? [];
-        return is_array($keys) ? array_values($keys) : [];
+        $usageKeys = is_array($usage[$moduleKey] ?? null) ? array_values($usage[$moduleKey]) : [];
+        $referenceKeys = array_keys($this->flattenArray($this->loadTranslations($referenceLang, $moduleKey)));
+        $keys = array_merge($usageKeys, $referenceKeys);
+
+        $keys = array_values(array_unique(array_map(static fn($key): string => (string) $key, $keys)));
+        sort($keys);
+        return $keys;
     }
 
     private function flattenArray(array $array, string $prefix = ''): array
