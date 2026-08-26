@@ -187,7 +187,10 @@ final class UpdateCheckService
             'status' => $status,
             'compatibility_reasons' => $reasons,
             'download_url' => is_array($selected) ? (string) ($selected['download_url'] ?? '') : '',
-            'changelog_url' => is_array($selected) ? (string) ($selected['changelog_url'] ?? '') : '',
+            'changelog_url' => is_array($selected)
+                ? $this->normalizeChangelogUrl((string) ($selected['changelog_url'] ?? ''))
+                : '',
+            'changelog' => is_array($selected) ? trim((string) ($selected['changelog'] ?? '')) : '',
             'published_at' => is_array($selected) ? (string) ($selected['published_at'] ?? '') : '',
             'sha256' => is_array($selected) ? (string) ($selected['sha256'] ?? '') : '',
             'signature' => is_array($selected) ? (string) ($selected['signature'] ?? '') : '',
@@ -292,6 +295,31 @@ final class UpdateCheckService
         }
 
         return $version !== '' ? $version : '0.0.0';
+    }
+
+    private function normalizeChangelogUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '' || filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return '';
+        }
+
+        $parts = parse_url($url);
+        if (!is_array($parts) || isset($parts['user']) || isset($parts['pass'])) {
+            return '';
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        if ($host === '' || !in_array($scheme, ['https', 'http'], true)) {
+            return '';
+        }
+
+        if ($scheme !== 'https' && !is_local_host($host)) {
+            return '';
+        }
+
+        return $url;
     }
 
     /**

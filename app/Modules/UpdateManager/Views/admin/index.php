@@ -173,6 +173,12 @@ $statusClass = static fn (string $value): string => match ($value) {
                             $latestVersion = (string) ($package['latest_version'] ?? '');
                             $compatibleVersion = (string) ($package['compatible_version'] ?? '');
                             $reasons = is_array($package['compatibility_reasons'] ?? null) ? $package['compatibility_reasons'] : [];
+                            $changelog = trim((string) ($package['changelog'] ?? ''));
+                            $changelogId = 'update-changelog-' . preg_replace(
+                                '/[^a-z0-9_-]+/',
+                                '-',
+                                strtolower($family . '-' . (string) ($package['slug'] ?? 'package'))
+                            );
                             ?>
                             <tr>
                                 <td>
@@ -191,6 +197,17 @@ $statusClass = static fn (string $value): string => match ($value) {
                                     <?php foreach ($reasons as $reason): ?>
                                         <small class="update-compatibility-reason"><?= __('updates_compatibility_' . $reason, 'UpdateManager') ?></small>
                                     <?php endforeach; ?>
+                                    <?php if ($changelog !== ''): ?>
+                                        <details class="update-changelog" id="<?= e($changelogId) ?>">
+                                            <summary class="btn btn-outline btn-sm">
+                                                <i class="fas fa-list-check" aria-hidden="true"></i>
+                                                <?= __('updates_view_changelog', 'UpdateManager') ?>
+                                            </summary>
+                                            <div class="update-changelog-content">
+                                                <p><?= nl2br(e($changelog)) ?></p>
+                                            </div>
+                                        </details>
+                                    <?php endif; ?>
                                     <?php if ($canManageUpdates && !$updateOperationLocked && $family === 'core' && $packageStatus === 'update_available' && $compatibleVersion !== ''): ?>
                                         <form method="POST" action="<?= e(url('/admin/updates/install/core/' . rawurlencode($compatibleVersion))) ?>" class="update-row-action">
                                             <?= csrf_field() ?>

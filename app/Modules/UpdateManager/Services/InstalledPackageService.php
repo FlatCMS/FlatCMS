@@ -74,6 +74,8 @@ final class InstalledPackageService
     private function themePackages(): array
     {
         $packages = [];
+        $themes = [];
+        $slugCounts = [];
         foreach (['frontend', 'admin'] as $themeType) {
             $root = BASE_PATH . '/themes/' . $themeType;
             if (!is_dir($root)) {
@@ -88,18 +90,34 @@ final class InstalledPackageService
                 }
 
                 $slug = trim((string) ($manifest['slug'] ?? basename(dirname($manifestPath))));
-                $packages[] = [
-                    'name' => (string) ($manifest['name'] ?? $slug),
+                $themes[] = [
+                    'manifest' => $manifest,
                     'slug' => $slug,
-                    'version' => trim((string) ($manifest['version'] ?? '0.0.0')),
-                    'vendor' => $this->vendor($manifest),
-                    'channel' => (string) ($manifest['channel'] ?? 'stable'),
-                    'official' => !empty($manifest['official']),
-                    'enabled' => true,
-                    'location' => 'theme',
-                    'theme_type' => (string) ($manifest['type'] ?? $themeType),
+                    'type' => (string) ($manifest['type'] ?? $themeType),
                 ];
+                $slugCounts[$slug] = ($slugCounts[$slug] ?? 0) + 1;
             }
+        }
+
+        foreach ($themes as $theme) {
+            $manifest = (array) $theme['manifest'];
+            $slug = (string) $theme['slug'];
+            $themeType = (string) $theme['type'];
+            $catalogSlug = ($slugCounts[$slug] ?? 0) > 1
+                ? $slug . '-' . $themeType
+                : $slug;
+
+            $packages[] = [
+                'name' => (string) ($manifest['name'] ?? $catalogSlug),
+                'slug' => $catalogSlug,
+                'version' => trim((string) ($manifest['version'] ?? '0.0.0')),
+                'vendor' => $this->vendor($manifest),
+                'channel' => (string) ($manifest['channel'] ?? 'stable'),
+                'official' => !empty($manifest['official']),
+                'enabled' => true,
+                'location' => 'theme',
+                'theme_type' => $themeType,
+            ];
         }
 
         return $packages;

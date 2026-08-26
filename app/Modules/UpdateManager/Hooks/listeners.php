@@ -220,6 +220,25 @@ hook_register('dashboard.admin.banners', static function (): string {
     $dashboardUpdateCount = (int) ($status['update_count'] ?? 0);
     $dashboardCheckedAt = (string) ($status['checked_at'] ?? '');
     $dashboardUpdatesUrl = url('/admin/updates');
+    $dashboardChangelogUrl = '';
+    foreach (['core', 'modules', 'extensions', 'plugins', 'themes', 'appliances'] as $family) {
+        $packages = is_array($status['catalogs'][$family]['packages'] ?? null)
+            ? $status['catalogs'][$family]['packages']
+            : [];
+        foreach ($packages as $package) {
+            $changelogUrl = is_array($package) ? trim((string) ($package['changelog_url'] ?? '')) : '';
+            if (!is_array($package)
+                || (string) ($package['status'] ?? '') !== 'update_available'
+                || $changelogUrl === ''
+                || filter_var($changelogUrl, FILTER_VALIDATE_URL) === false
+                || strtolower((string) parse_url($changelogUrl, PHP_URL_SCHEME)) !== 'https') {
+                continue;
+            }
+
+            $dashboardChangelogUrl = $changelogUrl;
+            break 2;
+        }
+    }
 
     ob_start();
     include BASE_PATH . '/app/Modules/UpdateManager/Views/admin/dashboard-banner.php';

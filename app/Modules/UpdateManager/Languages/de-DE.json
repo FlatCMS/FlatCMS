@@ -84,5 +84,6 @@
   "updates_worker_async_unavailable": "Update nicht möglich: Dieser Server kann den Update-Prozess nicht im Hintergrund starten. PHP muss proc_open oder shell_exec für den Webprozess erlauben.",
   "updates_worker_dispatch_failed": "Der Update-Prozess konnte nicht im Hintergrund gestartet werden. Es wurde keine Core-Datei geändert.",
   "updates_worker_dispatch_log_failed": "Das Protokoll des Update-Prozesses kann in storage/logs/update-manager nicht erstellt werden. Prüfen Sie die Berechtigungen dieses Verzeichnisses.",
-  "updates_compatibility_packages": "Eine oder mehrere erforderliche Komponenten müssen vor dieser Version aktualisiert werden"
+  "updates_compatibility_packages": "Eine oder mehrere erforderliche Komponenten müssen vor dieser Version aktualisiert werden",
+  "updates_view_changelog": "Änderungsprotokoll anzeigen"
 }

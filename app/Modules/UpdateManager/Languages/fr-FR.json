@@ -84,5 +84,6 @@
   "updates_worker_async_unavailable": "Mise à jour impossible : ce serveur ne permet pas de lancer le processus de mise à jour en arrière-plan. PHP doit autoriser proc_open ou shell_exec pour le processus web.",
   "updates_worker_dispatch_failed": "Le processus de mise à jour n’a pas pu être lancé en arrière-plan. Aucun fichier du Core n’a été modifié.",
   "updates_worker_dispatch_log_failed": "Le journal du processus de mise à jour ne peut pas être créé dans storage/logs/update-manager. Vérifiez les permissions de ce dossier.",
-  "updates_compatibility_packages": "Un ou plusieurs composants requis doivent être mis à jour avant cette version"
+  "updates_compatibility_packages": "Un ou plusieurs composants requis doivent être mis à jour avant cette version",
+  "updates_view_changelog": "Voir le changelog"
 }

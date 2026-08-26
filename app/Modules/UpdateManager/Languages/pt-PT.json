@@ -84,5 +84,6 @@
   "updates_worker_async_unavailable": "Atualização indisponível: este servidor não consegue iniciar o processo de atualização em segundo plano. O PHP deve permitir proc_open ou shell_exec para o processo web.",
   "updates_worker_dispatch_failed": "Não foi possível iniciar o processo de atualização em segundo plano. Nenhum ficheiro do Core foi alterado.",
   "updates_worker_dispatch_log_failed": "Não é possível criar o registo do processo de atualização em storage/logs/update-manager. Verifique as permissões deste diretório.",
-  "updates_compatibility_packages": "Um ou mais componentes necessários têm de ser atualizados antes desta versão"
+  "updates_compatibility_packages": "Um ou mais componentes necessários têm de ser atualizados antes desta versão",
+  "updates_view_changelog": "Ver registo de alterações"
 }

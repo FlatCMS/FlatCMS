@@ -102,6 +102,22 @@
         play: ['video', 'lecture', 'start'],
     };
 
+    const FONT_AWESOME_STRUCTURAL_CLASSES = new Set([
+        'fa',
+        'fas',
+        'far',
+        'fab',
+        'fa-classic',
+        'fa-sharp',
+        'fa-solid',
+        'fa-regular',
+        'fa-light',
+        'fa-thin',
+        'fa-duotone',
+        'fa-brands',
+        'fa-fw',
+    ]);
+
     let draggedEl = null;
     let dragPreview = null;
     let startX = 0;
@@ -1495,14 +1511,25 @@
             card.className = 'menu-icon-card';
             card.dataset.icon = iconClass;
 
-            const iconName = iconClass.split(' ').find(cls => cls.startsWith('fa-') && cls !== 'fa-solid' && cls !== 'fa-regular' && cls !== 'fa-brands');
-            const label = iconName ? iconName.replace('fa-', '') : 'icon';
-
-            card.innerHTML = `<i class="${iconClass}"></i><span>${label}</span>`;
+            const iconName = getFontAwesomeIconName(iconClass);
+            const icon = document.createElement('i');
+            const label = document.createElement('span');
+            icon.className = iconClass;
+            icon.setAttribute('aria-hidden', 'true');
+            label.textContent = iconName;
+            card.append(icon, label);
             card.addEventListener('click', () => applyIcon(iconClass));
             fragment.appendChild(card);
         });
         iconGrid.appendChild(fragment);
+    }
+
+    function getFontAwesomeIconName(iconClass) {
+        const iconToken = String(iconClass || '')
+            .split(/\s+/)
+            .find((className) => className.startsWith('fa-') && !FONT_AWESOME_STRUCTURAL_CLASSES.has(className));
+
+        return iconToken ? iconToken.slice(3) : '';
     }
 
     function applyIcon(iconClass) {

@@ -84,5 +84,6 @@
   "updates_worker_async_unavailable": "Aggiornamento non disponibile: questo server non può avviare il processo di aggiornamento in background. PHP deve consentire proc_open o shell_exec per il processo web.",
   "updates_worker_dispatch_failed": "Impossibile avviare il processo di aggiornamento in background. Nessun file del Core è stato modificato.",
   "updates_worker_dispatch_log_failed": "Impossibile creare il log del processo di aggiornamento in storage/logs/update-manager. Verifica i permessi di questa directory.",
-  "updates_compatibility_packages": "Uno o più componenti richiesti devono essere aggiornati prima di questa versione"
+  "updates_compatibility_packages": "Uno o più componenti richiesti devono essere aggiornati prima di questa versione",
+  "updates_view_changelog": "Visualizza il changelog"
 }

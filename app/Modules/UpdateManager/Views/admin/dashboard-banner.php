@@ -20,6 +20,12 @@
         </div>
     </div>
     <div class="maintenance-actions">
+        <?php if ($dashboardChangelogUrl !== ''): ?>
+            <a href="<?= e($dashboardChangelogUrl) ?>" class="btn btn-outline btn-sm" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-list-check" aria-hidden="true"></i>
+                <?= __('updates_view_changelog', 'UpdateManager') ?>
+            </a>
+        <?php endif; ?>
         <a href="<?= e($dashboardUpdatesUrl) ?>" class="btn btn-primary btn-sm">
             <i class="fas fa-arrow-right" aria-hidden="true"></i>
             <?= __('updates_dashboard_open', 'UpdateManager') ?>
