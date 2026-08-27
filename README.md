@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://flat-cms.fr/new-logo-flatcms-dark.png" alt="FlatCMS Logo" width="700">
+  <img src="https://www.flat-cms.fr/uploads/logo/new-logo-flatcms-dark.png" alt="FlatCMS Logo" width="700">
 </p>
 
 <p align="center">
