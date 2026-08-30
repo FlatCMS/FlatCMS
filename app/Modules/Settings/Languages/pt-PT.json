@@ -296,6 +296,8 @@
   "routing_title": "Roteamento e links permanentes",
   "routing_yes": "Yes",
   "seo": "SEO",
+  "seo_translations": "Traduções SEO",
+  "seo_translations_hint": "Defina os metadados SEO para cada idioma. Uma tradução vazia utiliza automaticamente o idioma de origem.",
   "settings": "Configurações",
   "settings_advanced": "Configurações avançadas",
   "settings_advanced_action_clear_all": "Limpar todas as caches de desenvolvimento",

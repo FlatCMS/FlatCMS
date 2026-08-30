@@ -304,6 +304,10 @@ $promoBannerTranslationUi = is_array($promoBannerUi['translation_ui'] ?? null) ?
 $promoBannerTranslationTabs = is_array($promoBannerTranslationUi['tabs'] ?? null) ? $promoBannerTranslationUi['tabs'] : [];
 $promoBannerActiveLocale = (string) ($promoBannerTranslationUi['active_locale'] ?? $selectedDefaultLanguage);
 $promoBannerSourceLocale = (string) ($promoBannerTranslationUi['source_locale'] ?? $selectedDefaultLanguage);
+$seoTranslationUi = is_array($seoTranslationUi ?? null) ? $seoTranslationUi : [];
+$seoTranslationTabs = is_array($seoTranslationUi['tabs'] ?? null) ? $seoTranslationUi['tabs'] : [];
+$seoActiveLocale = (string) ($seoTranslationUi['active_locale'] ?? $selectedDefaultLanguage);
+$seoSourceLocale = (string) ($seoTranslationUi['source_locale'] ?? $selectedDefaultLanguage);
 $promoBannerEnabledValue = (string) old('promo_banner_enabled', !empty($promoBannerConfig['enabled']) ? '1' : '0');
 $promoBannerEnabled = in_array($promoBannerEnabledValue, ['1', 'true', 'on', 'yes'], true);
 $promoBannerCtaVariant = (string) old('promo_banner_cta_variant', (string) ($promoBannerConfig['cta_variant'] ?? 'primary'));
@@ -875,10 +879,10 @@ $settingsAiAttrs = static function (
                     </div>
 
                     <div class="settings-branding-translation-bar promo-banner-translation-bar" data-promo-banner-translations-root>
-                        <div class="settings-branding-translation-tabs promo-banner-translation-tabs" role="tablist" aria-label="<?= e(__('promo_banner_translations', 'Settings')) ?>">
+                        <div class="settings-branding-translation-tabs promo-banner-translation-tabs fc-translation-tabs" role="tablist" aria-label="<?= e(__('promo_banner_translations', 'Settings')) ?>">
                             <?php foreach ($promoBannerTranslationTabs as $tab): ?>
                             <?php
-                                $tabClasses = ['settings-branding-translation-tab', 'promo-banner-translation-tab'];
+                                $tabClasses = ['settings-branding-translation-tab', 'promo-banner-translation-tab', 'fc-translation-tab'];
                                 $labels = is_array($tab['ui_labels'] ?? null) ? $tab['ui_labels'] : [];
                                 if (!empty($tab['is_active'])) {
                                     $tabClasses[] = 'is-active';
@@ -903,10 +907,10 @@ $settingsAiAttrs = static function (
                                 aria-selected="<?= !empty($tab['is_active']) ? 'true' : 'false' ?>"
                                 title="<?= e((string) ($tab['label'] ?? '')) ?>"
                             >
-                                <span class="settings-branding-translation-tab-icon" aria-hidden="true">
+                                <span class="settings-branding-translation-tab-icon fc-translation-tab-icon" aria-hidden="true">
                                     <span class="settings-branding-translation-flag"><?= e((string) ($tab['flag'] ?? '🏳️')) ?></span>
                                 </span>
-                                <span class="settings-branding-translation-tab-badge promo-banner-translation-tab-badge"><?= e($tabBadge) ?></span>
+                                <span class="settings-branding-translation-tab-badge promo-banner-translation-tab-badge fc-translation-tab-badge"><?= e($tabBadge) ?></span>
                             </button>
                             <?php endforeach; ?>
                         </div>
@@ -1078,23 +1082,85 @@ $settingsAiAttrs = static function (
             </div>
         </section>
 
-        <section class="settings-tab-panel" data-settings-panel="seo" role="tabpanel" hidden>
-            <div class="card">
-                <h3 class="card-title card-title-spaced"><?= __('seo', 'Settings') ?></h3>
-                <div class="form-group">
-                    <label for="meta_title" class="form-label"><?= __('meta_title', 'Settings') ?></label>
-                    <input type="text" id="meta_title" name="meta_title" class="form-input" value="<?= e($settings['meta_title'] ?? '') ?>">
+            <section class="settings-tab-panel" data-settings-panel="seo" role="tabpanel" hidden>
+                <div class="card">
+                    <h3 class="card-title card-title-spaced"><?= __('seo', 'Settings') ?></h3>
+                    <p class="form-hint"><?= __('seo_translations_hint', 'Settings') ?></p>
+
+                    <input type="hidden" name="seo_active_locale" value="<?= e($seoActiveLocale) ?>" data-seo-active-locale>
+                    <input type="hidden" name="seo_source_locale" value="<?= e($seoSourceLocale) ?>">
+
+                    <div class="settings-branding-translation-bar settings-seo-translation-bar" data-seo-translations-root>
+                        <div class="settings-branding-translation-tabs settings-seo-translation-tabs fc-translation-tabs" role="tablist" aria-label="<?= e(__('seo_translations', 'Settings')) ?>">
+                            <?php foreach ($seoTranslationTabs as $tab): ?>
+                            <?php
+                                $tabClasses = ['settings-branding-translation-tab', 'settings-seo-translation-tab', 'fc-translation-tab'];
+                                $labels = is_array($tab['ui_labels'] ?? null) ? $tab['ui_labels'] : [];
+                                if (!empty($tab['is_active'])) {
+                                    $tabClasses[] = 'is-active';
+                                }
+                                if ((string) ($tab['status'] ?? '') === 'empty') {
+                                    $tabClasses[] = 'is-missing';
+                                }
+                                $tabState = !empty($tab['is_source'])
+                                    ? 'source'
+                                    : (((string) ($tab['status'] ?? '') === 'translated') ? 'ready' : 'missing');
+                                $tabBadge = $tabState === 'source'
+                                    ? __('translation_source', 'Settings')
+                                    : ($tabState === 'ready' ? __('translation_ready', 'Settings') : __('translation_missing', 'Settings'));
+                            ?>
+                            <button
+                                type="button"
+                                class="<?= e(implode(' ', $tabClasses)) ?>"
+                                data-seo-tab-btn
+                                data-tab="<?= e((string) ($tab['code'] ?? '')) ?>"
+                                data-tab-state="<?= e($tabState) ?>"
+                                data-seo-label-source="<?= e((string) ($labels['translation_source'] ?? __('translation_source', 'Settings'))) ?>"
+                                data-seo-label-ready="<?= e((string) ($labels['translation_ready'] ?? __('translation_ready', 'Settings'))) ?>"
+                                data-seo-label-missing="<?= e((string) ($labels['translation_missing'] ?? __('translation_missing', 'Settings'))) ?>"
+                                role="tab"
+                                aria-selected="<?= !empty($tab['is_active']) ? 'true' : 'false' ?>"
+                                title="<?= e((string) ($tab['label'] ?? '')) ?>"
+                            >
+                                <span class="settings-branding-translation-tab-icon fc-translation-tab-icon" aria-hidden="true">
+                                    <span class="settings-branding-translation-flag"><?= e((string) ($tab['flag'] ?? '🏳️')) ?></span>
+                                </span>
+                                <span class="settings-branding-translation-tab-badge settings-seo-translation-tab-badge fc-translation-tab-badge"><?= e($tabBadge) ?></span>
+                            </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="settings-seo-translation-panels">
+                        <?php foreach ($seoTranslationTabs as $tab): ?>
+                        <?php
+                            $localeCode = (string) ($tab['code'] ?? '');
+                            $values = is_array($tab['values'] ?? null) ? $tab['values'] : [];
+                            $labels = is_array($tab['form_labels'] ?? null) ? $tab['form_labels'] : [];
+                        ?>
+                        <section
+                            class="settings-seo-translation-panel<?= !empty($tab['is_active']) ? ' is-active' : '' ?>"
+                            data-seo-panel="<?= e($localeCode) ?>"
+                            role="tabpanel"
+                            <?= !empty($tab['is_active']) ? '' : 'hidden' ?>
+                        >
+                            <div class="form-group">
+                                <label for="seo_<?= e($localeCode) ?>_meta_title" class="form-label"><?= e((string) ($labels['meta_title'] ?? __('meta_title', 'Settings'))) ?></label>
+                                <input type="text" id="seo_<?= e($localeCode) ?>_meta_title" name="seo_translations[<?= e($localeCode) ?>][meta_title]" class="form-input" value="<?= e((string) ($values['meta_title'] ?? '')) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="seo_<?= e($localeCode) ?>_meta_description" class="form-label"><?= e((string) ($labels['meta_description'] ?? __('meta_description', 'Settings'))) ?></label>
+                                <textarea id="seo_<?= e($localeCode) ?>_meta_description" name="seo_translations[<?= e($localeCode) ?>][meta_description]" class="form-input" rows="3" data-no-editor><?= e((string) ($values['meta_description'] ?? '')) ?></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="seo_<?= e($localeCode) ?>_meta_keywords" class="form-label"><?= e((string) ($labels['meta_keywords'] ?? __('meta_keywords', 'Settings'))) ?></label>
+                                <input type="text" id="seo_<?= e($localeCode) ?>_meta_keywords" name="seo_translations[<?= e($localeCode) ?>][meta_keywords]" class="form-input" value="<?= e((string) ($values['meta_keywords'] ?? '')) ?>">
+                            </div>
+                        </section>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="meta_description" class="form-label"><?= __('meta_description', 'Settings') ?></label>
-                    <textarea id="meta_description" name="meta_description" class="form-input" rows="2" data-no-editor><?= e($settings['meta_description'] ?? '') ?></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="meta_keywords" class="form-label"><?= __('meta_keywords', 'Settings') ?></label>
-                    <input type="text" id="meta_keywords" name="meta_keywords" class="form-input" value="<?= e($settings['meta_keywords'] ?? '') ?>">
-                </div>
-            </div>
-        </section>
+            </section>
 
         <section class="settings-tab-panel" data-settings-panel="mail" role="tabpanel" hidden>
             <div class="card">
@@ -2084,7 +2150,7 @@ $settingsAiAttrs = static function (
             <div class="modal-body">
                 <div class="settings-branding-translation-bar">
                 <div
-                    class="settings-branding-translation-tabs"
+                    class="settings-branding-translation-tabs fc-translation-tabs"
                     role="tablist"
                     data-site-branding-tablist
                     aria-label="<?= e((string) ($siteBrandingInitialUiLabels['translations_label'] ?? __('site_branding_translations', 'Settings'))) ?>"
@@ -2093,7 +2159,7 @@ $settingsAiAttrs = static function (
                         <?php
                         $status = (string) ($tab['status'] ?? 'empty');
                         $tabUiLabels = is_array($tab['ui_labels'] ?? null) ? $tab['ui_labels'] : [];
-                        $tabClasses = ['settings-branding-translation-tab'];
+                        $tabClasses = ['settings-branding-translation-tab', 'fc-translation-tab'];
                         if (!empty($tab['is_active'])) {
                             $tabClasses[] = 'is-active';
                         }
@@ -2116,10 +2182,10 @@ $settingsAiAttrs = static function (
                             aria-selected="<?= !empty($tab['is_active']) ? 'true' : 'false' ?>"
                             title="<?= e((string) ($tab['label'] ?? '')) ?>"
                         >
-                            <span class="settings-branding-translation-tab-icon" aria-hidden="true">
+                            <span class="settings-branding-translation-tab-icon fc-translation-tab-icon" aria-hidden="true">
                                 <span class="settings-branding-translation-flag"><?= e((string) ($tab['flag'] ?? '🏳️')) ?></span>
                             </span>
-                            <span class="settings-branding-translation-tab-badge">
+                            <span class="settings-branding-translation-tab-badge fc-translation-tab-badge">
                                 <?= e((string) ($statusLabelMap[$status] ?? __('translation_missing', 'Settings'))) ?>
                             </span>
                         </button>

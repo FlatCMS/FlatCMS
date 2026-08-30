@@ -43,6 +43,7 @@ final class AdminController extends BaseController
                 'php_version' => PHP_VERSION,
                 'update_count' => 0,
                 'incompatible_count' => 0,
+                'external_count' => 0,
                 'installed_count' => 0,
                 'errors' => ['system' => $exception->getMessage()],
                 'catalogs' => [],

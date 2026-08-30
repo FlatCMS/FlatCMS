@@ -10,6 +10,7 @@ $catalogs = is_array($status['catalogs'] ?? null) ? $status['catalogs'] : [];
 $errors = is_array($status['errors'] ?? null) ? $status['errors'] : [];
 $updateCount = (int) ($status['update_count'] ?? 0);
 $incompatibleCount = (int) ($status['incompatible_count'] ?? 0);
+$externalCount = (int) ($status['external_count'] ?? 0);
 $installedCount = (int) ($status['installed_count'] ?? 0);
 $checkedAt = trim((string) ($status['checked_at'] ?? ''));
 $checkedTimestamp = $checkedAt !== '' ? strtotime($checkedAt) : false;
@@ -112,7 +113,7 @@ $statusClass = static fn (string $value): string => match ($value) {
     </div>
 <?php endif; ?>
 
-<?php if ($errors === [] && $updateCount === 0 && $incompatibleCount === 0): ?>
+<?php if ($errors === [] && $updateCount === 0 && $incompatibleCount === 0 && $externalCount === 0): ?>
     <div class="card update-manager-empty">
         <div class="card-body">
             <i class="fas fa-circle-check" aria-hidden="true"></i>
@@ -130,6 +131,7 @@ $statusClass = static fn (string $value): string => match ($value) {
     $catalog = is_array($catalogs[$family] ?? null) ? $catalogs[$family] : [];
     $packages = is_array($catalog['packages'] ?? null) ? $catalog['packages'] : [];
     $available = !empty($catalog['available']);
+    $uncataloguedCount = (int) ($catalog['uncatalogued_count'] ?? 0);
     $sourceKey = in_array($family, ['core', 'appliances'], true)
         ? 'updates_repository_flatcms'
         : 'updates_repository_marketplace';
@@ -145,6 +147,12 @@ $statusClass = static fn (string $value): string => match ($value) {
                     <span class="badge badge-danger"><?= __('updates_status_repository_unavailable', 'UpdateManager') ?></span>
                 <?php elseif ((int) ($catalog['update_count'] ?? 0) > 0): ?>
                     <span class="badge badge-warning"><?= (int) ($catalog['update_count'] ?? 0) ?> × <?= __('updates_status_update_available', 'UpdateManager') ?></span>
+                <?php elseif ((int) ($catalog['incompatible_count'] ?? 0) > 0): ?>
+                    <span class="badge badge-danger"><?= (int) ($catalog['incompatible_count'] ?? 0) ?> × <?= __('updates_status_incompatible_update', 'UpdateManager') ?></span>
+                <?php elseif (in_array($family, ['extensions', 'plugins'], true) && $uncataloguedCount > 0): ?>
+                    <span class="badge badge-secondary">
+                        <?= __('updates_status_external_catalog', 'UpdateManager', ['count' => $uncataloguedCount]) ?>
+                    </span>
                 <?php else: ?>
                     <span class="badge badge-success"><?= __('updates_status_up_to_date', 'UpdateManager') ?></span>
                 <?php endif; ?>
@@ -156,6 +164,13 @@ $statusClass = static fn (string $value): string => match ($value) {
             <?php else: ?>
                 <div class="update-table-wrap">
                     <table class="table update-table">
+                        <colgroup>
+                            <col class="update-table-col-component">
+                            <col class="update-table-col-vendor">
+                            <col class="update-table-col-current">
+                            <col class="update-table-col-latest">
+                            <col class="update-table-col-status">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th><?= __('updates_component', 'UpdateManager') ?></th>
@@ -191,37 +206,39 @@ $statusClass = static fn (string $value): string => match ($value) {
                                 <td><code><?= e((string) ($package['current_version'] ?? '')) ?></code></td>
                                 <td><?= $latestVersion !== '' ? '<code>' . e($latestVersion) . '</code>' : '—' ?></td>
                                 <td>
-                                    <span class="badge <?= e($statusClass($packageStatus)) ?>">
-                                        <?= __('updates_status_' . $packageStatus, 'UpdateManager') ?>
-                                    </span>
-                                    <?php foreach ($reasons as $reason): ?>
-                                        <small class="update-compatibility-reason"><?= __('updates_compatibility_' . $reason, 'UpdateManager') ?></small>
-                                    <?php endforeach; ?>
-                                    <?php if ($changelog !== ''): ?>
-                                        <details class="update-changelog" id="<?= e($changelogId) ?>">
-                                            <summary class="btn btn-outline btn-sm">
-                                                <i class="fas fa-list-check" aria-hidden="true"></i>
-                                                <?= __('updates_view_changelog', 'UpdateManager') ?>
-                                            </summary>
-                                            <div class="update-changelog-content">
-                                                <p><?= nl2br(e($changelog)) ?></p>
-                                            </div>
-                                        </details>
-                                    <?php endif; ?>
-                                    <?php if ($canManageUpdates && !$updateOperationLocked && $family === 'core' && $packageStatus === 'update_available' && $compatibleVersion !== ''): ?>
-                                        <form method="POST" action="<?= e(url('/admin/updates/install/core/' . rawurlencode($compatibleVersion))) ?>" class="update-row-action">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-primary btn-sm"
-                                                    data-action="confirm-delete"
-                                                    data-message="<?= e(__('updates_install_confirm', 'UpdateManager', ['version' => $compatibleVersion])) ?>"
-                                                    data-confirm-text="<?= e(__('updates_install_core', 'UpdateManager')) ?>"
-                                                    data-warning="<?= e(__('updates_install_warning', 'UpdateManager')) ?>"
-                                                    data-item-name="FlatCMS <?= e($compatibleVersion) ?>">
-                                                <i class="fas fa-download" aria-hidden="true"></i>
-                                                <?= __('updates_install_core', 'UpdateManager') ?>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
+                                    <div class="update-status-stack">
+                                        <span class="badge <?= e($statusClass($packageStatus)) ?>">
+                                            <?= __('updates_status_' . $packageStatus, 'UpdateManager') ?>
+                                        </span>
+                                        <?php foreach ($reasons as $reason): ?>
+                                            <small class="update-compatibility-reason"><?= __('updates_compatibility_' . $reason, 'UpdateManager') ?></small>
+                                        <?php endforeach; ?>
+                                        <?php if ($changelog !== ''): ?>
+                                            <details class="update-changelog" id="<?= e($changelogId) ?>">
+                                                <summary class="btn btn-outline btn-sm">
+                                                    <i class="fas fa-list-check" aria-hidden="true"></i>
+                                                    <?= __('updates_view_changelog', 'UpdateManager') ?>
+                                                </summary>
+                                                <div class="update-changelog-content">
+                                                    <p><?= nl2br(e($changelog)) ?></p>
+                                                </div>
+                                            </details>
+                                        <?php endif; ?>
+                                        <?php if ($canManageUpdates && !$updateOperationLocked && $family === 'core' && $packageStatus === 'update_available' && $compatibleVersion !== ''): ?>
+                                            <form method="POST" action="<?= e(url('/admin/updates/install/core/' . rawurlencode($compatibleVersion))) ?>" class="update-row-action">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn btn-primary btn-sm"
+                                                        data-action="confirm-delete"
+                                                        data-message="<?= e(__('updates_install_confirm', 'UpdateManager', ['version' => $compatibleVersion])) ?>"
+                                                        data-confirm-text="<?= e(__('updates_install_core', 'UpdateManager')) ?>"
+                                                        data-warning="<?= e(__('updates_install_warning', 'UpdateManager')) ?>"
+                                                        data-item-name="FlatCMS <?= e($compatibleVersion) ?>">
+                                                    <i class="fas fa-download" aria-hidden="true"></i>
+                                                    <?= __('updates_install_core', 'UpdateManager') ?>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

@@ -35,21 +35,31 @@ Modules, Extensions, Plugins, Thèmes et Appliances restent en détection seule 
 - `themes`
 - `appliances`
 
+## Inventaire local
+
+UpdateManager ne transforme jamais un catalogue distant en liste d'installation. Il part exclusivement de l'inventaire local :
+
+- le Core FlatCMS ;
+- les Modules, Extensions et Plugins effectivement activés ;
+- les Thèmes installés, actifs ou non, afin de ne pas ignorer leurs correctifs ;
+- les Appliances explicitement rattachées à l'installation lorsqu'un contrat local les déclare.
+
+Une Extension ou un Plugin actif absent du catalogue reste visible avec l'état `not_in_catalog`. Sa carte indique alors qu'un composant est suivi hors catalogue FlatCMS au lieu d'afficher un faux état global « À jour ».
+
 ## Sources de distribution
 
-- `https://flat-cms.fr` : Core et Appliances officiels ;
-- `https://marketplace.flat-cms.fr` : Modules, Extensions, Plugins et Thèmes.
+- `https://flat-cms.fr` : Core, Appliances, Modules, Extensions, Plugins et Thèmes officiels.
 
-Principe : **le Marketplace distribue ; Update Manager gère l'installation FlatCMS.**
+Principe : **flat-cms.fr distribue ; Update Manager gère l'installation FlatCMS.**
 
 Les URLs sont configurables par environnement :
 
 - `FLATCMS_UPDATE_CORE_CATALOG_URL`
 - `FLATCMS_UPDATE_APPLIANCES_CATALOG_URL`
-- `FLATCMS_MARKETPLACE_MODULES_CATALOG_URL`
-- `FLATCMS_MARKETPLACE_EXTENSIONS_CATALOG_URL`
-- `FLATCMS_MARKETPLACE_PLUGINS_CATALOG_URL`
-- `FLATCMS_MARKETPLACE_THEMES_CATALOG_URL`
+- `FLATCMS_UPDATE_MODULES_CATALOG_URL`
+- `FLATCMS_UPDATE_EXTENSIONS_CATALOG_URL`
+- `FLATCMS_UPDATE_PLUGINS_CATALOG_URL`
+- `FLATCMS_UPDATE_THEMES_CATALOG_URL`
 
 HTTPS est obligatoire hors hôte local.
 
@@ -188,6 +198,7 @@ L'interface web délègue l'application à un processus PHP CLI distinct.
 
 Le statut est stocké dans `storage/cache/update-manager/status.json`.
 Le TTL normal est de 24 h (`FLATCMS_UPDATE_CHECK_TTL`) et tombe au maximum à 1 h lorsqu'une source est indisponible.
+Le cache contient aussi une empreinte de l'inventaire local. Toute activation, désactivation, installation, suppression ou modification de version invalide immédiatement le statut mémorisé.
 Le Dashboard et les badges ne déclenchent pas de requête réseau.
 
 Taille maximale de téléchargement :

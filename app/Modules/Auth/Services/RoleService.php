@@ -370,6 +370,59 @@ class RoleService
     }
 
     /**
+     * @return array<int, array<string,mixed>>
+     */
+    private static function roleExtensionPayloads(): array
+    {
+        $results = Hook::run('auth.roles.extend', []);
+        return array_values(array_filter($results, static fn ($entry): bool => is_array($entry)));
+    }
+
+    /**
+     * @return array<string, array<string,mixed>>
+     */
+    private static function resolveAllRoles(): array
+    {
+        $roles = self::ROLES;
+
+        foreach (self::roleExtensionPayloads() as $payload) {
+            $extraRoles = $payload['roles'] ?? [];
+            if (!is_array($extraRoles)) {
+                continue;
+            }
+
+            foreach ($extraRoles as $role => $meta) {
+                $role = self::normalizeRole((string) $role);
+                if (
+                    $role === ''
+                    || isset($roles[$role])
+                    || !preg_match('/^[a-z][a-z0-9_]{1,63}$/', $role)
+                    || !is_array($meta)
+                ) {
+                    continue;
+                }
+
+                $roles[$role] = array_merge([
+                    'label' => ucfirst(str_replace('_', ' ', $role)),
+                    'icon' => 'fas fa-user',
+                    'color' => '#95a5a6',
+                    'badge_class' => 'badge-secondary',
+                    'description' => '',
+                    'registerable' => false,
+                    'assignable_by' => [],
+                    'level' => 0,
+                    'login_redirect' => '/',
+                    'translation_domain' => 'Users',
+                    'label_key' => 'role_' . $role,
+                    'description_key' => 'role_desc_' . $role,
+                ], $meta);
+            }
+        }
+
+        return $roles;
+    }
+
+    /**
      * @return array<string>|'*'
      */
     private static function resolveRolePermissions(string $role)
@@ -494,27 +547,64 @@ class RoleService
     public static function getLoginRedirect(string $role): string
     {
         $role = self::normalizeRole($role);
-        return match ($role) {
+        $defaultRedirect = match ($role) {
             self::ROLE_SUPER_ADMIN, self::ROLE_ADMIN, self::ROLE_EDITOR, self::ROLE_DEMO => '/admin/dashboard',
             self::ROLE_MEMBER => '/admin/profile',
             default => '/',
         };
+
+        $roles = self::resolveAllRoles();
+        $redirect = trim((string) ($roles[$role]['login_redirect'] ?? $defaultRedirect));
+        if ($redirect === '' || $redirect[0] !== '/' || str_starts_with($redirect, '//')) {
+            return $defaultRedirect;
+        }
+
+        return $redirect;
     }
 
     public static function getRoleBadge(string $role): string
     {
         $role = self::normalizeRole($role);
-        $meta = self::ROLES[$role] ?? self::ROLES[self::ROLE_MEMBER];
-        $class = $meta['badge_class'];
-        $label = __('role_' . $role, 'Users');
+        $roles = self::resolveAllRoles();
+        $meta = $roles[$role] ?? $roles[self::ROLE_MEMBER];
+        $class = (string) ($meta['badge_class'] ?? 'badge-secondary');
+        $label = self::getRoleLabel($role);
         return '<span class="badge ' . $class . '">' . e($label) . '</span>';
+    }
+
+    public static function getRoleLabel(string $role, string $fallbackDomain = 'Users'): string
+    {
+        $role = self::normalizeRole($role);
+        $meta = self::resolveAllRoles()[$role] ?? null;
+        if (!is_array($meta)) {
+            return ucfirst(str_replace('_', ' ', $role));
+        }
+
+        $domain = trim((string) ($meta['translation_domain'] ?? $fallbackDomain));
+        $key = trim((string) ($meta['label_key'] ?? ('role_' . $role)));
+        return __($key, $domain !== '' ? $domain : $fallbackDomain);
+    }
+
+    public static function getRoleDescription(string $role, string $fallbackDomain = 'Auth'): string
+    {
+        $role = self::normalizeRole($role);
+        $meta = self::resolveAllRoles()[$role] ?? null;
+        if (!is_array($meta)) {
+            return '';
+        }
+
+        $domain = trim((string) ($meta['translation_domain'] ?? $fallbackDomain));
+        $key = trim((string) ($meta['description_key'] ?? ('role_desc_' . $role)));
+        return __($key, $domain !== '' ? $domain : $fallbackDomain);
     }
 
     public static function getRegistrationRoles(): array
     {
         $roles = [];
-        foreach (self::ROLES as $key => $meta) {
-            if ($meta['registerable']) {
+        foreach (self::resolveAllRoles() as $key => $meta) {
+            if (($meta['registerable'] ?? false) === true) {
+                $meta['display_label'] = self::getRoleLabel($key, 'Auth');
+                $meta['display_description'] = self::getRoleDescription($key, 'Auth');
                 $roles[$key] = $meta;
             }
         }
@@ -525,16 +615,33 @@ class RoleService
     {
         $managerRole = self::normalizeRole($managerRole);
 
-        return match ($managerRole) {
-            self::ROLE_SUPER_ADMIN => self::ROLES,
-            self::ROLE_ADMIN => [
-                self::ROLE_ADMIN => self::ROLES[self::ROLE_ADMIN],
-                self::ROLE_EDITOR => self::ROLES[self::ROLE_EDITOR],
-                self::ROLE_DEMO => self::ROLES[self::ROLE_DEMO],
-                self::ROLE_MEMBER => self::ROLES[self::ROLE_MEMBER],
-            ],
-            default => [],
-        };
+        $roles = self::resolveAllRoles();
+        if ($managerRole === self::ROLE_SUPER_ADMIN) {
+            return $roles;
+        }
+
+        if ($managerRole !== self::ROLE_ADMIN) {
+            return [];
+        }
+
+        $assignable = [];
+        foreach ($roles as $role => $meta) {
+            $allowedManagers = $meta['assignable_by'] ?? null;
+            if ($allowedManagers === null) {
+                $allowedManagers = in_array($role, [
+                    self::ROLE_ADMIN,
+                    self::ROLE_EDITOR,
+                    self::ROLE_DEMO,
+                    self::ROLE_MEMBER,
+                ], true) ? [self::ROLE_ADMIN] : [];
+            }
+
+            if (is_array($allowedManagers) && in_array($managerRole, $allowedManagers, true)) {
+                $assignable[$role] = $meta;
+            }
+        }
+
+        return $assignable;
     }
 
     public static function canAccessAdmin(string $role): bool
@@ -545,7 +652,11 @@ class RoleService
     public static function getRoleLevel(string $role): int
     {
         $role = self::normalizeRole($role);
-        return self::ROLE_HIERARCHY[$role] ?? 0;
+        if (isset(self::ROLE_HIERARCHY[$role])) {
+            return self::ROLE_HIERARCHY[$role];
+        }
+
+        return (int) (self::resolveAllRoles()[$role]['level'] ?? 0);
     }
 
     public static function isHigherRole(string $roleA, string $roleB): bool
@@ -555,6 +666,6 @@ class RoleService
 
     public static function getAllRoles(): array
     {
-        return self::ROLES;
+        return self::resolveAllRoles();
     }
 }

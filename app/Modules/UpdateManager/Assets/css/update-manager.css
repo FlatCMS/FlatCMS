@@ -168,6 +168,30 @@
 .update-table {
   margin: 0;
   width: 100%;
+  table-layout: fixed;
+}
+
+.update-table-col-component {
+  width: 20%;
+}
+
+.update-table-col-vendor {
+  width: 18%;
+}
+
+.update-table-col-current,
+.update-table-col-latest {
+  width: 18%;
+}
+
+.update-table-col-status {
+  width: 26%;
+}
+
+.update-table th,
+.update-table td {
+  vertical-align: top;
+  overflow-wrap: anywhere;
 }
 
 .update-table td strong,
@@ -184,8 +208,16 @@
   color: var(--color-danger, var(--color-text-secondary)) !important;
 }
 
+.update-status-stack {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
 .update-row-action {
-  margin-top: var(--spacing-2);
+  margin: 0;
 }
 
 .update-row-action .btn {
@@ -193,7 +225,7 @@
 }
 
 .update-changelog {
-  margin-top: var(--spacing-2);
+  margin: 0;
 }
 
 .update-changelog > summary {
@@ -240,5 +272,9 @@
 
   .update-catalog-badges {
     justify-content: flex-start;
+  }
+
+  .update-table {
+    min-width: 52rem;
   }
 }

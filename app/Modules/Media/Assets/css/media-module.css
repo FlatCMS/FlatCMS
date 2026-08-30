@@ -1263,6 +1263,9 @@ ul.media-tree ul.media-tree {
   flex-wrap: nowrap;
   align-items: center;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   gap: var(--spacing-2);
   padding: var(--spacing-3) var(--spacing-4);
   border-bottom: 1px solid var(--color-border);
@@ -1330,11 +1333,16 @@ ul.media-tree ul.media-tree {
 .media-search {
   position: relative;
   flex: 0 0 200px;
+  min-width: 0;
   margin-left: auto;
 }
 
 .media-search input {
+  display: block;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: var(--spacing-2) var(--spacing-3) var(--spacing-2) 32px;
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius-md);
@@ -1853,14 +1861,16 @@ ul.media-tree ul.media-tree {
 
   .media-toolbar-btns {
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     padding-bottom: var(--spacing-1);
     -webkit-overflow-scrolling: touch;
   }
 
   .media-search {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
     width: 100%;
+    max-width: 100%;
     margin-left: 0;
   }
 

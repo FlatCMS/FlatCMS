@@ -296,6 +296,8 @@
   "routing_title": "Routing & Permalinks",
   "routing_yes": "Ja",
   "seo": "SEO",
+  "seo_translations": "SEO-Übersetzungen",
+  "seo_translations_hint": "Definieren Sie die SEO-Metadaten für jede Sprache. Eine leere Übersetzung verwendet automatisch die Ausgangssprache.",
   "settings": "Einstellungen",
   "settings_advanced": "Erweiterte Einstellungen",
   "settings_advanced_action_clear_all": "Alle Dev-Caches leeren",

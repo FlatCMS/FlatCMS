@@ -892,6 +892,71 @@
             activateTab(String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''));
         }
 
+        function initSeoTranslations() {
+            const root = document.querySelector('[data-seo-translations-root]');
+            if (!root) {
+                return;
+            }
+
+            const buttons = Array.from(root.querySelectorAll('[data-seo-tab-btn]'));
+            const panels = Array.from(document.querySelectorAll('[data-seo-panel]'));
+            const activeLocaleInput = document.querySelector('[data-seo-active-locale]');
+            if (!buttons.length || !panels.length || !activeLocaleInput) {
+                return;
+            }
+
+            function updateBadgeLabels(activeButton) {
+                const sourceLabel = String(activeButton.getAttribute('data-seo-label-source') || '').trim();
+                const readyLabel = String(activeButton.getAttribute('data-seo-label-ready') || '').trim();
+                const missingLabel = String(activeButton.getAttribute('data-seo-label-missing') || '').trim();
+
+                buttons.forEach(function(button) {
+                    const badge = button.querySelector('.settings-seo-translation-tab-badge');
+                    const state = String(button.getAttribute('data-tab-state') || '').trim();
+                    if (!badge) {
+                        return;
+                    }
+                    badge.textContent = state === 'source'
+                        ? sourceLabel
+                        : (state === 'ready' ? readyLabel : missingLabel);
+                });
+            }
+
+            function activateTab(target) {
+                const locale = String(target || '').trim();
+                const activeButton = buttons.find(function(button) {
+                    return String(button.getAttribute('data-tab') || '') === locale;
+                }) || buttons[0];
+                if (!activeButton) {
+                    return;
+                }
+
+                const activeLocale = String(activeButton.getAttribute('data-tab') || '').trim();
+                activeLocaleInput.value = activeLocale;
+                updateBadgeLabels(activeButton);
+
+                buttons.forEach(function(button) {
+                    const isActive = String(button.getAttribute('data-tab') || '') === activeLocale;
+                    button.classList.toggle('is-active', isActive);
+                    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+
+                panels.forEach(function(panel) {
+                    const isActive = String(panel.getAttribute('data-seo-panel') || '') === activeLocale;
+                    panel.classList.toggle('is-active', isActive);
+                    panel.hidden = !isActive;
+                });
+            }
+
+            buttons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    activateTab(String(button.getAttribute('data-tab') || ''));
+                });
+            });
+
+            activateTab(String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''));
+        }
+
         function initAlignControls() {
             const controls = Array.from(document.querySelectorAll('[data-align-control]'));
             if (!controls.length) {
@@ -1020,6 +1085,7 @@
             initLocalizationDefaults();
             initHomepageRouting();
             initPromoBannerTranslations();
+            initSeoTranslations();
             initAlignControls();
             initSettingsCopyButtons();
             return;
@@ -1154,6 +1220,7 @@
         initLocalizationDefaults();
         initHomepageRouting();
         initPromoBannerTranslations();
+        initSeoTranslations();
         initAlignControls();
         initSettingsCopyButtons();
         initContactCaptchaDependency();

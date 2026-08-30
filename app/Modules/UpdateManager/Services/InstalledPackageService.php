@@ -27,7 +27,7 @@ final class InstalledPackageService
         ];
 
         $manager = new ModuleManager();
-        foreach ($manager->all() as $name => $meta) {
+        foreach ($manager->enabled() as $name => $meta) {
             if (!is_array($meta)) {
                 continue;
             }

@@ -882,8 +882,15 @@ final class ThemeCustomizationService
 
     private function resolveLightModeSelector(string $type, string $name): string
     {
+        $config = $this->readJsonFile($this->resolveThemeConfigPath($type, $name)) ?? [];
+        $supports = is_array($config['supports'] ?? null) ? $config['supports'] : [];
+        $selector = trim((string) ($supports['light_mode_selector'] ?? ''));
+        if ($selector !== '') {
+            return $selector;
+        }
+
         if ($type === 'frontend' && $name === 'modern-pro') {
-            return 'body.light-mode';
+            return 'body.light-mode,html.theme-light-init' . ' body';
         }
 
         if ($type === 'admin' && $name === 'admin-modern-pro') {

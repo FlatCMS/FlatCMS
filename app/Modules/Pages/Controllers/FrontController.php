@@ -20,7 +20,7 @@ use App\Modules\Pages\Services\PageTranslationService;
 use App\Modules\Pages\Support\SystemPages;
 use App\Modules\Posts\Services\PostTranslationService;
 use App\Modules\Settings\Services\SiteRoutingService;
-use App\Modules\Settings\Services\SiteBrandingTranslationService;
+use App\Modules\Settings\Services\LocalizedSettingsService;
 
 class FrontController extends BaseController
 {
@@ -188,7 +188,7 @@ class FrontController extends BaseController
      */
     protected function localizeFrontendSettings(array $settings): array
     {
-        $service = new SiteBrandingTranslationService();
+        $service = new LocalizedSettingsService();
         return $service->resolveForLocale($settings, (string) $this->request->locale());
     }
 

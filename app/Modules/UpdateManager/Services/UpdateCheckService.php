@@ -11,6 +11,7 @@ namespace App\Modules\UpdateManager\Services;
 
 final class UpdateCheckService
 {
+    private const CACHE_SCHEMA_VERSION = 3;
     private const CATALOGS = ['core', 'modules', 'extensions', 'plugins', 'themes', 'appliances'];
 
     public function __construct(
@@ -28,32 +29,61 @@ final class UpdateCheckService
     /** @return array<string, mixed> */
     public function status(bool $force = false): array
     {
+        $installed = $this->installed->all();
+        $inventoryHash = $this->inventoryHash($installed);
         $cached = $this->cache->read();
-        if (!$force && $this->cache->isFresh($cached)) {
+        if (
+            !$force
+            && (int) ($cached['cache_schema'] ?? 0) === self::CACHE_SCHEMA_VERSION
+            && hash_equals((string) ($cached['inventory_hash'] ?? ''), $inventoryHash)
+            && $this->cache->isFresh($cached)
+        ) {
             $cached['from_cache'] = true;
             return $cached;
         }
 
-        return $this->refresh();
+        return $this->refreshInventory($installed, $inventoryHash);
     }
 
     /** @return array<string, mixed>|null */
     public function cachedStatus(): ?array
     {
-        return $this->cache->read();
+        $cached = $this->cache->read();
+        if (!is_array($cached) || (int) ($cached['cache_schema'] ?? 0) !== self::CACHE_SCHEMA_VERSION) {
+            return null;
+        }
+
+        $inventoryHash = $this->inventoryHash($this->installed->all());
+        if (!hash_equals((string) ($cached['inventory_hash'] ?? ''), $inventoryHash)) {
+            return null;
+        }
+
+        return $cached;
     }
 
     /** @return array<string, mixed> */
     public function refresh(): array
     {
         $installed = $this->installed->all();
+        return $this->refreshInventory($installed, $this->inventoryHash($installed));
+    }
+
+    /**
+     * @param array<string, array<int, array<string, mixed>>> $installed
+     * @return array<string, mixed>
+     */
+    private function refreshInventory(array $installed, string $inventoryHash): array
+    {
         $result = [
+            'cache_schema' => self::CACHE_SCHEMA_VERSION,
+            'inventory_hash' => $inventoryHash,
             'checked_at' => gmdate('c'),
             'core_version' => flatcms_version(),
             'php_version' => PHP_VERSION,
             'from_cache' => false,
             'update_count' => 0,
             'incompatible_count' => 0,
+            'external_count' => 0,
             'installed_count' => 0,
             'errors' => [],
             'catalogs' => [],
@@ -73,6 +103,9 @@ final class UpdateCheckService
 
             $result['update_count'] += (int) ($catalogResult['update_count'] ?? 0);
             $result['incompatible_count'] += (int) ($catalogResult['incompatible_count'] ?? 0);
+            if (in_array($catalog, ['extensions', 'plugins'], true)) {
+                $result['external_count'] += (int) ($catalogResult['uncatalogued_count'] ?? 0);
+            }
             $result['catalogs'][$catalog] = $catalogResult;
         }
 
@@ -86,6 +119,49 @@ final class UpdateCheckService
     }
 
     /**
+     * @param array<string, array<int, array<string, mixed>>> $installed
+     */
+    private function inventoryHash(array $installed): string
+    {
+        $inventory = [];
+        $fields = [
+            'name',
+            'slug',
+            'version',
+            'vendor',
+            'channel',
+            'official',
+            'enabled',
+            'location',
+            'theme_type',
+        ];
+
+        foreach (self::CATALOGS as $catalog) {
+            $packages = [];
+            foreach ($installed[$catalog] ?? [] as $package) {
+                if (!is_array($package)) {
+                    continue;
+                }
+
+                $normalized = [];
+                foreach ($fields as $field) {
+                    $normalized[$field] = $package[$field] ?? null;
+                }
+                $packages[] = $normalized;
+            }
+
+            usort($packages, static fn (array $left, array $right): int => strcmp(
+                json_encode($left, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '',
+                json_encode($right, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: ''
+            ));
+            $inventory[$catalog] = $packages;
+        }
+
+        $encoded = json_encode($inventory, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return hash('sha256', is_string($encoded) ? $encoded : serialize($inventory));
+    }
+
+    /**
      * @param array<int, array<string, mixed>> $installed
      * @param array<string, mixed> $remote
      * @return array<string, mixed>
@@ -96,6 +172,7 @@ final class UpdateCheckService
         $records = [];
         $updates = 0;
         $incompatible = 0;
+        $uncatalogued = 0;
 
         foreach ($installed as $local) {
             if (!is_array($local)) {
@@ -108,6 +185,8 @@ final class UpdateCheckService
                 $updates++;
             } elseif (($record['status'] ?? '') === 'incompatible_update') {
                 $incompatible++;
+            } elseif (($record['status'] ?? '') === 'not_in_catalog') {
+                $uncatalogued++;
             }
         }
 
@@ -119,6 +198,7 @@ final class UpdateCheckService
             'installed_count' => count($installed),
             'update_count' => $updates,
             'incompatible_count' => $incompatible,
+            'uncatalogued_count' => $uncatalogued,
             'packages' => $records,
         ];
     }
@@ -355,6 +435,7 @@ final class UpdateCheckService
             'installed_count' => count($installed),
             'update_count' => 0,
             'incompatible_count' => 0,
+            'uncatalogued_count' => 0,
             'packages' => $packages,
         ];
     }

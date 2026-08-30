@@ -127,6 +127,12 @@ return [
         'description' => 'Extend permissions and role mappings from modules.',
         'params' => ['payload'],
     ],
+    'auth.roles.extend' => [
+        'label' => 'Auth roles extend',
+        'group' => 'auth',
+        'description' => 'Extend registration and role metadata from enabled modules.',
+        'params' => ['payload'],
+    ],
     'auth.menus.extend' => [
         'label' => 'Auth menus extend',
         'group' => 'auth',

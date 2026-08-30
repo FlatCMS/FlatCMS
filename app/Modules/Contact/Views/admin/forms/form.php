@@ -808,13 +808,13 @@ if (!is_string($formTypePresetsJson)) {
                 </div>
                 <div class="modal-body">
                     <div class="contact-form-translation-bar">
-                        <div class="contact-form-translation-tabs" role="tablist" data-contact-translation-tablist aria-label="<?= e($contactPanelLabel($contactSourcePanelLabels, 'translations', __('translations', 'Contact'))) ?>">
+                        <div class="contact-form-translation-tabs fc-translation-tabs" role="tablist" data-contact-translation-tablist aria-label="<?= e($contactPanelLabel($contactSourcePanelLabels, 'translations', __('translations', 'Contact'))) ?>">
                             <?php foreach ($contactTranslationModalTabs as $tab): ?>
                                 <?php
                                 $localeCode = (string) ($tab['code'] ?? '');
                                 $status = (string) ($tab['status'] ?? 'missing');
                                 $panelLabels = is_array($tab['form_labels'] ?? null) ? $tab['form_labels'] : [];
-                                $tabClasses = ['contact-form-translation-tab'];
+                                $tabClasses = ['contact-form-translation-tab', 'fc-translation-tab'];
                                 if ($localeCode === $contactTranslationInitialModalLocale) {
                                     $tabClasses[] = 'is-active';
                                 }
@@ -837,10 +837,10 @@ if (!is_string($formTypePresetsJson)) {
                                     data-contact-label-missing="<?= e($contactPanelLabel($panelLabels, 'translation_missing', __('translation_missing', 'Contact'))) ?>"
                                     title="<?= e((string) ($tab['label'] ?? $localeCode)) ?>"
                                 >
-                                    <span class="contact-form-translation-tab-icon" aria-hidden="true">
+                                    <span class="contact-form-translation-tab-icon fc-translation-tab-icon" aria-hidden="true">
                                         <span class="contact-form-translation-flag"><?= e($contactLocaleFlag($localeCode)) ?></span>
                                     </span>
-                                    <span class="contact-form-translation-badge"><?= e($badge) ?></span>
+                                    <span class="contact-form-translation-badge fc-translation-tab-badge"><?= e($badge) ?></span>
                                 </button>
                             <?php endforeach; ?>
                         </div>

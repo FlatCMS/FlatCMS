@@ -352,7 +352,7 @@ class AdminController extends BaseController
     {
         $roles = [];
         foreach (RoleService::getAssignableRoles($this->currentManagerRole()) as $key => $meta) {
-            $roles[$key] = __('role_' . $key, 'Users');
+            $roles[$key] = RoleService::getRoleLabel($key);
         }
         return $roles;
     }

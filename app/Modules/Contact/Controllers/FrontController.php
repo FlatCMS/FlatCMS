@@ -21,7 +21,7 @@ use App\Modules\Contact\Services\ContactFormTranslationService;
 use App\Modules\Contact\Services\FormService;
 use App\Modules\Contact\Services\MessageService;
 use App\Modules\Pages\Support\SystemPages;
-use App\Modules\Settings\Services\SiteBrandingTranslationService;
+use App\Modules\Settings\Services\LocalizedSettingsService;
 use App\Services\UpdateCatalogService;
 
 class FrontController extends BaseController
@@ -40,7 +40,7 @@ class FrontController extends BaseController
         $this->forms = new FormService();
         $this->translations = new ContactFormTranslationService();
         $this->pages = ContentDocumentStore::for('core/pages');
-        $this->settings = (new SiteBrandingTranslationService())->resolveForLocale(
+        $this->settings = (new LocalizedSettingsService())->resolveForLocale(
             FlatFile::settings(),
             (string) $this->request->locale()
         );

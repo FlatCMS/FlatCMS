@@ -14,7 +14,7 @@ namespace App\Modules\SiteMap\Controllers;
 use App\Core\BaseController;
 use App\Core\FlatFile;
 use App\Core\I18n;
-use App\Modules\Settings\Services\SiteBrandingTranslationService;
+use App\Modules\Settings\Services\LocalizedSettingsService;
 use App\Modules\SiteMap\Services\SiteMapService;
 
 final class FrontController extends BaseController
@@ -92,7 +92,7 @@ final class FrontController extends BaseController
      */
     protected function localizeFrontendSettings(array $settings): array
     {
-        $service = new SiteBrandingTranslationService();
+        $service = new LocalizedSettingsService();
         return $service->resolveForLocale($settings, (string) $this->request->locale());
     }
 

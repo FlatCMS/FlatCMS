@@ -1,0 +1,66 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ */
+
+@layer responsive {
+  @media (max-width: 768px) {
+    .fc-translation-tabs {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--spacing-2, 0.5rem) !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      align-items: stretch;
+      overflow: visible !important;
+      padding: 0 0 var(--spacing-2, 0.5rem) !important;
+      -webkit-overflow-scrolling: auto !important;
+    }
+
+    .fc-translation-tabs > .fc-translation-tab + .fc-translation-tab {
+      margin-left: 0 !important;
+    }
+
+    .fc-translation-tabs > .fc-translation-tab:hover,
+    .fc-translation-tabs > .fc-translation-tab:focus-visible {
+      border-color: transparent !important;
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 55%, transparent);
+    }
+
+    .fc-translation-tabs > .fc-translation-tab {
+      display: inline-flex !important;
+      flex: 1 1 auto !important;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-2, 0.5rem);
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      min-height: 44px;
+      box-sizing: border-box;
+      padding: var(--spacing-2, 0.5rem) !important;
+      border-radius: var(--btn-radius, var(--radius-lg)) !important;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .fc-translation-tabs > .fc-translation-tab.is-active {
+      padding: var(--spacing-1, 0.25rem) !important;
+    }
+
+    .fc-translation-tab-icon {
+      flex: 0 0 auto;
+    }
+
+    .fc-translation-tab-badge {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}

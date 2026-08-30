@@ -22,6 +22,7 @@ final class Mailer
         $subject = trim($subject);
         $htmlBody = trim((string) ($options['html_body'] ?? ''));
         $attachments = $this->normalizeAttachments($options['attachments'] ?? []);
+        $headers = $this->normalizeCustomHeaders($options['headers'] ?? []);
 
         if (!$this->isSafeHeaderValue($to) || !$this->isSafeHeaderValue($subject)) {
             return false;
@@ -58,6 +59,7 @@ final class Mailer
                 'settings' => $settings,
                 'html_body' => $htmlBody,
                 'attachments' => $attachments,
+                'headers' => $headers,
             ]);
         }
 
@@ -66,6 +68,7 @@ final class Mailer
             'from_name' => $fromName,
             'html_body' => $htmlBody,
             'attachments' => $attachments,
+            'headers' => $headers,
         ]);
     }
 
@@ -75,6 +78,7 @@ final class Mailer
         $fromName = (string) ($options['from_name'] ?? '');
         $htmlBody = trim((string) ($options['html_body'] ?? ''));
         $attachments = is_array($options['attachments'] ?? null) ? $options['attachments'] : [];
+        $customHeaders = is_array($options['headers'] ?? null) ? $options['headers'] : [];
 
         $headers = [];
         $headers[] = 'MIME-Version: 1.0';
@@ -87,6 +91,9 @@ final class Mailer
 
         $headers[] = 'From: ' . $fromHeader;
         $headers[] = 'Reply-To: ' . $fromAddress;
+        foreach ($customHeaders as $name => $value) {
+            $headers[] = $name . ': ' . $value;
+        }
 
         $encodedSubject = $this->encodeHeader($subject);
         $normalizedTextBody = $this->normalizeBody($textBody);
@@ -154,6 +161,7 @@ final class Mailer
         $fromName = (string) ($options['from_name'] ?? '');
         $htmlBody = trim((string) ($options['html_body'] ?? ''));
         $attachments = is_array($options['attachments'] ?? null) ? $options['attachments'] : [];
+        $customHeaders = is_array($options['headers'] ?? null) ? $options['headers'] : [];
         $settings = is_array($options['settings'] ?? null) ? $options['settings'] : [];
 
         $host = $this->normalizeSmtpHost((string) ($settings['mail_smtp_host'] ?? env('MAIL_SMTP_HOST', '')));
@@ -222,6 +230,9 @@ final class Mailer
             $mail->setFrom($fromAddress, $fromName !== '' ? $fromName : $fromAddress);
             $mail->addAddress($to);
             $mail->Subject = $subject;
+            foreach ($customHeaders as $name => $value) {
+                $mail->addCustomHeader($name, $value);
+            }
             if ($htmlBody !== '') {
                 $mail->isHTML(true);
                 $mail->Body = $htmlBody;
@@ -336,6 +347,38 @@ final class Mailer
         $body = str_replace(["\r\n", "\r"], "\n", $body);
         $body = trim($body) . "\n";
         return str_replace("\n", "\r\n", $body);
+    }
+
+    /**
+     * Only allow headers needed by automated mail flows. This prevents callers
+     * from overriding transport-controlled headers such as From or Content-Type.
+     *
+     * @return array<string,string>
+     */
+    private function normalizeCustomHeaders(mixed $headers): array
+    {
+        if (!is_array($headers)) {
+            return [];
+        }
+
+        $allowed = [
+            'list-unsubscribe' => 'List-Unsubscribe',
+            'list-unsubscribe-post' => 'List-Unsubscribe-Post',
+            'precedence' => 'Precedence',
+            'x-auto-response-suppress' => 'X-Auto-Response-Suppress',
+        ];
+        $normalized = [];
+
+        foreach ($headers as $name => $value) {
+            $key = strtolower(trim((string) $name));
+            $value = trim((string) $value);
+            if (!isset($allowed[$key]) || $value === '' || !$this->isSafeHeaderValue($value)) {
+                continue;
+            }
+            $normalized[$allowed[$key]] = $value;
+        }
+
+        return $normalized;
     }
 
     /**

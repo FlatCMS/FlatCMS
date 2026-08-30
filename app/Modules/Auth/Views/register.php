@@ -59,8 +59,8 @@
                         <div class="role-card-icon">
                             <i class="<?= e($roleMeta['icon']) ?>"></i>
                         </div>
-                        <div class="role-card-name"><?= __('role_' . $roleKey, 'Auth') ?></div>
-                        <div class="role-card-desc"><?= __('role_desc_' . $roleKey, 'Auth') ?></div>
+                        <div class="role-card-name"><?= e((string) ($roleMeta['display_label'] ?? '')) ?></div>
+                        <div class="role-card-desc"><?= e((string) ($roleMeta['display_description'] ?? '')) ?></div>
                     </a>
                 <?php endforeach; ?>
             </div>

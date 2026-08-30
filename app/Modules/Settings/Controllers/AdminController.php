@@ -25,6 +25,7 @@ use App\Modules\Settings\Services\FhseApiClient;
 use App\Modules\Settings\Services\FhseCapabilityService;
 use App\Modules\Settings\Services\IntegrationsDocumentationService;
 use App\Modules\Settings\Services\PromoBannerService;
+use App\Modules\Settings\Services\SeoTranslationService;
 use App\Modules\Settings\Services\SiteBrandingTranslationService;
 use App\Modules\Settings\Services\SiteLogoService;
 use App\Modules\Settings\Services\SiteRoutingService;
@@ -63,6 +64,7 @@ class AdminController extends BaseController
         $settings = FlatFile::settings();
         $languages = $this->availableLanguages();
         $brandingService = new SiteBrandingTranslationService();
+        $seoTranslationService = new SeoTranslationService($brandingService);
         $promoBannerService = new PromoBannerService();
         $siteRoutingService = new SiteRoutingService();
         $adminThemes = $this->availableThemes('admin');
@@ -168,6 +170,7 @@ class AdminController extends BaseController
                 'translation_ui' => $this->buildPromoBannerTranslationUi($settings, $languages, $promoBannerService, I18n::getLocale()),
             ],
             'siteBrandingUi' => $this->buildSiteBrandingTranslationUi($settings, $languages, $brandingService, I18n::getLocale()),
+            'seoTranslationUi' => $this->buildSeoTranslationUi($settings, $languages, $seoTranslationService, I18n::getLocale()),
             'siteRoutingUi' => $this->buildSiteRoutingUi($siteRoutingService),
             'systemInfo' => [
                 'flatcms_version' => flatcms_version(),
@@ -309,12 +312,17 @@ class AdminController extends BaseController
         $merged['default_language'] = $defaultLanguage;
 
         $brandingService = new SiteBrandingTranslationService();
+        $seoTranslationService = new SeoTranslationService($brandingService);
         $promoBannerService = new PromoBannerService();
         $siteRoutingService = new SiteRoutingService();
         $brandingInput = $this->request->input('branding_translations', []);
+        $seoTranslationsInput = $this->request->input('seo_translations', []);
         $promoBannerTranslationsInput = $this->request->input('promo_banner_translations', []);
         if (!is_array($brandingInput)) {
             $brandingInput = [];
+        }
+        if (!is_array($seoTranslationsInput)) {
+            $seoTranslationsInput = [];
         }
         if (!is_array($promoBannerTranslationsInput)) {
             $promoBannerTranslationsInput = [];
@@ -333,6 +341,12 @@ class AdminController extends BaseController
         );
 
         $brandingState = $brandingService->prepareSavePayload($brandingInput, $merged, $defaultLanguage);
+        $seoSourceLocale = trim((string) $this->request->input('seo_source_locale', ''));
+        $seoTranslationState = $seoTranslationService->prepareSavePayload(
+            $seoTranslationsInput,
+            $merged,
+            $seoSourceLocale !== '' ? $seoSourceLocale : $defaultLanguage
+        );
         $promoBannerSourceLocale = trim((string) $this->request->input('promo_banner_source_locale', ''));
         $promoBannerState = $promoBannerService->prepareTranslationPayload(
             $promoBannerTranslationsInput,
@@ -350,6 +364,13 @@ class AdminController extends BaseController
         }
         $merged['site_description'] = trim((string) ($sourceTranslation['site_description'] ?? ($merged['site_description'] ?? '')));
         $merged['site_slogan'] = trim((string) ($sourceTranslation['site_slogan'] ?? ($merged['site_slogan'] ?? '')));
+        $seoSourceLocale = (string) ($seoTranslationState['source_locale'] ?? $defaultLanguage);
+        $seoSourceTranslation = is_array($seoTranslationState['translations'][$seoSourceLocale] ?? null)
+            ? $seoTranslationState['translations'][$seoSourceLocale]
+            : [];
+        foreach (['meta_title', 'meta_description', 'meta_keywords'] as $seoField) {
+            $merged[$seoField] = trim((string) ($seoSourceTranslation[$seoField] ?? ($merged[$seoField] ?? '')));
+        }
         $promoBannerResolved = $promoBannerService->resolveForLocale(
             $merged,
             (string) ($promoBannerState['source_locale'] ?? $defaultLanguage),
@@ -530,6 +551,7 @@ class AdminController extends BaseController
         hook_run('settings.before_save', $merged);
         FlatFile::saveSettings($merged);
         $brandingService->save($brandingState);
+        $seoTranslationService->save($seoTranslationState);
         $promoBannerService->saveTranslations($promoBannerState);
         $siteRoutingService->save($siteRoutingService->prepareHomepagePayload(
             (string) $this->request->input('homepage_mode', 'native'),
@@ -1109,6 +1131,50 @@ class AdminController extends BaseController
     }
 
     /**
+     * @param array<string, mixed> $settings
+     * @param array<string, string> $languages
+     * @return array<string, mixed>
+     */
+    private function buildSeoTranslationUi(array $settings, array $languages, SeoTranslationService $service, string $activeLocale): array
+    {
+        $state = $service->read($settings);
+        $sourceLocale = (string) ($state['source_locale'] ?? $service->defaultLocale($settings));
+        $translations = is_array($state['translations'] ?? null) ? $state['translations'] : [];
+        $normalizedActiveLocale = $service->normalizeLocale($activeLocale);
+        if ($normalizedActiveLocale === '') {
+            $normalizedActiveLocale = $sourceLocale;
+        }
+
+        $tabs = [];
+        foreach ($service->supportedLocales() as $locale) {
+            $entry = is_array($translations[$locale] ?? null) ? $translations[$locale] : [];
+            $isSource = $locale === $sourceLocale;
+            $tabs[] = [
+                'code' => $locale,
+                'label' => $service->localeLabel($locale, $locale),
+                'flag' => $this->localeFlagEmoji($locale),
+                'is_source' => $isSource,
+                'is_active' => $locale === $normalizedActiveLocale,
+                'status' => $isSource ? 'source' : $this->seoTranslationStatus($entry),
+                'form_labels' => $this->seoFieldLabelsForLocale($locale),
+                'ui_labels' => $this->translationUiLabelsForLocale($locale),
+                'values' => [
+                    'meta_title' => trim((string) ($entry['meta_title'] ?? '')),
+                    'meta_description' => trim((string) ($entry['meta_description'] ?? '')),
+                    'meta_keywords' => trim((string) ($entry['meta_keywords'] ?? '')),
+                ],
+            ];
+        }
+
+        return [
+            'source_locale' => $sourceLocale,
+            'source_label' => (string) ($languages[$sourceLocale] ?? $service->localeLabel($sourceLocale, I18n::getLocale())),
+            'active_locale' => $normalizedActiveLocale,
+            'tabs' => $tabs,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function buildSiteRoutingUi(SiteRoutingService $service): array
@@ -1232,6 +1298,34 @@ class AdminController extends BaseController
     /**
      * @return array<string, string>
      */
+    private function seoFieldLabelsForLocale(string $locale): array
+    {
+        $payload = $this->loadLanguagePayload(BASE_PATH . '/app/Modules/Settings/Languages/' . $locale . '.json');
+
+        return [
+            'meta_title' => trim((string) ($payload['meta_title'] ?? __('meta_title', 'Settings'))),
+            'meta_description' => trim((string) ($payload['meta_description'] ?? __('meta_description', 'Settings'))),
+            'meta_keywords' => trim((string) ($payload['meta_keywords'] ?? __('meta_keywords', 'Settings'))),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function translationUiLabelsForLocale(string $locale): array
+    {
+        $payload = $this->loadLanguagePayload(BASE_PATH . '/app/Modules/Settings/Languages/' . $locale . '.json');
+
+        return [
+            'translation_source' => trim((string) ($payload['translation_source'] ?? __('translation_source', 'Settings'))),
+            'translation_ready' => trim((string) ($payload['translation_ready'] ?? __('translation_ready', 'Settings'))),
+            'translation_missing' => trim((string) ($payload['translation_missing'] ?? __('translation_missing', 'Settings'))),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
     private function promoBannerUiLabelsForLocale(string $locale): array
     {
         $settingsPayload = $this->loadLanguagePayload(BASE_PATH . '/app/Modules/Settings/Languages/' . $locale . '.json');
@@ -1293,6 +1387,20 @@ class AdminController extends BaseController
     private function promoBannerStatus(array $entry): string
     {
         foreach (['text', 'cta_label', 'cta_url'] as $field) {
+            if (trim((string) ($entry[$field] ?? '')) !== '') {
+                return 'translated';
+            }
+        }
+
+        return 'empty';
+    }
+
+    /**
+     * @param array<string, mixed> $entry
+     */
+    private function seoTranslationStatus(array $entry): string
+    {
+        foreach (['meta_title', 'meta_description', 'meta_keywords'] as $field) {
             if (trim((string) ($entry[$field] ?? '')) !== '') {
                 return 'translated';
             }

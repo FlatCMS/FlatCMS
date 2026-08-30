@@ -824,10 +824,20 @@ if (!function_exists('ensure_module_assets_link')) {
             return;
         }
         $expectedReal = realpath($assetsPath);
+        $sourceParts = explode('/', trim(str_replace('\\', '/', $assetsPath), '/'));
+        $destinationParts = explode('/', trim(str_replace('\\', '/', $publicBasePath), '/'));
+
+        while ($sourceParts !== [] && $destinationParts !== [] && $sourceParts[0] === $destinationParts[0]) {
+            array_shift($sourceParts);
+            array_shift($destinationParts);
+        }
+
+        $relativeTarget = str_repeat('../', count($destinationParts)) . implode('/', $sourceParts);
 
         if (is_link($linkPath)) {
             $currentReal = realpath($linkPath);
-            if ($expectedReal !== false && $currentReal === $expectedReal) {
+            $currentTarget = readlink($linkPath);
+            if ($expectedReal !== false && $currentReal === $expectedReal && $currentTarget === $relativeTarget) {
                 return;
             }
             if (!@unlink($linkPath) && file_exists($linkPath)) {
@@ -843,8 +853,8 @@ if (!function_exists('ensure_module_assets_link')) {
             return;
         }
 
-        if (function_exists('symlink')) {
-            $linked = @symlink($assetsPath, $linkPath);
+        if ($relativeTarget !== '' && function_exists('symlink')) {
+            $linked = @symlink($relativeTarget, $linkPath);
             if ($linked !== false && is_link($linkPath)) {
                 return;
             }

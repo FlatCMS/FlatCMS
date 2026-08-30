@@ -117,10 +117,10 @@ $footerAiAttrs = static function (string $locale, string $field, string $label, 
         </label>
 
         <div class="footer-translation-bar">
-            <div class="footer-translation-tabs" role="tablist" aria-label="<?= e(__('translations', 'Footer')) ?>">
+            <div class="footer-translation-tabs fc-translation-tabs" role="tablist" aria-label="<?= e(__('translations', 'Footer')) ?>">
                 <?php foreach ($translationTabs as $tab): ?>
                 <?php
-                    $tabClasses = ['footer-translation-tab'];
+                    $tabClasses = ['footer-translation-tab', 'fc-translation-tab'];
                     $labels = is_array($tab['form_labels'] ?? null) ? $tab['form_labels'] : [];
                     if (!empty($tab['is_active'])) {
                         $tabClasses[] = 'is-active';
@@ -148,10 +148,10 @@ $footerAiAttrs = static function (string $locale, string $field, string $label, 
                         aria-selected="<?= !empty($tab['is_active']) ? 'true' : 'false' ?>"
                         title="<?= e((string) ($tab['label'] ?? '')) ?>"
                     >
-                        <span class="footer-translation-tab-icon" aria-hidden="true">
+                        <span class="footer-translation-tab-icon fc-translation-tab-icon" aria-hidden="true">
                             <span class="footer-translation-flag"><?= $footerLocaleFlag((string) ($tab['code'] ?? '')) ?></span>
                         </span>
-                        <span class="footer-translation-tab-badge"><?= e($tabBadge) ?></span>
+                        <span class="footer-translation-tab-badge fc-translation-tab-badge"><?= e($tabBadge) ?></span>
                     </button>
                 <?php endforeach; ?>
             </div>

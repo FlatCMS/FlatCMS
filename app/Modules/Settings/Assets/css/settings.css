@@ -1255,6 +1255,12 @@
         align-items: flex-start;
     }
 
+    .settings-guided-tour-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
     .settings-routing-grid {
         grid-template-columns: 1fr;
     }

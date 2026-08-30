@@ -296,6 +296,8 @@
   "routing_title": "Routage et permaliens",
   "routing_yes": "Oui",
   "seo": "SEO",
+  "seo_translations": "Traductions SEO",
+  "seo_translations_hint": "Définissez les métadonnées SEO par langue. Une traduction vide utilise automatiquement la langue source.",
   "settings": "Paramètres",
   "settings_advanced": "Réglages avancés",
   "settings_advanced_action_clear_all": "Purger tous les caches dev",

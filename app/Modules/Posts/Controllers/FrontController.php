@@ -18,7 +18,7 @@ use App\Core\I18n;
 use App\Core\FlatFile;
 use App\Core\ModuleManager;
 use App\Modules\Posts\Services\PostTranslationService;
-use App\Modules\Settings\Services\SiteBrandingTranslationService;
+use App\Modules\Settings\Services\LocalizedSettingsService;
 
 class FrontController extends BaseController
 {
@@ -233,7 +233,7 @@ class FrontController extends BaseController
 
     protected function renderFrontend(string $template, array $data = []): void
     {
-        $settings = (new SiteBrandingTranslationService())->resolveForLocale(
+        $settings = (new LocalizedSettingsService())->resolveForLocale(
             FlatFile::settings(),
             (string) $this->request->locale()
         );

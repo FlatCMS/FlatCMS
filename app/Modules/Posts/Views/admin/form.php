@@ -119,10 +119,10 @@ $postsLocaleFlag = static function (string $locale): string {
     <input type="hidden" name="source_locale" value="<?= e((string) ($translationUi['source_locale'] ?? '')) ?>">
     <input type="hidden" name="source_id" value="<?= e((string) ($translationUi['source_post_id'] ?? '')) ?>">
     <div class="posts-translation-bar" data-tour-target="posts-translation-tabs">
-        <div class="posts-translation-tabs" role="tablist" aria-label="<?= e($postLabel('translations', __('translations', 'Posts'))) ?>">
+        <div class="posts-translation-tabs fc-translation-tabs" role="tablist" aria-label="<?= e($postLabel('translations', __('translations', 'Posts'))) ?>">
             <?php foreach (($translationUi['tabs'] ?? []) as $tab): ?>
                 <?php
-                $tabClasses = ['posts-translation-tab'];
+                $tabClasses = ['posts-translation-tab', 'fc-translation-tab'];
                 if (!empty($tab['is_active'])) {
                     $tabClasses[] = 'is-active';
                 }
@@ -150,10 +150,10 @@ $postsLocaleFlag = static function (string $locale): string {
                         aria-selected="<?= !empty($tab['is_active']) ? 'true' : 'false' ?>"
                         title="<?= e($tabTitle) ?>"
                     >
-                        <span class="posts-translation-tab-icon" aria-hidden="true">
+                        <span class="posts-translation-tab-icon fc-translation-tab-icon" aria-hidden="true">
                             <span class="posts-translation-flag"><?= $postsLocaleFlag((string) ($tab['code'] ?? '')) ?></span>
                         </span>
-                        <span class="posts-translation-tab-badge"><?= e($tabBadge) ?></span>
+                        <span class="posts-translation-tab-badge fc-translation-tab-badge"><?= e($tabBadge) ?></span>
                     </a>
                 <?php else: ?>
                     <span
@@ -163,10 +163,10 @@ $postsLocaleFlag = static function (string $locale): string {
                         aria-disabled="true"
                         title="<?= e($tabTitle) ?>"
                     >
-                        <span class="posts-translation-tab-icon" aria-hidden="true">
+                        <span class="posts-translation-tab-icon fc-translation-tab-icon" aria-hidden="true">
                             <span class="posts-translation-flag"><?= $postsLocaleFlag((string) ($tab['code'] ?? '')) ?></span>
                         </span>
-                        <span class="posts-translation-tab-badge"><?= e($tabBadge) ?></span>
+                        <span class="posts-translation-tab-badge fc-translation-tab-badge"><?= e($tabBadge) ?></span>
                     </span>
                 <?php endif; ?>
             <?php endforeach; ?>

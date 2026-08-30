@@ -1593,7 +1593,15 @@
         var children = currentDirectories.filter(function(d) {
             var depth = Number(d.depth || 0);
             var path = normalizeContext(d.path || '');
-            return depth === contextDepth + 1 && path !== currentContext;
+            if (depth !== contextDepth + 1 || path === currentContext) {
+                return false;
+            }
+
+            if (currentContext === '') {
+                return path.indexOf('/') === -1;
+            }
+
+            return path.indexOf(currentContext + '/') === 0;
         });
 
         if (children.length === 0) return;

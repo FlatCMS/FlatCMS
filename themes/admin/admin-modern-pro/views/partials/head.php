@@ -53,4 +53,5 @@ $adminHeadAssetsHtml = \App\Core\HookAssets::render('admin.assets.head', [
 ]);
 ?>
 <?= $adminHeadAssetsHtml !== '' ? $adminHeadAssetsHtml . PHP_EOL : '' ?>
+    <link rel="stylesheet" href="<?= asset('css/admin/translation-tabs.css') ?>">
 </head>

@@ -17,6 +17,8 @@ $router->group(['prefix' => 'admin', 'middleware' => 'auth'], function (Router $
     $router->get('/modules', [\App\Modules\Modules\Controllers\AdminController::class, 'index'])->name('admin.modules');
     $router->post('/modules/{name}/toggle', [\App\Modules\Modules\Controllers\AdminController::class, 'toggle'])->name('admin.modules.toggle');
     $router->post('/modules/{name}/sidebar-toggle', [\App\Modules\Modules\Controllers\AdminController::class, 'toggleSidebar'])->name('admin.modules.toggleSidebar');
+    $router->post('/modules/{name}/license', [\App\Modules\Modules\Controllers\AdminController::class, 'storeLicense'])->name('admin.modules.license.store');
+    $router->post('/modules/{name}/license/delete', [\App\Modules\Modules\Controllers\AdminController::class, 'deleteLicense'])->name('admin.modules.license.delete');
     $router->post('/modules/install', [\App\Modules\Modules\Controllers\AdminController::class, 'install'])->name('admin.modules.install');
     $router->post('/modules/{name}/delete', [\App\Modules\Modules\Controllers\AdminController::class, 'delete'])->name('admin.modules.delete');
 });

@@ -135,11 +135,11 @@ $pagesLocaleFlag = static function (string $locale): string {
 
     <?php if ($hasTranslationTabs): ?>
         <div class="pages-translation-bar" data-tour-target="pages-translation-tabs">
-            <div class="pages-translation-tabs" role="tablist" aria-label="<?= e($pageLabel('translations', __('translations', 'Pages'))) ?>">
+            <div class="pages-translation-tabs fc-translation-tabs" role="tablist" aria-label="<?= e($pageLabel('translations', __('translations', 'Pages'))) ?>">
                 <?php foreach ($translationTabs as $tab): ?>
                     <?php
                     $localeCode = (string) ($tab['code'] ?? '');
-                    $tabClasses = ['pages-translation-tab'];
+                    $tabClasses = ['pages-translation-tab', 'fc-translation-tab'];
                     if ($localeCode === $activeLocale) {
                         $tabClasses[] = 'is-active';
                     }
@@ -174,10 +174,10 @@ $pagesLocaleFlag = static function (string $locale): string {
                         aria-selected="<?= $localeCode === $activeLocale ? 'true' : 'false' ?>"
                         title="<?= e((string) ($tab['label'] ?? '')) ?>"
                     >
-                        <span class="pages-translation-tab-icon" aria-hidden="true">
+                        <span class="pages-translation-tab-icon fc-translation-tab-icon" aria-hidden="true">
                             <span class="pages-translation-flag"><?= $pagesLocaleFlag($localeCode) ?></span>
                         </span>
-                        <span class="pages-translation-tab-badge"><?= e($tabBadge) ?></span>
+                        <span class="pages-translation-tab-badge fc-translation-tab-badge"><?= e($tabBadge) ?></span>
                     </button>
                 <?php endforeach; ?>
             </div>

@@ -21,6 +21,9 @@ $moduleTypes = [];
 $moduleLocations = [];
 $modulesList = is_array($modulesList ?? null) ? $modulesList : [];
 $moduleEntries = $modulesList;
+$licenseProfiles = is_array($licenseProfiles ?? null) ? $licenseProfiles : [];
+$canManageLicenses = (bool) ($canManageLicenses ?? false);
+$currentLicenseHost = trim((string) ($currentLicenseHost ?? ''));
 $coreModulesList = array_filter($moduleEntries, static fn (array $meta): bool => strtolower((string) ($meta['location'] ?? 'module')) === 'module');
 $addonsList = array_filter($moduleEntries, static fn (array $meta): bool => in_array(strtolower((string) ($meta['location'] ?? 'module')), ['extension', 'plugin'], true));
 $initialStatusFilter = $initialStatusFilter ?? 'enabled';
@@ -63,7 +66,7 @@ $moduleTypes = array_keys($moduleTypes);
 sort($moduleTypes);
 $moduleLocations = array_keys($moduleLocations);
 sort($moduleLocations);
-$renderModuleCards = static function (array $items) use ($enabledModules, $lockedModules, $resolveLocationLabel, $resolveDependencyLabel, $resolveLifecycleLabel): void {
+$renderModuleCards = static function (array $items) use ($enabledModules, $lockedModules, $licenseProfiles, $canManageLicenses, $currentLicenseHost, $resolveLocationLabel, $resolveDependencyLabel, $resolveLifecycleLabel): void {
     foreach ($items as $name => $meta):
         $isEnabled = isset($enabledModules[$name]);
         $isRequired = !empty($meta['required']);
@@ -108,6 +111,28 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
             $dependencyIssueLabels[] = $resolveDependencyLabel((string) $dependencyName);
         }
         $dependencyIssueLabels = array_values(array_unique($dependencyIssueLabels));
+        $licenseProfile = is_array($licenseProfiles[$name] ?? null) ? $licenseProfiles[$name] : null;
+        $requiresLicense = is_array($licenseProfile) && (bool) ($licenseProfile['requires_license'] ?? false);
+        $licenseSummary = $requiresLicense && is_array($licenseProfile['license_summary'] ?? null)
+            ? $licenseProfile['license_summary']
+            : [];
+        $licenseStatus = $requiresLicense ? (string) ($licenseProfile['status'] ?? 'missing') : 'not_required';
+        $licenseValid = $requiresLicense && (bool) ($licenseProfile['license_valid'] ?? false);
+        $hasStoredLicense = trim((string) ($licenseSummary['license_id'] ?? '')) !== '';
+        $licenseStatusKey = match ($licenseStatus) {
+            'active' => 'module_license_status_active',
+            'local_bypass' => 'module_license_status_local_bypass',
+            'inactive' => 'module_license_status_inactive',
+            'invalid_domain' => 'module_license_status_invalid_domain',
+            default => 'module_license_status_missing',
+        };
+        $licenseBadgeClass = $licenseStatus === 'local_bypass'
+            ? 'badge-info'
+            : ($licenseValid ? 'badge-success' : 'badge-warning');
+        $licenseDomain = trim((string) ($licenseSummary['domain'] ?? ''));
+        if ($licenseDomain === '') {
+            $licenseDomain = $currentLicenseHost;
+        }
         ?>
         <section class="module-card" data-module-card data-module-name="<?= e(strtolower($name)) ?>" data-status="<?= e($status) ?>" data-type="<?= e($typeSlug) ?>" data-location="<?= e($location) ?>" data-search="<?= e($searchValue) ?>">
             <div class="module-card-header" data-module-toggle>
@@ -138,6 +163,9 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
                     <?php endif; ?>
                     <?php if ($isLegacy): ?>
                         <span class="badge badge-warning"><?= __('module_legacy', 'Modules') ?></span>
+                    <?php endif; ?>
+                    <?php if ($requiresLicense): ?>
+                        <span class="badge <?= e($licenseBadgeClass) ?>"><?= __($licenseStatusKey, 'Modules') ?></span>
                     <?php endif; ?>
                     <?php
                     $updateBadges = array_values(array_filter(
@@ -185,6 +213,12 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
                             <span class="module-detail-label"><?= __('module_sidebar_visibility', 'Modules') ?></span>
                             <span class="module-detail-value"><?= __($isSidebarManageable ? ($isSidebarVisible ? 'module_sidebar_visible' : 'module_sidebar_hidden') : 'module_sidebar_not_applicable', 'Modules') ?></span>
                         </div>
+                        <?php if ($requiresLicense): ?>
+                            <div class="module-detail">
+                                <span class="module-detail-label"><?= __('module_license_label', 'Modules') ?></span>
+                                <span class="module-detail-value"><?= __($licenseStatusKey, 'Modules') ?></span>
+                            </div>
+                        <?php endif; ?>
                         <?php if ($replacedBy !== ''): ?>
                             <div class="module-detail">
                                 <span class="module-detail-label"><?= __('module_replaced_by', 'Modules') ?></span>
@@ -208,6 +242,53 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
                         <p class="text-muted"><?= __('module_dependencies_missing', 'Modules', ['modules' => implode(', ', $dependencyIssueLabels)]) ?></p>
                     <?php elseif ($lifecycleStatus === 'invalid'): ?>
                         <p class="text-muted"><?= __('module_invalid_state', 'Modules') ?></p>
+                    <?php endif; ?>
+                    <?php if ($requiresLicense): ?>
+                        <section class="module-license-panel" aria-labelledby="moduleLicenseTitle-<?= e(strtolower($name)) ?>">
+                            <div class="module-license-panel__header">
+                                <div>
+                                    <h4 id="moduleLicenseTitle-<?= e(strtolower($name)) ?>" class="module-license-panel__title"><?= __('module_license_title', 'Modules') ?></h4>
+                                    <p class="module-license-panel__description"><?= __('module_license_description', 'Modules') ?></p>
+                                </div>
+                                <span class="badge <?= e($licenseBadgeClass) ?>"><?= __($licenseStatusKey, 'Modules') ?></span>
+                            </div>
+                            <?php if ($hasStoredLicense): ?>
+                                <dl class="module-license-summary">
+                                    <div>
+                                        <dt><?= __('module_license_key_masked', 'Modules') ?></dt>
+                                        <dd><?= e((string) ($licenseSummary['masked_key'] ?? '')) ?></dd>
+                                    </div>
+                                    <div>
+                                        <dt><?= __('module_license_domain', 'Modules') ?></dt>
+                                        <dd><?= e((string) ($licenseSummary['domain'] ?? '')) ?></dd>
+                                    </div>
+                                </dl>
+                            <?php endif; ?>
+                            <?php if ($canManageLicenses): ?>
+                                <form method="POST" action="<?= url('/admin/modules/' . rawurlencode((string) $name) . '/license') ?>" class="module-license-form">
+                                    <?= csrf_field() ?>
+                                    <div class="form-group">
+                                        <label class="form-label" for="licenseKey-<?= e(strtolower($name)) ?>"><?= __('module_license_key', 'Modules') ?></label>
+                                        <input id="licenseKey-<?= e(strtolower($name)) ?>" class="form-input" type="password" name="license_key" required maxlength="512" autocomplete="off" placeholder="<?= e(__('module_license_key_placeholder', 'Modules')) ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="licenseDomain-<?= e(strtolower($name)) ?>"><?= __('module_license_domain', 'Modules') ?></label>
+                                        <input id="licenseDomain-<?= e(strtolower($name)) ?>" class="form-input" type="text" name="license_domain" required maxlength="253" value="<?= e($licenseDomain) ?>" autocomplete="url">
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary"><?= __($hasStoredLicense ? 'module_license_update' : 'module_license_activate', 'Modules') ?></button>
+                                </form>
+                                <?php if ($hasStoredLicense): ?>
+                                    <form method="POST" action="<?= url('/admin/modules/' . rawurlencode((string) $name) . '/license/delete') ?>" class="module-license-delete-form">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm btn-ghost btn-danger" data-action="confirm-delete" data-message="<?= e(__('module_license_delete_confirm', 'Modules')) ?>" data-confirm-text="<?= e(__('module_license_delete', 'Modules')) ?>" data-warning="<?= e(__('module_license_delete_warning', 'Modules')) ?>" data-item-name="<?= e($translatedName) ?>">
+                                            <?= __('module_license_delete', 'Modules') ?>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <p class="text-muted"><?= __('module_license_manage_forbidden', 'Modules') ?></p>
+                            <?php endif; ?>
+                        </section>
                     <?php endif; ?>
                     <div class="module-actions">
                         <?php if ($lockedBy): ?>
@@ -253,7 +334,7 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
                             <?php else: ?>
                                 <form method="POST" action="<?= url('/admin/modules/' . $name . '/toggle') ?>">
                                     <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-sm btn-success">
+                                    <button type="submit" class="btn btn-sm btn-success"<?= $requiresLicense && !$licenseValid ? ' disabled' : '' ?>>
                                         <?= __('enable', 'Modules') ?>
                                     </button>
                                 </form>

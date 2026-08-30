@@ -14,6 +14,10 @@ namespace App\Modules\Modules\Controllers;
 use App\Core\BaseController;
 use App\Core\I18n;
 use App\Core\ModuleManager;
+use App\Modules\Auth\Services\LicenseAuditService;
+use App\Modules\Auth\Services\LicenseVaultService;
+use App\Modules\Auth\Services\RoleService;
+use App\Services\Licensing\ExtensionLicenseService;
 
 class AdminController extends BaseController
 {
@@ -45,6 +49,11 @@ class AdminController extends BaseController
         $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath, $this->pluginsPath], $this->statePath);
         $modules = $manager->all();
         $enabled = $manager->enabled();
+        $licenseProfiles = (new ExtensionLicenseService($manager))->all(false);
+        $currentUser = $this->session->get('user');
+        $currentRole = is_array($currentUser)
+            ? (string) ($currentUser['role'] ?? RoleService::ROLE_MEMBER)
+            : RoleService::ROLE_MEMBER;
         $lockedModules = $this->resolveLockedModules($enabled);
         $moduleEntries = [];
         foreach ($modules as $name => $meta) {
@@ -71,6 +80,9 @@ class AdminController extends BaseController
             'modulesList' => $moduleEntries,
             'enabledModules' => $enabled,
             'lockedModules' => $lockedModules,
+            'licenseProfiles' => $licenseProfiles,
+            'canManageLicenses' => RoleService::hasPermission($currentRole, 'licenses.manage'),
+            'currentLicenseHost' => normalize_host((string) ($_SERVER['HTTP_HOST'] ?? '')),
             'initialStatusFilter' => $initialStatusFilter,
             'autoDeleteModuleName' => $autoDeleteModuleName,
             'autoOpenModuleName' => $autoOpenModuleName,
@@ -121,6 +133,15 @@ class AdminController extends BaseController
             $this->session->flash('error', __('module_invalid_state', 'Modules'));
             $this->redirect(url('/admin/modules'));
             return;
+        }
+
+        if (!$isEnabled && $this->requiresLicense($meta)) {
+            $licenseProfile = (new ExtensionLicenseService($manager))->describe($name);
+            if (!is_array($licenseProfile) || !(bool) ($licenseProfile['license_valid'] ?? false)) {
+                $this->session->flash('error', __('module_license_required_to_enable', 'Modules'));
+                $this->redirect(url('/admin/modules?status=disabled&installed=' . rawurlencode($name)));
+                return;
+            }
         }
 
         if ($isEnabled) {
@@ -227,6 +248,133 @@ class AdminController extends BaseController
             'module' => $this->resolveModuleLabel($name),
         ]));
         $this->redirect(url('/admin/modules'));
+    }
+
+    public function storeLicense(string $name): void
+    {
+        if (!$this->authorize('modules.manage') || !$this->authorize('licenses.manage')) {
+            return;
+        }
+
+        if (!$this->verifyCsrf()) {
+            return;
+        }
+
+        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath, $this->pluginsPath], $this->statePath);
+        $meta = $manager->get($name);
+        if (!is_array($meta)) {
+            $this->session->flash('error', __('module_not_found', 'Modules'));
+            $this->redirect(url('/admin/modules'));
+            return;
+        }
+
+        if (!$this->requiresLicense($meta)) {
+            $this->session->flash('error', __('module_license_not_required', 'Modules'));
+            $this->redirect(url('/admin/modules?status=all&installed=' . rawurlencode($name)));
+            return;
+        }
+
+        $licenseKey = trim((string) $this->request->input('license_key', ''));
+        $domain = normalize_host((string) $this->request->input(
+            'license_domain',
+            (string) ($_SERVER['HTTP_HOST'] ?? '')
+        ));
+
+        if ($licenseKey === '' || strlen($licenseKey) > 512) {
+            $this->session->flash('error', __('module_license_key_invalid', 'Modules'));
+            $this->redirect(url('/admin/modules?status=all&installed=' . rawurlencode($name)));
+            return;
+        }
+
+        if (!$this->isValidLicenseHost($domain)) {
+            $this->session->flash('error', __('module_license_domain_invalid', 'Modules'));
+            $this->redirect(url('/admin/modules?status=all&installed=' . rawurlencode($name)));
+            return;
+        }
+
+        $user = $this->session->get('user');
+        $userId = is_array($user) ? (string) ($user['id'] ?? '') : '';
+
+        try {
+            $vault = new LicenseVaultService();
+            $vault->storeModuleLicense($name, $licenseKey, $domain, 'active', '', $userId);
+            (new LicenseAuditService())->record('license_stored', [
+                'module' => $name,
+                'user_id' => $userId,
+                'domain' => $domain,
+                'ip' => $this->request->ip(),
+            ]);
+        } catch (\Throwable $exception) {
+            error_log('[Modules] Unable to store component license: ' . $exception->getMessage());
+            $this->session->flash('error', __('module_license_save_failed', 'Modules'));
+            $this->redirect(url('/admin/modules?status=all&installed=' . rawurlencode($name)));
+            return;
+        }
+
+        $this->session->flash('success', __('module_license_saved', 'Modules'));
+        $this->redirect(url('/admin/modules?status=all&installed=' . rawurlencode($name)));
+    }
+
+    public function deleteLicense(string $name): void
+    {
+        if (!$this->authorize('modules.manage') || !$this->authorize('licenses.manage')) {
+            return;
+        }
+
+        if (!$this->verifyCsrf()) {
+            return;
+        }
+
+        $manager = new ModuleManager([$this->modulesPath, $this->extensionsPath, $this->pluginsPath], $this->statePath);
+        $meta = $manager->get($name);
+        if (!is_array($meta) || !$this->requiresLicense($meta)) {
+            $this->session->flash('error', __('module_not_found', 'Modules'));
+            $this->redirect(url('/admin/modules'));
+            return;
+        }
+
+        $user = $this->session->get('user');
+        $userId = is_array($user) ? (string) ($user['id'] ?? '') : '';
+
+        try {
+            (new LicenseVaultService())->clearModuleLicense($name);
+            (new LicenseAuditService())->record('license_deleted', [
+                'module' => $name,
+                'user_id' => $userId,
+                'ip' => $this->request->ip(),
+            ]);
+        } catch (\Throwable $exception) {
+            error_log('[Modules] Unable to delete component license: ' . $exception->getMessage());
+            $this->session->flash('error', __('module_license_delete_failed', 'Modules'));
+            $this->redirect(url('/admin/modules?status=all&installed=' . rawurlencode($name)));
+            return;
+        }
+
+        $this->session->flash('success', __('module_license_deleted', 'Modules'));
+        $this->redirect(url('/admin/modules?status=all&installed=' . rawurlencode($name)));
+    }
+
+    private function requiresLicense(array $meta): bool
+    {
+        $contract = is_array($meta['license'] ?? null) ? $meta['license'] : [];
+        return (bool) ($contract['required'] ?? false);
+    }
+
+    private function isValidLicenseHost(string $domain): bool
+    {
+        if ($domain === '' || strlen($domain) > 253 || preg_match('/[\s\/\\]/', $domain) === 1) {
+            return false;
+        }
+
+        if (filter_var($domain, FILTER_VALIDATE_IP) !== false) {
+            return true;
+        }
+
+        if ($domain === 'localhost' || str_ends_with($domain, '.local') || str_ends_with($domain, '.test')) {
+            return true;
+        }
+
+        return filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) !== false;
     }
 
     private function resolveLockedModules(array $enabled): array
