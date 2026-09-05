@@ -1,6 +1,6 @@
 {
     "name": "Contact",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Native contact form and message inbox.",
     "type": "content",
     "author": "Alain BROYE",
@@ -13,5 +13,5 @@
     "official": true,
     "origin": "flatcms",
     "required": true,
-    "signature": "We22l/jjdLbzQ1ezZAGcSx+vCwMxHXjCWLmB6xud0EvraIox2DrXyPP7l+7epCJdGJfdmk70obUpaCgUZcHF62xvWcww8leejI4YXO1wIubxHB17U8PJW02f6JIPPmb/kY3CRvtP0rKk1++G1wnBR7eYDpyotdvmm5riKbxFnTYZFwCr1GN1eiX+ZB7DMQhUaVnIx7Jw0IlhxVObS/xui5G9Qqj+bxcY+KAqXcwOqH9zI7mWcOnu76nj7bD/a1OnoZ0IfNk3K14f1WKtJRexfrNhUkGQroh70Ia5vMbu7z46RVfXF4Diy1gFR5cJFto7oUa/qE1NS4u0g2a4gn4Hpwejv56MGAKn4mctImJPH8vuPFQa57EGRnBClg3dcQF92hWiOHUrr7PyEUF/PMqp/Fychex3TcbMYnWTuc3H5+1uEyNpB2HEINjG0e8KcBeuthYEeHJ2UXrImq6+0U7jdpoQh2GSCWhAcpsc4dYhRvSvt4RUtVwW2Ey64HD2oqr7h4bkWJVMzmwh8roxKlvzG5N+RlyCREVs6e+GlATqS9AEv17a2Nf1KQcUoo8UT4OykC1A9uaryf60tkwXDtNXAh1H5aeK13LmZeC+5bM7RylR8VytNeTVG3/w5vmZ84F3ITr31kRxHqISYm8y7BANHZ5JOPHy0RXjVc7VW43grF8="
+    "signature": "TnAd9g2Rz0awy892qlnyK/9MFbdMJpFzV3YdaT+fX3O1TmgxWJZ6Msn+dOvHm6N6UHsz8mFC71ClERoGD76sisK2/zPFEQ1t/Kc5sINdDBa5nqCFaYckj95ODVfau+KXmf8yFWlJocw0MgXwSq/JzWAv5MGm7thd0BO0mWBbV4eXi3NOccJedfKINkgUSKQukTMixhlVTHVqKpMxZtLoG2hgkE6vXDtjxbGplD8DEWyflkSSVXgoc26MHYmMxClzVwbvRJ5/qTBoBBEmxJkB6lXvwregkdBrA8TAWdOkllmHcavwmDtpy29lPI8MQV2nryXutagkPdYQDqGFhzTKOBFsBmpNCbZQIKlGEfRPI8QfoBxVCf11qcECJoQ1vZkZ4cxAoR6weflRLksK+uu3Nip9BpL4rRULBpf1xG2/5+i5xppDp80D5bsdPCFfWO5zqTtaLHuKxc1/QtSOuIHaQ/EQJnRI4M5inAuIXj1ZPrSAO72PYzeHv9xD0AV7Mvo8RI2E/Nq5degojRcMoCo+KmjbFZWibKfItEY/oQzt2HszEYqb4UlWdTns+DR6Td5W5u7vug+pMQpR+3agQfBY71YzGatO5YoP/2DYpGuqLgSqqY0ELKDCynQM68QcxNgyubSyATX5N3AtmFrK95Afs2ciGWZ3u7dkqHt56VA3s0Y="
 }

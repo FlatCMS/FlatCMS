@@ -6,6 +6,50 @@
       "slug": "flatcms",
       "name": "FlatCMS",
       "type": "core",
+      "version": "1.1.6",
+      "channel": "stable",
+      "vendor": "flatcms",
+      "official": true,
+      "requires_php": "8.3",
+      "artifact": {
+        "file": "core/flatcms/1.1.6/flatcms.zip",
+        "filename": "flatcms-1.1.6.zip"
+      },
+      "sha256": "2e0479edff4a9342d9ae39e0f6a9a1164926630b69fd8db916db4b43595d78a3",
+      "signature": "Gyg1ODRRbHn10S58aYRqyBid4w1fo7w+p1VizNcarHC7dSrSBGSWUabZNcsSgX2cVCuwWoaETWoxM2x9T2bw0kt8NS48D44juQkt75W7Z92Ur9MaCTApjKPE/1Xhsxyp5iqUvGv69Dz682/x2owah4P06Lgxt1BDGsFoeSUpAHRufXhwkUoULE0t3/0087evgXPvef2kf3y1dKijmXQ4L05fNNS4TzPrQ6gsl+/HpY3/tKmfQz0TDTJa5aoW9q9gVzgW6QPfPyBSPrMW27han2HdWPD814GudoFjOAoOOaeXv0PaJFQNfIRjL3KSIg7jf6tVhXbBEFy8MC8SNMMYclxZGI+V2w0G4VQt6zo5tJPGK9IwtK06H2HIRdXFD6OKa+s3+lq7/yy0yngquziShRdz1pkI8DUUqn7wlg3iEOoCh1xgUNLS9hljxbJwb5gR5UMkAVhO/ACBf7IFdbShR6fLTqB+ORbTb5t1UJ1dNAjpWLZ5/n9MJFLzqT8OWHreEV1kOAFfVii13noCJattvaxOOtMSYPmjwQx6Z7Cd8IItsJih3X8Fa2Zv5w8Usc7ubfC8Q5O1WaPxQu6LdZeVilSLzPMB3FMQ8mHScI/kAKQGatDVcR69fBDn1GyCpZNY32Pd4aI5UAlPV6ztR7nxCgONi+ITdLmriMiMYNvuTII=",
+      "min_core_version": "1.0.0",
+      "max_core_version": "",
+      "changelog": "FlatCMS 1.1.6 : corrige IconPicker et les formulaires d’installation, fiabilise la détection des versions dans UpdateManager, ajoute le changelog au tableau de bord et exclut les plugins premium des paquets publics.",
+      "published_at": "2026-08-26T12:00:00Z",
+      "availability": "published",
+      "size_bytes": 4525972,
+      "requires_packages": [
+        {
+          "catalog": "modules",
+          "slug": "modules",
+          "version": ">=1.0.3"
+        },
+        {
+          "catalog": "modules",
+          "slug": "backups",
+          "version": ">=1.0.2"
+        },
+        {
+          "catalog": "modules",
+          "slug": "languages",
+          "version": ">=1.0.1"
+        },
+        {
+          "catalog": "modules",
+          "slug": "update-manager",
+          "version": ">=0.4.7"
+        }
+      ]
+    },
+    {
+      "slug": "flatcms",
+      "name": "FlatCMS",
+      "type": "core",
       "version": "1.1.5",
       "channel": "stable",
       "vendor": "flatcms",
@@ -21,7 +65,7 @@
       "max_core_version": "",
       "changelog": "FlatCMS 1.1.5 : isole strictement les mises à jour Core des Modules, Extensions, Plugins et Themes, ajoute les prérequis de composants signés, optimise la capsule de récupération Core et maintient l’API de distribution des mises à jour disponible pendant la maintenance.",
       "published_at": "2026-08-20T07:25:27Z",
-      "availability": "published",
+      "availability": "archived",
       "size_bytes": 4525640,
       "requires_packages": [
         {
@@ -147,7 +191,7 @@
       "max_core_version": "",
       "changelog": "First stable public release of the FlatCMS core.",
       "published_at": "2026-03-23T09:42:56Z",
-      "availability": "published"
+      "availability": "archived"
     },
     {
       "slug": "flatcms",

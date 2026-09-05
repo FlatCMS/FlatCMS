@@ -175,6 +175,22 @@ body.admin-body .ck.ck-editor__editable .ck-content h2 { font-size: 1.5rem; }
 body.admin-body .ck.ck-editor__editable .ck-content h3 { font-size: 1.25rem; }
 body.admin-body .ck.ck-editor__editable .ck-content h4 { font-size: 1.1rem; }
 
+body.admin-body .ck.ck-editor__editable .flatcms-align-left {
+  text-align: left;
+}
+
+body.admin-body .ck.ck-editor__editable .flatcms-align-center {
+  text-align: center;
+}
+
+body.admin-body .ck.ck-editor__editable .flatcms-align-right {
+  text-align: right;
+}
+
+body.admin-body .ck.ck-editor__editable .flatcms-align-justify {
+  text-align: justify;
+}
+
 body.admin-body .ck.ck-editor__editable .ck-content a {
   color: var(--color-primary);
   text-decoration: underline;

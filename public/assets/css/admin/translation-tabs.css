@@ -6,6 +6,101 @@
  * See LICENSE, LICENSING.md and TRADEMARK.md.
  */
 
+@layer components {
+  .fc-translation-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 0;
+    padding: 0 var(--spacing-1, 0.25rem);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .fc-translation-tabs > .fc-translation-tab + .fc-translation-tab {
+    margin-left: 2px;
+  }
+
+  .fc-translation-tabs > .fc-translation-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2, 0.5rem);
+    min-height: 38px;
+    margin-bottom: -1px;
+    padding: 0 var(--spacing-3, 0.75rem);
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+  }
+
+  .fc-translation-tabs > .fc-translation-tab:hover,
+  .fc-translation-tabs > .fc-translation-tab:focus-visible {
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+    background: color-mix(in srgb, var(--color-bg-secondary) 82%, var(--color-bg-primary));
+  }
+
+  .fc-translation-tabs > .fc-translation-tab.is-active {
+    border-color: var(--color-border);
+    border-bottom-color: var(--color-bg-primary);
+    color: var(--color-primary-light);
+    background: var(--color-bg-primary);
+  }
+
+  .fc-translation-tabs > .fc-translation-tab.is-missing {
+    color: var(--color-text-muted);
+  }
+
+  .fc-translation-tabs > .fc-translation-tab.is-disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+  }
+
+  .fc-translation-tab-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    color: inherit;
+    background: color-mix(in srgb, var(--color-bg-secondary) 65%, transparent);
+  }
+
+  .fc-translation-tab.is-active .fc-translation-tab-icon {
+    background: color-mix(in srgb, var(--color-primary-light) 22%, transparent);
+  }
+
+  .fc-translation-tab.is-missing .fc-translation-tab-icon {
+    opacity: 0.78;
+  }
+
+  .fc-translation-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 20px;
+    padding: 0 8px;
+    border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-bg-secondary) 72%, transparent);
+    color: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+}
+
 @layer responsive {
   @media (max-width: 768px) {
     .fc-translation-tabs {

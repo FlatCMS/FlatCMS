@@ -1725,8 +1725,8 @@ class AdminController extends BaseController
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeoutSeconds);
             curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutSeconds);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             curl_setopt($ch, CURLOPT_USERAGENT, 'FlatCMS-Routing-Probe/1.0');
             $response = curl_exec($ch);
             if (PHP_VERSION_ID < 80000) {
@@ -1748,8 +1748,8 @@ class AdminController extends BaseController
                 'header' => "User-Agent: FlatCMS-Routing-Probe/1.0\r\n",
             ],
             'ssl' => [
-                'verify_peer' => false,
-                'verify_peer_name' => false,
+                'verify_peer' => true,
+                'verify_peer_name' => true,
             ],
         ]);
 

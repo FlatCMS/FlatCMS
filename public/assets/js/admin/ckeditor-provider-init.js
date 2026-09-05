@@ -312,11 +312,14 @@
     }
 
     function isEffectivelyVisible(textarea) {
+        if (textarea.closest && textarea.closest('[hidden]')) {
+            return false;
+        }
         if (textarea.offsetParent !== null || (textarea.getClientRects && textarea.getClientRects().length > 0)) {
             return true;
         }
         var panel = textarea.closest ? textarea.closest('.pages-translation-panel') : null;
-        return !panel || panel.classList.contains('is-active');
+        return !!panel && panel.classList.contains('is-active');
     }
 
     function textareaMediaContext(textarea) {
@@ -547,6 +550,14 @@
                     { model: 'heading2', view: 'h2', title: translatedEditorLabel(editorLocale, 'Heading 2', 'Heading 2'), class: 'ck-heading_heading2' },
                     { model: 'heading3', view: 'h3', title: translatedEditorLabel(editorLocale, 'Heading 3', 'Heading 3'), class: 'ck-heading_heading3' },
                     { model: 'heading4', view: 'h4', title: translatedEditorLabel(editorLocale, 'Heading 4', 'Heading 4'), class: 'ck-heading_heading4' },
+                ],
+            },
+            alignment: {
+                options: [
+                    { name: 'left', className: 'flatcms-align-left' },
+                    { name: 'center', className: 'flatcms-align-center' },
+                    { name: 'right', className: 'flatcms-align-right' },
+                    { name: 'justify', className: 'flatcms-align-justify' },
                 ],
             },
             fontFamily: {

@@ -108,6 +108,22 @@ body {
   flex-direction: column;
 }
 
+.flatcms-align-left {
+    text-align: left;
+}
+
+.flatcms-align-center {
+    text-align: center;
+}
+
+.flatcms-align-right {
+    text-align: right;
+}
+
+.flatcms-align-justify {
+    text-align: justify;
+}
+
 a {
   color: var(--color-primary);
   text-decoration: none;

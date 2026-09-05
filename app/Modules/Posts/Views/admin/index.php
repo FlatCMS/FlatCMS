@@ -287,4 +287,6 @@ $postsLocaleFlag = static function (string $locale): string {
     <?php endif; ?>
 </div>
 
+<?= \App\Core\HookSlots::render('posts.admin.license', ['target' => 'Posts']) ?>
+
 <script src="<?= module_asset('Posts', 'js/posts.js') ?>"></script>

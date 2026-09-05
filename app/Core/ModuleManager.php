@@ -301,6 +301,7 @@ final class ModuleManager
         $normalized['hook_definitions_declared'] = array_key_exists('hook_definitions', $meta);
         $normalized['widgets_declared'] = array_key_exists('widgets_path', $meta);
         $normalized['license_declared'] = array_key_exists('license', $meta);
+        $normalized['license_activation_declared'] = array_key_exists('license_activation', $meta);
         $normalized['routes'] = $this->normalizeRelativePath($normalized['routes'] ?? null, 'Config/routes.php');
         $normalized['hooks'] = $this->normalizeRelativePath($normalized['hooks'] ?? null, 'Hooks/listeners.php');
         $normalized['hook_definitions'] = $this->normalizeRelativePath($normalized['hook_definitions'] ?? null, 'Hooks/hooks.php');
@@ -329,6 +330,14 @@ final class ModuleManager
             $normalized['name'],
             $location
         );
+        $normalized['license_activation'] = $this->normalizeLicenseActivation(
+            $normalized['license_activation'] ?? null,
+            (bool) ($normalized['license']['required'] ?? false)
+        );
+        [$normalized['license_activation_routes_path'], $normalized['license_activation_routes_status']] =
+            $this->resolveRuntimeFilePath($dir, (string) $normalized['license_activation']['routes']);
+        [$normalized['license_activation_hooks_path'], $normalized['license_activation_hooks_status']] =
+            $this->resolveRuntimeFilePath($dir, (string) $normalized['license_activation']['hooks']);
 
         return $normalized;
     }
@@ -755,7 +764,7 @@ final class ModuleManager
         $requiredByDefault = in_array($location, ['extension', 'plugin'], true) && $tier === 'premium';
         $required = array_key_exists('required', $contract) ? (bool) $contract['required'] : $requiredByDefault;
         $gate = strtolower(trim((string) ($contract['gate'] ?? 'authoring')));
-        if (!in_array($gate, ['authoring'], true)) {
+        if (!in_array($gate, ['authoring', 'execution'], true)) {
             $gate = 'authoring';
         }
 
@@ -773,6 +782,25 @@ final class ModuleManager
             'gate' => $gate,
             'subject' => $subject,
             'revealable' => $revealable,
+        ];
+    }
+
+    /**
+     * @return array{target: string, routes: string, hooks: string}
+     */
+    private function normalizeLicenseActivation(mixed $value, bool $requiresLicense): array
+    {
+        $activation = is_array($value) ? $value : [];
+        if (!$requiresLicense) {
+            return ['target' => '', 'routes' => '', 'hooks' => ''];
+        }
+
+        $target = preg_replace('/[^A-Za-z0-9_-]/', '', trim((string) ($activation['target'] ?? ''))) ?? '';
+
+        return [
+            'target' => $target,
+            'routes' => $this->normalizeRelativePath($activation['routes'] ?? null, ''),
+            'hooks' => $this->normalizeRelativePath($activation['hooks'] ?? null, ''),
         ];
     }
 

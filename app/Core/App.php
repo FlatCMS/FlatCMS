@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Services\Licensing\ExtensionLicenseService;
+
 class App
 {
     private static ?App $instance = null;
@@ -197,8 +199,13 @@ class App
             BASE_PATH . '/app/Extensions',
             BASE_PATH . '/app/Plugins',
         ], BASE_PATH . '/data/modules.json');
+        $licenses = new ExtensionLicenseService($manager);
 
         foreach ($manager->enabled() as $module => $meta) {
+            if (!$this->componentRuntimeAllowed($module, $meta, $licenses)) {
+                continue;
+            }
+
             $moduleRoutes = trim((string) ($meta['routes_path'] ?? ''));
             if ($moduleRoutes !== '') {
                 require $moduleRoutes;
@@ -208,6 +215,18 @@ class App
             $routesStatus = (string) ($meta['routes_status'] ?? 'absent');
             if (($meta['routes_declared'] ?? false) && ($routesStatus === 'missing' || $routesStatus === 'invalid')) {
                 $this->reportRuntimePathIssue($module, $meta, 'routes', $routesStatus);
+            }
+        }
+
+        foreach ($manager->all() as $module => $meta) {
+            $activation = is_array($meta['license_activation'] ?? null) ? $meta['license_activation'] : [];
+            if (trim((string) ($activation['target'] ?? '')) === '' || !($meta['integrity_valid'] ?? true)) {
+                continue;
+            }
+
+            $activationRoutes = trim((string) ($meta['license_activation_routes_path'] ?? ''));
+            if ($activationRoutes !== '') {
+                require $activationRoutes;
             }
         }
 
@@ -225,8 +244,13 @@ class App
             BASE_PATH . '/app/Extensions',
             BASE_PATH . '/app/Plugins',
         ], BASE_PATH . '/data/modules.json');
+        $licenses = new ExtensionLicenseService($manager);
 
         foreach ($manager->enabled() as $module => $meta) {
+            if (!$this->componentRuntimeAllowed($module, $meta, $licenses)) {
+                continue;
+            }
+
             $listenersFile = trim((string) ($meta['hooks_path'] ?? ''));
             if ($listenersFile !== '') {
                 require_once $listenersFile;
@@ -238,6 +262,32 @@ class App
                 $this->reportRuntimePathIssue($module, $meta, 'hooks', $hooksStatus);
             }
         }
+
+        foreach ($manager->all() as $module => $meta) {
+            $activation = is_array($meta['license_activation'] ?? null) ? $meta['license_activation'] : [];
+            if (trim((string) ($activation['target'] ?? '')) === '' || !($meta['integrity_valid'] ?? true)) {
+                continue;
+            }
+
+            $activationHooks = trim((string) ($meta['license_activation_hooks_path'] ?? ''));
+            if ($activationHooks !== '') {
+                require_once $activationHooks;
+            }
+        }
+    }
+
+    private function componentRuntimeAllowed(
+        string $module,
+        array $meta,
+        ExtensionLicenseService $licenses
+    ): bool {
+        $license = is_array($meta['license'] ?? null) ? $meta['license'] : [];
+        if (!(bool) ($license['required'] ?? false)) {
+            return true;
+        }
+
+        return (string) ($license['gate'] ?? 'authoring') !== 'execution'
+            || $licenses->canExecute($module);
     }
 
     private function reportRuntimePathIssue(string $module, array $meta, string $kind, string $status): void

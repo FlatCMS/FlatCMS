@@ -2468,6 +2468,183 @@ if (!function_exists('flatcms_editor_valid_image_width')) {
     }
 }
 
+if (!function_exists('flatcms_editor_tag_alignment')) {
+    function flatcms_editor_tag_alignment(string $tag): ?string
+    {
+        $attributes = flatcms_editor_tag_attributes($tag);
+        $classes = preg_split('/\s+/', trim((string) ($attributes['class'] ?? ''))) ?: [];
+        $classMap = [
+            'flatcms-align-left' => 'left',
+            'flatcms-align-center' => 'center',
+            'flatcms-align-right' => 'right',
+            'flatcms-align-justify' => 'justify',
+            'fco-text-center' => 'center',
+        ];
+        foreach ($classes as $className) {
+            if (isset($classMap[$className])) {
+                return $classMap[$className];
+            }
+        }
+
+        $styles = flatcms_editor_style_declarations((string) ($attributes['style'] ?? ''));
+        $alignment = strtolower(trim((string) ($styles['text-align'] ?? '')));
+
+        return in_array($alignment, ['left', 'center', 'right', 'justify'], true)
+            ? $alignment
+            : null;
+    }
+}
+
+if (!function_exists('flatcms_editor_update_tag_alignment')) {
+    function flatcms_editor_update_tag_alignment(string $tag, ?string $alignment): string
+    {
+        if ($alignment !== null && !in_array($alignment, ['left', 'center', 'right', 'justify'], true)) {
+            return $tag;
+        }
+
+        $stylePattern = '/\s+style\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i';
+        $tag = preg_replace_callback(
+            $stylePattern,
+            static function (array $matches): string {
+                $style = (string) (($matches[2] ?? '') !== ''
+                    ? $matches[2]
+                    : (($matches[3] ?? '') !== '' ? $matches[3] : ($matches[4] ?? '')));
+                $declarations = flatcms_editor_style_declarations(
+                    html_entity_decode($style, ENT_QUOTES | ENT_HTML5, 'UTF-8')
+                );
+                unset($declarations['text-align']);
+                if ($declarations === []) {
+                    return '';
+                }
+
+                $parts = [];
+                foreach ($declarations as $name => $value) {
+                    $parts[] = $name . ': ' . $value;
+                }
+
+                return ' ' . 'style' . '="' . htmlspecialchars(
+                    implode('; ', $parts) . ';',
+                    ENT_QUOTES | ENT_HTML5,
+                    'UTF-8'
+                ) . '"';
+            },
+            $tag
+        ) ?? $tag;
+
+        $classPattern = '/\s+class\s*=\s*("([^"]*)"|\'([^\']*)\')/i';
+        $alignmentClasses = [
+            'flatcms-align-left',
+            'flatcms-align-center',
+            'flatcms-align-right',
+            'flatcms-align-justify',
+            'fco-text-center',
+        ];
+        $replacementClass = $alignment !== null ? 'flatcms-align-' . $alignment : '';
+        if (preg_match($classPattern, $tag, $match, PREG_OFFSET_CAPTURE) === 1) {
+            $rawClasses = (string) (($match[2][0] ?? '') !== '' ? $match[2][0] : ($match[3][0] ?? ''));
+            $classes = preg_split('/\s+/', trim($rawClasses)) ?: [];
+            $classes = array_values(array_filter(
+                $classes,
+                static fn (string $className): bool => !in_array($className, $alignmentClasses, true)
+            ));
+            if ($replacementClass !== '') {
+                $classes[] = $replacementClass;
+            }
+            $replacement = $classes === []
+                ? ''
+                : ' class="' . htmlspecialchars(implode(' ', array_values(array_unique($classes))), ENT_QUOTES | ENT_HTML5, 'UTF-8') . '"';
+
+            return substr_replace(
+                $tag,
+                $replacement,
+                (int) $match[0][1],
+                strlen((string) $match[0][0])
+            );
+        }
+
+        if ($replacementClass === '') {
+            return $tag;
+        }
+
+        $position = strrpos($tag, '/>');
+        if ($position === false) {
+            $position = strrpos($tag, '>');
+        }
+        if ($position === false) {
+            return $tag;
+        }
+
+        return substr($tag, 0, $position)
+            . ' class="' . $replacementClass . '"'
+            . substr($tag, $position);
+    }
+}
+
+if (!function_exists('flatcms_apply_editor_alignment_delta_to_source')) {
+    function flatcms_apply_editor_alignment_delta_to_source(
+        string $existingHtml,
+        string $baselineHtml,
+        string $submittedHtml
+    ): ?string {
+        $collect = static function (string $html): array {
+            $tokens = flatcms_editor_html_tokens($html);
+            $blocks = [];
+            foreach ($tokens as $tokenIndex => $token) {
+                if (preg_match('/^<\s*(p|h[1-6]|div|section|article|blockquote|figcaption|li|td|th)\b/i', $token, $match) !== 1) {
+                    continue;
+                }
+                $blocks[] = [
+                    'token_index' => $tokenIndex,
+                    'tag' => strtolower((string) $match[1]),
+                    'alignment' => flatcms_editor_tag_alignment($token),
+                ];
+            }
+
+            return [$tokens, $blocks];
+        };
+
+        [$existingTokens, $existingBlocks] = $collect($existingHtml);
+        [, $baselineBlocks] = $collect($baselineHtml);
+        [, $submittedBlocks] = $collect($submittedHtml);
+        if (count($baselineBlocks) !== count($submittedBlocks)) {
+            return null;
+        }
+
+        $changedIndexes = [];
+        foreach ($baselineBlocks as $index => $baselineBlock) {
+            $submittedBlock = $submittedBlocks[$index];
+            if ($baselineBlock['tag'] !== $submittedBlock['tag']) {
+                return null;
+            }
+            if ($baselineBlock['alignment'] !== $submittedBlock['alignment']) {
+                $changedIndexes[] = $index;
+            }
+        }
+        if ($changedIndexes === []) {
+            return $existingHtml;
+        }
+        if (count($existingBlocks) !== count($baselineBlocks)) {
+            return null;
+        }
+
+        foreach ($changedIndexes as $index) {
+            $baselineBlock = $baselineBlocks[$index];
+            $submittedBlock = $submittedBlocks[$index];
+            $existingBlock = $existingBlocks[$index];
+            if ($baselineBlock['tag'] !== $existingBlock['tag']) {
+                return null;
+            }
+            $tokenIndex = $existingBlock['token_index'];
+            $existingTokens[$tokenIndex] = flatcms_editor_update_tag_alignment(
+                $existingTokens[$tokenIndex],
+                $submittedBlock['alignment']
+            );
+        }
+
+        return implode('', $existingTokens);
+    }
+}
+
 if (!function_exists('flatcms_editor_update_tag_width')) {
     function flatcms_editor_update_tag_width(string $tag, ?string $width): string
     {
@@ -2635,6 +2812,15 @@ if (!function_exists('flatcms_apply_editor_delta_to_source')) {
         string $submittedHtml
     ): ?string {
         if (flatcms_editor_tag_skeleton($baselineHtml) !== flatcms_editor_tag_skeleton($submittedHtml)) {
+            return null;
+        }
+
+        $existingHtml = flatcms_apply_editor_alignment_delta_to_source(
+            $existingHtml,
+            $baselineHtml,
+            $submittedHtml
+        );
+        if ($existingHtml === null) {
             return null;
         }
 

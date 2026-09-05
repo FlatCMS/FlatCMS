@@ -71,15 +71,13 @@ final class ExtensionLicenseService
         $hasLicense = trim((string) ($summary['license_id'] ?? '')) !== ''
             || trim((string) ($summary['masked_key'] ?? '')) !== '';
 
-        $localBypassEnabled = $this->localLicenseBypassEnabled();
-        $localBypass = $requiresLicense && is_local_host($normalizedHost) && $localBypassEnabled;
-        $isValid = !$requiresLicense || $localBypass || $this->vault->isModuleLicenseValid(
+        $isValid = !$requiresLicense || $this->vault->isModuleLicenseValid(
             $module,
             $normalizedHost,
             null,
-            $localBypassEnabled
+            false
         );
-        $status = $this->resolveStatus($requiresLicense, $localBypass, $isValid, $hasLicense, $summary);
+        $status = $this->resolveStatus($requiresLicense, $isValid, $hasLicense, $summary);
 
         return [
             'module' => $module,
@@ -112,6 +110,17 @@ final class ExtensionLicenseService
         return (bool) ($profile['authoring_enabled'] ?? true);
     }
 
+    public function canExecute(string $module, ?string $host = null): bool
+    {
+        $profile = $this->describe($module, $host);
+        if (!is_array($profile)) {
+            return true;
+        }
+
+        return !(bool) ($profile['requires_license'] ?? false)
+            || (bool) ($profile['license_valid'] ?? false);
+    }
+
     private function isLicensableExtension(array $meta): bool
     {
         if (!in_array((string) ($meta['location'] ?? ''), ['extension', 'plugin'], true)) {
@@ -140,17 +149,12 @@ final class ExtensionLicenseService
      */
     private function resolveStatus(
         bool $requiresLicense,
-        bool $localBypass,
         bool $isValid,
         bool $hasLicense,
         array $summary
     ): string {
         if (!$requiresLicense) {
             return 'not_required';
-        }
-
-        if ($localBypass) {
-            return 'local_bypass';
         }
 
         if ($isValid) {
@@ -168,8 +172,4 @@ final class ExtensionLicenseService
         return 'invalid_domain';
     }
 
-    private function localLicenseBypassEnabled(): bool
-    {
-        return filter_var(env('EXTENSIONS_LOCAL_LICENSE_BYPASS', false), FILTER_VALIDATE_BOOL);
-    }
 }

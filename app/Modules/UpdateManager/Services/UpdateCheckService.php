@@ -267,6 +267,8 @@ final class UpdateCheckService
             'status' => $status,
             'compatibility_reasons' => $reasons,
             'download_url' => is_array($selected) ? (string) ($selected['download_url'] ?? '') : '',
+            'catalog_only' => is_array($selected) && !empty($selected['catalog_only']),
+            'protected' => is_array($selected) && !empty($selected['protected']),
             'changelog_url' => is_array($selected)
                 ? $this->normalizeChangelogUrl((string) ($selected['changelog_url'] ?? ''))
                 : '',
@@ -318,7 +320,11 @@ final class UpdateCheckService
             return false;
         }
 
-        if (array_key_exists('download_ready', $package) && empty($package['download_ready'])) {
+        if (
+            array_key_exists('download_ready', $package)
+            && empty($package['download_ready'])
+            && empty($package['catalog_only'])
+        ) {
             return false;
         }
 

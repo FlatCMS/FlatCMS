@@ -1,6 +1,6 @@
 {
     "name": "UpdateManager",
-    "version": "0.4.7",
+    "version": "0.4.8",
     "description": "Official FlatCMS update manager.",
     "type": "system",
     "author": "Alain BROYE",
@@ -15,5 +15,5 @@
     "vendor": "FlatCMS",
     "official": true,
     "origin": "flatcms",
-    "signature": "KNTseHedF77sRRqLLIg+OUqeL1B6VeuEIMme2H0yDR9zvbrlJ6URGeNfWxnHPe2xz464OFTByJM3hOQfCw/Vhn2ANuvxtq5HAqmlqe8ZDVMXqUklmE2gGmJ0Ylehu1tBFNyuLRQxIxUfHFmFR9pUg7YCI9jLhc8XE7Rv5/0pXJUtFWfghE1JY0iSs4023X4mEhCB5cuKsmPco7H/dVJbR0avF/L8gowpH/Bf9lf4RrYHRxr6jqKM26E5gPJYUgZpogAGkUN02CYPlZvoCcW8XviErd0ma0ytmDUkSUGkyeYISoD/eVfMQV/vymvsTLKkHngDDDTY/XxaVfRMzeX4ddFAVFnlqJ3okS2b+JtrcDous26QuGkRM+4+Ghd0YwCs/egMEDym5Ty/HsQb9YyRH6qdP1tNKwsAaODXJ+lHZ8CPX2bn+yL1MsauNpWi1M6oD3MpbnKmQPAezXPo3IU0+m/6gDOXJOXygRoZri9Lakisq8/IKbDkHyvw5v7Bu0UXSECl5gUbYDFmY3DYz5Q4m4RY9Xn46QEb3MU1emE5JTcRUcwtxtRf4RYZEu0bTTrnbXdKcmec7Gwq58Bj+ziTdP5rkiIXilSREOeUCwu01NE0BhAGeGHC+6CBKGynkD7LoQrWIVmmlJuK7qzjfgni90pHblLLAh4k95Sowf9JdoI="
+    "signature": "ESeFEJx9HnnujTCd31SOYExRlDnK219Xa7snzWBPhw1l0KiwSK3IG9KzR+CssFGvaDI0AstlfID9lzx4yEn2uTR6y8zHEITIbRNpgkopAXCvVvo7tBSOFDApKJ3WdWxFY/5oKVJ1SDBNIi/0bnBmAa39ttXj+zXYo4ioqSx5wsg9Dex0hINrpdaokh9J+0u9zfxrGGhITGIn+3SmNpeBlGGylbHWd94WhaUYMjqeOG9lZbfwL308/zjO5yeQR7zKm7uFKcJJMmoou+6I8i4YGAKSeedmbGnkxVkRxuC+hn9fmxspwEbX95hZMwxOpXzdXmqZm7/auGR/QyxYX+hBXnAB8xQzo7waraBorfY1H6+2QxWExrR2+Zfrr+0fgQ+oOwvtAYEq9TFAw43NKLz42y3GZx1gKGmVND5LJxpQg107EkV8PWlqBu0CqNWDwIzJ6Z/72LdISXDOx0Yt8KCz7cPpxmOYylEYUZoy3ISLWXy3+Kp4l5pAM8kDjpJCBJVJ+/+0ErMqZo6wce3TA8Y8UX8T+Pq4N+fLOEURVzykNGXD0Dvpnh4murtg/CicM3Qlgbd1l64Y+f26g6JWGf9Ft+U1ByaPwNis8xx9Yh153v+Bcn5FaqtOPxtrVhXBGDiqeRT+IqJlI3hbg6cSwO1U2gNwndZ4avgRBnMY3mLN78M="
 }

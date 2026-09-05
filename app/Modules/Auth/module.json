@@ -1,6 +1,6 @@
 {
     "name": "Auth",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Authentication and access control.",
     "type": "system",
     "author": "Alain BROYE",
@@ -12,5 +12,5 @@
     "vendor": "FlatCMS",
     "official": true,
     "origin": "flatcms",
-    "signature": "IfjW0GEGO5G7PQq5MSB878o0CikvXkfs59qcAqrxIsyyXfR7E6b3rKFQ6TQe6097fBHNcnfrm00uHqhkdeIYJt7aiD5hSa2fV0nbBNHRqc01MCOmgz9LoY9elHR+G3idZNMy+VQ6TPhz7zUdcyQKarvY5P9vlE/vIyT1l20HN5Wlyi944k+O3NOvufliI9lluT9oV/c0RsRwO0GG6lhhkmAbxiI8Zf0Tttc/XK0gKMfSnm8LYE53mrj2qZsPwcryUKN1nIeaFKdfJVOmYgO3HQ3tDy6QLJu5uT03oO5Iym3c09zXq1ieTl7kZ/hvayqKbbo4zicTD6cMpoduT/Okv42FXBG9mqWb8tVKRLxSLL20EKxjGlc0uJRFcpJLqHdEvsRIzGcUysU90eFk93wdrZ2iQxo6jkHyCwl5d6pMt2Vkdmlokg1/P9fvl7F2CdolEJjIksI0ntH5Mm3SJUizARyN+DBF+2AdRhmxc5QkcQJ+gtsfynwE8lgUN/9M9Ps5c8XVRDNtvXwbNlo0rIgjiju+DP/wHL9dVSWNIOsV661eYNkj5/zCuSQ137Iy1fN2GkyQ/sQEvwOa/AyaHAdo9yZGZIFlVM2s2g4Q2QUeAefWrMEQ3Ct4RF6udTF763Zq6Jlgj7NA4FMWlL7FdkdC7sTgp4/MasuaS60MFCEVam8="
+    "signature": "JD/ElyFGBfsLEzXwfxXuFFaJ66VXcwgLZBef4mIgJQ6if8JUK/fiVips3ABa5EkCM23+Tyk1PaGPUWnGbEKWYIiTMIeDFYnXcNbe959fWiogDdjzIlYTStj6twgRBeBg6BpLeU1Tz1GAlCCFgzuQigM6xMNz1QzEKs0LkXLG8EYNMdqzhEXhdzWRFp4yKtD5gquGDetY0JJHXE1hq+b/LPeqStS5eCOiKoSHvxIkQuJUkdwFsd9x2l7SHK5ngRodAN+fH8AJm7cdTIHAXTdKajEwe2FJzRnkQu/0QHJL2R2l2LvMS3vVK5es+ylY5v9wsyeRJRVk3n8HWqawxn/y0QlgIJX9ZdV4WDpn/RP39VtiHXOCV+vDqITM3EC+C12o05fbilkZKd+jKPnlQWnIuERBhqq6B+IkfKDNVKWvwopKcuD5dTuoSiFw9ZQCc+vRV92yP+7405D+VIDiTyLCrtL4UA6b3zdqpxx1oCdeEO3QHp+Rg0SHjy0iV9nwtY+UWpk4USlGCdyQbqH2bAk9ofP1fVURuUnsgFDguaX+aAxxwRUWoxhWYcxEvLNBDE6ibJ4s/out0m3kUzq22VgeqKYh9MiX4gKEGBKxEAmS/1r7ECt5KzAAvFbFkzPpYCMtBDsLpbjZuGZgx6QTo7AXOVMAcyFVJDyCvlQXvepZZ/w="
 }

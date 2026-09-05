@@ -2,7 +2,7 @@
     "name": "Modern Pro",
     "slug": "modern-pro",
     "description": "Thème frontend premium avec un design sombre moderne et des effets de dégradés dynamiques. Offre une expérience visuelle immersive et contemporaine pour vos visiteurs avec une ambiance nocturne élégante.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "author": "Alain BROYE",
     "screenshot": "screenshot.png",
     "type": "frontend",
@@ -61,5 +61,5 @@
             "description": "Tema frontend premium com um design escuro moderno e efeitos de gradiente dinâmicos. Oferece aos visitantes uma experiência visual imersiva e contemporânea com uma elegante atmosfera noturna."
         }
     },
-    "signature": "ZqtU8LICtrS9BVMEhNvs2xD/eX/A47OJF8qwIZkY+PasMWWUuFKVixyYixe82NPnOSvxKgvY/cxqFB7j48mHC8VR5r0NzYAzoRLlgLy9VKrEYK1BhoY8Chnn23LnioEkpTjM+6YDlmKgkB/XBiMHejIDlH0LEahthfrn99VNjj892sqBBEGkasz4+PfeceSlNKKjlaOPh9DlQDxUSzwMbIWLJlqTNqcN/h04WMsvlDa3xTXVk+LB4FlzUHJmlRZpmHtw3576K+8AdYXSSuqR6UVviWfFh43v0mndkWtGVjv3w0fJkqhh0jNYfqLFAOM6NWMImJxZDZO2rxL3HkIj9wmAcNq/rv0x1vTCn8/PDVGXgH4q/nzVptPSefhAWKwfUXSBn33fWSz96GE8xQDHCXktvs0RlCq4QDXfttMVcQTIW0lWOfkUa8G4Lo6FeDnsEjy0Fn4X3RbIsCYhm/hc4/OxsoRoqDK6lZYmvLWLcaZZt6XKz7xh8eFRDQU2LZ9YxwkWcP5xAnZnqNm0aVKYGbzU6ZtCc9B4wMCEXpE0WZuCuMwredzBJD/TFKrOriYJC+oq7UkkdNRNvnkFEioGnSmQK4/SQFadyfGykzfFHlvIC4q7bStPmBddH/r/GdGgG8xYZU6vJMr3pvcnTEhhknLmnOp6j3h7e6xoHxxXLrw="
+    "signature": "koCtHiehtLD4JVmv9ZQpdTT8IVExGl+wPBX8dEKlYzNRInFPt2D+bkGABpcpacNl6PznpKq9XanWtYoXG+WSRguQbHi8Z0XpfdCyPjLlxASq5MMxw8i57FhVU0XG12r6APd38WRfFlX5JvOMOu6/JzN7DevVD+RmByfcWJJWrUvHLoAPaRpl4pgbgCI60i8C2RLSnIzPs5WsbgbZUf28yBEecTBKQaMZawtZod+HB1VP8/btAnc5aHM1bUoxk/18cG5VTgTv04yGTnnXWc1nJCwikn7dK2ASxkP06ub97nEKKzFVwDmBFFAemHLuCStw7iJTzRiao3gD9BKaskxf/p7/yzKtjIU3p6l1WHm64DVb8LPCWS+5S6uqKPCWmknguGwO7Szhg89KSQuqMI0F7ek7xYtEs4k3J2xZrpDyYUMk7VabAOCA0t7WfU4OwOgsMzjCko1tt2sPT28g+YJTpj7I2epggLQoXqaXtFp5XdgRAAlnP+3M9BBLQCtcKX1J4ZBRZdDVCqdouRxdwdn+Gl6lLuCAZ4H67iWG2BdDP7NWCuy2kCCXdiwvFVCWdqJYniPMz7w6OlmVOn6hlM7zkvAaMIwttnif/osZtQyp+NN+rR1X6Rr2s096r3W4gdIM17/AUQgDFROLb2qqsfeEVe4rp8tiGZyCuwKtKz9cg08="
 }

@@ -9,6 +9,15 @@
 
 ?>
 
+<?php
+$profileExtensionSections = array_values(array_filter(
+    hook_run('auth.profile.sections', [
+        'user' => is_array($user ?? null) ? $user : [],
+    ]),
+    static fn ($markup): bool => is_string($markup) && trim($markup) !== ''
+));
+?>
+
 <link rel="stylesheet" href="<?= module_asset('Auth', 'css/auth-module.css') ?>">
 
 <div class="page-header">
@@ -180,6 +189,10 @@
         </div>
     </form>
 </div>
+
+<?php foreach ($profileExtensionSections as $profileExtensionSection): ?>
+    <?= $profileExtensionSection ?>
+<?php endforeach; ?>
 
 <?php
 $canManageLicenses = !empty($canManageLicenses);

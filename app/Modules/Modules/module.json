@@ -1,6 +1,6 @@
 {
     "name": "Modules",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Modules manager.",
     "type": "system",
     "author": "Alain BROYE",
@@ -14,5 +14,5 @@
     "vendor": "FlatCMS",
     "official": true,
     "origin": "flatcms",
-    "signature": "Tiji5S7F26pbgbzorGoizitV7QI7Do3Js/+reBjddmP3KsMnNCyDgVsINSbY73JlrJ7CHoveeMu11hGrD7mUWNIuazNCxwA9Qj1+OYPaVQxZo2p+G/k0xYGdBhFmXHc0w3skXIM9B+8oaXX9WmZK8O1p1C/gsvmIvAFs24wrj1aawh03PWR+F1MfvMyyuKx8agQ/QshuSMvzy9/9PVQbmAdVouAAvyV7Jgq7pYk5VqTRjoDSnvCjkn/NSJDPXHNZDLN0T92nqyyTCqvJaH9wIqKTvtcs7Ult8y/eOntLlujSa+tk45B0AkZl79nQtsl7EidEOeomIwccIcwZmskE5fgvioM07Uy0MgehZz34VY2G5YAFhWmEGYleNmopizh9Frg5fbRi8q1tUHm/vX9Nx2ulg85X43xyA4C1xLdGYim03rYSylVOIRx9NnBBBPtgixa1JchxPePzLRyO5l8OOzuqkGRVqU2GpSrhipCfnAT/XlSWdAgH0jNTepsZFNo4LY8zARjL5QATQ7Jws+Xi9cN9Y2KRSRBxY1EUE9ZTwutevX59ihqbLX6PmE6hVufApj7XeoKwV3lO9YDO+9hgMk7JK9c3nLJa0t+nqwb7VR42OK1rFILunNyeFMhCASyEBcPxhb9COvWNj7dpRuBhVt8IfJAPkhdJHI/gQsJZp9A="
+    "signature": "fDn8cG/6dPZBHdgyg7iTdcZBD3AwPzyv3Pk8jRG2tkfZgV09v3gy54vJiWbLwP/Fk7m+J6OG+ENS/SuG+WMIHD/fXczBbfRraWIhwzuo8+hKaX0Kz8Vbv0psUPkwER/rjtTzjo+xdPYmXjNHpKRZzNbE4epMet6t5Jipm6vbumlaURHaNGfd0qNNaNEFkbipMwCdfJ4jaawwg0mM0myrpRK3PPGOOagv6LSxzSeCVbtSOZ9yuoiEkbT7wy0X/PpKJDkQ7sLC/IgWUH25Q5cg2tnKcMH79w+U1lC7xRa4g88BrvoI3Ou7ybp1uPknZIMywEnbbrXzxlqLPi4383VX4ORJhtbSXpuFO0hO2WFWGqKyO1poVu6XC/cf1M0qk0rwBSd33hQqiw5V4+2EqcyE3Br6yNchRrrBDbjK4P+OeTlDlXTuHfUa2X+FIaZEgM2eXosvNiNCpfE2n5fkP5KhpekqPvv2YSVUxMKeoiRWp76eyRrQYOQ5IqXTljWVU6hSbQ/c2sQPBsTeyHcLGWdRri+ID4yUxaNU3s5xgU6K57ZmtLHdTsH83ZEF737TpvfsHP8YECbRcwOnWWzZgzXY8UoZisO9M1X9Y2p9kaVhfodixxzyJzEkC2hira9eWJRIcRwN3XUEF6usIQtsQCZBplHPprPWt4OjCo29ipTMr7k="
 }

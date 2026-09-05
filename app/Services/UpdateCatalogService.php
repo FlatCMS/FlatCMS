@@ -34,7 +34,10 @@ final class UpdateCatalogService
             $published = 0;
 
             foreach ($packages as $package) {
-                if (($package['availability'] ?? '') === 'published' && !empty($package['download_ready'])) {
+                if (
+                    ($package['availability'] ?? '') === 'published'
+                    && (!empty($package['download_ready']) || !empty($package['catalog_only']))
+                ) {
                     $published++;
                 }
             }
@@ -96,6 +99,9 @@ final class UpdateCatalogService
         if (!is_array($package)) {
             return null;
         }
+        if (!empty($package['catalog_only']) || !empty($package['protected'])) {
+            return null;
+        }
 
         $artifact = $this->artifacts->resolveArtifact($package);
         if (is_array($artifact)) {
@@ -148,6 +154,8 @@ final class UpdateCatalogService
 
     private function normalizePackage(string $catalog, array $package): array
     {
+        $protected = !empty($package['protected']);
+        $catalogOnly = $protected || !empty($package['catalog_only']);
         $downloadFile = '';
         $downloadReady = false;
         $downloadUrl = '';
@@ -174,7 +182,7 @@ final class UpdateCatalogService
         }
 
         $availability = strtolower(trim((string) ($package['availability'] ?? 'draft')));
-        if ($availability === 'published' && !$downloadReady) {
+        if ($availability === 'published' && !$downloadReady && !$catalogOnly) {
             $availability = 'draft';
         }
         if (!in_array($availability, ['draft', 'published', 'archived'], true)) {
@@ -203,6 +211,8 @@ final class UpdateCatalogService
             'requires_php' => (string) ($package['requires_php'] ?? ''),
             'download_url' => $downloadUrl,
             'download_ready' => $downloadReady,
+            'catalog_only' => $catalogOnly,
+            'protected' => $protected,
             'sha256' => $sha256,
             'signature' => (string) ($package['signature'] ?? ''),
             'min_core_version' => (string) ($package['min_core_version'] ?? ''),

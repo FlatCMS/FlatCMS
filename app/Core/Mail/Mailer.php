@@ -43,19 +43,31 @@ final class Mailer
 
         $fromAddress = trim((string) ($options['from_address'] ?? env('MAIL_FROM_ADDRESS', $defaultFromAddress)));
         $fromName = trim((string) ($options['from_name'] ?? env('MAIL_FROM_NAME', $defaultFromName)));
+        $replyToAddress = trim((string) ($options['reply_to'] ?? ''));
+        $replyToName = trim((string) ($options['reply_to_name'] ?? ''));
 
-        if (!$this->isSafeHeaderValue($fromAddress) || !$this->isSafeHeaderValue($fromName)) {
+        if (
+            !$this->isSafeHeaderValue($fromAddress)
+            || !$this->isSafeHeaderValue($fromName)
+            || !$this->isSafeHeaderValue($replyToAddress)
+            || !$this->isSafeHeaderValue($replyToName)
+        ) {
             return false;
         }
 
         if ($fromAddress === '' || !filter_var($fromAddress, FILTER_VALIDATE_EMAIL)) {
             $fromAddress = $this->fallbackFromAddress();
         }
+        if ($replyToAddress !== '' && !filter_var($replyToAddress, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
 
         if ($transport === 'smtp') {
             return $this->sendSmtp($to, $subject, $textBody, [
                 'from_address' => $fromAddress,
                 'from_name' => $fromName,
+                'reply_to' => $replyToAddress,
+                'reply_to_name' => $replyToName,
                 'settings' => $settings,
                 'html_body' => $htmlBody,
                 'attachments' => $attachments,
@@ -66,6 +78,8 @@ final class Mailer
         return $this->sendMail($to, $subject, $textBody, [
             'from_address' => $fromAddress,
             'from_name' => $fromName,
+            'reply_to' => $replyToAddress,
+            'reply_to_name' => $replyToName,
             'html_body' => $htmlBody,
             'attachments' => $attachments,
             'headers' => $headers,
@@ -76,6 +90,8 @@ final class Mailer
     {
         $fromAddress = (string) ($options['from_address'] ?? '');
         $fromName = (string) ($options['from_name'] ?? '');
+        $replyToAddress = (string) ($options['reply_to'] ?? '');
+        $replyToName = (string) ($options['reply_to_name'] ?? '');
         $htmlBody = trim((string) ($options['html_body'] ?? ''));
         $attachments = is_array($options['attachments'] ?? null) ? $options['attachments'] : [];
         $customHeaders = is_array($options['headers'] ?? null) ? $options['headers'] : [];
@@ -90,7 +106,11 @@ final class Mailer
         }
 
         $headers[] = 'From: ' . $fromHeader;
-        $headers[] = 'Reply-To: ' . $fromAddress;
+        $replyToHeader = $replyToAddress !== '' ? $replyToAddress : $fromAddress;
+        if ($replyToAddress !== '' && $replyToName !== '') {
+            $replyToHeader = sprintf('"%s" <%s>', $this->escapeHeaderPhrase($replyToName), $replyToAddress);
+        }
+        $headers[] = 'Reply-To: ' . $replyToHeader;
         foreach ($customHeaders as $name => $value) {
             $headers[] = $name . ': ' . $value;
         }
@@ -159,6 +179,8 @@ final class Mailer
     {
         $fromAddress = (string) ($options['from_address'] ?? '');
         $fromName = (string) ($options['from_name'] ?? '');
+        $replyToAddress = (string) ($options['reply_to'] ?? '');
+        $replyToName = (string) ($options['reply_to_name'] ?? '');
         $htmlBody = trim((string) ($options['html_body'] ?? ''));
         $attachments = is_array($options['attachments'] ?? null) ? $options['attachments'] : [];
         $customHeaders = is_array($options['headers'] ?? null) ? $options['headers'] : [];
@@ -228,6 +250,9 @@ final class Mailer
             }
 
             $mail->setFrom($fromAddress, $fromName !== '' ? $fromName : $fromAddress);
+            if ($replyToAddress !== '') {
+                $mail->addReplyTo($replyToAddress, $replyToName !== '' ? $replyToName : $replyToAddress);
+            }
             $mail->addAddress($to);
             $mail->Subject = $subject;
             foreach ($customHeaders as $name => $value) {

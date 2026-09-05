@@ -35,77 +35,6 @@
   flex-wrap: wrap;
 }
 
-.module-license-panel {
-  display: grid;
-  gap: var(--spacing-4);
-  padding: var(--spacing-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-tertiary);
-}
-
-.module-license-panel__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--spacing-3);
-}
-
-.module-license-panel__title {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-}
-
-.module-license-panel__description {
-  margin: var(--spacing-1) 0 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-}
-
-.module-license-summary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-3);
-  margin: 0;
-}
-
-.module-license-summary > div {
-  min-width: 0;
-}
-
-.module-license-summary dt {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.module-license-summary dd {
-  margin: var(--spacing-1) 0 0;
-  overflow-wrap: anywhere;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-}
-
-.module-license-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) auto;
-  gap: var(--spacing-3);
-  align-items: end;
-}
-
-.module-license-form .form-group {
-  margin: 0;
-}
-
-.module-license-delete-form {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .module-card-list {
   display: flex;
   flex-direction: column;
@@ -146,6 +75,11 @@
   min-width: 0;
 }
 
+.module-card-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .module-card-icon {
   width: 44px;
   height: 44px;
@@ -164,6 +98,10 @@
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   margin: 0;
+}
+
+.module-card-text .module-meta {
+  margin: var(--spacing-1) 0 0;
 }
 
 .module-card-summary {
@@ -389,18 +327,4 @@
     justify-content: space-between;
   }
 
-  .module-license-panel__header {
-    flex-direction: column;
-  }
-
-  .module-license-summary,
-  .module-license-form {
-    grid-template-columns: 1fr;
-  }
-
-  .module-license-form .btn,
-  .module-license-delete-form .btn {
-    width: 100%;
-    justify-content: center;
-  }
 }

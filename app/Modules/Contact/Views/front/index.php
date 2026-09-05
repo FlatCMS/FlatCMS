@@ -57,6 +57,9 @@ $normalizeOptions = static function (mixed $options): array {
 };
 
 $contactFormRecord = is_array($contactForm ?? null) ? $contactForm : null;
+$contactFormInstanceCounter = (int) ($GLOBALS['flatcms_contact_form_instance_counter'] ?? 0) + 1;
+$GLOBALS['flatcms_contact_form_instance_counter'] = $contactFormInstanceCounter;
+$contactFormDomPrefix = 'contactForm' . $contactFormInstanceCounter;
 $hasRenderableForm = is_array($contactFormRecord)
     && trim((string) ($contactFormRecord['id'] ?? '')) !== ''
     && !empty($contactFormRecord['is_active']);
@@ -238,7 +241,7 @@ foreach ($customFields as $index => $field) {
     $fieldPlaceholder = trim((string) ($field['placeholder'] ?? ''));
     $fieldHelp = trim((string) ($field['help'] ?? ''));
     $fieldOptions = $normalizeOptions($field['options'] ?? []);
-    $inputId = 'contactCustomField' . (int) $index;
+    $inputId = $contactFormDomPrefix . 'CustomField' . (int) $index;
 
     $normalizedCustomFields[] = [
         'key' => $fieldKey,
@@ -448,8 +451,8 @@ $pageHeaderEnabled = !array_key_exists('page_header_enabled', $settings ?? [])
             <input type="hidden" name="contact_form_slug" value="<?= e((string) ($formState['slug'] ?? '')) ?>">
 
             <div class="flatcms-contact-honeypot" aria-hidden="true">
-                <label for="contactCompany"><?= e(__('contact_form_honeypot_company', 'Contact')) ?></label>
-                <input id="contactCompany" type="text" name="company" tabindex="-1" autocomplete="off">
+                <label for="<?= e($contactFormDomPrefix) ?>Company"><?= e(__('contact_form_honeypot_company', 'Contact')) ?></label>
+                <input id="<?= e($contactFormDomPrefix) ?>Company" type="text" name="company" tabindex="-1" autocomplete="off">
             </div>
 
             <?php if ($normalizedCustomFields !== []): ?>
@@ -484,14 +487,14 @@ $pageHeaderEnabled = !array_key_exists('page_header_enabled', $settings ?? [])
 
             <?php if ($toBool($attachments['enabled'] ?? false, false)): ?>
                 <div class="form-group" data-contact-attachments>
-                    <label class="form-label" for="contactAttachments">
+                    <label class="form-label" for="<?= e($contactFormDomPrefix) ?>Attachments">
                         <?= e(__('contact_form_attachments_input_label', 'Contact')) ?>
                         <?php if ($toBool($attachments['required'] ?? false, false)): ?>
                             <span class="flatcms-contact-required-mark" aria-hidden="true">*</span>
                         <?php endif; ?>
                     </label>
                     <input
-                        id="contactAttachments"
+                        id="<?= e($contactFormDomPrefix) ?>Attachments"
                         class="form-input flatcms-contact-attachments-input"
                         type="file"
                         name="attachments[]"

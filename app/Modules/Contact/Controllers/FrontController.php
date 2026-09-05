@@ -206,6 +206,13 @@ class FrontController extends BaseController
             return;
         }
 
+        if ($subject === '') {
+            $subject = $this->cleanText((string) ($form['name'] ?? ''), 180);
+        }
+        if ($subject === '') {
+            $subject = __('contact_no_subject', 'Contact');
+        }
+
         $savedMessage = $this->messages->create([
             'name' => $name,
             'email' => $email,
@@ -222,6 +229,7 @@ class FrontController extends BaseController
             'form_slug' => (string) ($form['slug'] ?? ''),
             'form_name' => (string) ($form['name'] ?? ''),
             'form_type' => $formType,
+            'locale' => (string) $this->request->locale(),
             'consent' => $consent,
             'custom_values' => $customValues,
             'attachments' => $attachments,
@@ -231,6 +239,17 @@ class FrontController extends BaseController
         if ($savedMessageId === '' || $this->messages->find($savedMessageId) === null) {
             $this->fail(__('error.server', 'Core'));
             return;
+        }
+
+        try {
+            hook_run('contact.submission.created', [
+                'message' => $savedMessage,
+                'form' => $form,
+            ]);
+        } catch (\Throwable $exception) {
+            if ((bool) env('APP_DEBUG', false)) {
+                error_log('[FlatCMS][Contact] Submission hook failed: ' . $exception->getMessage());
+            }
         }
 
         $this->sendNotificationEmail($savedMessage);
@@ -1014,28 +1033,18 @@ class FrontController extends BaseController
         }
 
         $subject = trim((string) ($message['subject'] ?? ''));
-        if ($subject === '') {
-            $subject = __('contact_no_subject', 'Contact');
-        }
+        $subject = $subject !== '' ? $subject : trim((string) ($message['form_name'] ?? ''));
+        $subject = $subject !== '' ? $subject : __('contact_no_subject', 'Contact');
 
         $emailSubject = __('contact_notification_subject', 'Contact', [
             'subject' => $subject,
         ]);
 
-        $bodyLines = [
-            __('contact_notification_body_intro', 'Contact'),
-            '',
-            __('contact_field_name', 'Contact') . ': ' . (string) ($message['name'] ?? ''),
-            __('contact_field_email', 'Contact') . ': ' . (string) ($message['email'] ?? ''),
-            __('contact_field_phone', 'Contact') . ': ' . (string) ($message['phone'] ?? ''),
-            __('contact_subject', 'Contact') . ': ' . (string) ($message['subject'] ?? ''),
-            __('contact_received_at', 'Contact') . ': ' . (string) ($message['created_at'] ?? date('Y-m-d H:i:s')),
-            __('contact_source', 'Contact') . ': ' . (string) ($message['source_url'] ?? ''),
-            __('contact_field_ip', 'Contact') . ': ' . (string) ($message['ip'] ?? ''),
-            '',
-            __('contact_field_message', 'Contact') . ':',
-            (string) ($message['message'] ?? ''),
-        ];
+        $bodyLines = [__('contact_notification_body_intro', 'Contact'), ''];
+        $summaryRows = $this->notificationSummaryRows($message, $subject);
+        foreach ($summaryRows as $row) {
+            $bodyLines[] = $row['label'] . ': ' . $row['value'];
+        }
 
         $customValues = is_array($message['custom_values'] ?? null) ? $message['custom_values'] : [];
         $customFieldRows = [];
@@ -1049,7 +1058,7 @@ class FrontController extends BaseController
 
                 $label = trim((string) ($customValue['label'] ?? ''));
                 $value = trim((string) ($customValue['value'] ?? ''));
-                if ($label === '' || $value === '') {
+                if ($label === '' || $value === '' || $this->isSummaryCustomField($customValue)) {
                     continue;
                 }
 
@@ -1093,38 +1102,26 @@ class FrontController extends BaseController
 
         $body = implode("\n", $bodyLines);
         $nameValue = trim((string) ($message['name'] ?? ''));
-        if ($nameValue === '') {
-            $nameValue = __('contact_unknown', 'Contact');
-        }
-
         $emailValue = trim((string) ($message['email'] ?? ''));
-        $subjectValue = trim((string) ($message['subject'] ?? ''));
-        if ($subjectValue === '') {
-            $subjectValue = __('contact_no_subject', 'Contact');
-        }
-
-        $messageValue = trim((string) ($message['message'] ?? ''));
-        if ($messageValue === '') {
-            $messageValue = '-';
-        }
 
         $esc = static function (string $value): string {
             return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         };
 
-        $messageHtml = nl2br($esc($messageValue), false);
-        $emailLink = $emailValue !== '' && filter_var($emailValue, FILTER_VALIDATE_EMAIL)
-            ? '<a href="mailto:' . $esc($emailValue) . '"><u>' . $esc($emailValue) . '</u></a>'
-            : '-';
+        $htmlSummary = [];
+        foreach ($summaryRows as $row) {
+            $value = $esc($row['value']);
+            if ($row['key'] === 'email' && filter_var($row['value'], FILTER_VALIDATE_EMAIL)) {
+                $value = '<a href="mailto:' . $value . '"><u>' . $value . '</u></a>';
+            } elseif ($row['key'] === 'message') {
+                $value = nl2br($value, false);
+            }
+            $htmlSummary[] = '<li><strong>' . $esc($row['label']) . ':</strong> ' . $value . '</li>';
+        }
 
         $htmlSections = [
             '<p>' . $esc(__('contact_notification_body_intro', 'Contact')) . '</p>',
-            '<p><strong>' . $esc(__('contact_field_name', 'Contact') . ': ' . $nameValue) . '</strong></p>',
-            '<p>' . $esc(__('contact_field_email', 'Contact')) . ': ' . $emailLink . '</p>',
-            '<p>' . $esc(__('contact_field_phone', 'Contact')) . ': ' . $esc(trim((string) ($message['phone'] ?? '')) ?: '-') . '</p>',
-            '<p><strong><em>' . $esc($subjectValue) . '</em></strong></p>',
-            '<p>' . $esc(__('contact_field_message', 'Contact')) . ':</p>',
-            '<p>' . $messageHtml . '</p>',
+            '<ul>' . implode('', $htmlSummary) . '</ul>',
         ];
 
         if ($customFieldRows !== []) {
@@ -1148,13 +1145,61 @@ class FrontController extends BaseController
         $htmlBody = implode("\n", $htmlSections);
 
         $mailer = new Mailer();
-        $sent = $mailer->send($recipient, $emailSubject, $body, [
+        $options = [
             'html_body' => $htmlBody,
             'attachments' => $emailAttachments,
-        ]);
+        ];
+        if ($emailValue !== '' && filter_var($emailValue, FILTER_VALIDATE_EMAIL)) {
+            $options['reply_to'] = $emailValue;
+            $options['reply_to_name'] = $nameValue;
+        }
+        $sent = $mailer->send($recipient, $emailSubject, $body, $options);
         if (!$sent && (bool) env('APP_DEBUG', false)) {
             error_log('[FlatCMS] Contact notification email could not be sent to ' . $recipient);
         }
+    }
+
+    /**
+     * @param array<string,mixed> $message
+     * @return array<int,array{key:string,label:string,value:string}>
+     */
+    private function notificationSummaryRows(array $message, string $subject): array
+    {
+        $rows = [
+            ['key' => 'form', 'label' => __('contact_form_name_label', 'Contact'), 'value' => trim((string) ($message['form_name'] ?? ''))],
+            ['key' => 'name', 'label' => __('contact_field_name', 'Contact'), 'value' => trim((string) ($message['name'] ?? ''))],
+            ['key' => 'email', 'label' => __('contact_field_email', 'Contact'), 'value' => trim((string) ($message['email'] ?? ''))],
+            ['key' => 'phone', 'label' => __('contact_field_phone', 'Contact'), 'value' => trim((string) ($message['phone'] ?? ''))],
+            ['key' => 'subject', 'label' => __('contact_subject', 'Contact'), 'value' => $subject],
+            ['key' => 'message', 'label' => __('contact_field_message', 'Contact'), 'value' => trim((string) ($message['message'] ?? ''))],
+            ['key' => 'received_at', 'label' => __('contact_received_at', 'Contact'), 'value' => trim((string) ($message['created_at'] ?? date('Y-m-d H:i:s')))],
+            ['key' => 'source', 'label' => __('contact_source', 'Contact'), 'value' => trim((string) ($message['source_url'] ?? ''))],
+            ['key' => 'ip', 'label' => __('contact_field_ip', 'Contact'), 'value' => trim((string) ($message['ip'] ?? ''))],
+        ];
+
+        return array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => $row['value'] !== ''
+        ));
+    }
+
+    /** @param array<string,mixed> $customValue */
+    private function isSummaryCustomField(array $customValue): bool
+    {
+        $key = strtolower(trim((string) ($customValue['key'] ?? '')));
+        $label = strtolower(trim((string) ($customValue['label'] ?? '')));
+        $aliases = [
+            'name', 'full_name', 'fullname', 'nom', 'nom_complet',
+            'first_name', 'firstname', 'prenom', 'given_name',
+            'last_name', 'lastname', 'nom_famille', 'family_name', 'surname',
+            'email', 'e_mail', 'mail', 'courriel', 'adresse_email', 'e-mail',
+            'phone', 'telephone', 'tel', 'mobile', 'portable',
+            'subject', 'sujet', 'objet', 'topic',
+            'message', 'msg', 'content', 'contenu', 'description', 'comment', 'commentaire',
+        ];
+
+        return in_array($key, $aliases, true)
+            || in_array(str_replace('-', '_', str_slug($label)), $aliases, true);
     }
 
     /**

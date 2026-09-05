@@ -1,6 +1,6 @@
 {
     "name": "Settings",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Global settings.",
     "type": "system",
     "author": "Alain BROYE",
@@ -13,5 +13,5 @@
     "vendor": "FlatCMS",
     "official": true,
     "origin": "flatcms",
-    "signature": "fziLtLptLbdssQTJyq5hdsn2WZTTaz/rswSyvbyK1i/tkNf3PSw422vRXcE71BmLBKyCTTBa6/M2JeqKvUQPDt9wuUPwdLoafiF2mLuHW7GMBixjh87Qrc2T08jJf1ImP00q6CUvZBMDGoerRI6n/9XHGQKPxt+Kw37gpPP14Qn0fENKDO/f85Amizc075xlsJimCraeDZ8bcmELuoSkco0fKgFJZboReAPORrMXIwO+z+OpmS1U/dEWG1t3LK7Vt4GFTy2uq5UUly/4N5Xaan88MuPoWJ3yq94RfHeuvZtmbzcfPi/kT8eIKAURPVgLN9VP/lJaivkz2pVSI7w2SCfGtCNBo8mHvW9hNZJligH8iwAHa3zFAeDqCpV6a+Vn/h8Zp719bLVDMlyIQgRV1/KFIF2DTvwEReeIj6mc7WvHzdvGmdkfwKXrL5/Q8uSCHa/MA74eIjsf76Te94VLU4qXERN18AGTURlHNv/z9o5LtNIoJAlhHCid8WO+Fz6SAlYEOJ9MKI24KdMTpUlK/6L2XZRrIY6XH3DBDXkPCs7C8leWAZqIFdJOzW3opbAUlL+NhxYsj8+ZWSij/Nwi/2aR4gECkcAzoso/6JyrFBo5d+Hf5GWODg9/L0dl9C9MGCW6kyUZKoArUNz+epkX7j5EjhceJ7TOOgSPciwGLPM="
+    "signature": "lQJ6vDRm4KMMueP8yxp+3qGGgM0kShsW8IjICDFgOby9Hv2ASc2MM6DGCCtdJcsUKd95oUpu4PItYMt4un7nquV29U3moGiHU/cLWShGmxUGS1duLdhvLxDvavujDk/ISxcI+M6fmNF/ZhhtWceQZ4hKukfNu6+pEQBkyV8ey6WnwSq4fRDV00EEX6TfgkefwH2tkS6Eua/RloIU/1vEMJaUzxmZMWm8dHVJsXvuMKNx09MzjwjYwTdYp44WAyN06r+euYhLs1gVbxbdUbXn4E1EcgkY+Iv2xK0sAh2iWPCV2xNHtuRx0o0R78VRBdyi9KIDgxueDSXbz/aJLIa1jpj6amc+1wBnWSg53BZYmJljAisi4UwYkyO4YmtrbLDVw3I2SjnqSY6BaQzHYL8+mWRoblVxW4nHMzERoAhIqhbaJIp8OyzhE+53RKDrXNZfYKCx+rilx1S+Ok9IbI0g5XkcoQu9S2U0ANbBRk7gzuiN5mZn0kmN7ab+6Nj4UVkO6xogdT53OeFrB+xv2NuC+EOVa9ZTXjaU+fyQJGh79fA2TGP7BlJ3SdS+n+94X3KhZJ9dut3l6c2DqCNJDPV0jkPUTdFSLAno3yQF5EE7EF0Wna7buoyKY2UgMGJrb4eeaacfrD/g3ZrjyETLZkLHVtZwMUr4VqK3hP/pM0+c5Jw="
 }

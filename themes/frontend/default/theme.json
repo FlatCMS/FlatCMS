@@ -2,7 +2,7 @@
     "name": "Default",
     "slug": "default",
     "description": "Thème frontend épuré et professionnel avec un design responsive adapté à tous les écrans. Parfait pour les blogs et sites de contenu avec une navigation claire et une typographie soignée.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "author": "Alain BROYE",
     "screenshot": "screenshot.png",
     "type": "frontend",
@@ -46,5 +46,5 @@
             "description": "Tema frontend limpo e profissional com um design responsivo adaptado a todos os ecrãs. Perfeito para blogs e sites de conteúdo com navegação clara e tipografia cuidada."
         }
     },
-    "signature": "sTgSM5MzOu+Fl5ST0ZD0qz5OEErrhv61PCOEMXLTB8VIIgZFJROZB5SeI+vgRPhuzkWbstWSe+VfWJR/opKgCHww2znkeRHHlVaT2PYzVHjkMNHn4rRIor44fvxwZ5K3H5VYFExkVm4+264yOjkYE5OVkG41ffeqFHSlpXLFcL+PzXw9lOtm1owOQO44rfUuqkShdQoyg/fOWCLkgzywpFYZrquWoKKK8EiCa1wKakyzDobm4dZ6EGx7N0+wt9C8BUKASjM8c99Pj5H0u6PA+/pjaVTYcpyWqwA7zg45xZVnQSGCobzVNmod1184MJqFLki17aZ71zcgAS1mrt5QpOgC1i5w/6WrSzgIbL9Ia60YNsyUMii7RqfDWA3XzDNyQdk5rcYLhl/czBGfSR4EEv/T+Z9dylHYj03tUdBfD7JJO+nr5p0FdCFWsuqYcQIOQplIBUtKES8liB4YSwR/B0tq2NcEgvsYHbLYf8vFbLQh3YsZPpl4VwRS+UfR/UUEeMXJ1tNVAbsNPuXY7g4+uU6YG3NYFutVa/BdVcnlNXnVe84ZSH31/YypcLd9lnTmul56kQafSqP2XGI2idExAeHWVlW9mdcpgB+oIC1O7iWvX+F1klyVUJhYmbhOAprOZ2kO/lHI/Lvxi7TeE4BsW50YAMly2/2KusYwHiUVX04="
+    "signature": "jgAlxOpsRE1IYYItkNyu6C2yVQB9TKRvuybalGSo6A9R0tD8O9mQF6ZpAADLYN24jsS3wj/ij3xwdzwce8Hip4OLa3XV5lIXKsjbJUG+qOFpFqg9k3adEYPOyNo7E7ZF1dSyGRCgTn+gLWcK7sKrY56pjSlzodGgagKx0yA6zemWwgmZHygf14ObJcJRmHts0pYHUQEzvkzGxMl0+Rh/okBWpX5MtH9tyyNAKzjkauYvZaqfnEbNZYT1rqJhYzVTsKmius3B8rbK5/WYQ0ONZ4Y+nT6T2y+M2/BmVqbsDJcGnLDP0oRgU1jSiZ/VyTFZBxc4UzpaNsWW2mIH4/KHZkyaMW4PtEmDM1QVL+eQfWZiVC1jam+dhM3EyG+jf5psjhrpeWfJpfnuOQgT01odyLhCnvGPmQCQrLn/vVf76wokf6buHGMz0BS3qns16jND6804fA/8e2bZhwwsOH3vuMqBRHluj/84ljDyJO2tiNqJixxzGl6IYu4ZDmvgtp4hbwx8kFB37DDPG66bc6XHkMr6eRi0w9dODywbEkw/06VuuI0a361BR5SZ00ezQC4TRM4BJHqcjtG+SHRw8/YIr8yL9wNOVrQ1+xkwjfr1psKYFgnsvNJg2t6a0dWg6UJ0asnRypJyXjOBecm0teqSPMxXIoT0iz+3wdash9WAJ6s="
 }

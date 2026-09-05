@@ -14,4 +14,10 @@ return [
         ['catalog' => 'modules', 'slug' => 'languages', 'version' => '>=1.0.1'],
         ['catalog' => 'modules', 'slug' => 'update-manager', 'version' => '>=0.4.7'],
     ],
+    '1.1.7' => [
+        ['catalog' => 'modules', 'slug' => 'modules', 'version' => '>=1.0.3'],
+        ['catalog' => 'modules', 'slug' => 'backups', 'version' => '>=1.0.2'],
+        ['catalog' => 'modules', 'slug' => 'languages', 'version' => '>=1.0.1'],
+        ['catalog' => 'modules', 'slug' => 'update-manager', 'version' => '>=0.4.7'],
+    ],
 ];
