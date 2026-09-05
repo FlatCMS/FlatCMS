@@ -6,6 +6,50 @@
       "slug": "flatcms",
       "name": "FlatCMS",
       "type": "core",
+      "version": "1.1.7",
+      "channel": "stable",
+      "vendor": "flatcms",
+      "official": true,
+      "requires_php": "8.3",
+      "artifact": {
+        "file": "core/flatcms/1.1.7/flatcms.zip",
+        "filename": "flatcms-1.1.7.zip"
+      },
+      "sha256": "fcb9b7e4bfa92395ea428851744f9191e0ef775354832b119b9212d7542282f9",
+      "signature": "VhQI/PjdHhZdAaegDw7uBx4L3GYFyTbbXqJIrCFeCyhF1XZsNX4W1hbPFePsQBspKSPbwq3NQUZm4XyshykHxCtAGHl6lG2l3l7/yv9e9DgRdpffa5ak/0aPc13V02Cxyf8P4UpkoFPxK47L44YES27KTTRoGfYEmftuMkwK1fTTWaSd7zQp1ObwvAH3DtHMsuK0YMDKnddj35mvUckvntYpuexWJ5HrySBLM8KS9PvYboW4VVM/Yu6LZgp45gEkURJW90hDJtWMvGConb776G5WBJpvQOsBgXu7f/DUqz+ecletKXOfM/O0qwV5aT8wmCq3alDKY7WB/SEZ3DbzbnjhwnUTszB/1z5G3sGf32CXGSblV4zSLl1cpl1VHwBNtkc+2S11JFjR2S7uz2chdzj/8IrpGpmPUl3T3BhdUGDTSq2/e2dR+fIlk8iFj2y0tKwEH51eya8xJe5xbXOwJ/nujR+/7qyMYpHZRc5r2hYPEoJNEBvfi/A04IxaXRgqR+Ubwv/YLiQo50L8WLQxmFk3RVZBhqA+lMx0b6jzc4VEfHd5yldMKWgKyMgv1Dj9XwKqycPjoKD0L3XtjQFnKzoqmhDKR5QMXpgef6kbRp2oZ0XVJaz/+3ZczbCOgH7J5YzE1d1FdCcpVx1DmoxJFRK4XsgDZtrYIq1kpl4h4AU=",
+      "min_core_version": "1.0.0",
+      "max_core_version": "",
+      "changelog": "• fiabilise CKEditor et conserve les alignements sans écraser le HTML source ;\n• unifie les onglets de traduction sur mobile et ajoute la localisation SEO ;\n• complète les e-mails Contact et raccorde les consentements Newsletter ;\n• impose l'activation locale des licences aux composants premium avant exécution ;\n• distingue les composants catalogués mais protégés des téléchargements publics ;\n• corrige l'affichage responsive des vues d'administration et des thèmes frontend.",
+      "published_at": "2026-09-05T09:16:23Z",
+      "availability": "published",
+      "size_bytes": 4532014,
+      "requires_packages": [
+        {
+          "catalog": "modules",
+          "slug": "modules",
+          "version": ">=1.0.3"
+        },
+        {
+          "catalog": "modules",
+          "slug": "backups",
+          "version": ">=1.0.2"
+        },
+        {
+          "catalog": "modules",
+          "slug": "languages",
+          "version": ">=1.0.1"
+        },
+        {
+          "catalog": "modules",
+          "slug": "update-manager",
+          "version": ">=0.4.7"
+        }
+      ]
+    },
+    {
+      "slug": "flatcms",
+      "name": "FlatCMS",
+      "type": "core",
       "version": "1.1.6",
       "channel": "stable",
       "vendor": "flatcms",
@@ -21,7 +65,7 @@
       "max_core_version": "",
       "changelog": "FlatCMS 1.1.6 : corrige IconPicker et les formulaires d’installation, fiabilise la détection des versions dans UpdateManager, ajoute le changelog au tableau de bord et exclut les plugins premium des paquets publics.",
       "published_at": "2026-08-26T12:00:00Z",
-      "availability": "published",
+      "availability": "archived",
       "size_bytes": 4525972,
       "requires_packages": [
         {
