@@ -35,6 +35,7 @@ final class CoreUpdatePathPolicy
         'storage/',
         'uploads/',
         'public/uploads/',
+        'resources/licenses/',
         'resources/Store/',
         'resources/updates/catalogs/',
     ];

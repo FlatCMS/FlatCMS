@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.9
+
+- interdit aux mises à jour Core de modifier le coffre et l'audit des licences premium.
+
 ## 0.4.8
 
 - prend en charge les composants premium publiés au catalogue sans exposer leur archive ;

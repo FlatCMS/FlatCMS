@@ -131,9 +131,10 @@ Une mise à jour Core ne peut pas modifier directement :
 - `data/` et `storage/` ;
 - `uploads/` et `public/uploads/` ;
 - `app/Plugins/` et `app/Extensions/` ;
+- `resources/licenses/` ;
 - `resources/updates/catalogs/`.
 
-Ce dernier point protège notamment une installation utilisée comme Marketplace ou serveur de distribution.
+Ces exclusions protègent notamment les licences actives ainsi qu'une installation utilisée comme Marketplace ou serveur de distribution.
 
 
 ## Frontière d’appartenance Core 0.4.0
