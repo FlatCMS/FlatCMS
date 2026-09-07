@@ -9,6 +9,26 @@
 
 declare(strict_types=1);
 
+use App\Core\Storage\CacheStore;
+
+if (!function_exists('cache_store')) {
+    function cache_store(): CacheStore
+    {
+        static $store = null;
+
+        return $store ??= new CacheStore(BASE_PATH . '/storage/cache/data');
+    }
+}
+
+if (!function_exists('view_cache_store')) {
+    function view_cache_store(): CacheStore
+    {
+        static $store = null;
+
+        return $store ??= new CacheStore(BASE_PATH . '/storage/cache/views');
+    }
+}
+
 if (!function_exists('cache_get')) {
     function cache_get(string $key, mixed $default = null): mixed
     {
@@ -16,16 +36,13 @@ if (!function_exists('cache_get')) {
             return $default;
         }
 
-        $path = cache_path($key);
-        
-        if (!file_exists($path)) {
+        try {
+            $data = cache_store()->readJson($key);
+        } catch (\Throwable) {
             return $default;
         }
 
-        $content = file_get_contents($path);
-        $data = json_decode($content, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (!is_array($data)) {
             return $default;
         }
 
@@ -46,13 +63,6 @@ if (!function_exists('cache_set')) {
             return false;
         }
 
-        $path = cache_path($key);
-        $dir = dirname($path);
-        
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
         $ttl = $ttl ?? (int) env('CACHE_TTL', 3600);
         
         $data = [
@@ -61,21 +71,24 @@ if (!function_exists('cache_set')) {
             'expires_at' => time() + $ttl,
         ];
 
-        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        return file_put_contents($path, $json, LOCK_EX) !== false;
+        try {
+            cache_store()->writeJson($key, $data);
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }
 
 if (!function_exists('cache_forget')) {
     function cache_forget(string $key): bool
     {
-        $path = cache_path($key);
-        
-        if (file_exists($path)) {
-            return unlink($path);
+        try {
+            cache_store()->forget($key);
+            return true;
+        } catch (\Throwable) {
+            return false;
         }
-
-        return true;
     }
 }
 
@@ -105,55 +118,41 @@ if (!function_exists('cache_remember')) {
 if (!function_exists('cache_clear')) {
     function cache_clear(): bool
     {
-        $cachePath = BASE_PATH . '/storage/cache/data';
-        
-        if (!is_dir($cachePath)) {
+        try {
+            cache_store()->clear();
             return true;
+        } catch (\Throwable) {
+            return false;
         }
-
-        $files = glob($cachePath . '/*.json');
-        
-        foreach ($files as $file) {
-            if (is_file($file)) {
-                unlink($file);
-            }
-        }
-
-        return true;
     }
 }
 
 if (!function_exists('cache_path')) {
     function cache_path(string $key): string
     {
-        $filename = md5($key) . '.json';
-        return BASE_PATH . '/storage/cache/data/' . $filename;
+        return cache_store()->pathFor($key);
     }
 }
 
 if (!function_exists('view_cache_get')) {
     function view_cache_get(string $key): ?string
     {
-        $path = BASE_PATH . '/storage/cache/views/' . md5($key) . '.php';
-        
-        if (file_exists($path)) {
-            return file_get_contents($path);
+        try {
+            return view_cache_store()->readText($key);
+        } catch (\Throwable) {
+            return null;
         }
-
-        return null;
     }
 }
 
 if (!function_exists('view_cache_set')) {
     function view_cache_set(string $key, string $content): bool
     {
-        $path = BASE_PATH . '/storage/cache/views/' . md5($key) . '.php';
-        $dir = dirname($path);
-        
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+        try {
+            view_cache_store()->writeText($key, $content);
+            return true;
+        } catch (\Throwable) {
+            return false;
         }
-
-        return file_put_contents($path, $content, LOCK_EX) !== false;
     }
 }

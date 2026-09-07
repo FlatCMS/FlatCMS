@@ -11,37 +11,40 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth\Services;
 
+use App\Core\Storage\AtomicFileWriter;
+use App\Core\Storage\FileLockManager;
+use App\Core\Storage\JsonLineStore;
+
 final class LicenseAuditService
 {
-    private string $path;
+    private JsonLineStore $store;
+    private string $recordPath;
 
-    public function __construct(?string $path = null)
+    public function __construct(?string $path = null, ?JsonLineStore $store = null, ?string $lockRoot = null)
     {
-        $this->path = $path ?? (BASE_PATH . '/resources/licenses/audit.jsonl');
+        $path ??= BASE_PATH . '/resources/licenses/audit.jsonl';
+
+        if ($store === null) {
+            $auditRoot = dirname($path);
+            $lockRoot ??= BASE_PATH . '/storage/cache/locks/licenses';
+            $store = new JsonLineStore($auditRoot, new AtomicFileWriter(
+                $auditRoot,
+                new FileLockManager($lockRoot)
+            ));
+        }
+
+        $this->store = $store;
+        $this->recordPath = basename($path);
     }
 
     public function record(string $action, array $context = []): void
     {
-        $this->ensureDirectory();
-
         $payload = [
             'action' => $action,
             'timestamp' => date('Y-m-d H:i:s'),
             'context' => $context,
         ];
 
-        @file_put_contents(
-            $this->path,
-            json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL,
-            FILE_APPEND | LOCK_EX
-        );
-    }
-
-    private function ensureDirectory(): void
-    {
-        $dir = dirname($this->path);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
-        }
+        $this->store->append($this->recordPath, $payload);
     }
 }

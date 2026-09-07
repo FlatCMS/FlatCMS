@@ -14,6 +14,8 @@ namespace App\Modules\Modules\Controllers;
 use App\Core\BaseController;
 use App\Core\I18n;
 use App\Core\ModuleManager;
+use App\Core\ModuleStateRepository;
+use App\Core\RuntimeAssetPublisher;
 use App\Services\Licensing\ExtensionLicenseService;
 
 class AdminController extends BaseController
@@ -22,8 +24,8 @@ class AdminController extends BaseController
     private string $extensionsPath;
     private string $pluginsPath;
     private string $statePath;
-    private string $publicModulesPath;
     private string $tmpPath;
+    private ModuleStateRepository $stateRepository;
 
     public function __construct()
     {
@@ -33,8 +35,8 @@ class AdminController extends BaseController
         $this->extensionsPath = BASE_PATH . '/app/Extensions';
         $this->pluginsPath = BASE_PATH . '/app/Plugins';
         $this->statePath = BASE_PATH . '/data/modules.json';
-        $this->publicModulesPath = BASE_PATH . '/public/modules';
         $this->tmpPath = BASE_PATH . '/storage/tmp/extensions';
+        $this->stateRepository = new ModuleStateRepository($this->statePath);
     }
 
     public function index(): void
@@ -106,7 +108,7 @@ class AdminController extends BaseController
             return;
         }
 
-        $state = $this->readState();
+        $state = [];
         $isEnabled = $manager->isEnabled($name);
         $lockedModules = $this->resolveLockedModules($manager->enabled());
         if (isset($lockedModules[$name])) {
@@ -227,7 +229,7 @@ class AdminController extends BaseController
         }
 
         $sidebarVisible = (bool) ($meta['sidebar_visible'] ?? true);
-        $state = $this->readState();
+        $state = [];
         $this->setStateFlag($state, $name, 'sidebar_visible', !$sidebarVisible);
         $this->writeState($state);
 
@@ -492,7 +494,7 @@ class AdminController extends BaseController
                     return;
                 }
 
-                if (!$this->createAssetsSymlink($moduleName, $destination)) {
+                if (!$this->publishComponentAssets($moduleName)) {
                     $this->removeDirectory($destination);
                     $this->cleanupInstall($zipPath, $extractDir);
                     $this->session->flash('error', __('extensions_copy_failed', 'Modules'));
@@ -570,40 +572,31 @@ class AdminController extends BaseController
         }
 
         hook_run('modules.before_delete', $meta);
+        try {
+            (new RuntimeAssetPublisher())->removeComponentAssets($meta);
+        } catch (\Throwable $exception) {
+            error_log('[FlatCMS][Modules] Unable to remove public assets: ' . $exception->getMessage());
+            $this->session->flash('error', __('module_delete_failed', 'Modules'));
+            $this->redirect(url('/admin/modules'));
+            return;
+        }
+
         $this->removeModuleTranslations($name);
         $this->removeDirectory($path);
-        $this->removeAssetsLink($name);
 
-        $state = $this->readState();
-        unset($state[$name]);
-        $this->writeState($state);
+        $this->stateRepository->remove($name);
 
         hook_run('modules.after_delete', $meta);
         $this->session->flash('success', __('module_deleted_success', 'Modules', ['module' => $meta['name'] ?? $name]));
         $this->redirect(url('/admin/modules'));
     }
 
-    private function readState(): array
-    {
-        if (!file_exists($this->statePath)) {
-            return [];
-        }
-
-        $content = file_get_contents($this->statePath);
-        $data = json_decode($content, true);
-        return is_array($data) ? $data : [];
-    }
-
+    /**
+     * @param array<string, array<string, mixed>> $state
+     */
     private function writeState(array $state): void
     {
-        if (!is_dir(dirname($this->statePath))) {
-            mkdir(dirname($this->statePath), 0755, true);
-        }
-
-        file_put_contents(
-            $this->statePath,
-            json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-        );
+        $this->stateRepository->merge($state);
     }
 
     private function setStateFlag(array &$state, string $name, string $flag, bool $value): void
@@ -1251,7 +1244,7 @@ class AdminController extends BaseController
             }
             $swapped = true;
 
-            if (!$this->createAssetsSymlink($moduleName, $destination)) {
+            if (!$this->publishComponentAssets($moduleName)) {
                 throw new \RuntimeException('extensions_update_assets_failed');
             }
 
@@ -1268,7 +1261,7 @@ class AdminController extends BaseController
                     $this->removeDirectory($failed);
                 }
                 if (is_dir($destination)) {
-                    $this->createAssetsSymlink($moduleName, $destination);
+                    $this->publishComponentAssets($moduleName);
                 }
             }
             return $result(false, $exception->getMessage() !== '' ? $exception->getMessage() : 'extensions_update_swap_failed');
@@ -1320,154 +1313,14 @@ class AdminController extends BaseController
         return true;
     }
 
-    private function createAssetsSymlink(string $moduleName, string $modulePath): bool
+    private function publishComponentAssets(string $moduleName): bool
     {
-        $assetsPath = $modulePath . '/Assets';
-        if (!is_dir($assetsPath)) {
+        try {
+            (new RuntimeAssetPublisher())->publishComponent($moduleName);
             return true;
-        }
-
-        $contract = flatcms_resolve_module_asset_contract($moduleName);
-        $linkPath = trim((string) ($contract['public_path'] ?? ''));
-        if ($linkPath === '') {
+        } catch (\Throwable $exception) {
+            error_log('[FlatCMS][Modules] Unable to publish public assets: ' . $exception->getMessage());
             return false;
-        }
-
-        $publicBasePath = dirname($linkPath);
-        if (!is_dir($publicBasePath) && !@mkdir($publicBasePath, 0755, true) && !is_dir($publicBasePath)) {
-            return false;
-        }
-
-        if (is_link($linkPath)) {
-            $currentReal = realpath($linkPath);
-            $expectedReal = realpath($assetsPath);
-            if ($currentReal === $expectedReal && $expectedReal !== false) {
-                return true;
-            }
-            if (!@unlink($linkPath) && file_exists($linkPath)) {
-                return false;
-            }
-        } elseif (is_dir($linkPath)) {
-            if (function_exists('symlink')) {
-                $this->removeDirectory($linkPath);
-            } else {
-                // Shared hosting fallback: keep a real folder and refresh files in place.
-                return $this->copyDirectory($assetsPath, $linkPath);
-            }
-        } elseif (file_exists($linkPath)) {
-            if (!@unlink($linkPath) && file_exists($linkPath)) {
-                return false;
-            }
-        }
-
-        if (function_exists('symlink')) {
-            $linked = @symlink($assetsPath, $linkPath);
-            if ($linked !== false && is_link($linkPath)) {
-                return true;
-            }
-        }
-
-        // Symlink unavailable (Nginx shared hosting, Windows, etc.): copy assets.
-        return $this->copyDirectory($assetsPath, $linkPath);
-    }
-
-    private function removeAssetsLink(string $moduleName): void
-    {
-        $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '', $moduleName) ?: $moduleName;
-        $contract = flatcms_resolve_module_asset_contract($moduleName);
-        $declaredPath = trim((string) ($contract['public_path'] ?? ''));
-        $candidates = array_unique([
-            $declaredPath,
-            $this->publicModulesPath . '/' . strtolower($moduleName),
-            $this->publicModulesPath . '/' . strtolower($sanitized),
-        ]);
-
-        foreach ($candidates as $candidate) {
-            $linkPath = $candidate;
-            if ($linkPath === '') {
-                continue;
-            }
-            if (is_link($linkPath)) {
-                @unlink($linkPath);
-                continue;
-            }
-
-            if (is_dir($linkPath)) {
-                // Fallback mode (assets copied instead of symlink): remove directory on uninstall.
-                $this->removeDirectory($linkPath);
-                continue;
-            }
-
-            if (file_exists($linkPath)) {
-                @unlink($linkPath);
-            }
-        }
-
-        // Safety net: remove any remaining symlink/directory that points to this module assets.
-        if (!is_dir($this->publicModulesPath)) {
-            return;
-        }
-
-        $entries = scandir($this->publicModulesPath);
-        if ($entries === false) {
-            return;
-        }
-
-        $expectedTargets = [
-            realpath($this->modulesPath . '/' . $sanitized . '/Assets'),
-            realpath($this->extensionsPath . '/' . $sanitized . '/Assets'),
-            realpath($this->pluginsPath . '/' . $sanitized . '/Assets'),
-            realpath($this->modulesPath . '/' . $moduleName . '/Assets'),
-            realpath($this->extensionsPath . '/' . $moduleName . '/Assets'),
-            realpath($this->pluginsPath . '/' . $moduleName . '/Assets'),
-        ];
-        $expectedTargets = array_values(array_filter(array_unique($expectedTargets)));
-        if (empty($expectedTargets)) {
-            return;
-        }
-
-        foreach ($entries as $entry) {
-            if ($entry === '.' || $entry === '..') {
-                continue;
-            }
-            $path = $this->publicModulesPath . '/' . $entry;
-            if (!is_link($path)) {
-                continue;
-            }
-            $targetReal = realpath($path);
-            if ($targetReal !== false && in_array($targetReal, $expectedTargets, true)) {
-                @unlink($path);
-            }
-        }
-
-        foreach ([BASE_PATH . '/public/assets/extensions', BASE_PATH . '/public/assets/plugins'] as $extensionAssetsRoot) {
-            if (!is_dir($extensionAssetsRoot)) {
-                continue;
-            }
-
-            $iterator = scandir($extensionAssetsRoot);
-            if ($iterator === false) {
-                continue;
-            }
-
-            foreach ($iterator as $entry) {
-                if ($entry === '.' || $entry === '..') {
-                    continue;
-                }
-
-                $path = $extensionAssetsRoot . '/' . $entry;
-                if (is_link($path)) {
-                    $targetReal = realpath($path);
-                    if ($targetReal !== false && in_array($targetReal, $expectedTargets, true)) {
-                        @unlink($path);
-                    }
-                    continue;
-                }
-
-                if (is_dir($path) && in_array(realpath($path), $expectedTargets, true)) {
-                    $this->removeDirectory($path);
-                }
-            }
         }
     }
 

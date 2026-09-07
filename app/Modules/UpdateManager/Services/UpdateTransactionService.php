@@ -33,9 +33,15 @@ final class UpdateTransactionService
      * @param array<string,mixed> $prepared
      * @param array<string,mixed> $package
      * @param callable|null $healthCheck function(string $basePath, array $manifest): bool
+     * @param callable|null $afterRollback function(string $basePath, array $manifest): void
      * @return array<string,mixed>
      */
-    public function applyCore(array $prepared, array $package, ?callable $healthCheck = null): array
+    public function applyCore(
+        array $prepared,
+        array $package,
+        ?callable $healthCheck = null,
+        ?callable $afterRollback = null
+    ): array
     {
         $manifest = is_array($prepared['manifest'] ?? null) ? $prepared['manifest'] : [];
         $extractPath = rtrim((string) ($prepared['extract_path'] ?? ''), '/\\');
@@ -105,6 +111,13 @@ final class UpdateTransactionService
                 $this->rollback($backupPath, $targets, $mutatedPaths);
             } catch (\Throwable $rollbackException) {
                 $rollbackError = $rollbackException->getMessage();
+            }
+            if ($rollbackError === '' && $afterRollback !== null) {
+                try {
+                    $afterRollback($this->basePath, $manifest);
+                } catch (\Throwable $rollbackException) {
+                    $rollbackError = 'post_rollback_failed:' . $rollbackException->getMessage();
+                }
             }
 
             $this->history->append([

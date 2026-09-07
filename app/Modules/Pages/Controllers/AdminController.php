@@ -16,6 +16,7 @@ use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
 use App\Core\ModuleManager;
+use App\Core\Storage\StorageException;
 use App\Modules\Auth\Services\RoleService;
 use App\Modules\Media\Models\MediaModel;
 use App\Modules\Pages\Services\PageTranslationService;
@@ -164,37 +165,16 @@ class AdminController extends BaseController
             return;
         }
 
-        hook_run('pages.before_save', $sourcePayload);
-        $page = $this->pages->create($sourcePayload);
-        $translationGroup = (string) ($page['id'] ?? '');
-        $page = $this->pages->update((string) $page['id'], [
-            'translation_group' => $translationGroup,
-            'locale' => $sourceLocale,
-            'source_locale' => $sourceLocale,
-            'status' => $globalStatus,
-        ]) ?? $page;
-        hook_run('pages.after_save', $page);
-
-        $savedByLocale = [
-            $sourceLocale => $page,
-        ];
-
-        foreach ($entries as $locale => $entry) {
-            if ($locale === $sourceLocale) {
-                continue;
-            }
-
-            $payload = array_merge($entry, [
-                'translation_group' => $translationGroup,
-                'source_locale' => $sourceLocale,
-                'status' => $globalStatus,
-                'author_id' => (string) ($page['author_id'] ?? auth()['id'] ?? ''),
-            ]);
-            hook_run('pages.before_save', $payload);
-            $savedByLocale[$locale] = $this->pages->create($payload);
-            hook_run('pages.after_save', $savedByLocale[$locale]);
+        try {
+            $savedByLocale = $this->persistPageTranslationEntries($entries, $sourceLocale, true);
+        } catch (StorageException) {
+            $this->session->flash('error', __('error.server', 'Core'));
+            $this->flashPageTranslationOldInput($prepared['submitted'], $sourceLocale, '', $sourceLocale, $globalStatus);
+            $this->redirect(url('/admin/pages/create?locale=' . rawurlencode($sourceLocale)));
+            return;
         }
 
+        $page = $savedByLocale[$sourceLocale] ?? $sourcePayload;
         $redirectPage = $savedByLocale[$activeLocale] ?? $page;
 
         $this->session->flash('success', __('page_created', 'Pages'));
@@ -302,58 +282,19 @@ class AdminController extends BaseController
 
             $entries = is_array($prepared['entries'] ?? null) ? $prepared['entries'] : [];
             $entries = $this->propagatePageMediaReplacements($entries, $existingTranslations);
-            $savedByLocale = [];
-            $sourceId = (string) ($sourcePage['id'] ?? '');
-            $sourceAuthorId = trim((string) (($sourcePage['author_id'] ?? '') ?: (auth()['id'] ?? '')));
-
-            foreach ($this->translations->supportedLocales() as $locale) {
-                $entry = $entries[$locale] ?? null;
-                if (!is_array($entry)) {
-                    continue;
-                }
-
-                $existing = is_array($existingTranslations[$locale] ?? null)
-                    ? $this->translations->normalizePage($existingTranslations[$locale])
-                    : null;
-
-                if (is_array($existing)) {
-                    $payload = array_merge($existing, $entry);
-                    hook_run('pages.before_save', $payload);
-                    $saved = $this->pages->update((string) $existing['id'], $entry);
-                    if (!is_array($saved)) {
-                        continue;
-                    }
-                    hook_run('pages.after_save', $saved);
-                    $savedByLocale[$locale] = $saved;
-                    if ($locale === $sourceLocale) {
-                        $sourceId = (string) ($saved['id'] ?? $sourceId);
-                    }
-                    continue;
-                }
-
-                $payload = array_merge($entry, [
-                    'translation_group' => $translationGroup,
-                    'source_locale' => $sourceLocale,
-                    'status' => $globalStatus,
-                    'author_id' => $sourceAuthorId,
-                ]);
-                hook_run('pages.before_save', $payload);
-                $saved = $this->pages->create($payload);
-                hook_run('pages.after_save', $saved);
-                $savedByLocale[$locale] = $saved;
-                if ($locale === $sourceLocale) {
-                    $sourceId = (string) ($saved['id'] ?? $sourceId);
-                }
-            }
-
-            if ($sourceId !== '') {
-                $this->syncTranslationStatuses($translationGroup, $sourceId, $globalStatus);
+            try {
+                $savedByLocale = $this->persistPageTranslationEntries($entries, $sourceLocale, false);
+            } catch (StorageException) {
+                $this->session->flash('error', __('error.server', 'Core'));
+                $this->flashPageTranslationOldInput($prepared['submitted'], $activeLocale, $translationGroup, $sourceLocale, $globalStatus);
+                $this->redirect(url('/admin/pages/' . $id . '/edit?locale=' . rawurlencode($activeLocale)));
+                return;
             }
 
             $this->cleanupPageContextImages(array_values($savedByLocale));
 
             $redirectPage = $savedByLocale[$activeLocale]
-                ?? ($sourceId !== '' ? $this->translations->find($sourceId) : null)
+                ?? ($savedByLocale[$sourceLocale] ?? null)
                 ?? $page;
 
             $this->session->flash('success', __('page_updated', 'Pages'));
@@ -429,7 +370,21 @@ class AdminController extends BaseController
 
         foreach ($groupPages as $groupPage) {
             hook_run('pages.before_delete', $groupPage);
-            $this->pages->delete((string) ($groupPage['id'] ?? ''));
+        }
+
+        $groupIds = $this->pageIds($groupPages);
+        try {
+            $deleted = $groupIds !== [] && $this->pages->deleteMany($groupIds);
+        } catch (StorageException) {
+            $deleted = false;
+        }
+        if (!$deleted) {
+            $this->session->flash('error', __('error.server', 'Core'));
+            $this->redirect(url('/admin/pages'));
+            return;
+        }
+
+        foreach ($groupPages as $groupPage) {
             hook_run('pages.after_delete', $groupPage);
         }
 
@@ -522,37 +477,44 @@ class AdminController extends BaseController
                     continue;
                 }
 
-                $deleteFailed = false;
-                foreach ($groupPages as $groupPage) {
-                    $groupId = (string) ($groupPage['id'] ?? '');
-                    if ($groupId === '' || !$this->pages->delete($groupId)) {
-                        $deleteFailed = true;
-                        break;
-                    }
-                    hook_run('pages.after_archive', $groupPage);
+                $groupIds = $this->pageIds($groupPages);
+                try {
+                    $deleted = $groupIds !== [] && $this->pages->deleteMany($groupIds);
+                } catch (StorageException) {
+                    $deleted = false;
                 }
-                if ($deleteFailed) {
+                if (!$deleted) {
+                    foreach ($archivedEntries as $archivedEntry) {
+                        $trash?->delete((string) ($archivedEntry['id'] ?? ''));
+                    }
                     $skipped++;
                     continue;
+                }
+
+                foreach ($groupPages as $groupPage) {
+                    hook_run('pages.after_archive', $groupPage);
                 }
 
                 $processed++;
                 continue;
             }
 
-            $deleteFailed = false;
             foreach ($groupPages as $groupPage) {
                 hook_run('pages.before_delete', $groupPage);
-                $groupId = (string) ($groupPage['id'] ?? '');
-                if ($groupId === '' || !$this->pages->delete($groupId)) {
-                    $deleteFailed = true;
-                    break;
-                }
-                hook_run('pages.after_delete', $groupPage);
             }
-            if ($deleteFailed) {
+
+            $groupIds = $this->pageIds($groupPages);
+            try {
+                $deleted = $groupIds !== [] && $this->pages->deleteMany($groupIds);
+            } catch (StorageException) {
+                $deleted = false;
+            }
+            if (!$deleted) {
                 $skipped++;
                 continue;
+            }
+            foreach ($groupPages as $groupPage) {
+                hook_run('pages.after_delete', $groupPage);
             }
             $processed++;
         }
@@ -1120,6 +1082,59 @@ class AdminController extends BaseController
     }
 
     /**
+     * @param array<string, array<string, mixed>> $entries
+     * @return array<string, array<string, mixed>>
+     */
+    private function persistPageTranslationEntries(array $entries, string $sourceLocale, bool $create): array
+    {
+        $orderedEntries = [];
+        if (is_array($entries[$sourceLocale] ?? null)) {
+            $orderedEntries[$sourceLocale] = $entries[$sourceLocale];
+        }
+        foreach ($entries as $locale => $entry) {
+            if ($locale === $sourceLocale || !is_array($entry)) {
+                continue;
+            }
+            $orderedEntries[$locale] = $entry;
+        }
+
+        if ($orderedEntries === [] || ($create && !isset($orderedEntries[$sourceLocale]))) {
+            throw new StorageException('Page translation transaction requires a source entry.');
+        }
+
+        foreach ($orderedEntries as $payload) {
+            hook_run('pages.before_save', $payload);
+        }
+
+        $saved = $create
+            ? $this->pages->createTranslationGroup($orderedEntries, $sourceLocale)
+            : $this->pages->saveMany($orderedEntries);
+
+        foreach ($saved as $page) {
+            hook_run('pages.after_save', $page);
+        }
+
+        return $saved;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $pages
+     * @return array<int, string>
+     */
+    private function pageIds(array $pages): array
+    {
+        $ids = [];
+        foreach ($pages as $page) {
+            $id = trim((string) ($page['id'] ?? ''));
+            if ($id !== '') {
+                $ids[$id] = $id;
+            }
+        }
+
+        return array_values($ids);
+    }
+
+    /**
      * @param array<string, array<string, mixed>> $existingTranslations
      * @param array<string, mixed>|null $sourcePage
      * @return array{entries: array<string, array<string, mixed>>, errors: array<int, array<string, string>>, submitted: array<string, array<string, string>>}
@@ -1436,28 +1451,6 @@ class AdminController extends BaseController
         }
 
         return array_values($translations);
-    }
-
-    private function syncTranslationStatuses(string $translationGroup, string $sourceId, string $status): void
-    {
-        if ($translationGroup === '') {
-            return;
-        }
-
-        $translations = $this->translations->getTranslations($translationGroup, false);
-        foreach ($translations as $translation) {
-            $translationId = (string) ($translation['id'] ?? '');
-            if ($translationId === '' || $translationId === $sourceId) {
-                continue;
-            }
-            if (!$this->supportsTranslationsForPage($translation)) {
-                continue;
-            }
-            if ((string) ($translation['status'] ?? 'draft') === $status) {
-                continue;
-            }
-            $this->pages->update($translationId, ['status' => $status]);
-        }
     }
 
     private function buildPagesIndexUrl(string $status = 'all'): string

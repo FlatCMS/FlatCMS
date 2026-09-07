@@ -80,6 +80,7 @@
     "theme_move_to_trash_confirm": "Tem a certeza de que pretende mover este tema para a lixeira?",
     "theme_move_to_trash_success": "Tema movido para a lixeira.",
     "theme_move_to_trash_failed": "Falha ao mover o tema para a lixeira.",
+    "theme_archive_unavailable": "A lixeira tem de estar instalada e ativa para arquivar um tema.",
     "theme_move_to_trash_active_blocked": "O tema ativo não pode ser movido para a lixeira.",
     "theme_customization_unavailable": "Este tema não disponibiliza personalização na linha LTS.",
     "themes_help_badge": "Workflow",

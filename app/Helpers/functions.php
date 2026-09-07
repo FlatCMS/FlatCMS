@@ -669,57 +669,6 @@ if (!function_exists('guided_tour_collect_module_tours')) {
     }
 }
 
-if (!function_exists('copy_module_assets_directory')) {
-    function copy_module_assets_directory(string $source, string $destination): bool
-    {
-        if (!is_dir($source)) {
-            return false;
-        }
-
-        if (!is_dir($destination) && !@mkdir($destination, 0755, true) && !is_dir($destination)) {
-            return false;
-        }
-
-        $sourceReal = realpath($source);
-        if ($sourceReal === false) {
-            return false;
-        }
-
-        $sourcePrefix = rtrim(str_replace('\\', '/', $sourceReal), '/') . '/';
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($sourceReal, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::SELF_FIRST
-        );
-
-        foreach ($iterator as $item) {
-            $pathname = str_replace('\\', '/', $item->getPathname());
-            $relativePath = ltrim(substr($pathname, strlen($sourcePrefix)), '/');
-            if ($relativePath === '') {
-                continue;
-            }
-
-            $targetPath = rtrim($destination, '/') . '/' . $relativePath;
-            if ($item->isDir()) {
-                if (!is_dir($targetPath) && !@mkdir($targetPath, 0755, true) && !is_dir($targetPath)) {
-                    return false;
-                }
-                continue;
-            }
-
-            $targetDir = dirname($targetPath);
-            if (!is_dir($targetDir) && !@mkdir($targetDir, 0755, true) && !is_dir($targetDir)) {
-                return false;
-            }
-
-            if (!@copy($item->getPathname(), $targetPath)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-}
-
 if (!function_exists('flatcms_resolve_module_asset_contract')) {
     function flatcms_resolve_module_asset_contract(string $module): array
     {
@@ -805,70 +754,9 @@ if (!function_exists('flatcms_resolve_module_asset_contract')) {
     }
 }
 
-if (!function_exists('ensure_module_assets_link')) {
-    function ensure_module_assets_link(string $module): void
-    {
-        $contract = flatcms_resolve_module_asset_contract($module);
-        $assetsPath = trim((string) ($contract['source_path'] ?? ''));
-        if ($assetsPath === '') {
-            return;
-        }
-
-        $linkPath = trim((string) ($contract['public_path'] ?? ''));
-        if ($linkPath === '') {
-            return;
-        }
-
-        $publicBasePath = dirname($linkPath);
-        if (!is_dir($publicBasePath) && !@mkdir($publicBasePath, 0755, true) && !is_dir($publicBasePath)) {
-            return;
-        }
-        $expectedReal = realpath($assetsPath);
-        $sourceParts = explode('/', trim(str_replace('\\', '/', $assetsPath), '/'));
-        $destinationParts = explode('/', trim(str_replace('\\', '/', $publicBasePath), '/'));
-
-        while ($sourceParts !== [] && $destinationParts !== [] && $sourceParts[0] === $destinationParts[0]) {
-            array_shift($sourceParts);
-            array_shift($destinationParts);
-        }
-
-        $relativeTarget = str_repeat('../', count($destinationParts)) . implode('/', $sourceParts);
-
-        if (is_link($linkPath)) {
-            $currentReal = realpath($linkPath);
-            $currentTarget = readlink($linkPath);
-            if ($expectedReal !== false && $currentReal === $expectedReal && $currentTarget === $relativeTarget) {
-                return;
-            }
-            if (!@unlink($linkPath) && file_exists($linkPath)) {
-                return;
-            }
-        } elseif (is_file($linkPath)) {
-            if (!@unlink($linkPath) && file_exists($linkPath)) {
-                return;
-            }
-        } elseif (is_dir($linkPath)) {
-            // Fallback mode (copied assets): keep directory and refresh contents.
-            copy_module_assets_directory($assetsPath, $linkPath);
-            return;
-        }
-
-        if ($relativeTarget !== '' && function_exists('symlink')) {
-            $linked = @symlink($relativeTarget, $linkPath);
-            if ($linked !== false && is_link($linkPath)) {
-                return;
-            }
-        }
-
-        copy_module_assets_directory($assetsPath, $linkPath);
-    }
-}
-
 if (!function_exists('module_asset')) {
     function module_asset(string $module, string $path): string
     {
-        ensure_module_assets_link($module);
-
         $relativePath = ltrim($path, '/');
         $contract = flatcms_resolve_module_asset_contract($module);
         $baseUrl = rtrim((string) ($contract['public_url'] ?? ''), '/');
@@ -1589,7 +1477,25 @@ if (!function_exists('menu_front_render_icon_html')) {
 if (!function_exists('menu_front_normalize_path')) {
     function menu_front_normalize_path(string $url): string
     {
-        $path = (string) parse_url($url, PHP_URL_PATH);
+        $parts = parse_url($url);
+        if (!is_array($parts)) {
+            return '/';
+        }
+
+        $path = (string) ($parts['path'] ?? '');
+        $query = (string) ($parts['query'] ?? '');
+        $frontControllerPath = $path === '/'
+            || $path === ''
+            || basename($path) === 'index.php';
+
+        if ($frontControllerPath && $query !== '') {
+            parse_str($query, $parameters);
+            $routePath = $parameters['path'] ?? null;
+            if (is_string($routePath)) {
+                $path = $routePath;
+            }
+        }
+
         if ($path === '') {
             return '/';
         }

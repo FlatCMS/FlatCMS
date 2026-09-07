@@ -11,23 +11,22 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Core\Storage\JsonStore;
+use App\Core\Storage\StorageException;
+
 class FlatFile
 {
-    /** @var array<string, array<string, mixed>> */
-    private static array $settingsCache = [];
-
     private string $basePath;
+    private string $dataRoot;
     private string $entity;
+    private JsonStore $store;
 
     public function __construct(string $entity)
     {
-        $this->entity = $entity;
-        $this->basePath = BASE_PATH . '/data/' . $entity;
-        
-        // Ensure directory exists
-        if (!is_dir($this->basePath)) {
-            mkdir($this->basePath, 0755, true);
-        }
+        $this->entity = trim($entity, '/');
+        $this->dataRoot = BASE_PATH . '/data';
+        $this->store = new JsonStore($this->dataRoot);
+        $this->basePath = $this->store->ensureDirectory($this->entity);
     }
 
     public static function for(string $entity): self
@@ -146,13 +145,13 @@ class FlatFile
     {
         $path = $this->getFilePath($id);
         
-        if (file_exists($path)) {
-            return unlink($path);
+        if (is_file($path) && !is_link($path)) {
+            return $this->store->delete($path);
         }
 
         $legacyPath = $this->getLegacyFilePath($id);
-        if ($legacyPath !== null && file_exists($legacyPath)) {
-            return unlink($legacyPath);
+        if ($legacyPath !== null && is_file($legacyPath) && !is_link($legacyPath)) {
+            return $this->store->delete($legacyPath);
         }
 
         return false;
@@ -160,12 +159,12 @@ class FlatFile
 
     public function exists(string $id): bool
     {
-        if (file_exists($this->getFilePath($id))) {
+        if (is_file($this->getFilePath($id)) && !is_link($this->getFilePath($id))) {
             return true;
         }
 
         $legacyPath = $this->getLegacyFilePath($id);
-        return $legacyPath !== null && file_exists($legacyPath);
+        return $legacyPath !== null && is_file($legacyPath) && !is_link($legacyPath);
     }
 
     public function count(): int
@@ -212,23 +211,17 @@ class FlatFile
     private function save(string $id, array $data): void
     {
         $path = $this->getFilePath($id);
-        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        $saved = file_put_contents($path, $json, LOCK_EX) !== false;
-        if ($saved) {
-            $this->cleanupLegacyFilePath($id, $path);
-        }
+        $this->store->write($path, $data);
+        $this->cleanupLegacyFilePath($id, $path);
     }
 
     private function readFile(string $path): ?array
     {
-        if (!file_exists($path)) {
+        if (!is_file($path)) {
             return null;
         }
 
-        $content = file_get_contents($path);
-        $data = json_decode($content, true);
-
-        return json_last_error() === JSON_ERROR_NONE ? $data : null;
+        return $this->store->read($path);
     }
 
     private function getFilePath(string $id): string
@@ -267,7 +260,7 @@ class FlatFile
         }
 
         if (file_exists($legacyPath)) {
-            @unlink($legacyPath);
+            $this->store->delete($legacyPath);
         }
     }
 
@@ -279,47 +272,33 @@ class FlatFile
     // Settings helper - for single config files
     public static function settings(string $name = 'settings'): array
     {
-        if (array_key_exists($name, self::$settingsCache)) {
-            return self::$settingsCache[$name];
-        }
-
         $path = self::resolveSettingsReadPath($name);
 
-        if (!file_exists($path)) {
-            self::$settingsCache[$name] = [];
-            return self::$settingsCache[$name];
+        if (!is_file($path)) {
+            return [];
         }
 
-        $content = file_get_contents($path);
-        $data = json_decode($content, true);
-
-        self::$settingsCache[$name] = json_last_error() === JSON_ERROR_NONE && is_array($data) ? $data : [];
-        return self::$settingsCache[$name];
+        return self::dataStore()->read($path);
     }
 
     public static function saveSettings(array $data, string $name = 'settings'): bool
     {
         $path = self::resolveSettingsWritePath($name);
-        $dir = dirname($path);
-        
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+
+        try {
+            self::dataStore()->write($path, $data);
+            self::cleanupLegacySettingsPath($name, $path);
+        } catch (StorageException) {
+            return false;
         }
 
-        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        $saved = file_put_contents($path, $json, LOCK_EX) !== false;
-        if ($saved) {
-            self::cleanupLegacySettingsPath($name, $path);
-            self::$settingsCache[$name] = $data;
-        }
-        return $saved;
+        return true;
     }
 
     private static function resolveSettingsReadPath(string $name): string
     {
         $preferred = self::resolveSettingsWritePath($name);
         if (file_exists($preferred)) {
-            self::cleanupLegacySettingsPath($name, $preferred);
             return $preferred;
         }
 
@@ -358,7 +337,7 @@ class FlatFile
             }
 
             if (file_exists($legacy)) {
-                @unlink($legacy);
+                self::dataStore()->delete($legacy);
             }
 
             self::cleanupLegacyDirectory($legacy);
@@ -399,5 +378,10 @@ class FlatFile
                 self::resolveLegacySettingsPath($name),
             ],
         };
+    }
+
+    private static function dataStore(): JsonStore
+    {
+        return new JsonStore(BASE_PATH . '/data');
     }
 }

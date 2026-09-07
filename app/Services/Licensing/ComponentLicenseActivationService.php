@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace App\Services\Licensing;
 
 use App\Core\ModuleManager;
+use App\Core\ModuleStateRepository;
 use App\Modules\Auth\Services\LicenseVaultService;
 use RuntimeException;
 
@@ -22,13 +23,16 @@ final class ComponentLicenseActivationService
     private ModuleManager $modules;
     private LicenseVaultService $vault;
     private string $statePath;
+    private ModuleStateRepository $stateRepository;
 
     public function __construct(
         ?ModuleManager $modules = null,
         ?LicenseVaultService $vault = null,
-        ?string $statePath = null
+        ?string $statePath = null,
+        ?ModuleStateRepository $stateRepository = null
     ) {
         $this->statePath = $statePath ?? (BASE_PATH . '/data/modules.json');
+        $this->stateRepository = $stateRepository ?? new ModuleStateRepository($this->statePath);
         $this->modules = $modules ?? new ModuleManager(null, $this->statePath);
         $this->vault = $vault ?? new LicenseVaultService();
     }
@@ -128,55 +132,7 @@ final class ComponentLicenseActivationService
 
     private function enableComponent(string $component): void
     {
-        $state = $this->readState();
-        $entry = is_array($state[$component] ?? null) ? $state[$component] : [];
-        $entry['enabled'] = true;
-        $state[$component] = $entry;
-        $this->writeState($state);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function readState(): array
-    {
-        if (!is_file($this->statePath)) {
-            return [];
-        }
-
-        $decoded = json_decode((string) file_get_contents($this->statePath), true);
-        return is_array($decoded) ? $decoded : [];
-    }
-
-    /**
-     * @param array<string, mixed> $state
-     */
-    private function writeState(array $state): void
-    {
-        $directory = dirname($this->statePath);
-        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
-            throw new RuntimeException('component_license_state_write_failed');
-        }
-
-        $json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if (!is_string($json)) {
-            throw new RuntimeException('component_license_state_write_failed');
-        }
-
-        $temporary = tempnam($directory, '.modules-');
-        if (!is_string($temporary)) {
-            throw new RuntimeException('component_license_state_write_failed');
-        }
-
-        try {
-            if (file_put_contents($temporary, $json . PHP_EOL, LOCK_EX) === false || !rename($temporary, $this->statePath)) {
-                throw new RuntimeException('component_license_state_write_failed');
-            }
-        } finally {
-            if (is_file($temporary)) {
-                @unlink($temporary);
-            }
-        }
+        $this->stateRepository->merge([$component => ['enabled' => true]]);
     }
 
     /**

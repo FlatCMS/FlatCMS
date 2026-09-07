@@ -25,6 +25,7 @@ final class ModuleManager
 
     private array $modulesPaths;
     private string $statePath;
+    private ModuleStateRepository $stateRepository;
     private array $modules = [];
     private array $state = [];
     private ?array $resolvedEnabled = null;
@@ -44,6 +45,7 @@ final class ModuleManager
         }
         $this->modulesPaths = array_values(array_unique($paths));
         $this->statePath = $statePath ?? (BASE_PATH . '/data/modules.json');
+        $this->stateRepository = new ModuleStateRepository($this->statePath);
         $this->loadState();
 
         $cacheKey = $this->catalogCacheKey();
@@ -63,6 +65,11 @@ final class ModuleManager
     public function all(): array
     {
         return $this->modules;
+    }
+
+    public static function clearCatalogCache(): void
+    {
+        self::$catalogCache = [];
     }
 
     public function enabled(): array
@@ -136,14 +143,7 @@ final class ModuleManager
 
     private function loadState(): void
     {
-        if (!file_exists($this->statePath)) {
-            $this->state = [];
-            return;
-        }
-
-        $content = file_get_contents($this->statePath);
-        $data = json_decode($content, true);
-        $this->state = is_array($data) ? $data : [];
+        $this->state = $this->stateRepository->all();
     }
 
     private function catalogCacheKey(): string

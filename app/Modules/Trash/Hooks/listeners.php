@@ -25,3 +25,15 @@ hook_register('auth.menus.extend', static function (): array {
         'demo' => [$entry],
     ];
 }, ['module' => 'Trash', 'priority' => 20]);
+
+hook_register('themes.archive.available', static fn (): bool => true, [
+    'module' => 'Trash',
+    'priority' => 10,
+]);
+
+hook_register('themes.archive', static function (array $payload): ?array {
+    $theme = is_array($payload['theme'] ?? null) ? $payload['theme'] : [];
+    $deletedBy = trim((string) ($payload['deleted_by'] ?? ''));
+
+    return (new \App\Modules\Trash\Services\TrashService())->archiveTheme($theme, $deletedBy);
+}, ['module' => 'Trash', 'priority' => 10]);

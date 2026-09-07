@@ -18,6 +18,7 @@
  * @var string $pageTitle
  * @var string|bool $activeFrontend
  * @var string|bool $activeAdmin
+ * @var bool $themeArchiveAvailable
  */
 $themesCssVersion = file_exists(BASE_PATH . '/app/Modules/Themes/Assets/css/themes-module.css')
     ? (string) filemtime(BASE_PATH . '/app/Modules/Themes/Assets/css/themes-module.css')
@@ -272,18 +273,20 @@ ksort($categoryOptions);
                                     <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-primary btn-sm"><?= __('activate', 'Themes') ?></button>
                                 </form>
-                                <form action="<?= url("/admin/themes/trash/frontend/{$name}") ?>" method="POST" class="form-inline">
-                                    <?= csrf_field() ?>
-                                    <button
-                                        type="submit"
-                                        class="btn btn-outline btn-sm"
-                                        data-action="confirm-delete"
-                                        data-message="<?= e(__('theme_move_to_trash_confirm', 'Themes')) ?>"
-                                        data-item-name="<?= e((string) ($theme['name'] ?? $name)) ?>"
-                                    >
-                                        <?= __('theme_move_to_trash', 'Themes') ?>
-                                    </button>
-                                </form>
+                                <?php if ($themeArchiveAvailable): ?>
+                                    <form action="<?= url("/admin/themes/trash/frontend/{$name}") ?>" method="POST" class="form-inline">
+                                        <?= csrf_field() ?>
+                                        <button
+                                            type="submit"
+                                            class="btn btn-outline btn-sm"
+                                            data-action="confirm-delete"
+                                            data-message="<?= e(__('theme_move_to_trash_confirm', 'Themes')) ?>"
+                                            data-item-name="<?= e((string) ($theme['name'] ?? $name)) ?>"
+                                        >
+                                            <?= __('theme_move_to_trash', 'Themes') ?>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                             <?php endif; ?>
                             <?php if ($supportsCustomization): ?>
                                 <a href="<?= url("/admin/themes/frontend/{$name}/customize") ?>" class="btn btn-secondary btn-sm"><?= __('customize', 'Themes') ?></a>
@@ -370,18 +373,20 @@ ksort($categoryOptions);
                                     <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-primary btn-sm"><?= __('activate', 'Themes') ?></button>
                                 </form>
-                                <form action="<?= url("/admin/themes/trash/admin/{$name}") ?>" method="POST" class="form-inline">
-                                    <?= csrf_field() ?>
-                                    <button
-                                        type="submit"
-                                        class="btn btn-outline btn-sm"
-                                        data-action="confirm-delete"
-                                        data-message="<?= e(__('theme_move_to_trash_confirm', 'Themes')) ?>"
-                                        data-item-name="<?= e((string) ($theme['name'] ?? $name)) ?>"
-                                    >
-                                        <?= __('theme_move_to_trash', 'Themes') ?>
-                                    </button>
-                                </form>
+                                <?php if ($themeArchiveAvailable): ?>
+                                    <form action="<?= url("/admin/themes/trash/admin/{$name}") ?>" method="POST" class="form-inline">
+                                        <?= csrf_field() ?>
+                                        <button
+                                            type="submit"
+                                            class="btn btn-outline btn-sm"
+                                            data-action="confirm-delete"
+                                            data-message="<?= e(__('theme_move_to_trash_confirm', 'Themes')) ?>"
+                                            data-item-name="<?= e((string) ($theme['name'] ?? $name)) ?>"
+                                        >
+                                            <?= __('theme_move_to_trash', 'Themes') ?>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                             <?php endif; ?>
                             <?php if ($supportsCustomization): ?>
                                 <a href="<?= url("/admin/themes/admin/{$name}/customize") ?>" class="btn btn-secondary btn-sm"><?= __('customize', 'Themes') ?></a>

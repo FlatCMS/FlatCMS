@@ -11,19 +11,29 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth\Services;
 
+use App\Core\Storage\AtomicFileWriter;
+use App\Core\Storage\FileLockManager;
+use App\Core\Storage\JsonStore;
+use App\Core\Storage\StorageException;
+
 class TokenRepository
 {
-    private string $tokensPath;
-    private string $attemptsPath;
+    private JsonStore $store;
     private const MAX_ATTEMPTS = 5;
     private const BLOCK_DURATION = 900; // 15 minutes
     private const TOKEN_EXPIRY = 3600; // 1 hour
     private const ATTEMPT_RETENTION = 86400; // 24 hours
 
-    public function __construct()
+    public function __construct(?string $authPath = null, ?JsonStore $store = null)
     {
-        $this->tokensPath = BASE_PATH . '/data/core/auth/tokens.json';
-        $this->attemptsPath = BASE_PATH . '/data/core/auth/login_attempts.json';
+        $authPath ??= BASE_PATH . '/data/core/auth';
+
+        if ($store === null) {
+            $locks = new FileLockManager(BASE_PATH . '/storage/cache/locks/auth');
+            $store = new JsonStore($authPath, new AtomicFileWriter($authPath, $locks));
+        }
+
+        $this->store = $store;
     }
 
     // --- Reset Tokens ---
@@ -31,19 +41,23 @@ class TokenRepository
     public function createResetToken(string $email): string
     {
         $token = bin2hex(random_bytes(32));
-        $tokens = $this->loadTokens();
+        $now = time();
 
-        // Remove existing tokens for this email
-        $tokens = array_filter($tokens, fn($t) => $t['email'] !== $email);
+        $this->mutateTokens(static function (array $tokens) use ($email, $token, $now): array {
+            // A reset request replaces only the previous token for this address.
+            $tokens = array_values(array_filter(
+                $tokens,
+                static fn (array $entry): bool => (string) ($entry['email'] ?? '') !== $email
+            ));
+            $tokens[] = [
+                'email' => $email,
+                'token' => hash('sha256', $token),
+                'created_at' => $now,
+                'expires_at' => $now + self::TOKEN_EXPIRY,
+            ];
 
-        $tokens[] = [
-            'email' => $email,
-            'token' => hash('sha256', $token),
-            'created_at' => time(),
-            'expires_at' => time() + self::TOKEN_EXPIRY,
-        ];
-
-        $this->saveTokens(array_values($tokens));
+            return $tokens;
+        });
 
         return $token;
     }
@@ -54,7 +68,8 @@ class TokenRepository
         $tokens = $this->loadTokens();
 
         foreach ($tokens as $entry) {
-            if ($entry['token'] === $hashedToken && $entry['expires_at'] > time()) {
+            if (hash_equals((string) ($entry['token'] ?? ''), $hashedToken)
+                && (int) ($entry['expires_at'] ?? 0) > time()) {
                 return $entry;
             }
         }
@@ -65,32 +80,40 @@ class TokenRepository
     public function deleteToken(string $token): void
     {
         $hashedToken = hash('sha256', $token);
-        $tokens = $this->loadTokens();
-        $tokens = array_filter($tokens, fn($t) => $t['token'] !== $hashedToken);
-        $this->saveTokens(array_values($tokens));
+        $this->mutateTokens(static function (array $tokens) use ($hashedToken): array {
+            return array_values(array_filter(
+                $tokens,
+                static fn (array $entry): bool => !hash_equals((string) ($entry['token'] ?? ''), $hashedToken)
+            ));
+        });
     }
 
     public function cleanExpiredTokens(): void
     {
-        $tokens = $this->loadTokens();
-        $tokens = array_filter($tokens, fn($t) => $t['expires_at'] > time());
-        $this->saveTokens(array_values($tokens));
+        $now = time();
+        $this->mutateTokens(static function (array $tokens) use ($now): array {
+            return array_values(array_filter(
+                $tokens,
+                static fn (array $entry): bool => (int) ($entry['expires_at'] ?? 0) > $now
+            ));
+        });
     }
 
     // --- Login Attempts ---
 
     public function recordLoginAttempt(string $ip, string $email, bool $success): void
     {
-        $attempts = $this->loadAttempts();
+        $now = time();
+        $this->mutateAttempts(static function (array $attempts) use ($ip, $email, $success, $now): array {
+            $attempts[] = [
+                'ip' => $ip,
+                'email' => $email,
+                'success' => $success,
+                'created_at' => $now,
+            ];
 
-        $attempts[] = [
-            'ip' => $ip,
-            'email' => $email,
-            'success' => $success,
-            'created_at' => time(),
-        ];
-
-        $this->saveAttempts($attempts);
+            return $attempts;
+        });
     }
 
     public function countFailedAttempts(string $ip): int
@@ -100,7 +123,9 @@ class TokenRepository
         $count = 0;
 
         foreach ($attempts as $attempt) {
-            if ($attempt['ip'] === $ip && !$attempt['success'] && $attempt['created_at'] > $cutoff) {
+            if ((string) ($attempt['ip'] ?? '') === $ip
+                && !(bool) ($attempt['success'] ?? false)
+                && (int) ($attempt['created_at'] ?? 0) > $cutoff) {
                 $count++;
             }
         }
@@ -120,8 +145,10 @@ class TokenRepository
         $lastFailed = 0;
 
         foreach ($attempts as $attempt) {
-            if ($attempt['ip'] === $ip && !$attempt['success'] && $attempt['created_at'] > $cutoff) {
-                $lastFailed = max($lastFailed, $attempt['created_at']);
+            if ((string) ($attempt['ip'] ?? '') === $ip
+                && !(bool) ($attempt['success'] ?? false)
+                && (int) ($attempt['created_at'] ?? 0) > $cutoff) {
+                $lastFailed = max($lastFailed, (int) ($attempt['created_at'] ?? 0));
             }
         }
 
@@ -135,54 +162,72 @@ class TokenRepository
 
     public function clearAttempts(string $ip): void
     {
-        $attempts = $this->loadAttempts();
-        $attempts = array_filter($attempts, fn($a) => $a['ip'] !== $ip);
-        $this->saveAttempts(array_values($attempts));
+        $this->mutateAttempts(static function (array $attempts) use ($ip): array {
+            return array_values(array_filter(
+                $attempts,
+                static fn (array $entry): bool => (string) ($entry['ip'] ?? '') !== $ip
+            ));
+        });
     }
 
     public function cleanOldAttempts(): void
     {
-        $attempts = $this->loadAttempts();
         $cutoff = time() - self::ATTEMPT_RETENTION;
-        $attempts = array_filter($attempts, fn($a) => $a['created_at'] > $cutoff);
-        $this->saveAttempts(array_values($attempts));
+        $this->mutateAttempts(static function (array $attempts) use ($cutoff): array {
+            return array_values(array_filter(
+                $attempts,
+                static fn (array $entry): bool => (int) ($entry['created_at'] ?? 0) > $cutoff
+            ));
+        });
     }
 
     // --- Storage helpers ---
 
     private function loadTokens(): array
     {
-        if (!file_exists($this->tokensPath)) {
-            return [];
-        }
-        $data = json_decode(file_get_contents($this->tokensPath), true);
-        return is_array($data) ? $data : [];
+        return $this->normalizeRecords($this->store->read('tokens.json', []));
     }
 
-    private function saveTokens(array $tokens): void
+    private function mutateTokens(callable $mutation): void
     {
-        $dir = dirname($this->tokensPath);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        file_put_contents($this->tokensPath, json_encode($tokens, JSON_PRETTY_PRINT));
+        $this->mutateRecords('tokens.json', $mutation);
     }
 
     private function loadAttempts(): array
     {
-        if (!file_exists($this->attemptsPath)) {
-            return [];
-        }
-        $data = json_decode(file_get_contents($this->attemptsPath), true);
-        return is_array($data) ? $data : [];
+        return $this->normalizeRecords($this->store->read('login_attempts.json', []));
     }
 
-    private function saveAttempts(array $attempts): void
+    private function mutateAttempts(callable $mutation): void
     {
-        $dir = dirname($this->attemptsPath);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+        $this->mutateRecords('login_attempts.json', $mutation);
+    }
+
+    private function mutateRecords(string $path, callable $mutation): void
+    {
+        $this->store->mutate($path, function (array $records) use ($mutation): array {
+            $updated = $mutation($this->normalizeRecords($records));
+            if (!is_array($updated)) {
+                throw new StorageException('Authentication record mutation must return an array.');
+            }
+
+            return $this->normalizeRecords($updated);
+        }, []);
+    }
+
+    /**
+     * @param array<int|string, mixed> $records
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeRecords(array $records): array
+    {
+        $normalized = [];
+        foreach ($records as $record) {
+            if (is_array($record)) {
+                $normalized[] = $record;
+            }
         }
-        file_put_contents($this->attemptsPath, json_encode($attempts, JSON_PRETTY_PRINT));
+
+        return $normalized;
     }
 }

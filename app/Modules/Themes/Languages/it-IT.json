@@ -80,6 +80,7 @@
     "theme_move_to_trash_confirm": "Vuoi davvero spostare questo tema nel cestino?",
     "theme_move_to_trash_success": "Tema spostato nel cestino.",
     "theme_move_to_trash_failed": "Spostamento del tema nel cestino non riuscito.",
+    "theme_archive_unavailable": "Il cestino deve essere installato e attivo per archiviare un tema.",
     "theme_move_to_trash_active_blocked": "Il tema attivo non può essere spostato nel cestino.",
     "theme_customization_unavailable": "Questo tema non offre personalizzazione nella linea LTS.",
     "themes_help_badge": "Workflow",

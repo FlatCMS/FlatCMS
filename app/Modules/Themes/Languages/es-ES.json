@@ -80,6 +80,7 @@
     "theme_move_to_trash_confirm": "¿Seguro que deseas mover este tema a la papelera?",
     "theme_move_to_trash_success": "Tema movido a la papelera.",
     "theme_move_to_trash_failed": "No se pudo mover el tema a la papelera.",
+    "theme_archive_unavailable": "La papelera debe estar instalada y activada para archivar un tema.",
     "theme_move_to_trash_active_blocked": "El tema activo no se puede mover a la papelera.",
     "theme_customization_unavailable": "Este tema no ofrece personalización en la línea LTS.",
     "themes_help_badge": "Workflow",

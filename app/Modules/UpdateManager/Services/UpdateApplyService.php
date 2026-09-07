@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace App\Modules\UpdateManager\Services;
 
+use App\Core\RuntimeAssetPublisher;
+
 final class UpdateApplyService
 {
     private string $basePath;
@@ -71,10 +73,17 @@ final class UpdateApplyService
             $package['site_backup_path'] = (string) ($siteBackup['path'] ?? '');
             $this->recovery->markUpdating();
             $previousMaintenance = $this->enableMaintenance();
+            $assetPublisher = new RuntimeAssetPublisher($this->basePath);
             $result = $this->transactions->applyCore(
                 $prepared,
                 $package,
-                fn (string $basePath, array $manifest): bool => $this->health->check($basePath, $manifest)
+                function (string $basePath, array $manifest) use ($assetPublisher): bool {
+                    $assetPublisher->publishAll();
+                    return $this->health->check($basePath, $manifest);
+                },
+                static function (string $_basePath, array $_manifest) use ($assetPublisher): void {
+                    $assetPublisher->publishAll();
+                }
             );
             if (is_array($result)) {
                 $result['site_backup'] = $siteBackup;

@@ -11,15 +11,33 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth\Services;
 
+use App\Core\Storage\AtomicFileWriter;
+use App\Core\Storage\FileLockManager;
+use App\Core\Storage\JsonStore;
+use App\Core\Storage\StorageException;
+
 final class LicenseVaultService
 {
     private const CIPHER = 'aes-256-gcm';
 
-    private string $path;
+    private JsonStore $store;
+    private string $recordPath;
 
-    public function __construct(?string $path = null)
+    public function __construct(?string $path = null, ?JsonStore $store = null, ?string $lockRoot = null)
     {
-        $this->path = $path ?? (BASE_PATH . '/resources/licenses/licenses.json');
+        $path ??= BASE_PATH . '/resources/licenses/licenses.json';
+
+        if ($store === null) {
+            $vaultRoot = dirname($path);
+            $lockRoot ??= BASE_PATH . '/storage/cache/locks/licenses';
+            $store = new JsonStore($vaultRoot, new AtomicFileWriter(
+                $vaultRoot,
+                new FileLockManager($lockRoot)
+            ));
+        }
+
+        $this->store = $store;
+        $this->recordPath = basename($path);
     }
 
     /**
@@ -94,43 +112,53 @@ final class LicenseVaultService
         $status = trim($status) !== '' ? trim($status) : 'active';
         $updatedAt = trim($updatedAt) !== '' ? trim($updatedAt) : date('Y-m-d H:i:s');
 
-        $records = $this->loadRecords();
-        $recordId = '';
-
-        foreach ($records as $index => $record) {
-            if (($record['module'] ?? '') !== $module) {
-                continue;
-            }
-
-            $recordId = (string) ($record['id'] ?? '');
-            $records[$index] = $this->buildRecord(
-                $recordId !== '' ? $recordId : $this->generateId(),
-                $module,
-                $plainKey,
-                $domain,
-                $status,
-                $updatedAt,
-                $ownerUserId !== '' ? $ownerUserId : (string) ($record['owner_user_id'] ?? ''),
-                $record
-            );
-            $this->saveRecords($records);
-            return $this->toPublicSummary($records[$index]);
-        }
-
-        $record = $this->buildRecord(
-            $this->generateId(),
+        $storedRecord = [];
+        $this->mutateRecords(function (array $records) use (
             $module,
             $plainKey,
             $domain,
             $status,
             $updatedAt,
             $ownerUserId,
-            []
-        );
-        $records[] = $record;
-        $this->saveRecords($records);
+            &$storedRecord
+        ): array {
+            foreach ($records as $index => $record) {
+                if (($record['module'] ?? '') !== $module) {
+                    continue;
+                }
 
-        return $this->toPublicSummary($record);
+                $recordId = (string) ($record['id'] ?? '');
+                $storedRecord = $this->buildRecord(
+                    $recordId !== '' ? $recordId : $this->generateId(),
+                    $module,
+                    $plainKey,
+                    $domain,
+                    $status,
+                    $updatedAt,
+                    $ownerUserId !== '' ? $ownerUserId : (string) ($record['owner_user_id'] ?? ''),
+                    $record
+                );
+                $records[$index] = $storedRecord;
+
+                return $records;
+            }
+
+            $storedRecord = $this->buildRecord(
+                $this->generateId(),
+                $module,
+                $plainKey,
+                $domain,
+                $status,
+                $updatedAt,
+                $ownerUserId,
+                []
+            );
+            $records[] = $storedRecord;
+
+            return $records;
+        });
+
+        return $this->toPublicSummary($storedRecord);
     }
 
     /**
@@ -151,11 +179,11 @@ final class LicenseVaultService
      */
     public function clearModuleLicense(string $module): array
     {
-        $records = $this->loadRecords();
-        $records = array_values(array_filter($records, static function (array $record) use ($module): bool {
-            return ($record['module'] ?? '') !== $module;
-        }));
-        $this->saveRecords($records);
+        $this->mutateRecords(static function (array $records) use ($module): array {
+            return array_values(array_filter($records, static function (array $record) use ($module): bool {
+                return ($record['module'] ?? '') !== $module;
+            }));
+        });
 
         return $this->emptySummary($module, normalize_host((string) ($_SERVER['HTTP_HOST'] ?? '')));
     }
@@ -257,47 +285,36 @@ final class LicenseVaultService
 
     public function incrementRevealAttempts(string $module): void
     {
-        $records = $this->loadRecords();
-        foreach ($records as $index => $record) {
-            if (($record['module'] ?? '') !== $module) {
-                continue;
+        $this->mutateRecords(static function (array $records) use ($module): array {
+            foreach ($records as $index => $record) {
+                if (($record['module'] ?? '') !== $module) {
+                    continue;
+                }
+
+                $records[$index]['reveal_attempts'] = max(0, (int) ($record['reveal_attempts'] ?? 0)) + 1;
+                break;
             }
 
-            $records[$index]['reveal_attempts'] = max(0, (int) ($record['reveal_attempts'] ?? 0)) + 1;
-            $this->saveRecords($records);
-            return;
-        }
+            return $records;
+        });
     }
 
     public function markModuleLicenseRevealed(string $module, string $userId): void
     {
-        $records = $this->loadRecords();
-        foreach ($records as $index => $record) {
-            if (($record['module'] ?? '') !== $module) {
-                continue;
+        $revealedAt = date('Y-m-d H:i:s');
+        $this->mutateRecords(static function (array $records) use ($module, $userId, $revealedAt): array {
+            foreach ($records as $index => $record) {
+                if (($record['module'] ?? '') !== $module) {
+                    continue;
+                }
+
+                $records[$index]['last_reveal_at'] = $revealedAt;
+                $records[$index]['last_reveal_by'] = $userId;
+                break;
             }
 
-            $records[$index]['last_reveal_at'] = date('Y-m-d H:i:s');
-            $records[$index]['last_reveal_by'] = $userId;
-            $this->saveRecords($records);
-            return;
-        }
-    }
-
-    private function ensureStorage(): void
-    {
-        $dir = dirname($this->path);
-        if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
-            throw new \RuntimeException('Unable to create license vault directory.');
-        }
-
-        if (!is_file($this->path)) {
-            $payload = ['licenses' => []];
-            $written = @file_put_contents($this->path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
-            if ($written === false) {
-                throw new \RuntimeException('Unable to initialize license vault.');
-            }
-        }
+            return $records;
+        });
     }
 
     /**
@@ -305,41 +322,37 @@ final class LicenseVaultService
      */
     private function loadRecords(): array
     {
-        $this->ensureStorage();
-        $raw = @file_get_contents($this->path);
-        if (!is_string($raw) || trim($raw) === '') {
-            return [];
-        }
-
-        $decoded = json_decode($raw, true);
-        if (!is_array($decoded)) {
-            return [];
-        }
-
-        $licenses = $decoded['licenses'] ?? [];
-        if (!is_array($licenses)) {
-            return [];
-        }
-
-        return array_values(array_filter($licenses, static fn ($record): bool => is_array($record)));
+        $payload = $this->store->read($this->recordPath, ['licenses' => []]);
+        return $this->normalizeRecords($payload['licenses'] ?? []);
     }
 
     /**
      * @param array<int,array<string,mixed>> $records
      */
-    private function saveRecords(array $records): void
+    private function mutateRecords(callable $mutation): void
     {
-        $this->ensureStorage();
-        $payload = ['licenses' => array_values($records)];
-        $written = @file_put_contents(
-            $this->path,
-            json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
-            LOCK_EX
-        );
+        $this->store->mutate($this->recordPath, function (array $payload) use ($mutation): array {
+            $records = $this->normalizeRecords($payload['licenses'] ?? []);
+            $updated = $mutation($records);
+            if (!is_array($updated)) {
+                throw new StorageException('License vault mutation must return an array.');
+            }
 
-        if ($written === false) {
-            throw new \RuntimeException('Unable to save license vault.');
+            return ['licenses' => $this->normalizeRecords($updated)];
+        }, ['licenses' => []]);
+    }
+
+    /**
+     * @param mixed $records
+     * @return array<int,array<string,mixed>>
+     */
+    private function normalizeRecords(mixed $records): array
+    {
+        if (!is_array($records)) {
+            return [];
         }
+
+        return array_values(array_filter($records, static fn ($record): bool => is_array($record)));
     }
 
     /**

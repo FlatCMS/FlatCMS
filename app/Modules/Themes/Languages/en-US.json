@@ -80,6 +80,7 @@
     "theme_move_to_trash_confirm": "Do you really want to move this theme to trash?",
     "theme_move_to_trash_success": "Theme moved to trash.",
     "theme_move_to_trash_failed": "Moving the theme to trash failed.",
+    "theme_archive_unavailable": "Trash must be installed and enabled to archive a theme.",
     "theme_move_to_trash_active_blocked": "The active theme cannot be moved to trash.",
     "theme_customization_unavailable": "This theme does not expose customization settings in the LTS line.",
     "themes_help_badge": "Workflow",

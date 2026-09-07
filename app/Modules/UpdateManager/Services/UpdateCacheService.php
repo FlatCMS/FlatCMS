@@ -9,14 +9,33 @@ declare(strict_types=1);
 
 namespace App\Modules\UpdateManager\Services;
 
+use App\Core\Storage\AtomicFileWriter;
+use App\Core\Storage\FileLockManager;
+use App\Core\Storage\JsonStore;
+use App\Core\Storage\StorageException;
+
 final class UpdateCacheService
 {
     private string $path;
+    private string $fileName;
     private int $ttl;
+    private JsonStore $store;
 
-    public function __construct(?string $path = null, ?int $ttl = null)
-    {
-        $this->path = $path ?? (BASE_PATH . '/storage/cache/update-manager/status.json');
+    public function __construct(
+        ?string $path = null,
+        ?int $ttl = null,
+        ?JsonStore $store = null,
+        ?string $lockRoot = null
+    ) {
+        $path ??= BASE_PATH . '/storage/cache/update-manager/status.json';
+        $cacheRoot = dirname($path);
+        $lockRoot ??= dirname($cacheRoot) . '/locks/update-manager';
+        $this->store = $store ?? new JsonStore(
+            $cacheRoot,
+            new AtomicFileWriter($cacheRoot, new FileLockManager($lockRoot))
+        );
+        $this->fileName = basename($path);
+        $this->path = $this->store->root() . '/' . $this->fileName;
         $configuredTtl = $ttl ?? (int) env('FLATCMS_UPDATE_CHECK_TTL', 86400);
         $this->ttl = max(300, min(604800, $configuredTtl));
     }
@@ -28,9 +47,13 @@ final class UpdateCacheService
             return null;
         }
 
-        $raw = @file_get_contents($this->path);
-        $payload = json_decode((string) $raw, true);
-        return is_array($payload) ? $payload : null;
+        try {
+            $payload = $this->store->read($this->fileName);
+        } catch (StorageException) {
+            return null;
+        }
+
+        return $payload === [] ? null : $payload;
     }
 
     public function isFresh(?array $payload = null): bool
@@ -55,31 +78,19 @@ final class UpdateCacheService
     /** @param array<string, mixed> $payload */
     public function write(array $payload): void
     {
-        $directory = dirname($this->path);
-        if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new \RuntimeException('update_cache_directory_failed');
-        }
-
-        $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (!is_string($json)) {
-            throw new \RuntimeException('update_cache_encode_failed');
-        }
-
-        $temporary = $this->path . '.tmp-' . bin2hex(random_bytes(4));
-        if (@file_put_contents($temporary, $json . PHP_EOL, LOCK_EX) === false) {
-            throw new \RuntimeException('update_cache_write_failed');
-        }
-
-        if (!@rename($temporary, $this->path)) {
-            @unlink($temporary);
-            throw new \RuntimeException('update_cache_commit_failed');
+        try {
+            $this->store->write($this->fileName, $payload);
+        } catch (StorageException $exception) {
+            throw new \RuntimeException('update_cache_write_failed', 0, $exception);
         }
     }
 
     public function clear(): void
     {
-        if (is_file($this->path) && !@unlink($this->path)) {
-            throw new \RuntimeException('update_cache_clear_failed');
+        try {
+            $this->store->delete($this->fileName);
+        } catch (StorageException $exception) {
+            throw new \RuntimeException('update_cache_clear_failed', 0, $exception);
         }
     }
 

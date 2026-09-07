@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Install\Controllers;
 
+use App\Core\RuntimeAssetPublisher;
 use App\Modules\Install\Support\Lang;
 use App\Modules\Users\Support\UserName;
 
@@ -609,8 +610,8 @@ final class InstallController
             // 5. Générer les fichiers de configuration serveur
             $this->generateServerConfigs($site['url']);
 
-            // 6. Créer les liens d'assets des modules/extensions
-            $this->createModuleAssetLinks();
+            // 6. Publier des copies locales et portables des assets runtime
+            (new RuntimeAssetPublisher())->publishAll();
 
             // 6.1 Préparer un .env.local minimal pour les intégrations (si absent)
             $this->ensureEnvLocalDefaults();
@@ -2331,64 +2332,6 @@ final class InstallController
         if ($written === false) {
             throw new \RuntimeException('Unable to persist Install module state.');
         }
-    }
-
-    /**
-     * Crée les liens d'assets des modules/extensions dans public/modules
-     * (fallback en copie si symlink indisponible).
-     */
-    private function createModuleAssetLinks(): void
-    {
-        $publicModules = PUBLIC_PATH . '/modules';
-        if (!is_dir($publicModules) && !mkdir($publicModules, 0755, true) && !is_dir($publicModules)) {
-            throw new \RuntimeException('Unable to create public/modules directory.');
-        }
-
-        $roots = [APP_PATH . '/Modules', APP_PATH . '/Extensions', APP_PATH . '/Plugins'];
-        foreach ($roots as $root) {
-            if (!is_dir($root)) {
-                continue;
-            }
-            $entries = scandir($root);
-            if ($entries === false) {
-                continue;
-            }
-            foreach ($entries as $entry) {
-                if ($entry === '.' || $entry === '..') {
-                    continue;
-                }
-                $moduleDir = $root . '/' . $entry;
-                if (!is_dir($moduleDir)) {
-                    continue;
-                }
-                $assetsPath = $moduleDir . '/Assets';
-                if (!is_dir($assetsPath)) {
-                    continue;
-                }
-                $linkName = strtolower($entry);
-                $linkPath = $publicModules . '/' . $linkName;
-                $this->refreshAssetLink($assetsPath, $linkPath);
-            }
-        }
-    }
-
-    private function refreshAssetLink(string $assetsPath, string $linkPath): void
-    {
-        if (is_link($linkPath) || is_file($linkPath)) {
-            @unlink($linkPath);
-        } elseif (is_dir($linkPath)) {
-            $this->removeDirectory($linkPath);
-        }
-
-        $canSymlink = function_exists('symlink') && is_callable('symlink');
-        if ($canSymlink) {
-            if (@\symlink($assetsPath, $linkPath) === false) {
-                $this->copyDirectory($assetsPath, $linkPath);
-            }
-            return;
-        }
-
-        $this->copyDirectory($assetsPath, $linkPath);
     }
 
     private function ensureEnvLocalDefaults(): void

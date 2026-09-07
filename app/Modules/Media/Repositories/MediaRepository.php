@@ -11,19 +11,31 @@ declare(strict_types=1);
 
 namespace App\Modules\Media\Repositories;
 
+use App\Core\Storage\AtomicFileWriter;
+use App\Core\Storage\FileLockManager;
+use App\Core\Storage\JsonStore;
+use App\Core\Storage\StorageException;
+
 class MediaRepository
 {
-    private string $dataFile;
     private array $data = [];
     private ?string $sourceHash = null;
+    private JsonStore $store;
 
     public function __construct(?string $basePath = null)
     {
         $basePath = $basePath !== null
             ? rtrim(str_replace('\\', '/', $basePath), '/')
             : $this->resolveBasePath();
-        $this->dataFile = $basePath . '/data/core/media/media.json';
-        $this->ensureDirectory();
+        $dataRoot = $basePath . '/data/core/media';
+        $this->store = new JsonStore(
+            $dataRoot,
+            new AtomicFileWriter(
+                $dataRoot,
+                new FileLockManager($basePath . '/storage/cache/locks/media')
+            )
+        );
+        $this->ensureDataFile();
         $this->load();
     }
 
@@ -43,86 +55,35 @@ class MediaRepository
         return $basePath;
     }
 
-    /**
-     * S'assure que le répertoire existe
-     */
-    private function ensureDirectory(): void
+    private function ensureDataFile(): void
     {
-        $dir = dirname($this->dataFile);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        if (!file_exists($this->dataFile)) {
-            file_put_contents($this->dataFile, json_encode([], JSON_PRETTY_PRINT));
+        $snapshot = $this->store->snapshot('media.json', []);
+        if ($snapshot['hash'] === null) {
+            $this->store->replaceIfUnchanged('media.json', [], null);
         }
     }
 
-    /**
-     * Charge les données depuis le fichier JSON
-     */
     private function load(): void
     {
-        $content = file_get_contents($this->dataFile);
-        $this->sourceHash = is_string($content) ? hash('sha256', $content) : null;
-        $this->data = is_string($content) ? (json_decode($content, true) ?: []) : [];
+        $snapshot = $this->store->snapshot('media.json', []);
+        $this->data = $snapshot['data'];
+        $this->sourceHash = $snapshot['hash'];
     }
 
-    /**
-     * Sauvegarde les données dans le fichier JSON
-     */
     private function save(): bool
     {
-        $json = json_encode($this->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if (!is_string($json)) {
-            return false;
-        }
-
-        if (is_link($this->dataFile)) {
-            return false;
-        }
-        $current = @file_get_contents($this->dataFile);
-        if (!is_string($current) || ($this->sourceHash !== null && hash('sha256', $current) !== $this->sourceHash)) {
-            return false;
-        }
-
-        $payload = $json . PHP_EOL;
-
-        $directory = dirname($this->dataFile);
         try {
-            $suffix = bin2hex(random_bytes(6));
-        } catch (\Throwable) {
-            $suffix = str_replace('.', '', uniqid('', true));
-        }
-        $temp = $directory . '/.' . basename($this->dataFile) . '.' . $suffix . '.tmp';
-        if (@file_put_contents($temp, $payload, LOCK_EX) === false) {
+            $hash = $this->store->replaceIfUnchanged('media.json', $this->data, $this->sourceHash);
+        } catch (StorageException) {
             return false;
         }
 
-        $permissions = @fileperms($this->dataFile);
-        if (is_int($permissions)) {
-            @chmod($temp, $permissions & 0777);
-        }
-
-        if (@rename($temp, $this->dataFile)) {
-            $this->sourceHash = hash('sha256', $payload);
-            return true;
-        }
-
-        $backup = $directory . '/.' . basename($this->dataFile) . '.' . $suffix . '.bak';
-        if (!@rename($this->dataFile, $backup)) {
-            @unlink($temp);
+        if ($hash === null) {
             return false;
         }
 
-        if (@rename($temp, $this->dataFile)) {
-            @unlink($backup);
-            $this->sourceHash = hash('sha256', $payload);
-            return true;
-        }
-
-        @rename($backup, $this->dataFile);
-        @unlink($temp);
-        return false;
+        $this->sourceHash = $hash;
+        return true;
     }
 
     /**

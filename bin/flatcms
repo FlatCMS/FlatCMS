@@ -69,5 +69,27 @@ if ($command === 'updates:build-core') {
     }
 }
 
-fwrite(STDOUT, "FlatCMS CLI\n\nUsage:\n  php bin/flatcms tasks:run\n  php bin/flatcms updates:apply core flatcms <version>\n  php bin/flatcms updates:build-core <version> [output.zip]\n");
+if ($command === 'assets:publish') {
+    try {
+        $result = (new \App\Core\RuntimeAssetPublisher())->publishAll();
+        fwrite(STDOUT, json_encode(['ok' => true, 'result' => $result], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(0);
+    } catch (\Throwable $exception) {
+        fwrite(STDERR, json_encode(['ok' => false, 'error' => $exception->getMessage()], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(5);
+    }
+}
+
+if ($command === 'doctor') {
+    try {
+        $result = (new \App\Core\InstallationDoctor())->diagnose();
+        fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit($result['ok'] ? 0 : 2);
+    } catch (\Throwable) {
+        fwrite(STDERR, json_encode(['ok' => false, 'error' => 'doctor_failed'], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(6);
+    }
+}
+
+fwrite(STDOUT, "FlatCMS CLI\n\nUsage:\n  php bin/flatcms tasks:run\n  php bin/flatcms updates:apply core flatcms <version>\n  php bin/flatcms updates:build-core <version> [output.zip]\n  php bin/flatcms assets:publish\n  php bin/flatcms doctor\n");
 exit($command === '' ? 0 : 1);

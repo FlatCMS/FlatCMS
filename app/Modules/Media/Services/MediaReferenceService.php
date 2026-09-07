@@ -11,18 +11,26 @@ declare(strict_types=1);
 
 namespace App\Modules\Media\Services;
 
+use App\Core\Storage\AtomicFileWriter;
+use App\Core\Storage\FileLockManager;
+use App\Core\Storage\StorageException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use RuntimeException;
 
 final class MediaReferenceService
 {
     private string $basePath;
+    private AtomicFileWriter $writer;
 
     public function __construct(?string $basePath = null)
     {
         $resolvedBasePath = $basePath ?? (defined('BASE_PATH') ? BASE_PATH : dirname(__DIR__, 4));
         $this->basePath = rtrim(str_replace('\\', '/', $resolvedBasePath), '/');
+        $dataRoot = $this->basePath . '/data';
+        $this->writer = new AtomicFileWriter(
+            $dataRoot,
+            new FileLockManager($this->basePath . '/storage/cache/locks/media-references')
+        );
     }
 
     /**
@@ -40,7 +48,7 @@ final class MediaReferenceService
         $replacementCount = 0;
 
         foreach ($this->candidateFiles() as $file) {
-            $before = @file_get_contents($file);
+            $before = $this->readContent($file);
             if (!is_string($before) || $before === '') {
                 continue;
             }
@@ -65,13 +73,7 @@ final class MediaReferenceService
         $written = [];
         foreach (($plan['files'] ?? []) as $file => $change) {
             $before = (string) ($change['before'] ?? '');
-            $current = @file_get_contents($file);
-            if (!is_string($current) || $current !== $before || is_link($file)) {
-                $this->restoreWritten($written, $plan);
-                return false;
-            }
-
-            if (!$this->atomicWrite($file, (string) ($change['after'] ?? ''))) {
+            if (!$this->replaceIfUnchanged($file, $before, (string) ($change['after'] ?? ''))) {
                 $this->restoreWritten($written, $plan);
                 return false;
             }
@@ -89,17 +91,13 @@ final class MediaReferenceService
         $success = true;
         foreach (array_reverse(array_keys($plan['files'] ?? [])) as $file) {
             $change = $plan['files'][$file] ?? [];
-            $current = @file_get_contents($file);
-            if (
-                !is_string($current)
-                || $current !== (string) ($change['after'] ?? '')
-                || is_link($file)
-            ) {
+            if (!$this->replaceIfUnchanged(
+                $file,
+                (string) ($change['after'] ?? ''),
+                (string) ($change['before'] ?? '')
+            )) {
                 $success = false;
-                continue;
             }
-
-            $success = $this->atomicWrite($file, (string) ($change['before'] ?? '')) && $success;
         }
         return $success;
     }
@@ -244,47 +242,30 @@ final class MediaReferenceService
         return trim($path, '/');
     }
 
-    private function atomicWrite(string $file, string $content): bool
+    private function readContent(string $file): ?string
     {
-        $directory = dirname($file);
-        if (is_link($file) || !is_dir($directory) || !is_writable($directory)) {
-            return false;
-        }
-
         try {
-            $suffix = bin2hex(random_bytes(6));
-        } catch (\Throwable) {
-            $suffix = str_replace('.', '', uniqid('', true));
-        }
+            return $this->writer->synchronized($file, function () use ($file): ?string {
+                $target = $this->writer->resolvePath($file);
+                if (!is_file($target)) {
+                    return null;
+                }
 
-        $temp = $directory . '/.' . basename($file) . '.media-' . $suffix . '.tmp';
-        if (@file_put_contents($temp, $content, LOCK_EX) === false) {
+                $content = file_get_contents($target);
+                return is_string($content) ? $content : null;
+            });
+        } catch (StorageException) {
+            return null;
+        }
+    }
+
+    private function replaceIfUnchanged(string $file, string $expectedContent, string $content): bool
+    {
+        try {
+            return $this->writer->replaceIfContentsMatch($file, $expectedContent, $content);
+        } catch (StorageException) {
             return false;
         }
-
-        $permissions = @fileperms($file);
-        if (is_int($permissions)) {
-            @chmod($temp, $permissions & 0777);
-        }
-
-        if (@rename($temp, $file)) {
-            return true;
-        }
-
-        $backup = $directory . '/.' . basename($file) . '.media-' . $suffix . '.bak';
-        if (!@rename($file, $backup)) {
-            @unlink($temp);
-            return false;
-        }
-
-        if (@rename($temp, $file)) {
-            @unlink($backup);
-            return true;
-        }
-
-        @rename($backup, $file);
-        @unlink($temp);
-        return false;
     }
 
     /**
@@ -296,18 +277,13 @@ final class MediaReferenceService
         $success = true;
         foreach (array_reverse($written) as $writtenFile) {
             $change = $plan['files'][$writtenFile] ?? [];
-            $current = @file_get_contents($writtenFile);
-            if (
-                !is_string($current)
-                || $current !== (string) ($change['after'] ?? '')
-                || is_link($writtenFile)
-            ) {
+            if (!$this->replaceIfUnchanged(
+                $writtenFile,
+                (string) ($change['after'] ?? ''),
+                (string) ($change['before'] ?? '')
+            )) {
                 $success = false;
-                continue;
             }
-
-            $original = (string) ($change['before'] ?? '');
-            $success = $this->atomicWrite($writtenFile, $original) && $success;
         }
         return $success;
     }

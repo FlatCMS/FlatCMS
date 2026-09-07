@@ -9,45 +9,89 @@ declare(strict_types=1);
 
 namespace App\Modules\UpdateManager\Services;
 
+use App\Core\Storage\AtomicFileWriter;
+use App\Core\Storage\FileLockManager;
+use App\Core\Storage\JsonLineStore;
+
 final class UpdateHistoryService
 {
     private string $path;
+    private string $recordPath;
+    private string $logRoot;
+    private string $lockRoot;
+    private ?JsonLineStore $store;
+    private bool $storeUnavailable = false;
 
-    public function __construct(?string $path = null)
+    public function __construct(?string $path = null, ?JsonLineStore $store = null, ?string $lockRoot = null)
     {
-        $this->path = $path ?: BASE_PATH . '/storage/logs/update-manager/history.jsonl';
+        if ($path === null) {
+            $basePath = defined('BASE_PATH') ? (string) BASE_PATH : dirname(__DIR__, 4);
+            $path = $basePath . '/storage/logs/update-manager/history.jsonl';
+        }
+
+        $this->path = rtrim(str_replace('\\', '/', $path), '/');
+        $this->recordPath = basename($this->path);
+        $this->logRoot = dirname($this->path);
+        $this->lockRoot = $lockRoot ?? dirname(dirname($this->logRoot)) . '/cache/locks/update-manager';
+        $this->store = $store;
     }
 
     /** @param array<string,mixed> $entry */
     public function append(array $entry): void
     {
-        $dir = dirname($this->path);
-        if (!is_dir($dir) && !@mkdir($dir, 0750, true) && !is_dir($dir)) {
+        $store = $this->store();
+        if ($store === null) {
             return;
         }
 
         $entry['recorded_at'] = $entry['recorded_at'] ?? gmdate('c');
-        $json = json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if (!is_string($json)) {
-            return;
+        try {
+            $store->append($this->recordPath, $entry);
+        } catch (\Throwable) {
+            // Update history is operational; it must never block the update transaction.
         }
-        @file_put_contents($this->path, $json . PHP_EOL, FILE_APPEND | LOCK_EX);
     }
 
     /** @return array<int,array<string,mixed>> */
     public function recent(int $limit = 50): array
     {
-        if (!is_file($this->path)) {
+        $store = $this->store();
+        if ($store === null) {
             return [];
         }
-        $lines = file($this->path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
-        $items = [];
-        foreach (array_slice($lines, -max(1, min(200, $limit))) as $line) {
-            $decoded = json_decode((string) $line, true);
-            if (is_array($decoded)) {
-                $items[] = $decoded;
-            }
+
+        try {
+            $items = $store->read($this->recordPath);
+        } catch (\Throwable) {
+            return [];
         }
-        return array_reverse($items);
+
+        return array_reverse(array_slice($items, -max(1, min(200, $limit))));
+    }
+
+    private function store(): ?JsonLineStore
+    {
+        if ($this->store !== null) {
+            return $this->store;
+        }
+        if ($this->storeUnavailable) {
+            return null;
+        }
+
+        try {
+            $this->store = new JsonLineStore(
+                $this->logRoot,
+                new AtomicFileWriter(
+                    $this->logRoot,
+                    new FileLockManager($this->lockRoot),
+                    0750,
+                    0640
+                )
+            );
+            return $this->store;
+        } catch (\Throwable) {
+            $this->storeUnavailable = true;
+            return null;
+        }
     }
 }

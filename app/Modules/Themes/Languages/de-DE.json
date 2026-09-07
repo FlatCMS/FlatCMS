@@ -80,6 +80,7 @@
     "theme_move_to_trash_confirm": "Möchten Sie dieses Theme wirklich in den Papierkorb verschieben?",
     "theme_move_to_trash_success": "Theme in den Papierkorb verschoben.",
     "theme_move_to_trash_failed": "Das Verschieben des Themes in den Papierkorb ist fehlgeschlagen.",
+    "theme_archive_unavailable": "Der Papierkorb muss installiert und aktiviert sein, um ein Theme zu archivieren.",
     "theme_move_to_trash_active_blocked": "Das aktive Theme kann nicht in den Papierkorb verschoben werden.",
     "theme_customization_unavailable": "Dieses Theme bietet in der LTS-Linie keine Anpassung an.",
     "themes_help_badge": "Workflow",

@@ -12,9 +12,9 @@ declare(strict_types=1);
 namespace App\Modules\Themes\Controllers;
 
 use App\Core\BaseController;
-use App\Core\I18n;
 use App\Core\FlatFile;
-use App\Modules\Trash\Services\TrashService;
+use App\Core\I18n;
+use App\Core\RuntimeAssetPublisher;
 
 class AdminController extends BaseController
 {
@@ -33,9 +33,6 @@ class AdminController extends BaseController
 
     public function index(): void
     {
-        $this->syncThemesFromPublic('admin');
-        $this->syncThemesFromPublic('frontend');
-
         $adminThemes = $this->getThemes('admin');
         $frontendThemes = $this->getThemes('frontend');
 
@@ -49,6 +46,7 @@ class AdminController extends BaseController
             'frontendThemes' => $frontendThemes,
             'activeAdmin' => $activeAdmin,
             'activeFrontend' => $activeFrontend,
+            'themeArchiveAvailable' => $this->themeArchiveAvailable(),
         ], 'admin.main');
     }
 
@@ -328,11 +326,16 @@ class AdminController extends BaseController
             return;
         }
 
-        $this->syncThemeAssetsToPublic(
-            $type,
-            $themeName,
-            $destination
-        );
+        try {
+            (new RuntimeAssetPublisher())->publishTheme($type, $themeName);
+        } catch (\Throwable $exception) {
+            $this->removeDirectory($destination);
+            $this->cleanupInstall($zipPath, $extractDir);
+            error_log('[FlatCMS][Themes] Unable to publish theme assets: ' . $exception->getMessage());
+            $this->session->flash('error', __('themes_copy_failed', 'Themes'));
+            $this->redirect(url('/admin/themes'));
+            return;
+        }
 
         $this->cleanupInstall($zipPath, $extractDir);
         $this->session->flash(
@@ -401,8 +404,6 @@ class AdminController extends BaseController
             return;
         }
 
-        $this->syncThemesFromPublic($type);
-
         $themePath = $this->resolveThemePath($type, $name);
         if ($themePath === null) {
             $this->session->flash('error', __('theme_not_found', 'Themes'));
@@ -432,14 +433,19 @@ class AdminController extends BaseController
             $rootPath = $themePath;
         }
 
-        $trash = new TrashService();
+        if (!$this->themeArchiveAvailable()) {
+            $this->session->flash('error', __('theme_archive_unavailable', 'Themes'));
+            $this->redirect(url('/admin/themes'));
+            return;
+        }
+
         $deletedBy = trim((string) (
             auth()['name']
             ?? auth()['email']
             ?? ''
         ));
 
-        $archived = $trash->archiveTheme([
+        $archivePayload = [
             'theme_type' => $type,
             'theme_name' => $name,
             'name' => (string) ($theme['name'] ?? $name),
@@ -449,7 +455,17 @@ class AdminController extends BaseController
             'root_path' => $rootPath,
             'public_path' => $this->publicThemesPath . '/' . $type . '/' . $name,
             'customization_path' => BASE_PATH . '/data/themes/' . $type . '_' . $name . '.json',
-        ], $deletedBy);
+        ];
+        $archived = null;
+        foreach (hook_run('themes.archive', [
+            'theme' => $archivePayload,
+            'deleted_by' => $deletedBy,
+        ]) as $result) {
+            if (is_array($result)) {
+                $archived = $result;
+                break;
+            }
+        }
 
         if (!is_array($archived)) {
             $this->session->flash(
@@ -690,7 +706,6 @@ class AdminController extends BaseController
 
             $config = $this->localizeThemeConfig($config);
 
-            $this->syncThemeAssetsToPublic($type, $name, $dir);
             $publicThemeDir = $this->publicThemesPath . "/{$type}/{$name}";
 
             foreach (
@@ -736,78 +751,15 @@ class AdminController extends BaseController
         return null;
     }
 
-    private function syncThemesFromPublic(string $type): void
+    private function themeArchiveAvailable(): bool
     {
-        $legacyPath = $this->publicThemesPath . "/{$type}";
-
-        if (!is_dir($legacyPath)) {
-            return;
-        }
-
-        $rootPath = $this->themesPath . "/{$type}";
-        if (!is_dir($rootPath)) {
-            mkdir($rootPath, 0755, true);
-        }
-
-        foreach (glob($legacyPath . '/*', GLOB_ONLYDIR) as $legacyThemeDir) {
-            $name = basename($legacyThemeDir);
-            $hasManifest = file_exists($legacyThemeDir . '/theme.json');
-            $hasViews = is_dir($legacyThemeDir . '/views');
-
-            if (!$hasManifest && !$hasViews) {
-                continue;
-            }
-
-            $target = $rootPath . '/' . $name;
-
-            if (!is_dir($target)) {
-                $this->copyDirectory($legacyThemeDir, $target);
-            }
-
-            $this->syncThemeAssetsToPublic(
-                $type,
-                $name,
-                $target
-            );
-        }
-    }
-
-    private function syncThemeAssetsToPublic(
-        string $type,
-        string $name,
-        string $rootThemeDir
-    ): void {
-        $publicThemeDir = $this->publicThemesPath . "/{$type}/{$name}";
-
-        if (!is_dir($publicThemeDir)) {
-            mkdir($publicThemeDir, 0755, true);
-        }
-
-        $assetsDir = $rootThemeDir . '/assets';
-        $publicAssetsDir = $publicThemeDir . '/assets';
-
-        if (is_dir($assetsDir)) {
-            $this->copyDirectory($assetsDir, $publicAssetsDir);
-        }
-
-        foreach (
-            ['screenshot.png', 'screenshot.webp', 'screenshot.jpg', 'preview.png', 'preview.webp', 'preview.jpg']
-            as $img
-        ) {
-            $source = $rootThemeDir . '/' . $img;
-
-            if (!file_exists($source) && is_dir($assetsDir)) {
-                $alt = $assetsDir . '/' . $img;
-
-                if (file_exists($alt)) {
-                    $source = $alt;
-                }
-            }
-
-            if (file_exists($source)) {
-                @copy($source, $publicAssetsDir . '/' . $img);
+        foreach (hook_run('themes.archive.available') as $result) {
+            if ($result === true) {
+                return true;
             }
         }
+
+        return false;
     }
 
     private function validateZipEntries(\ZipArchive $zip): bool

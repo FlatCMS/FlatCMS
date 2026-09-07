@@ -17,6 +17,7 @@ use App\Core\ContentDocumentStore;
 use App\Core\I18n;
 use App\Core\FlatFile;
 use App\Core\ModuleManager;
+use App\Core\Storage\StorageException;
 use App\Modules\Auth\Services\RoleService;
 use App\Modules\Posts\Services\PostTranslationService;
 use App\Modules\Trash\Services\TrashService;
@@ -130,7 +131,7 @@ class AdminController extends BaseController
         $data = $this->request->only(['title', 'slug', 'excerpt', 'content', 'featured_image', 'meta_title', 'meta_description', 'status']);
         $data['content'] = flatcms_reconcile_editor_html(
             (string) ($data['content'] ?? ''),
-            (string) ($post['content'] ?? ''),
+            '',
             (string) $this->request->input('content__editor_baseline', '')
         );
         $data['categories'] = $this->isCategoriesEnabled()
@@ -141,6 +142,9 @@ class AdminController extends BaseController
         $translationGroup = trim((string) $this->request->input('translation_group', ''));
         $sourceLocale = $this->translations->normalizeLocale((string) $this->request->input('source_locale', ''));
         if ($sourceLocale === '') {
+            $sourceLocale = $activeLocale;
+        }
+        if ($translationGroup === '') {
             $sourceLocale = $activeLocale;
         }
 
@@ -185,13 +189,24 @@ class AdminController extends BaseController
             hook_run('posts.before_publish', $data);
         }
         hook_run('posts.before_save', $data);
-        $post = $this->posts->create($data);
-        if (trim((string) ($post['translation_group'] ?? '')) === '') {
-            $post = $this->posts->update((string) $post['id'], [
-                'translation_group' => (string) $post['id'],
-                'locale' => $activeLocale,
-                'source_locale' => $sourceLocale,
-            ]) ?? $post;
+        try {
+            if ($translationGroup === '') {
+                $created = $this->posts->createTranslationGroup([$sourceLocale => $data], $sourceLocale);
+                $post = $created[$sourceLocale] ?? null;
+            } else {
+                $post = $this->posts->create($data);
+            }
+        } catch (StorageException) {
+            $this->session->flash('error', __('error.server', 'Core'));
+            $this->session->flash('old', $data);
+            $this->redirect($this->buildCreateUrl($activeLocale, $translationGroup, (string) $this->request->input('source_id', '')));
+            return;
+        }
+        if (!is_array($post)) {
+            $this->session->flash('error', __('error.server', 'Core'));
+            $this->session->flash('old', $data);
+            $this->redirect($this->buildCreateUrl($activeLocale, $translationGroup, (string) $this->request->input('source_id', '')));
+            return;
         }
         hook_run('posts.after_save', $post);
         if ($isPublishing) {
@@ -296,19 +311,24 @@ class AdminController extends BaseController
             hook_run('posts.before_publish', $payload);
         }
         hook_run('posts.before_save', $payload);
-        $updated = $this->posts->update($id, $data);
-        if ($updated) {
-            hook_run('posts.after_save', $updated);
-            if ($isPublishing) {
-                hook_run('posts.after_publish', $updated);
-            }
-            if ($isSourcePost) {
-                $this->syncTranslationStatuses(
-                    (string) ($updated['translation_group'] ?? $id),
-                    $id,
-                    (string) ($updated['status'] ?? 'draft')
-                );
-            }
+        try {
+            $updated = $this->persistPostUpdate($id, $post, $data, $isSourcePost);
+        } catch (StorageException) {
+            $this->session->flash('error', __('error.server', 'Core'));
+            $this->session->flash('old', $data);
+            $this->redirect(url('/admin/posts/' . $id . '/edit'));
+            return;
+        }
+        if (!is_array($updated)) {
+            $this->session->flash('error', __('error.server', 'Core'));
+            $this->session->flash('old', $data);
+            $this->redirect(url('/admin/posts/' . $id . '/edit'));
+            return;
+        }
+
+        hook_run('posts.after_save', $updated);
+        if ($isPublishing) {
+            hook_run('posts.after_publish', $updated);
         }
 
         $this->session->flash('success', __('post_updated', 'Posts'));
@@ -337,7 +357,21 @@ class AdminController extends BaseController
 
         foreach ($groupPosts as $groupPost) {
             hook_run('posts.before_delete', $groupPost);
-            $this->posts->delete((string) ($groupPost['id'] ?? ''));
+        }
+
+        $groupIds = $this->postIds($groupPosts);
+        try {
+            $deleted = $groupIds !== [] && $this->posts->deleteMany($groupIds);
+        } catch (StorageException) {
+            $deleted = false;
+        }
+        if (!$deleted) {
+            $this->session->flash('error', __('error.server', 'Core'));
+            $this->redirect(url('/admin/posts'));
+            return;
+        }
+
+        foreach ($groupPosts as $groupPost) {
             hook_run('posts.after_delete', $groupPost);
         }
 
@@ -425,37 +459,44 @@ class AdminController extends BaseController
                     continue;
                 }
 
-                $deleteFailed = false;
-                foreach ($groupPosts as $groupPost) {
-                    $groupId = (string) ($groupPost['id'] ?? '');
-                    if ($groupId === '' || !$this->posts->delete($groupId)) {
-                        $deleteFailed = true;
-                        break;
-                    }
-                    hook_run('posts.after_archive', $groupPost);
+                $groupIds = $this->postIds($groupPosts);
+                try {
+                    $deleted = $groupIds !== [] && $this->posts->deleteMany($groupIds);
+                } catch (StorageException) {
+                    $deleted = false;
                 }
-                if ($deleteFailed) {
+                if (!$deleted) {
+                    foreach ($archivedEntries as $archivedEntry) {
+                        $trash?->delete((string) ($archivedEntry['id'] ?? ''));
+                    }
                     $skipped++;
                     continue;
+                }
+
+                foreach ($groupPosts as $groupPost) {
+                    hook_run('posts.after_archive', $groupPost);
                 }
 
                 $processed++;
                 continue;
             }
 
-            $deleteFailed = false;
             foreach ($groupPosts as $groupPost) {
                 hook_run('posts.before_delete', $groupPost);
-                $groupId = (string) ($groupPost['id'] ?? '');
-                if ($groupId === '' || !$this->posts->delete($groupId)) {
-                    $deleteFailed = true;
-                    break;
-                }
-                hook_run('posts.after_delete', $groupPost);
             }
-            if ($deleteFailed) {
+
+            $groupIds = $this->postIds($groupPosts);
+            try {
+                $deleted = $groupIds !== [] && $this->posts->deleteMany($groupIds);
+            } catch (StorageException) {
+                $deleted = false;
+            }
+            if (!$deleted) {
                 $skipped++;
                 continue;
+            }
+            foreach ($groupPosts as $groupPost) {
+                hook_run('posts.after_delete', $groupPost);
             }
             $processed++;
         }
@@ -983,6 +1024,59 @@ class AdminController extends BaseController
     }
 
     /**
+     * Persists the edited post and, when it is the source, synchronizes the
+     * derived publication status of every translation in the same transaction.
+     *
+     * @param array<string, mixed> $post
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>|null
+     */
+    private function persistPostUpdate(string $id, array $post, array $data, bool $isSourcePost): ?array
+    {
+        if (!$isSourcePost) {
+            return $this->posts->update($id, $data);
+        }
+
+        $documents = [
+            $id => array_merge($data, ['id' => $id]),
+        ];
+        $translationGroup = trim((string) ($data['translation_group'] ?? $post['translation_group'] ?? $id));
+        $status = (string) ($data['status'] ?? $post['status'] ?? 'draft');
+
+        foreach ($this->translations->getTranslations($translationGroup, false) as $translation) {
+            $translationId = trim((string) ($translation['id'] ?? ''));
+            if ($translationId === '' || $translationId === $id) {
+                continue;
+            }
+
+            $documents[$translationId] = [
+                'id' => $translationId,
+                'status' => $status,
+            ];
+        }
+
+        $saved = $this->posts->saveMany($documents);
+        return $saved[$id] ?? null;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $posts
+     * @return array<int, string>
+     */
+    private function postIds(array $posts): array
+    {
+        $ids = [];
+        foreach ($posts as $post) {
+            $id = trim((string) ($post['id'] ?? ''));
+            if ($id !== '') {
+                $ids[$id] = $id;
+            }
+        }
+
+        return array_values($ids);
+    }
+
+    /**
      * @param array<string, mixed>|null $post
      * @return array<int, array<string, mixed>>
      */
@@ -1008,22 +1102,4 @@ class AdminController extends BaseController
         return array_values($translations);
     }
 
-    private function syncTranslationStatuses(string $translationGroup, string $sourceId, string $status): void
-    {
-        if ($translationGroup === '') {
-            return;
-        }
-
-        $translations = $this->translations->getTranslations($translationGroup, false);
-        foreach ($translations as $translation) {
-            $translationId = (string) ($translation['id'] ?? '');
-            if ($translationId === '' || $translationId === $sourceId) {
-                continue;
-            }
-            if ((string) ($translation['status'] ?? 'draft') === $status) {
-                continue;
-            }
-            $this->posts->update($translationId, ['status' => $status]);
-        }
-    }
 }

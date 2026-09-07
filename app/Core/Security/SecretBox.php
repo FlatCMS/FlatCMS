@@ -11,17 +11,37 @@ declare(strict_types=1);
 
 namespace App\Core\Security;
 
+use App\Core\Storage\AtomicFileWriter;
+use App\Core\Storage\FileLockManager;
+
 final class SecretBox
 {
     private const CIPHER = 'aes-256-gcm';
     private const PREFIX = 'flatcms-secret:v1:';
 
     private string $storagePath;
+    private string $fileName;
+    private AtomicFileWriter $writer;
 
-    public function __construct(?string $storagePath = null)
+    public function __construct(
+        ?string $storagePath = null,
+        ?AtomicFileWriter $writer = null,
+        ?string $lockRoot = null
+    )
     {
-        $storageRoot = defined('STORAGE_PATH') ? (string) STORAGE_PATH : (BASE_PATH . '/storage');
-        $this->storagePath = $storagePath ?? (rtrim($storageRoot, '/') . '/app/secretbox.key');
+        $applicationRoot = defined('BASE_PATH') ? (string) BASE_PATH : dirname(__DIR__, 3);
+        $storageRoot = defined('STORAGE_PATH') ? (string) STORAGE_PATH : ($applicationRoot . '/storage');
+        $storagePath ??= rtrim($storageRoot, '/') . '/app/secretbox.key';
+        $secretRoot = dirname($storagePath);
+        $lockRoot ??= dirname($secretRoot) . '/cache/locks/secrets';
+        $this->writer = $writer ?? new AtomicFileWriter(
+            $secretRoot,
+            new FileLockManager($lockRoot),
+            0700,
+            0600
+        );
+        $this->fileName = basename($storagePath);
+        $this->storagePath = $this->writer->root() . '/' . $this->fileName;
     }
 
     public function storagePath(): string
@@ -159,27 +179,29 @@ final class SecretBox
             return $configured;
         }
 
-        if (is_file($this->storagePath)) {
-            $stored = trim((string) @file_get_contents($this->storagePath));
-            if ($stored !== '') {
-                return $stored;
-            }
-        }
+        try {
+            return $this->writer->synchronized($this->fileName, function () use ($createStorageSecret): string {
+                $target = $this->writer->resolvePath($this->fileName);
+                if (is_file($target)) {
+                    $stored = file_get_contents($target);
+                    if (is_string($stored) && trim($stored) !== '') {
+                        @chmod($target, 0600);
+                        return trim($stored);
+                    }
+                } elseif (file_exists($target) || is_link($target)) {
+                    return '';
+                }
 
-        if (!$createStorageSecret) {
+                if (!$createStorageSecret) {
+                    return '';
+                }
+
+                $generated = base64_encode(random_bytes(32));
+                $this->writer->write($this->fileName, $generated);
+                return $generated;
+            });
+        } catch (\Throwable) {
             return '';
         }
-
-        $directory = dirname($this->storagePath);
-        if (!is_dir($directory) && !@mkdir($directory, 0755, true) && !is_dir($directory)) {
-            return '';
-        }
-
-        $generated = base64_encode(random_bytes(32));
-        if (@file_put_contents($this->storagePath, $generated, LOCK_EX) === false) {
-            return '';
-        }
-
-        return $generated;
     }
 }

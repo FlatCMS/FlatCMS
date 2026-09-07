@@ -25,6 +25,8 @@ storage/uploads/avatars/
 storage/tmp/release_package_extract/
 storage/backups/
 storage/backups/env/
+storage/cache/assets/
+storage/cache/locks/
 storage/app/secretbox.key
 resources/uploads/personal/
 resources/uploads/contact/

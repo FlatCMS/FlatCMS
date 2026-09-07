@@ -80,6 +80,7 @@
     "theme_move_to_trash_confirm": "Voulez-vous vraiment déplacer ce thème dans la poubelle ?",
     "theme_move_to_trash_success": "Thème déplacé dans la poubelle.",
     "theme_move_to_trash_failed": "Le déplacement du thème vers la poubelle a échoué.",
+    "theme_archive_unavailable": "La poubelle doit être installée et activée pour archiver un thème.",
     "theme_move_to_trash_active_blocked": "Le thème actif ne peut pas être déplacé dans la poubelle.",
     "theme_customization_unavailable": "Ce thème ne propose pas de personnalisation dans la ligne LTS.",
     "themes_help_badge": "Workflow",
