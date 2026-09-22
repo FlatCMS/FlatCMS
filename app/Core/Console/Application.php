@@ -31,6 +31,17 @@ final class Application
             self::arguments($args, 0, 0);
             return ['ok' => true, 'result' => (new \App\Core\RuntimeAssetPublisher())->publishAll()];
         }, 5);
+        $registry->register('backups:baseline', 'backups:baseline --write|--check', static function (array $args): array {
+            $service = new \App\Modules\Backups\Services\SiteBackupBaselineService();
+            if ($args === ['--write']) {
+                return ['ok' => true, 'result' => $service->write()];
+            }
+            if ($args === ['--check']) {
+                $result = $service->inspect();
+                return ['ok' => !empty($result['portable']), 'result' => $result];
+            }
+            throw new \InvalidArgumentException('cli_backups_baseline_action_invalid');
+        }, 5);
         $registry->register('tasks:run', 'tasks:run', static function (array $args): array {
             self::arguments($args, 0, 0);
             $result = \App\Core\TaskRunner::run();

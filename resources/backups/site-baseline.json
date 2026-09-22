@@ -1,0 +1,426 @@
+{
+    "schema": 1,
+    "flatcms_version": "2.0.0",
+    "protected_roots": {
+        "app/Bootstrap": {
+            "path": "app/Bootstrap",
+            "sha256": "6b0830d4bb69874c07df446baa8b4a429fb1e350ada6b6bffb6fa905c119d42c",
+            "files_count": 2,
+            "size_bytes": 4656
+        },
+        "app/Controllers": {
+            "path": "app/Controllers",
+            "sha256": "0530f8458875fe3652332b7f7ae80a7da1e0604b454094c951b6aee9a01ca22a",
+            "files_count": 1,
+            "size_bytes": 2573
+        },
+        "app/Core": {
+            "path": "app/Core",
+            "sha256": "682ccae7e232b7e441aa815f6dd3f80fef730f59ec8568b2b2363f23c304b5a5",
+            "files_count": 40,
+            "size_bytes": 339275
+        },
+        "app/Helpers": {
+            "path": "app/Helpers",
+            "sha256": "5a7180b013501b628807d81992b98bbf5cdcc7ab5b5c05c45c1415cb91f7440c",
+            "files_count": 8,
+            "size_bytes": 171670
+        },
+        "app/Services": {
+            "path": "app/Services",
+            "sha256": "8ceeb37d51dd22a1be4b21111f8fe955a69a0990ad67dfcedc454acc513e6214",
+            "files_count": 29,
+            "size_bytes": 126578
+        }
+    },
+    "components": {
+        "modules": {
+            "AiAgent": {
+                "path": "app/Modules/AiAgent",
+                "sha256": "8909d24215ff4df8cd65a653114f7fe0fc032242bb18214a55406d33b4c62908",
+                "files_count": 21,
+                "size_bytes": 2971164,
+                "identity": {
+                    "name": "AiAgent",
+                    "version": "1.0.0",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Auth": {
+                "path": "app/Modules/Auth",
+                "sha256": "754bbb26a4a679e3fbe4a5cda3dcf9707a6356601109025857076fc3eba77b1d",
+                "files_count": 29,
+                "size_bytes": 284561,
+                "identity": {
+                    "name": "Auth",
+                    "version": "1.0.1",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Backups": {
+                "path": "app/Modules/Backups",
+                "sha256": "c78da7fca500c1fe5d345119ec21dd64482e7499c098d3a9f92b7b28fe150115",
+                "files_count": 17,
+                "size_bytes": 212059,
+                "identity": {
+                    "name": "Backups",
+                    "version": "1.0.2",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Categories": {
+                "path": "app/Modules/Categories",
+                "sha256": "415312ca70f4df5f7fd234286342f7cf284ba3e03d2d418ecf9a55d4f0e8ca6e",
+                "files_count": 15,
+                "size_bytes": 139929,
+                "identity": {
+                    "name": "Categories",
+                    "version": "1.0.0",
+                    "type": "content",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Comments": {
+                "path": "app/Modules/Comments",
+                "sha256": "9c974270d9690ae101ce20abc6b9fe450829c95d3a3c9ddfb2fe7b4f0b049586",
+                "files_count": 14,
+                "size_bytes": 48111,
+                "identity": {
+                    "name": "Comments",
+                    "version": "1.0.0",
+                    "type": "content",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Contact": {
+                "path": "app/Modules/Contact",
+                "sha256": "4bcbc9b733efa22be61cb78bff759e4c81220891fc579fbb06be3d8a83a6e50e",
+                "files_count": 24,
+                "size_bytes": 608524,
+                "identity": {
+                    "name": "Contact",
+                    "version": "1.0.1",
+                    "type": "content",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Core": {
+                "path": "app/Modules/Core",
+                "sha256": "6291cc0b66cc07149ebb03b96c6a49609de6962d1225a6bcfb3be08ca2e6b4e9",
+                "files_count": 13,
+                "size_bytes": 151878,
+                "identity": {
+                    "name": "Core",
+                    "version": "1.0.0",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Dashboard": {
+                "path": "app/Modules/Dashboard",
+                "sha256": "49cc958ad542b3625efeb7a340ca01529541cbfb8cecef7b2a2f18e9294e6dff",
+                "files_count": 13,
+                "size_bytes": 118376,
+                "identity": {
+                    "name": "Dashboard",
+                    "version": "1.0.0",
+                    "type": "admin",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Footer": {
+                "path": "app/Modules/Footer",
+                "sha256": "cd808911a58745fcc4c9fa8272b22ef4802e37da406b3cbea051a3e9d7ddf82d",
+                "files_count": 15,
+                "size_bytes": 47614,
+                "identity": {
+                    "name": "Footer",
+                    "version": "1.0.0",
+                    "type": "content",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "HookManager": {
+                "path": "app/Modules/HookManager",
+                "sha256": "3a5f5e830f1dc3c7502df73bf41957c009ef257d725cca0b3a54115a143c9364",
+                "files_count": 13,
+                "size_bytes": 92916,
+                "identity": {
+                    "name": "HookManager",
+                    "version": "1.0.0",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Install": {
+                "path": "app/Modules/Install",
+                "sha256": "bd619ea6870f5301410695b458528cc1e11728c0c87876d7f0c3508e8baac460",
+                "files_count": 98,
+                "size_bytes": 2464256,
+                "identity": {
+                    "name": "Install",
+                    "version": "1.0.0",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Languages": {
+                "path": "app/Modules/Languages",
+                "sha256": "ba1f2b981956277923b6eb948644208509a325c51b9bc10be49a657db79a44d9",
+                "files_count": 17,
+                "size_bytes": 169323,
+                "identity": {
+                    "name": "Languages",
+                    "version": "1.0.1",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Media": {
+                "path": "app/Modules/Media",
+                "sha256": "a5790a65f41e74bca6e1763ecb4e0dbd111033a57467f0e422cbf5cb58d4b61e",
+                "files_count": 20,
+                "size_bytes": 425835,
+                "identity": {
+                    "name": "Media",
+                    "version": "1.0.0",
+                    "type": "content",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Menu": {
+                "path": "app/Modules/Menu",
+                "sha256": "d8055e0f1f8d0b51ed32ddf17816807c9a007fe6f5e3e6a064fb4c4323808e3e",
+                "files_count": 15,
+                "size_bytes": 213617,
+                "identity": {
+                    "name": "Menu",
+                    "version": "1.0.0",
+                    "type": "content",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Modules": {
+                "path": "app/Modules/Modules",
+                "sha256": "c22696a689246308ca0db6aec528788648e34265c9400438b4db71ffd6b0ee9f",
+                "files_count": 15,
+                "size_bytes": 180187,
+                "identity": {
+                    "name": "Modules",
+                    "version": "1.0.4",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Pages": {
+                "path": "app/Modules/Pages",
+                "sha256": "140137d0e689cfa366581dea60b14f4d453c4194cd7e748782c845f00ac11790",
+                "files_count": 18,
+                "size_bytes": 236663,
+                "identity": {
+                    "name": "Pages",
+                    "version": "1.0.0",
+                    "type": "content",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Posts": {
+                "path": "app/Modules/Posts",
+                "sha256": "c5dfb9cf53c812b66c14dd70b2fb63d491d7169db9f25f80c8238db10041128a",
+                "files_count": 19,
+                "size_bytes": 209022,
+                "identity": {
+                    "name": "Posts",
+                    "version": "1.0.1",
+                    "type": "content",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Settings": {
+                "path": "app/Modules/Settings",
+                "sha256": "e0e5f8f4c7ad849fb030191ebdb400c7cc2877ac6d8b5fd0452a2bee11638908",
+                "files_count": 28,
+                "size_bytes": 683380,
+                "identity": {
+                    "name": "Settings",
+                    "version": "1.0.1",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "SiteMap": {
+                "path": "app/Modules/SiteMap",
+                "sha256": "9263574b24b24dc37c1b3ff356fea03c6f6c3dedfabf4246109242b510bc2a5c",
+                "files_count": 16,
+                "size_bytes": 66078,
+                "identity": {
+                    "name": "SiteMap",
+                    "version": "1.0.0",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Themes": {
+                "path": "app/Modules/Themes",
+                "sha256": "d9a41e0334782336e1e5ad3eb478eec7431addcaf639e518d849730aa5a523c4",
+                "files_count": 16,
+                "size_bytes": 276475,
+                "identity": {
+                    "name": "Themes",
+                    "version": "1.0.0",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Trash": {
+                "path": "app/Modules/Trash",
+                "sha256": "5e7886f0dfd72b0927d3cb8776d485e14c0f4d6b303cc86f85ccf652084a05bd",
+                "files_count": 15,
+                "size_bytes": 144068,
+                "identity": {
+                    "name": "Trash",
+                    "version": "1.0.0",
+                    "type": "content",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "UpdateManager": {
+                "path": "app/Modules/UpdateManager",
+                "sha256": "219c359b3bcc1b0783722379cef8d6386e4f360d2b36e5e35b5bd8dc4daad8e6",
+                "files_count": 47,
+                "size_bytes": 290528,
+                "identity": {
+                    "name": "UpdateManager",
+                    "version": "0.4.9",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            },
+            "Users": {
+                "path": "app/Modules/Users",
+                "sha256": "7be7213860ec5e947086b08539ebcbf1e3be32ee865411cc5409e3274a577fda",
+                "files_count": 16,
+                "size_bytes": 98090,
+                "identity": {
+                    "name": "Users",
+                    "version": "1.0.0",
+                    "type": "system",
+                    "vendor": "FlatCMS",
+                    "official": true,
+                    "origin": "flatcms"
+                }
+            }
+        },
+        "extensions": [],
+        "plugins": [],
+        "themes": {
+            "admin/admin-modern-pro": {
+                "path": "themes/admin/admin-modern-pro",
+                "sha256": "d49d381b0ed9933f88affd1e36aee4173efabb53f970757edc1e84bef9b0b276",
+                "files_count": 14,
+                "size_bytes": 1327633,
+                "identity": {
+                    "name": "Admin Modern Pro",
+                    "slug": "admin-modern-pro",
+                    "version": "1.0.0",
+                    "type": "admin",
+                    "official": true,
+                    "origin": "flatcms"
+                },
+                "theme_type": "admin"
+            },
+            "admin/default": {
+                "path": "themes/admin/default",
+                "sha256": "5957ac3de5597446a5a5a12a828ebff0b1a2baf7556a03a0a8974547cc85b87f",
+                "files_count": 13,
+                "size_bytes": 1653994,
+                "identity": {
+                    "name": "Default",
+                    "slug": "default",
+                    "version": "1.0.0",
+                    "type": "admin",
+                    "official": true,
+                    "origin": "flatcms"
+                },
+                "theme_type": "admin"
+            },
+            "frontend/default": {
+                "path": "themes/frontend/default",
+                "sha256": "90f667b008f0bda733083e8b7a76e0fb57a83710ec12dc784aeda46dd8fc9140",
+                "files_count": 16,
+                "size_bytes": 1003728,
+                "identity": {
+                    "name": "Default",
+                    "slug": "default",
+                    "version": "1.0.1",
+                    "type": "frontend",
+                    "official": true,
+                    "origin": "flatcms"
+                },
+                "theme_type": "frontend"
+            },
+            "frontend/modern-pro": {
+                "path": "themes/frontend/modern-pro",
+                "sha256": "ae1f3b9f5fc96e2ed3049203e5a5c972419551e885a6459c214cf819f861b1ad",
+                "files_count": 18,
+                "size_bytes": 962750,
+                "identity": {
+                    "name": "Modern Pro",
+                    "slug": "modern-pro",
+                    "version": "1.0.1",
+                    "type": "frontend",
+                    "official": true,
+                    "origin": "flatcms"
+                },
+                "theme_type": "frontend"
+            }
+        }
+    }
+}
