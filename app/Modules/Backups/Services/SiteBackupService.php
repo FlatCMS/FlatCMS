@@ -1216,7 +1216,8 @@ final class SiteBackupService
                 $files += $this->snapshotFileDirectory(
                     BASE_PATH . '/' . $relative,
                     $relative,
-                    $developmentExclusions
+                    $developmentExclusions,
+                    true
                 );
             }
         }
@@ -1879,7 +1880,12 @@ final class SiteBackupService
      * @param array<int, string> $excludedPrefixes
      * @return array<string, array{sha256:string,size:int,source:string}>
      */
-    private function snapshotFileDirectory(string $absoluteRoot, string $archiveRoot, array $excludedPrefixes = []): array
+    private function snapshotFileDirectory(
+        string $absoluteRoot,
+        string $archiveRoot,
+        array $excludedPrefixes = [],
+        bool $runtimePayloadOnly = false
+    ): array
     {
         $files = [];
         $paths = new StoragePathGuard(BASE_PATH);
@@ -1900,7 +1906,9 @@ final class SiteBackupService
 
             $pathname = $item->getPathname();
             $relativeWithinRoot = ltrim(str_replace('\\', '/', substr($pathname, strlen($absoluteRoot))), '/');
-            if ($relativeWithinRoot === '' || $this->shouldSkipMediaRelativePath($relativeWithinRoot, $excludedPrefixes)) {
+            if ($relativeWithinRoot === ''
+                || $this->shouldSkipMediaRelativePath($relativeWithinRoot, $excludedPrefixes)
+                || ($runtimePayloadOnly && $this->isNonRuntimeComponentPath($relativeWithinRoot))) {
                 continue;
             }
 
@@ -1952,6 +1960,22 @@ final class SiteBackupService
         }
 
         return false;
+    }
+
+    private function isNonRuntimeComponentPath(string $relative): bool
+    {
+        foreach (['.git', '.svn', '.idea', '.vscode'] as $directory) {
+            if ($relative === $directory || str_starts_with($relative, $directory . '/')) {
+                return true;
+            }
+        }
+
+        $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
+        return in_array($extension, [
+            'md', 'xlsx', 'xls', 'docx', 'pptx',
+            'bak', 'tmp', 'orig', 'rej',
+            'zip', 'tar', 'tgz', 'gz',
+        ], true);
     }
 
     private function uploadsAliasesPublicUploads(): bool

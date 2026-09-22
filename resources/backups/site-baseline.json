@@ -51,9 +51,9 @@
             },
             "Auth": {
                 "path": "app/Modules/Auth",
-                "sha256": "76af9075e98bfab36eb2258e63c1cd204e34db88f94e5898edebe38b21ca0ec3",
-                "files_count": 29,
-                "size_bytes": 288290,
+                "sha256": "e17e2351e729129e6834e85f4284af2288330461127541608f49c244d579e549",
+                "files_count": 28,
+                "size_bytes": 288115,
                 "identity": {
                     "name": "Auth",
                     "version": "1.0.1",
@@ -65,9 +65,9 @@
             },
             "Backups": {
                 "path": "app/Modules/Backups",
-                "sha256": "be4fc5b5b4427e681533195eddabbf3e5337a43a0a8f2aacc707fac73720ae3d",
+                "sha256": "e3d8e430ff8efbbda80bc344bf9b389b73a3ed63831e8dfcb496e045d758c43c",
                 "files_count": 17,
-                "size_bytes": 249906,
+                "size_bytes": 250898,
                 "identity": {
                     "name": "Backups",
                     "version": "1.0.2",
@@ -107,9 +107,9 @@
             },
             "Contact": {
                 "path": "app/Modules/Contact",
-                "sha256": "4bcbc9b733efa22be61cb78bff759e4c81220891fc579fbb06be3d8a83a6e50e",
-                "files_count": 24,
-                "size_bytes": 608524,
+                "sha256": "96ecc425ac898488b6f1295814e642274a70be4e75872eb73e4f80bbf5e044b3",
+                "files_count": 23,
+                "size_bytes": 608177,
                 "identity": {
                     "name": "Contact",
                     "version": "1.0.1",
@@ -233,9 +233,9 @@
             },
             "Modules": {
                 "path": "app/Modules/Modules",
-                "sha256": "c22696a689246308ca0db6aec528788648e34265c9400438b4db71ffd6b0ee9f",
-                "files_count": 15,
-                "size_bytes": 180187,
+                "sha256": "7baf357e1d50e5dc7a4b0e85653e983fdd496b49c9f2b980795fb4e58f8df8d1",
+                "files_count": 14,
+                "size_bytes": 179879,
                 "identity": {
                     "name": "Modules",
                     "version": "1.0.4",
@@ -261,9 +261,9 @@
             },
             "Posts": {
                 "path": "app/Modules/Posts",
-                "sha256": "c5dfb9cf53c812b66c14dd70b2fb63d491d7169db9f25f80c8238db10041128a",
-                "files_count": 19,
-                "size_bytes": 209022,
+                "sha256": "e2f96d2518a11c498f6d51aa299c9013b8f93ca380285b8a624a1d07c888ac97",
+                "files_count": 18,
+                "size_bytes": 208855,
                 "identity": {
                     "name": "Posts",
                     "version": "1.0.1",
@@ -275,9 +275,9 @@
             },
             "Settings": {
                 "path": "app/Modules/Settings",
-                "sha256": "ede902f84973293a6ed5f3284b10c7189b1d8c0769612c8b25ecc12a4ea9588d",
-                "files_count": 28,
-                "size_bytes": 687356,
+                "sha256": "704a06ccf4a20ee16ad4f36ac82fd75da33b63cdf2f8ef6c33227f7744ad85ca",
+                "files_count": 27,
+                "size_bytes": 687120,
                 "identity": {
                     "name": "Settings",
                     "version": "1.0.1",
@@ -331,9 +331,9 @@
             },
             "UpdateManager": {
                 "path": "app/Modules/UpdateManager",
-                "sha256": "219c359b3bcc1b0783722379cef8d6386e4f360d2b36e5e35b5bd8dc4daad8e6",
-                "files_count": 47,
-                "size_bytes": 290528,
+                "sha256": "1e0c246f6335c4a9466ff933532be0b0ddce320dc488a46fe58047183a3e1b98",
+                "files_count": 45,
+                "size_bytes": 280849,
                 "identity": {
                     "name": "UpdateManager",
                     "version": "0.4.9",
@@ -393,9 +393,9 @@
             },
             "frontend/default": {
                 "path": "themes/frontend/default",
-                "sha256": "90f667b008f0bda733083e8b7a76e0fb57a83710ec12dc784aeda46dd8fc9140",
-                "files_count": 16,
-                "size_bytes": 1003728,
+                "sha256": "3dc5abbc022567265745e2131a2b10edef484a62bbf097b8ca4c65d7bd39b697",
+                "files_count": 15,
+                "size_bytes": 1003558,
                 "identity": {
                     "name": "Default",
                     "slug": "default",
@@ -408,9 +408,9 @@
             },
             "frontend/modern-pro": {
                 "path": "themes/frontend/modern-pro",
-                "sha256": "ae1f3b9f5fc96e2ed3049203e5a5c972419551e885a6459c214cf819f861b1ad",
-                "files_count": 18,
-                "size_bytes": 962750,
+                "sha256": "1197de91fc90b12838259d647f722e48ba48fb0f5b43c6d3a32f49f191e60c35",
+                "files_count": 17,
+                "size_bytes": 962577,
                 "identity": {
                     "name": "Modern Pro",
                     "slug": "modern-pro",

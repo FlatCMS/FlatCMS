@@ -256,7 +256,7 @@ final class SiteBackupBaselineService
             }
             $pathname = $item->getPathname();
             $child = ltrim(str_replace('\\', '/', substr($pathname, strlen($absolute))), '/');
-            if ($this->isDevelopmentMetadataPath($child)) {
+            if ($this->isNonRuntimePath($child)) {
                 continue;
             }
             $files[$child] = $pathname;
@@ -283,14 +283,20 @@ final class SiteBackupBaselineService
         ];
     }
 
-    private function isDevelopmentMetadataPath(string $relative): bool
+    private function isNonRuntimePath(string $relative): bool
     {
         foreach (['.git', '.svn', '.idea', '.vscode'] as $directory) {
             if ($relative === $directory || str_starts_with($relative, $directory . '/')) {
                 return true;
             }
         }
-        return false;
+
+        $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
+        return in_array($extension, [
+            'md', 'xlsx', 'xls', 'docx', 'pptx',
+            'bak', 'tmp', 'orig', 'rej',
+            'zip', 'tar', 'tgz', 'gz',
+        ], true);
     }
 
     /** @return array<string,mixed> */
