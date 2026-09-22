@@ -244,8 +244,10 @@ final class AdminController extends BaseController
             return;
         }
 
+        $deleteSensitive = (string) $this->request->input('delete_sensitive', '0') === '1';
+
         try {
-            $this->service->factoryResetSite($this->backupContext('factory_reset'));
+            $this->service->factoryResetSite($this->backupContext('factory_reset'), $deleteSensitive);
         } catch (\RuntimeException $exception) {
             $this->session->flash('error', $this->failureMessage($exception));
             $this->redirect(url('/admin/backups'));

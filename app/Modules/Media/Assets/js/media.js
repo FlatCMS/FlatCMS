@@ -131,11 +131,17 @@
     }
 
     function openModal(id) {
-        showElement(document.getElementById(id));
+        var modal = document.getElementById(id);
+        if (window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal) {
+            window.FlatCMS.AdminUI.modal.open(modal);
+        }
     }
 
     function closeModal(id) {
-        hideElement(document.getElementById(id));
+        var modal = document.getElementById(id);
+        if (window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal) {
+            window.FlatCMS.AdminUI.modal.close(modal);
+        }
     }
 
     function storageKey() {
@@ -2289,9 +2295,6 @@
 
     function closeDeleteModal() {
         closeModal('deleteModal');
-        deleteMediaId = null;
-        deleteMediaPath = null;
-        deleteMediaType = 'file';
     }
 
     function confirmDeleteMedia() {
@@ -2428,8 +2431,6 @@
 
     function closeRenameModal() {
         closeModal('renameModal');
-        renameMediaId = null;
-        renameMediaPath = null;
     }
 
     function confirmRename() {
@@ -2488,14 +2489,6 @@
 
     function closeSyncModal() {
         closeModal('syncModal');
-        
-        const progress = document.getElementById('syncProgress');
-        const result = document.getElementById('syncResult');
-        const confirmBtn = document.getElementById('syncConfirmBtn');
-        
-        hideElement(progress);
-        hideElement(result);
-        if (confirmBtn) confirmBtn.disabled = false;
     }
 
     function confirmSync() {
@@ -2654,23 +2647,36 @@
     window.syncMedia = openSyncModal;
 
     function setupModals() {
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                handleModalClose('deleteModal');
-                handleModalClose('syncModal');
-                handleModalClose('uploadModal');
-                handleModalClose('directoryModal');
-                handleModalClose('renameModal');
-            }
-        });
-
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    handleModalClose(modal.id);
+        const modalApi = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal;
+        if (modalApi && typeof modalApi.attach === 'function') {
+            const resetHandlers = {
+                deleteModal: function() {
+                    deleteMediaId = null;
+                    deleteMediaPath = null;
+                    deleteMediaType = 'file';
+                },
+                renameModal: function() {
+                    renameMediaId = null;
+                    renameMediaPath = null;
+                },
+                syncModal: function() {
+                    hideElement(document.getElementById('syncProgress'));
+                    hideElement(document.getElementById('syncResult'));
+                    const confirmBtn = document.getElementById('syncConfirmBtn');
+                    if (confirmBtn) confirmBtn.disabled = false;
+                },
+                previewModal: function() {
+                    const previewContent = document.querySelector('#previewModal .media-preview-content');
+                    if (previewContent) previewContent.remove();
                 }
+            };
+
+            document.querySelectorAll('.modal-overlay').forEach(function(modal) {
+                modalApi.attach(modal, {
+                    onClose: resetHandlers[modal.id] || null
+                });
             });
-        });
+        }
 
         const directoryForm = document.getElementById('directoryForm');
         if (directoryForm instanceof HTMLFormElement) {

@@ -14,6 +14,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         var scanFillModal = null;
+        var scanFillModalController = null;
         var reloadAfterModalClose = false;
 
         function ensureScanFillModal(closeLabel) {
@@ -41,6 +42,16 @@
 
             document.body.appendChild(modal);
             scanFillModal = modal;
+            scanFillModalController = window.FlatCMS.AdminUI.modal.attach(modal, {
+                initialFocus: '#scanFillResultConfirm',
+                onClose: function () {
+                    var mustReload = reloadAfterModalClose;
+                    reloadAfterModalClose = false;
+                    if (mustReload) {
+                        window.location.reload();
+                    }
+                }
+            });
             return modal;
         }
 
@@ -61,28 +72,7 @@
             }
 
             reloadAfterModalClose = !!shouldReloadAfterClose;
-            modal.classList.remove('hidden');
-            modal.setAttribute('aria-hidden', 'false');
-
-            window.requestAnimationFrame(function () {
-                if (confirmBtn) {
-                    confirmBtn.focus();
-                }
-            });
-        }
-
-        function closeScanFillModal() {
-            if (!scanFillModal) return;
-
-            scanFillModal.classList.add('hidden');
-            scanFillModal.setAttribute('aria-hidden', 'true');
-
-            var mustReload = reloadAfterModalClose;
-            reloadAfterModalClose = false;
-
-            if (mustReload) {
-                window.location.reload();
-            }
+            scanFillModalController.open(document.activeElement);
         }
 
         function escapeHtml(value) {
@@ -95,18 +85,6 @@
         }
 
         document.addEventListener('click', function (e) {
-            var closeTrigger = e.target.closest('[data-modal-close="scanFillResultModal"]');
-            if (closeTrigger) {
-                e.preventDefault();
-                closeScanFillModal();
-                return;
-            }
-
-            if (scanFillModal && e.target === scanFillModal) {
-                closeScanFillModal();
-                return;
-            }
-
             var btn = e.target.closest('[data-action="scan-fill"]');
             if (!btn) return;
 
@@ -156,10 +134,5 @@
             });
         });
 
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && scanFillModal && !scanFillModal.classList.contains('hidden')) {
-                closeScanFillModal();
-            }
-        });
     });
 })();

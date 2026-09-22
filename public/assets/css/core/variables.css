@@ -4,8 +4,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/css/core/variables.css
+ * Version: 2.0.0-dev
  */
 
+@layer base {
 :root {
   /* ============================================
      PRIMARY COLORS - Indigo
@@ -305,4 +309,5 @@ html[data-theme="light"] {
     --color-border: #334155;
     --color-border-light: #1e293b;
   }
+}
 }

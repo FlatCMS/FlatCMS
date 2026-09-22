@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Posts/Assets/js/posts.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -46,7 +49,6 @@
         var previewImage = field.querySelector('[data-post-featured-preview-img]');
         var openButton = field.querySelector('[data-post-featured-open]');
         var clearButton = field.querySelector('[data-post-featured-clear]');
-        var mediaModal = document.getElementById('mediaModal');
         var modalError = String(field.getAttribute('data-modal-error') || '').trim();
 
         if (!input) {
@@ -65,11 +67,9 @@
         }
 
         function closeMediaModal() {
-            if (!mediaModal) {
-                return;
+            if (window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.media) {
+                window.FlatCMS.AdminUI.media.close();
             }
-            mediaModal.classList.add('hidden');
-            mediaModal.style.display = 'none';
         }
 
         function normalizeUploadPath(rawValue) {
@@ -217,14 +217,12 @@
 
         if (openButton) {
             openButton.addEventListener('click', function() {
-                if (!mediaModal || typeof window.initMediaModal !== 'function') {
+                if (!window.FlatCMS || !window.FlatCMS.AdminUI || !window.FlatCMS.AdminUI.media) {
                     showModalError();
                     return;
                 }
 
-                mediaModal.classList.remove('hidden');
-                mediaModal.style.display = 'flex';
-                window.initMediaModal({
+                if (!window.FlatCMS.AdminUI.media.open({
                     mode: 'images',
                     folder: 'images',
                     openUploadIfEmpty: true,
@@ -238,7 +236,9 @@
                         input.dispatchEvent(new Event('change', { bubbles: true }));
                         closeMediaModal();
                     }
-                });
+                })) {
+                    showModalError();
+                }
             });
         }
 

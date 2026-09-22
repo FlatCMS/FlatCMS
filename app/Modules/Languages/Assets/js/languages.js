@@ -33,6 +33,7 @@
     var unsavedModules = {};      // module -> Set of changed keys
     var searchTerm = '';
     var filterMissing = false;
+    var moduleDisclosure = null;
 
     // =============================================
     // DOM Ready
@@ -58,39 +59,48 @@
     // Module Accordion Headers
     // =============================================
     function initModuleHeaders() {
-        var headers = document.querySelectorAll('.module-card-header');
-        headers.forEach(function(header) {
-            header.addEventListener('click', function() {
-                var moduleName = this.dataset.module;
-                toggleModule(moduleName, this);
-            });
+        var root = document.getElementById('modulesList');
+        if (!root || !window.FlatCMS || !window.FlatCMS.AdminUI || !window.FlatCMS.AdminUI.disclosure) {
+            return;
+        }
+        var headers = root.querySelectorAll('.module-card-header');
+        headers.forEach(function(header, index) {
+            var content = header.nextElementSibling;
+            if (!content) return;
+            var panelId = content.id || 'translations-module-panel-' + index;
+            content.id = panelId;
+            header.setAttribute('aria-controls', panelId);
+        });
+        moduleDisclosure = window.FlatCMS.AdminUI.disclosure.attach({
+            root: root,
+            triggerSelector: '.module-card-header',
+            panelSelector: '.module-card-content',
+            activeClass: 'active',
+            hidePanels: false,
+            onChange: function(expanded, header, content) {
+                var moduleName = header.dataset.module;
+                if (!expanded) {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    content.offsetHeight;
+                    content.style.maxHeight = '0';
+                    return;
+                }
+                expandContent(header, content);
+                if (!loadedModules[moduleName]) {
+                    loadModuleTranslations(moduleName, function() {
+                        applyFilters(moduleName);
+                    });
+                } else {
+                    applyFilters(moduleName);
+                }
+            }
         });
     }
 
     function toggleModule(moduleName, headerEl) {
-        var content = headerEl.nextElementSibling;
-        var isActive = headerEl.classList.contains('active');
-
-        if (isActive) {
-            // Collapse
-            content.style.maxHeight = content.scrollHeight + 'px';
-            content.offsetHeight; // force reflow
-            content.style.maxHeight = '0';
-            headerEl.classList.remove('active');
-            content.classList.remove('active');
-        } else {
-            // Expand immediately, then load if needed
-            headerEl.classList.add('active');
-            content.classList.add('active');
-            expandContent(headerEl, content);
-
-            if (!loadedModules[moduleName]) {
-                loadModuleTranslations(moduleName, function() {
-                    applyFilters(moduleName);
-                });
-            } else {
-                applyFilters(moduleName);
-            }
+        void moduleName;
+        if (moduleDisclosure) {
+            moduleDisclosure.toggle(headerEl);
         }
     }
 
@@ -659,12 +669,9 @@
     function collapseAll() {
         var headers = document.querySelectorAll('.module-card-header.active');
         headers.forEach(function(header) {
-            var content = header.nextElementSibling;
-            content.style.maxHeight = content.scrollHeight + 'px';
-            content.offsetHeight;
-            content.style.maxHeight = '0';
-            header.classList.remove('active');
-            content.classList.remove('active');
+            if (moduleDisclosure) {
+                moduleDisclosure.collapse(header);
+            }
         });
     }
 
@@ -919,39 +926,11 @@
     // Toast Notification
     // =============================================
     function showToast(message, type) {
-        var container = document.querySelector('.menu-toast-container[data-source="languages"]');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'menu-toast-container';
-            container.dataset.source = 'languages';
-            document.body.appendChild(container);
+        var text = String(message || '').trim();
+        var toast = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.toast;
+        if (text !== '' && toast && typeof toast.show === 'function') {
+            toast.show(text, type || 'success');
         }
-
-        var toastType = (type === 'error' || type === 'warning') ? type : 'success';
-        var iconClass = toastType === 'error'
-            ? 'fas fa-circle-exclamation'
-            : (toastType === 'warning' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-check');
-        var title = toastType === 'error'
-            ? config.i18n.toastErrorTitle
-            : (toastType === 'warning' ? config.i18n.toastWarningTitle : config.i18n.toastSuccessTitle);
-
-        var toast = document.createElement('div');
-        toast.className = 'menu-toast menu-toast-' + toastType;
-        toast.setAttribute('role', 'status');
-        toast.innerHTML =
-            '<span class="menu-toast-icon" aria-hidden="true"><i class="' + iconClass + '"></i></span>' +
-            '<span class="menu-toast-content">' +
-            '<span class="menu-toast-title">' + title + '</span>' +
-            '<span class="menu-toast-message">' + escapeHtml(String(message || '')) + '</span>' +
-            '</span>';
-
-        container.appendChild(toast);
-        requestAnimationFrame(function() { toast.classList.add('is-visible'); });
-
-        setTimeout(function() {
-            toast.classList.remove('is-visible');
-            setTimeout(function() { toast.remove(); }, 260);
-        }, 3000);
     }
 
     // =============================================

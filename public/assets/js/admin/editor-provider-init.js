@@ -66,19 +66,12 @@
         return base + '/' + path.replace(/^\/+/, '');
     }
 
-    function closeMediaModal(modal) {
-        if (!modal) {
-            return;
-        }
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-    }
-
     function openMediaModalForImage(onSelect) {
         const modal = document.getElementById('mediaModal');
         const callback = typeof onSelect === 'function' ? onSelect : function() {};
+        const media = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.media;
 
-        if (!modal || typeof window.initMediaModal !== 'function') {
+        if (!modal || !media || typeof media.open !== 'function') {
             const fallbackUrl = window.prompt('', 'https://');
             if (fallbackUrl) {
                 callback(String(fallbackUrl));
@@ -89,7 +82,7 @@
         const baseConfig = parseMediaConfig() || {};
         const uploadsBase = String(baseConfig.uploadsBase || '/uploads');
 
-        window.initMediaModal(Object.assign({}, baseConfig, {
+        media.open(Object.assign({}, baseConfig, {
             mode: 'images',
             folder: 'images',
             openUploadIfEmpty: true,
@@ -99,12 +92,9 @@
                 if (src !== '') {
                     callback(src);
                 }
-                closeMediaModal(modal);
+                media.close();
             },
         }));
-
-        modal.classList.remove('hidden');
-        modal.style.display = 'flex';
     }
 
     function markAsExternalEditor(textareas) {

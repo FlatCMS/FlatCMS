@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Comments/Assets/js/comments-admin.js
+ * Version: 2.0.0-dev
  */
 
 (function () {
@@ -19,7 +22,9 @@
   var postEl = modal.querySelector("[data-comment-modal-post]");
   var contentEl = modal.querySelector("[data-comment-modal-content]");
   var closeControls = modal.querySelectorAll("[data-comment-modal-close]");
-  var lastTrigger = null;
+  var modalController = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal
+    ? window.FlatCMS.AdminUI.modal.attach(modal)
+    : null;
 
   function toText(value) {
     return (value || "").toString();
@@ -34,7 +39,6 @@
 
   function openModal(trigger) {
     var dataset = trigger.dataset;
-    lastTrigger = trigger;
 
     if (authorEl) {
       authorEl.textContent = toText(modal.dataset.labelAuthor) + ": " + toText(dataset.commentAuthor) + " (" + toText(dataset.commentEmail) + ")";
@@ -49,23 +53,14 @@
       contentEl.textContent = toText(dataset.commentContent);
     }
 
-    modal.hidden = false;
-    modal.setAttribute("aria-hidden", "false");
-    document.body.classList.add("comments-modal-open");
-
-    var closeBtn = modal.querySelector(".comments-read-modal__close");
-    if (closeBtn) {
-      closeBtn.focus();
+    if (modalController) {
+      modalController.open(trigger, { initialFocus: ".comments-read-modal__close" });
     }
   }
 
   function closeModal() {
-    modal.hidden = true;
-    modal.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("comments-modal-open");
-
-    if (lastTrigger && typeof lastTrigger.focus === "function") {
-      lastTrigger.focus();
+    if (modalController) {
+      modalController.close();
     }
   }
 
@@ -82,11 +77,4 @@
       closeModal();
     });
   });
-
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && !modal.hidden) {
-      closeModal();
-    }
-  });
 })();
-

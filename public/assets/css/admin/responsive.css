@@ -4,8 +4,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/css/admin/responsive.css
+ * Version: 2.0.0-dev
  */
 
+@layer responsive {
 /* ============================================
    BASE STYLES (MOBILE FIRST - DEFAULT)
    ============================================ */
@@ -94,6 +98,20 @@ body {
   width: 100%;
   flex-direction: column;
   align-items: stretch;
+}
+
+.fc-ui-action-group[data-mobile-stack] {
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.fc-ui-action-group[data-mobile-stack] > .btn,
+.fc-ui-action-group[data-mobile-stack] > button,
+.fc-ui-action-group[data-mobile-stack] > a {
+  width: 100%;
+  min-height: 44px;
+  justify-content: center;
 }
 
 /* ============================================
@@ -775,6 +793,18 @@ a.btn {
     align-items: center;
   }
 
+  .fc-ui-action-group[data-mobile-stack] {
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .fc-ui-action-group[data-mobile-stack] > .btn,
+  .fc-ui-action-group[data-mobile-stack] > button,
+  .fc-ui-action-group[data-mobile-stack] > a {
+    width: auto;
+  }
+
   .page-content {
     padding: var(--spacing-6);
   }
@@ -1176,4 +1206,5 @@ a.btn {
   .user-stats-row {
     grid-template-columns: repeat(3, 1fr);
   }
+}
 }

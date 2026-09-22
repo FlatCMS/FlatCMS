@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Footer/Assets/js/footer.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -18,8 +21,10 @@
         const buttons = Array.from(root.querySelectorAll('[data-footer-tab-btn]'));
         const panels = Array.from(root.querySelectorAll('[data-footer-panel]'));
         const activeLocaleInput = root.querySelector('[data-footer-active-locale]');
+        const translationTabs = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.translationTabs;
 
-        if (!buttons.length || !panels.length || !activeLocaleInput) {
+        if (!buttons.length || !panels.length || !activeLocaleInput
+            || !translationTabs || typeof translationTabs.attach !== 'function') {
             return;
         }
 
@@ -51,38 +56,19 @@
             });
         }
 
-        function activateTab(target) {
-            const locale = String(target || '').trim();
-            if (!locale) {
-                return;
-            }
-
-            const activeButton = buttons.find(function(button) {
-                return String(button.getAttribute('data-tab') || '') === locale;
-            }) || null;
-
-            activeLocaleInput.value = locale;
+        function handleLocaleChange(locale, activeButton) {
             updateBadgeLabels(activeButton);
-
-            buttons.forEach(function(button) {
-                const isActive = String(button.getAttribute('data-tab') || '') === locale;
-                button.classList.toggle('is-active', isActive);
-                button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-            });
-
-            panels.forEach(function(panel) {
-                const isActive = String(panel.getAttribute('data-footer-panel') || '') === locale;
-                panel.classList.toggle('is-active', isActive);
-                panel.hidden = !isActive;
-            });
         }
 
-        buttons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                activateTab(String(button.getAttribute('data-tab') || ''));
-            });
+        translationTabs.attach({
+            root: root,
+            tabSelector: '[data-footer-tab-btn]',
+            panelSelector: '[data-footer-panel]',
+            tabAttribute: 'data-tab',
+            panelAttribute: 'data-footer-panel',
+            activeInput: activeLocaleInput,
+            initialValue: String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''),
+            onChange: handleLocaleChange
         });
-
-        activateTab(String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''));
     });
 })();

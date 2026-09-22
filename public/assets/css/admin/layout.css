@@ -4,8 +4,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/css/admin/layout.css
+ * Version: 2.0.0-dev
  */
 
+@layer layout {
 /* ============================================
    RESET & BASE
    ============================================ */
@@ -631,6 +635,8 @@ html:not(.theme-light-init)
 .page-content {
   flex: 1;
   padding: var(--spacing-6);
+}
+
 }
 
 /* ============================================

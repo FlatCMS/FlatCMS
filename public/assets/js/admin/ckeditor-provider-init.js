@@ -136,14 +136,6 @@
         return base + '/' + path.replace(/^\/+/, '');
     }
 
-    function closeMediaModal(modal) {
-        if (!modal) {
-            return;
-        }
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-    }
-
     function showToast(message, type) {
         var text = String(message || '').trim();
         if (text === '') {
@@ -349,7 +341,8 @@
 
     function openMediaModalForEditor(editor, textarea, options) {
         var modal = document.getElementById('mediaModal');
-        if (!modal || typeof window.initMediaModal !== 'function') {
+        var media = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.media;
+        if (!modal || !media || typeof media.open !== 'function') {
             showToast(textareaMediaErrorLabel(textarea), 'warning');
             return;
         }
@@ -390,10 +383,10 @@
                 propagateMediaReplacementToTranslations(textarea, previousSrc, src);
                 textarea.dispatchEvent(new Event('input', { bubbles: true }));
             }
-            closeMediaModal(modal);
+            media.close();
         }
 
-        window.initMediaModal(Object.assign({}, baseConfig, {
+        media.open(Object.assign({}, baseConfig, {
             mode: mode,
             folder: folder,
             mediaContext: mediaContext,
@@ -407,9 +400,6 @@
                     });
             },
         }));
-
-        modal.classList.remove('hidden');
-        modal.style.display = 'flex';
     }
 
     var ICON_IMAGE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill="currentColor" d="M2 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4zm2 0v9.6l3.4-3.4a1 1 0 0 1 1.4 0L13 14.4l2.6-2.6a1 1 0 0 1 1.4 0L18 13V4H4zm3 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></svg>';

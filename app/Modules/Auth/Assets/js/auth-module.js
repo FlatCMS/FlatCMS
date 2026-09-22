@@ -174,6 +174,9 @@
         let activeRequestUrl = '';
         let activeVerifyUrl = '';
         let activeTitle = '';
+        const modalController = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal
+            ? window.FlatCMS.AdminUI.modal.attach(modal, { onClose: resetModalState })
+            : null;
 
         function toast(message, type) {
             if (!message) return;
@@ -185,21 +188,15 @@
         }
 
         function openModal() {
-            modal.classList.remove('is-initially-hidden');
-            modal.style.display = 'flex';
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';
+            if (modalController) {
+                modalController.open();
+            }
         }
 
         function closeModal() {
-            if (window.FlatCMS && window.FlatCMS.modal && typeof window.FlatCMS.modal.close === 'function') {
-                window.FlatCMS.modal.close('licenseRevealModal');
-            } else {
-                modal.style.display = 'none';
-                modal.setAttribute('aria-hidden', 'true');
-                document.body.style.overflow = '';
+            if (modalController) {
+                modalController.close();
             }
-            resetModalState();
         }
 
         function resetModalState() {
@@ -383,23 +380,6 @@
             }
         });
 
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
-                closeModal();
-            }
-        });
-
-        modal.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
-
-        document.querySelectorAll('[data-modal-close="licenseRevealModal"]').forEach(function(button) {
-            button.addEventListener('click', function() {
-                closeModal();
-            });
-        });
     }
 
     function init() {

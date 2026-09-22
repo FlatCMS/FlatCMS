@@ -38,7 +38,12 @@
     <link rel="stylesheet" href="<?= asset('dists/fontawesome/css/all.min.css') ?>">
 
     <link rel="stylesheet" href="<?= asset('css/admin/base.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/core/variables.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/admin/layout.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/admin/components.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/admin/components-extended.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/admin/themes/admin-modern-pro.css') ?>" data-editor-content-theme>
+    <link rel="stylesheet" href="<?= asset('css/admin/responsive.css') ?>">
     <?php if ($themeCustomizationAsset !== ''): ?>
         <link rel="stylesheet" href="<?= e($themeCustomizationAsset) ?>" data-editor-content-theme>
     <?php endif; ?>

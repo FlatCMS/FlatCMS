@@ -284,13 +284,28 @@ final class SiteBackupService
      * @param array<string, string> $context
      * @return array<string, mixed>
      */
-    public function factoryResetSite(array $context = []): array
+    public function factoryResetSite(array $context = [], bool $deleteSensitive = false): array
     {
-        return $this->transaction()->synchronized(function (): array {
+        return $this->transaction()->synchronized(function () use ($deleteSensitive): array {
             $bootstrapFiles = $this->buildFactoryResetBootstrapSnapshot();
-            $this->mirrorArchiveFiles($bootstrapFiles, null, $this->factoryResetResidualFiles());
+            if (!$deleteSensitive) {
+                $bootstrapFiles += $this->snapshotExactFile(
+                    $this->storageSecretKeyPath,
+                    'storage/app/secretbox.key'
+                );
+            }
+
+            $this->mirrorArchiveFiles(
+                $bootstrapFiles,
+                null,
+                $this->factoryResetResidualFiles($deleteSensitive)
+            );
             $this->clearRuntimeCaches();
-            return ['bootstrap_files_count' => count($bootstrapFiles)];
+
+            return [
+                'bootstrap_files_count' => count($bootstrapFiles),
+                'sensitive_data_deleted' => $deleteSensitive,
+            ];
         });
     }
 
@@ -408,7 +423,11 @@ final class SiteBackupService
                 $operations[] = ['path' => $relative, 'open' => null];
             }
             foreach ($extraDeletes as $relative) {
-                if ($relative !== 'data/installed.lock' && !str_starts_with($relative, 'resources/uploads/contact/')) {
+                $allowedFactoryResetDelete = $relative === 'data/installed.lock'
+                    || $relative === '.env.local'
+                    || str_starts_with($relative, 'resources/uploads/contact/')
+                    || str_starts_with($relative, 'resources/licenses/');
+                if (!$allowedFactoryResetDelete) {
                     throw new \RuntimeException('backups_restore_write_failed');
                 }
                 $operations[] = ['path' => $relative, 'open' => null];
@@ -1454,22 +1473,58 @@ final class SiteBackupService
     }
 
     /** @return list<string> */
-    private function factoryResetResidualFiles(): array
+    private function factoryResetResidualFiles(bool $deleteSensitive = false): array
     {
         $guard = new StoragePathGuard(BASE_PATH);
         $installed = $guard->resolve('data/installed.lock');
         if (is_dir($installed)) { throw new \RuntimeException('backups_restore_write_failed'); }
         $files = is_file($installed) ? ['data/installed.lock'] : [];
-        $root = $guard->resolve('resources/uploads/contact');
-        if (is_file($root)) { throw new \RuntimeException('backups_restore_write_failed'); }
-        if (!is_dir($root)) { return $files; }
-        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
-        foreach ($iterator as $item) {
-            $guard->resolve($item->getPathname());
-            if ($item->isFile()) {
-                $files[] = $this->buildArchiveRelativePath($root, 'resources/uploads/contact', $item->getPathname());
+
+        $privateAttachmentsRoot = $guard->resolve('resources/uploads/contact');
+        if (is_file($privateAttachmentsRoot)) { throw new \RuntimeException('backups_restore_write_failed'); }
+        if (is_dir($privateAttachmentsRoot)) {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($privateAttachmentsRoot, \FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $item) {
+                $guard->resolve($item->getPathname());
+                if ($item->isFile()) {
+                    $files[] = $this->buildArchiveRelativePath(
+                        $privateAttachmentsRoot,
+                        'resources/uploads/contact',
+                        $item->getPathname()
+                    );
+                }
             }
         }
+
+        if ($deleteSensitive) {
+            $envLocal = $guard->resolve('.env.local');
+            if (is_dir($envLocal)) { throw new \RuntimeException('backups_restore_write_failed'); }
+            if (is_file($envLocal) && !is_link($envLocal)) {
+                $files[] = '.env.local';
+            }
+
+            $licensesRoot = $guard->resolve('resources/licenses');
+            if (is_file($licensesRoot)) { throw new \RuntimeException('backups_restore_write_failed'); }
+            if (is_dir($licensesRoot)) {
+                $iterator = new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($licensesRoot, \FilesystemIterator::SKIP_DOTS)
+                );
+                foreach ($iterator as $item) {
+                    $guard->resolve($item->getPathname());
+                    if ($item->isFile()) {
+                        $files[] = $this->buildArchiveRelativePath(
+                            $licensesRoot,
+                            'resources/licenses',
+                            $item->getPathname()
+                        );
+                    }
+                }
+            }
+        }
+
+        $files = array_values(array_unique($files));
         sort($files);
         return $files;
     }

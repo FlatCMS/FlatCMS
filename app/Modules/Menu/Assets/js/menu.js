@@ -66,9 +66,6 @@
     const toastIconUpdated = message('toastIconUpdated');
     const toastIconRemoved = message('toastIconRemoved');
     const toastTranslationSaved = message('toastTranslationSaved');
-    const toastErrorTitle = message('toastErrorTitle');
-    const toastWarningTitle = message('toastWarningTitle');
-    const toastSuccessTitle = message('toastSuccessTitle');
     const toastCustomIconSelected = message('toastCustomIconSelected');
     const toastCustomIconUploaded = message('toastCustomIconUploaded');
     const customIconInvalidType = message('customIconInvalidType');
@@ -147,6 +144,16 @@
             closeOnSelect: false,
         })
         : null;
+    const translationModalController = translationModal
+        && window.FlatCMS
+        && window.FlatCMS.AdminUI
+        && window.FlatCMS.AdminUI.modal
+        ? window.FlatCMS.AdminUI.modal.attach(translationModal, {
+            onClose: function() {
+                translationTarget = null;
+            }
+        })
+        : null;
     if (form) {
         form.addEventListener('submit', handleSubmit);
     }
@@ -157,14 +164,6 @@
     document.addEventListener('pointermove', handlePointerMove);
     document.addEventListener('pointerup', handlePointerUp);
     document.addEventListener('keydown', handleKeydown);
-
-    if (translationModal) {
-        translationModal.addEventListener('click', function(event) {
-            if (event.target === translationModal) {
-                closeTranslationModal();
-            }
-        });
-    }
 
     const customLabelInput = document.getElementById('menuCustomLabel');
     const customUrlInput = document.getElementById('menuCustomUrl');
@@ -200,50 +199,13 @@
         return {};
     }
 
-    function getToastContainer() {
-        let container = document.getElementById('menuToastContainer');
-        if (container) return container;
-
-        container = document.createElement('div');
-        container.id = 'menuToastContainer';
-        container.className = 'menu-toast-container';
-        container.setAttribute('aria-live', 'polite');
-        container.setAttribute('aria-atomic', 'false');
-        document.body.appendChild(container);
-        return container;
-    }
-
     function showToast(message, type) {
         const text = (message || '').trim();
         if (!text) return;
-
-        const toastType = typeof type === 'string' && type ? type : 'success';
-        const container = getToastContainer();
-        const toast = document.createElement('div');
-        toast.className = `menu-toast menu-toast-${toastType}`;
-        toast.setAttribute('role', 'status');
-
-        const iconClass = toastType === 'error'
-            ? 'fas fa-circle-exclamation'
-            : (toastType === 'warning' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-check');
-        const title = toastType === 'error'
-            ? toastErrorTitle
-            : (toastType === 'warning' ? toastWarningTitle : toastSuccessTitle);
-        toast.innerHTML = `
-            <span class="menu-toast-icon" aria-hidden="true"><i class="${iconClass}"></i></span>
-            <span class="menu-toast-content">
-                <span class="menu-toast-title">${title}</span>
-                <span class="menu-toast-message">${escapeHtml(text)}</span>
-            </span>
-        `;
-        container.appendChild(toast);
-        requestAnimationFrame(() => toast.classList.add('is-visible'));
-
-        const dismiss = () => {
-            toast.classList.remove('is-visible');
-            window.setTimeout(() => toast.remove(), 260);
-        };
-        window.setTimeout(dismiss, Number.isFinite(toastDuration) && toastDuration > 0 ? toastDuration : 1500);
+        const toast = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.toast;
+        if (toast && typeof toast.show === 'function') {
+            toast.show(text, typeof type === 'string' && type ? type : 'success', toastDuration);
+        }
     }
 
     function handleClick(event) {
@@ -336,11 +298,6 @@
 
     function handleKeydown(event) {
         if (event.key !== 'Escape') {
-            return;
-        }
-
-        if (translationModal && translationModal.classList.contains('is-open')) {
-            closeTranslationModal();
             return;
         }
 
@@ -1620,18 +1577,18 @@
             field.value = explicitLabel || fallbackLabel || '';
         });
 
-        translationModal.classList.add('is-open');
-        translationModal.setAttribute('aria-hidden', 'false');
-        if (translationFields.length) {
-            translationFields[0].focus();
+        if (translationModalController) {
+            translationModalController.open(button, {
+                initialFocus: '[data-locale]'
+            });
         }
     }
 
     function closeTranslationModal() {
         if (!translationModal) return;
-        translationModal.classList.remove('is-open');
-        translationModal.setAttribute('aria-hidden', 'true');
-        translationTarget = null;
+        if (translationModalController) {
+            translationModalController.close();
+        }
     }
 
     function saveTranslations() {
@@ -1666,17 +1623,14 @@
     }
 
     function openCustomIconMediaModal() {
-        const mediaModal = document.getElementById('mediaModal');
-        if (!iconTarget || !mediaModal || typeof window.initMediaModal !== 'function') {
+        if (!iconTarget || !window.FlatCMS || !window.FlatCMS.AdminUI || !window.FlatCMS.AdminUI.media) {
             showToast(mediaModalUnavailable, 'warning');
             return;
         }
 
         closeIconModal();
-        mediaModal.classList.remove('hidden');
-        mediaModal.style.display = 'flex';
 
-        window.initMediaModal({
+        if (!window.FlatCMS.AdminUI.media.open({
             mode: 'images',
             accept: customIconAccept || '.png,.gif,.webp,.avif,image/png,image/gif,image/webp,image/avif',
             initialTab: 'library',
@@ -1698,8 +1652,7 @@
                     iconType: 'media',
                     iconMedia: mediaPath,
                 });
-                mediaModal.classList.add('hidden');
-                mediaModal.style.display = 'none';
+                window.FlatCMS.AdminUI.media.close();
                 showToast(toastCustomIconSelected, 'success');
             },
             onUploadComplete: function(payload) {
@@ -1715,7 +1668,9 @@
                 }
                 showToast(toastCustomIconUploaded, 'success');
             },
-        });
+        })) {
+            showToast(mediaModalUnavailable, 'warning');
+        }
     }
 
     function isAllowedCustomIconFile(file) {

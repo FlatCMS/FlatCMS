@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Pages/Assets/js/pages.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -32,8 +35,10 @@
         var buttons = Array.prototype.slice.call(root.querySelectorAll('[data-pages-tab-btn]'));
         var panels = Array.prototype.slice.call(root.querySelectorAll('[data-pages-panel]'));
         var activeLocaleInput = root.querySelector('[data-pages-active-locale]');
+        var translationTabs = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.translationTabs;
         var documentTitleSuffix = '';
-        if (!buttons.length || !panels.length || !(activeLocaleInput instanceof HTMLInputElement)) {
+        if (!buttons.length || !panels.length || !(activeLocaleInput instanceof HTMLInputElement)
+            || !translationTabs || typeof translationTabs.attach !== 'function') {
             return;
         }
 
@@ -117,31 +122,9 @@
             }
         }
 
-        function activateTab(locale) {
-            var targetLocale = String(locale || '').trim();
-            if (targetLocale === '') {
-                return;
-            }
-
-            activeLocaleInput.value = targetLocale;
-            var activeButton = buttons.find(function(button) {
-                return String(button.getAttribute('data-tab') || '') === targetLocale;
-            }) || null;
+        function handleLocaleChange(targetLocale, activeButton) {
             updateBadgeLabels(activeButton);
             updateChromeLabels(activeButton);
-
-            buttons.forEach(function(button) {
-                var isActive = String(button.getAttribute('data-tab') || '') === targetLocale;
-                button.classList.toggle('is-active', isActive);
-                button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-            });
-
-            panels.forEach(function(panel) {
-                var isActive = String(panel.getAttribute('data-pages-panel') || '') === targetLocale;
-                panel.classList.toggle('is-active', isActive);
-                panel.hidden = !isActive;
-            });
-
             document.dispatchEvent(new CustomEvent('pages:locale-changed', {
                 detail: {
                     locale: targetLocale
@@ -149,13 +132,16 @@
             }));
         }
 
-        buttons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                activateTab(String(button.getAttribute('data-tab') || ''));
-            });
+        translationTabs.attach({
+            root: root,
+            tabSelector: '[data-pages-tab-btn]',
+            panelSelector: '[data-pages-panel]',
+            tabAttribute: 'data-tab',
+            panelAttribute: 'data-pages-panel',
+            activeInput: activeLocaleInput,
+            initialValue: String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''),
+            onChange: handleLocaleChange
         });
-
-        activateTab(String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''));
     }
 
     function syncBatchHiddenInputs(container, ids) {

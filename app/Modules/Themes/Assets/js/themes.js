@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Themes/Assets/js/themes.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -31,6 +34,8 @@
     const resetCloseButtons = Array.from(document.querySelectorAll('[data-theme-reset-close]'));
     let activeScope = modeTabButtons.find((button) => button.classList.contains('is-active'))?.dataset.themeMode || 'default';
     let activeComponentPanel = componentTabButtons.find((button) => button.classList.contains('is-active'))?.dataset.themeComponentsTab || 'buttons';
+    let modeTabs = null;
+    let componentTabs = null;
 
     function setPreviewProperty(name, value) {
         previewBoxes.forEach((box) => {
@@ -58,51 +63,21 @@
         });
     }
 
-    function isModalVisible(modal) {
-        if (!modal || modal.hidden) {
-            return false;
-        }
-        if (modal.style.display && modal.style.display !== 'none') {
-            return true;
-        }
-        return window.getComputedStyle(modal).display !== 'none';
-    }
-
-    function updateBodyOverflow() {
-        const anyVisibleModal = Array.from(document.querySelectorAll('.modal-overlay')).some(isModalVisible);
-        document.body.style.overflow = anyVisibleModal ? 'hidden' : '';
-    }
-
     function openModal(modal) {
-        if (!modal) {
-            return;
+        if (window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal) {
+            window.FlatCMS.AdminUI.modal.open(modal);
         }
+    }
 
-        document.querySelectorAll('.modal-overlay').forEach((otherModal) => {
-            if (otherModal !== modal && isModalVisible(otherModal)) {
-                closeModal(otherModal);
-            }
-        });
-
-        modal.hidden = false;
-        modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden', 'false');
-        requestAnimationFrame(() => {
-            modal.classList.remove('is-initially-hidden');
-        });
-        updateBodyOverflow();
+    function isModalVisible(modal) {
+        return !!(window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal
+            && window.FlatCMS.AdminUI.modal.isOpen(modal));
     }
 
     function closeModal(modal) {
-        if (!modal) {
-            return;
+        if (window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal) {
+            window.FlatCMS.AdminUI.modal.close(modal);
         }
-
-        modal.classList.add('is-initially-hidden');
-        modal.style.display = 'none';
-        modal.hidden = true;
-        modal.setAttribute('aria-hidden', 'true');
-        updateBodyOverflow();
     }
 
     function setActiveComponentPanel(panelKey) {
@@ -110,17 +85,11 @@
             ? panelKey
             : 'buttons';
 
+        if (componentTabs && componentTabs.current() !== targetPanel) {
+            componentTabs.activate(targetPanel);
+            return;
+        }
         activeComponentPanel = targetPanel;
-        componentTabButtons.forEach((button) => {
-            const isActive = button.dataset.themeComponentsTab === targetPanel;
-            button.classList.toggle('is-active', isActive);
-            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        });
-        componentPanels.forEach((panel) => {
-            const isActive = panel.dataset.themeComponentsPanel === targetPanel;
-            panel.classList.toggle('is-active', isActive);
-            panel.hidden = !isActive;
-        });
     }
 
     function openComponentsModal(panelKey) {
@@ -408,17 +377,11 @@
     }
 
     function setActiveMode(scope) {
+        if (modeTabs && modeTabs.current() !== scope) {
+            modeTabs.activate(scope);
+            return;
+        }
         activeScope = scope;
-        modeTabButtons.forEach((button) => {
-            const active = button.dataset.themeMode === scope;
-            button.classList.toggle('is-active', active);
-            button.setAttribute('aria-selected', active ? 'true' : 'false');
-        });
-        modePanels.forEach((panel) => {
-            const active = panel.dataset.themeModePanel === scope;
-            panel.classList.toggle('is-active', active);
-            panel.hidden = !active;
-        });
         previewBoxes.forEach((box) => {
             box.dataset.previewMode = scope;
         });
@@ -619,11 +582,16 @@
         input.addEventListener('change', updatePreview);
     });
 
-    if (modeTabsRoot) {
-        modeTabButtons.forEach((button) => {
-            button.addEventListener('click', function() {
-                setActiveMode(String(this.dataset.themeMode || 'dark'));
-            });
+    if (modeTabsRoot && window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.tabs) {
+        modeTabs = window.FlatCMS.AdminUI.tabs.attach({
+            root: modeTabsRoot,
+            panelsRoot: document,
+            tabSelector: '[data-theme-mode-tab]',
+            panelSelector: '[data-theme-mode-panel]',
+            tabAttribute: 'data-theme-mode',
+            panelAttribute: 'data-theme-mode-panel',
+            initialValue: activeScope,
+            onChange: setActiveMode,
         });
     }
 
@@ -651,11 +619,17 @@
         });
     });
 
-    componentTabButtons.forEach((button) => {
-        button.addEventListener('click', function() {
-            setActiveComponentPanel(String(this.dataset.themeComponentsTab || 'buttons'));
+    if (componentsModal && window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.tabs) {
+        componentTabs = window.FlatCMS.AdminUI.tabs.attach({
+            root: componentsModal,
+            tabSelector: '[data-theme-components-tab]',
+            panelSelector: '[data-theme-components-panel]',
+            tabAttribute: 'data-theme-components-tab',
+            panelAttribute: 'data-theme-components-panel',
+            initialValue: activeComponentPanel,
+            onChange: setActiveComponentPanel,
         });
-    });
+    }
 
     if (componentsModal) {
         componentsModal.addEventListener('click', function(event) {

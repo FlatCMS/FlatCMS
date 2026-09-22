@@ -81,37 +81,24 @@
   // ============================================
   window.openModal = function(modalId) {
     const backdrop = document.getElementById(modalId);
-    if (backdrop) {
-      backdrop.classList.add('active');
-      document.body.style.overflow = 'hidden';
+    const modal = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal;
+    if (backdrop && modal) {
+      modal.open(backdrop);
     }
   };
 
   window.closeModal = function(modalId) {
     const backdrop = document.getElementById(modalId);
-    if (backdrop) {
-      backdrop.classList.remove('active');
-      document.body.style.overflow = '';
+    const modal = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal;
+    if (backdrop && modal) {
+      modal.close(backdrop);
     }
   };
 
-  // Close modal on backdrop click
   document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-    backdrop.addEventListener('click', function(e) {
-      if (e.target === backdrop) {
-        backdrop.classList.remove('active');
-        document.body.style.overflow = '';
-      }
-    });
-  });
-
-  // Close modal on ESC key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-backdrop.active').forEach(function(backdrop) {
-        backdrop.classList.remove('active');
-      });
-      document.body.style.overflow = '';
+    const modal = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal;
+    if (modal) {
+      modal.attach(backdrop, { activeClass: 'active' });
     }
   });
 
@@ -119,26 +106,18 @@
   // TABS
   // ============================================
   document.querySelectorAll('.tabs').forEach(function(tabs) {
-    const buttons = tabs.querySelectorAll('.tab-btn');
-    const panels = tabs.querySelectorAll('.tab-panel');
-    
-    buttons.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        const target = btn.dataset.tab;
-        
-        // Update buttons
-        buttons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        // Update panels
-        panels.forEach(function(panel) {
-          panel.classList.remove('active');
-          if (panel.id === target) {
-            panel.classList.add('active');
-          }
-        });
+    const tabsApi = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.tabs;
+    if (tabsApi) {
+      tabsApi.attach({
+        root: tabs,
+        tabSelector: '.tab-btn',
+        panelSelector: '.tab-panel',
+        tabAttribute: 'data-tab',
+        panelAttribute: 'id',
+        activeClass: 'active',
+        panelActiveClass: 'active'
       });
-    });
+    }
   });
 
   // ============================================

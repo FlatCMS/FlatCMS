@@ -453,31 +453,20 @@
   let confirmCallback = null;
   let activeHelpTemplate = null;
   let activeHelpPlaceholder = null;
+  const adminModal = window.FlatCMS && window.FlatCMS.AdminUI
+    ? window.FlatCMS.AdminUI.modal
+    : null;
 
-  function isModalVisible(modal) {
-    if (!modal) return false;
-    if (modal.style.display && modal.style.display !== 'none') return true;
-    return window.getComputedStyle(modal).display !== 'none';
+  if (adminModal && helpModal) {
+    adminModal.attach(helpModal, { onClose: restoreHelpTemplate });
   }
 
-  function updateBodyOverflow() {
-    const anyVisibleModal = Array.from(document.querySelectorAll('.modal-overlay')).some(isModalVisible);
-    document.body.style.overflow = anyVisibleModal ? 'hidden' : '';
+  function isModalVisible(modal) {
+    return !!(adminModal && adminModal.isOpen(modal));
   }
 
   function openModal(modal) {
-    if (!modal) return;
-
-    // Ensure only one global overlay is visible at once.
-    document.querySelectorAll('.modal-overlay').forEach(function(other) {
-      if (other === modal) return;
-      closeModal(other);
-    });
-
-    modal.classList.remove('is-initially-hidden');
-    modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
-    updateBodyOverflow();
+    if (adminModal) adminModal.open(modal);
   }
 
   function restoreHelpTemplate() {
@@ -512,13 +501,7 @@
     if (modal === helpModal) {
       restoreHelpTemplate();
     }
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
-    updateBodyOverflow();
-  }
-
-  function isGlobalModal(modal) {
-    return modal === alertModal || modal === confirmModal || modal === helpModal;
+    if (adminModal) adminModal.close(modal);
   }
 
   function showAlert(message) {
@@ -540,15 +523,16 @@
     if (confirmModalItemName && confirmModalItemValue) {
       if (finalItemName) {
         confirmModalItemValue.textContent = finalItemName;
-        confirmModalItemName.style.display = 'block';
+        confirmModalItemName.hidden = false;
+        confirmModalItemName.classList.remove('is-initially-hidden');
       } else {
         confirmModalItemValue.textContent = '';
-        confirmModalItemName.style.display = 'none';
+        confirmModalItemName.hidden = true;
       }
     }
     if (confirmModalWarning) {
       confirmModalWarning.textContent = finalWarning;
-      confirmModalWarning.style.display = finalWarning ? 'block' : 'none';
+      confirmModalWarning.hidden = !finalWarning;
     }
     confirmCallback = typeof onConfirm === 'function' ? onConfirm : null;
     if (confirmModalConfirm) {
@@ -667,36 +651,6 @@
     });
   }
 
-  document.querySelectorAll('[data-modal-close]').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      const targetId = btn.getAttribute('data-modal-close');
-      const targetModal = document.getElementById(targetId);
-      if (!isGlobalModal(targetModal)) {
-        return;
-      }
-      closeModal(targetModal);
-    });
-  });
-
-  document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
-    overlay.addEventListener('click', function(e) {
-      if (!isGlobalModal(overlay)) {
-        return;
-      }
-      if (e.target === overlay) {
-        closeModal(overlay);
-      }
-    });
-  });
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeModal(alertModal);
-      closeModal(confirmModal);
-      closeModal(helpModal);
-    }
-  });
-
   document.addEventListener('click', function(e) {
     const helpTrigger = e.target.closest('[data-admin-help-open]');
     if (!helpTrigger) return;
@@ -717,8 +671,13 @@
   });
 
   window.FlatCMS = window.FlatCMS || {};
+  if (window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.toast) {
+    window.FlatCMS.AdminUI.toast.setProvider(showToast);
+  }
   window.FlatCMS.toast = {
-    show: showToast
+    show: function(message, type, duration) {
+      return window.FlatCMS.AdminUI.toast.show(message, type, duration);
+    }
   };
   window.FlatCMS.modal = {
     alert: showAlert,

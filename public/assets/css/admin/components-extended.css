@@ -9,6 +9,7 @@
  * Version: 2.0.0-dev
  */
 
+@layer components {
 /* ============================================
    BADGES
    ============================================ */
@@ -205,6 +206,19 @@
   z-index: var(--z-modal-backdrop, 1100);
   padding: var(--spacing-4);
   backdrop-filter: blur(4px);
+}
+
+body.fc-ui-modal-open {
+  overflow: hidden;
+}
+
+.modal-overlay[hidden],
+.modal-overlay.is-initially-hidden:not(.is-open) {
+  display: none !important;
+}
+
+.modal-overlay.is-open {
+  display: flex;
 }
 
 #mediaModal.modal-overlay {
@@ -725,6 +739,71 @@
 
 .tab-panel.active {
   display: block;
+}
+
+.fc-ui-disclosure {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+  overflow: clip;
+}
+
+.fc-ui-disclosure + .fc-ui-disclosure {
+  margin-top: var(--spacing-3);
+}
+
+.fc-ui-disclosure__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fc-ui-disclosure__trigger:hover,
+.fc-ui-disclosure__trigger:focus-visible {
+  background: var(--color-bg-hover);
+}
+
+.fc-ui-disclosure__indicator {
+  flex: 0 0 auto;
+  transition: transform var(--transition-fast);
+}
+
+.fc-ui-disclosure__trigger.is-expanded .fc-ui-disclosure__indicator {
+  transform: rotate(180deg);
+}
+
+.fc-ui-disclosure__panel {
+  padding: var(--spacing-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.fc-ui-disclosure__panel[hidden] {
+  display: none;
+}
+
+.fc-ui-action-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+.fc-ui-action-group > .btn,
+.fc-ui-action-group > button,
+.fc-ui-action-group > a {
+  margin: 0;
 }
 
 /* Pill Tabs Variant */
@@ -1518,4 +1597,5 @@
     grid-column: 2;
     justify-self: start;
   }
+}
 }

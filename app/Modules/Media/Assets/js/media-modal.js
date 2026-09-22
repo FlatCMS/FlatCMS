@@ -204,18 +204,17 @@
         let selectedIndex = null;
         let uploadInProgress = false;
         let activeContext = getMediaContext();
+        const sharedModal = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal
+            ? window.FlatCMS.AdminUI.modal.attach(modal)
+            : null;
 
         const show = (el) => { if (el) el.classList.remove('hidden'); };
         const hide = (el) => { if (el) el.classList.add('hidden'); };
         const openModal = () => {
-            modal.classList.remove('hidden', 'is-initially-hidden');
-            modal.style.display = 'flex';
-            modal.setAttribute('aria-hidden', 'false');
+            if (sharedModal) sharedModal.open();
         };
         const closeModal = () => {
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-            modal.setAttribute('aria-hidden', 'true');
+            if (sharedModal) sharedModal.close();
         };
 
         function getFrontControllerPath() {
@@ -723,25 +722,6 @@
                 fileInput.click();
             });
         }
-
-        modal.querySelectorAll('[data-modal-close="mediaModal"]').forEach((button) => {
-            button.addEventListener('click', (event) => {
-                event.preventDefault();
-                closeModal();
-            });
-        });
-
-        modal.addEventListener('click', (event) => {
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
-
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
-                closeModal();
-            }
-        });
 
         window.FlatCMS = window.FlatCMS || {};
         window.FlatCMS.mediaModal = {

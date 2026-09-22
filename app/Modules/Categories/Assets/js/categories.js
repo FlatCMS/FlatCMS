@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Categories/Assets/js/categories.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -157,8 +160,10 @@
         var buttons = Array.prototype.slice.call(root.querySelectorAll('[data-categories-tab-btn]'));
         var panels = Array.prototype.slice.call(root.querySelectorAll('[data-categories-panel]'));
         var activeLocaleInput = root.querySelector('[data-categories-active-locale]');
+        var translationTabs = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.translationTabs;
 
-        if (!buttons.length || !panels.length || !(activeLocaleInput instanceof HTMLInputElement)) {
+        if (!buttons.length || !panels.length || !(activeLocaleInput instanceof HTMLInputElement)
+            || !translationTabs || typeof translationTabs.attach !== 'function') {
             return;
         }
 
@@ -190,39 +195,20 @@
             });
         }
 
-        function activateTab(locale) {
-            var targetLocale = String(locale || '').trim();
-            if (targetLocale === '') {
-                return;
-            }
-
-            var activeButton = buttons.find(function(button) {
-                return String(button.getAttribute('data-tab') || '') === targetLocale;
-            }) || null;
-
-            activeLocaleInput.value = targetLocale;
+        function handleLocaleChange(targetLocale, activeButton) {
             updateBadgeLabels(activeButton);
-
-            buttons.forEach(function(button) {
-                var isActive = String(button.getAttribute('data-tab') || '') === targetLocale;
-                button.classList.toggle('is-active', isActive);
-                button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-            });
-
-            panels.forEach(function(panel) {
-                var isActive = String(panel.getAttribute('data-categories-panel') || '') === targetLocale;
-                panel.classList.toggle('is-active', isActive);
-                panel.hidden = !isActive;
-            });
         }
 
-        buttons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                activateTab(String(button.getAttribute('data-tab') || ''));
-            });
+        translationTabs.attach({
+            root: root,
+            tabSelector: '[data-categories-tab-btn]',
+            panelSelector: '[data-categories-panel]',
+            tabAttribute: 'data-tab',
+            panelAttribute: 'data-categories-panel',
+            activeInput: activeLocaleInput,
+            initialValue: String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''),
+            onChange: handleLocaleChange
         });
-
-        activateTab(String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''));
     }
 
     document.addEventListener('DOMContentLoaded', function() {

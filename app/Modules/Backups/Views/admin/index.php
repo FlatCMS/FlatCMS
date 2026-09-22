@@ -213,7 +213,7 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
         </div>
 
         <?php if ($canManageBackups): ?>
-            <form method="POST" action="<?= url('/admin/backups/factory-reset') ?>" class="backups-action-form">
+            <form method="POST" action="<?= url('/admin/backups/factory-reset') ?>" class="backups-action-form backups-factory-reset-form">
                 <?= csrf_field() ?>
                 <button
                     type="submit"
@@ -228,6 +228,13 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                     <i class="fas fa-power-off" aria-hidden="true"></i>
                     <?= __('backups_factory_reset_action', 'Backups') ?>
                 </button>
+                <div class="backups-sensitive-reset-option">
+                    <label class="form-inline">
+                        <input type="checkbox" class="form-check-input" name="delete_sensitive" value="1">
+                        <span><?= __('backups_factory_reset_sensitive_label', 'Backups') ?></span>
+                    </label>
+                    <div class="form-hint"><?= __('backups_factory_reset_sensitive_hint', 'Backups') ?></div>
+                </div>
             </form>
         <?php endif; ?>
     </div>

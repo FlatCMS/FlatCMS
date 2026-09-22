@@ -245,6 +245,19 @@
         var modalCountNewBadge = modal.querySelector('.contact-messages-modal__status-bar [data-contact-count-new]');
         var modalCountReadBadge = modal.querySelector('.contact-messages-modal__status-bar [data-contact-count-read]');
         var modalCountArchivedBadge = modal.querySelector('.contact-messages-modal__status-bar [data-contact-count-archived]');
+        var adminModal = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal;
+        var modalController = adminModal && typeof adminModal.attach === 'function'
+            ? adminModal.attach(modal, {
+                beforeClose: function() {
+                    if (modal.classList.contains('is-reading')) {
+                        showList();
+                        return false;
+                    }
+                    return true;
+                },
+                onClose: showList
+            })
+            : null;
 
         var messagesMap = {};
         if (dataNode) {
@@ -579,16 +592,16 @@
         }
 
         function openModal() {
-            modal.hidden = false;
-            modal.classList.add('is-open');
             showList();
+            if (modalController) {
+                modalController.open();
+            }
         }
 
         function closeModal() {
-            modal.classList.remove('is-open');
-            modal.classList.remove('is-reading');
-            modal.hidden = true;
-            showList();
+            if (modalController) {
+                modalController.close();
+            }
         }
 
         function showList() {
@@ -899,16 +912,6 @@
             backButton.addEventListener('click', showList);
         }
 
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape' && !modal.hidden) {
-                if (modal.classList.contains('is-reading')) {
-                    showList();
-                    return;
-                }
-                closeModal();
-            }
-        });
-
         ensureListPlaceholder();
         syncMessageRows();
         syncCountBadges();
@@ -1172,6 +1175,18 @@
         var optionsModalState = {
             fieldIndex: -1,
         };
+        var adminUi = window.FlatCMS && window.FlatCMS.AdminUI;
+        var translationModalController = translationModal && adminUi && adminUi.modal
+            ? adminUi.modal.attach(translationModal)
+            : null;
+        var optionsModalController = optionsModal && adminUi && adminUi.modal
+            ? adminUi.modal.attach(optionsModal, {
+                onClose: function() {
+                    optionsModalState.fieldIndex = -1;
+                }
+            })
+            : null;
+        var translationTabsController = null;
 
         function getLabel(attribute, fallback) {
             var value = form.getAttribute(attribute);
@@ -1781,11 +1796,9 @@
             if (!optionsModal) {
                 return;
             }
-
-            optionsModal.style.display = 'none';
-            optionsModal.setAttribute('aria-hidden', 'true');
-            optionsModalState.fieldIndex = -1;
-            updateBodyOverflow();
+            if (optionsModalController) {
+                optionsModalController.close();
+            }
         }
 
         function createOptionsModalItem(value) {
@@ -1878,14 +1891,6 @@
                 return;
             }
 
-            Array.prototype.slice.call(document.querySelectorAll('.modal-overlay')).forEach(function (otherModal) {
-                if (otherModal === optionsModal) {
-                    return;
-                }
-                otherModal.style.display = 'none';
-                otherModal.setAttribute('aria-hidden', 'true');
-            });
-
             optionsModalState.fieldIndex = fieldIndex;
             setActiveField(fieldIndex, false);
 
@@ -1904,10 +1909,9 @@
                 optionsModalField.textContent = computedLabel !== '' ? computedLabel : (labels.unnamedField + ' #' + (fieldIndex + 1));
             }
 
-            optionsModal.classList.remove('is-initially-hidden');
-            optionsModal.style.display = 'flex';
-            optionsModal.setAttribute('aria-hidden', 'false');
-            updateBodyOverflow();
+            if (optionsModalController) {
+                optionsModalController.open();
+            }
         }
 
         function saveOptionsModal() {
@@ -2131,6 +2135,11 @@
                 normalized = sourceLocale;
             }
 
+            if (translationTabsController && translationTabsController.current() !== normalized) {
+                translationTabsController.activate(normalized);
+                return;
+            }
+
             var activeButton = null;
             for (var buttonIndex = 0; buttonIndex < translationTabs.length; buttonIndex += 1) {
                 var currentLocale = String(translationTabs[buttonIndex].getAttribute('data-contact-translation-tab') || '').trim();
@@ -2164,24 +2173,6 @@
                 }
             }
 
-            for (var i = 0; i < translationTabs.length; i += 1) {
-                var tabLocale = String(translationTabs[i].getAttribute('data-contact-translation-tab') || '').trim();
-                var isActiveTab = tabLocale === normalized;
-                translationTabs[i].classList.toggle('is-active', isActiveTab);
-                translationTabs[i].setAttribute('aria-selected', isActiveTab ? 'true' : 'false');
-            }
-
-            for (var j = 0; j < translationPanels.length; j += 1) {
-                var panelLocale = String(translationPanels[j].getAttribute('data-contact-translation-panel') || '').trim();
-                var isActivePanel = panelLocale === normalized;
-                translationPanels[j].classList.toggle('is-active', isActivePanel);
-                translationPanels[j].hidden = !isActivePanel;
-            }
-
-            if (activeLocaleInput) {
-                activeLocaleInput.value = normalized;
-            }
-
             applyTranslationModalUi(normalized);
 
             if (normalized === sourceLocale) {
@@ -2189,25 +2180,10 @@
             }
         }
 
-        function updateBodyOverflow() {
-            var anyVisibleModal = Array.prototype.slice.call(document.querySelectorAll('.modal-overlay')).some(function (modalNode) {
-                return window.getComputedStyle(modalNode).display !== 'none';
-            });
-            document.body.style.overflow = anyVisibleModal ? 'hidden' : '';
-        }
-
         function openTranslationModal() {
             if (!translationModal) {
                 return;
             }
-
-            Array.prototype.slice.call(document.querySelectorAll('.modal-overlay')).forEach(function (otherModal) {
-                if (otherModal === translationModal) {
-                    return;
-                }
-                otherModal.style.display = 'none';
-                otherModal.setAttribute('aria-hidden', 'true');
-            });
 
             var targetLocale = activeLocaleInput ? String(activeLocaleInput.value || '').trim() : '';
             if (targetLocale === '') {
@@ -2217,10 +2193,9 @@
             }
 
             setTranslationPanel(targetLocale);
-            translationModal.classList.remove('is-initially-hidden');
-            translationModal.style.display = 'flex';
-            translationModal.setAttribute('aria-hidden', 'false');
-            updateBodyOverflow();
+            if (translationModalController) {
+                translationModalController.open();
+            }
 
             var activePanel = null;
             for (var panelIndex = 0; panelIndex < translationPanels.length; panelIndex += 1) {
@@ -2242,11 +2217,9 @@
             if (!translationModal) {
                 return;
             }
-
-            translationModal.style.display = 'none';
-            translationModal.setAttribute('aria-hidden', 'true');
-            translationModal.classList.add('is-initially-hidden');
-            updateBodyOverflow();
+            if (translationModalController) {
+                translationModalController.close();
+            }
         }
 
         function renderCanvas() {
@@ -2784,46 +2757,26 @@
         syncInspectorFromActiveRow();
         toggleNewsletterOptionsByType();
 
+        if (translationModal && translationTabs.length && adminUi && adminUi.translationTabs) {
+            translationTabsController = adminUi.translationTabs.attach({
+                root: translationModal,
+                panelsRoot: translationModal,
+                tabSelector: '[data-contact-translation-tab]',
+                panelSelector: '[data-contact-translation-panel]',
+                tabAttribute: 'data-contact-translation-tab',
+                panelAttribute: 'data-contact-translation-panel',
+                activeInput: activeLocaleInput,
+                initialValue: activeLocaleInput ? String(activeLocaleInput.value || '').trim() : '',
+                onChange: function(locale) {
+                    setTranslationPanel(locale);
+                }
+            });
+        }
+
         for (var openIndex = 0; openIndex < translationOpenButtons.length; openIndex += 1) {
             translationOpenButtons[openIndex].addEventListener('click', function (event) {
                 event.preventDefault();
                 openTranslationModal();
-            });
-        }
-
-        for (var t = 0; t < translationTabs.length; t += 1) {
-            translationTabs[t].addEventListener('click', function (event) {
-                event.preventDefault();
-                var target = event.currentTarget;
-                var locale = String(target.getAttribute('data-contact-translation-tab') || '').trim();
-                setTranslationPanel(locale);
-            });
-        }
-
-        if (translationModal) {
-            translationModal.addEventListener('click', function (event) {
-                if (event.target === translationModal) {
-                    closeTranslationModal();
-                }
-            });
-
-            Array.prototype.slice.call(translationModal.querySelectorAll('[data-modal-close="contactTranslationsModal"]')).forEach(function (button) {
-                button.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    closeTranslationModal();
-                });
-            });
-
-            document.addEventListener('keydown', function (event) {
-                if (event.key !== 'Escape') {
-                    return;
-                }
-
-                if (translationModal.getAttribute('aria-hidden') === 'true') {
-                    return;
-                }
-
-                closeTranslationModal();
             });
         }
 
@@ -2868,21 +2821,6 @@
                 });
             }
 
-            optionsModal.addEventListener('click', function (event) {
-                if (event.target === optionsModal) {
-                    closeOptionsModal();
-                }
-            });
-
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && optionsModal.getAttribute('aria-hidden') === 'false') {
-                    closeOptionsModal();
-                }
-            });
-        }
-
-        if (translationTabs.length) {
-            setTranslationPanel(activeLocaleInput ? String(activeLocaleInput.value || '').trim() : '');
         }
     }
 

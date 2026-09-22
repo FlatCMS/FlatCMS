@@ -4,17 +4,15 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/css/admin/base.css
+ * Version: 2.0.0-dev
  */
 
 @layer reset, base, layout, components, utilities, theme, responsive;
 
-/* Core tokens */
-@import url('../core/variables.css') layer(base);
-
-/* Layout + Components */
-@import url('layout.css') layer(layout);
-@import url('components.css') layer(components);
-@import url('components-extended.css') layer(components);
-
-/* Mobile-first responsive overrides */
-@import url('responsive.css') layer(responsive);
+@layer reset {
+  [hidden] {
+    display: none !important;
+  }
+}

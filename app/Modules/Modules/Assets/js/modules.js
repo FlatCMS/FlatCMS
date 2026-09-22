@@ -104,46 +104,29 @@
             searchInput.addEventListener('input', applyFilters);
         }
 
-        headers.forEach(header => {
-            header.addEventListener('click', () => {
-                const list = header.closest('[data-module-list]');
-                const content = header.nextElementSibling;
-                if (!content) return;
-                const isActive = header.classList.contains('active');
-
-                if (list && !isActive) {
-                    const openHeaders = Array.from(list.querySelectorAll('[data-module-toggle].active'));
-                    openHeaders.forEach(openHeader => {
-                        if (openHeader === header) {
-                            return;
-                        }
-
-                        const openContent = openHeader.nextElementSibling;
-                        if (!openContent) {
-                            return;
-                        }
-
-                        openContent.style.maxHeight = openContent.scrollHeight + 'px';
-                        openContent.offsetHeight;
-                        openContent.style.maxHeight = '0';
-                        openHeader.classList.remove('active');
-                        openContent.classList.remove('active');
-                    });
-                }
-
-                if (!isActive) {
-                    content.style.maxHeight = content.scrollHeight + 'px';
-                    header.classList.add('active');
-                    content.classList.add('active');
+        headers.forEach((header, index) => {
+            const content = header.nextElementSibling;
+            if (!content) return;
+            const panelId = content.id || `module-detail-panel-${index}`;
+            content.id = panelId;
+            header.setAttribute('aria-controls', panelId);
+        });
+        const moduleDisclosure = window.FlatCMS.AdminUI.disclosure.attach({
+            root: moduleIndex || document,
+            triggerSelector: '[data-module-toggle]',
+            panelSelector: '.module-card-content',
+            activeClass: 'active',
+            hidePanels: false,
+            single: true,
+            onChange: (expanded, header, content) => {
+                if (expanded) {
+                    content.style.maxHeight = `${content.scrollHeight}px`;
                     return;
                 }
-
                 content.style.maxHeight = content.scrollHeight + 'px';
                 content.offsetHeight;
                 content.style.maxHeight = '0';
-                header.classList.remove('active');
-                content.classList.remove('active');
-            });
+            }
         });
 
         function openCard(card) {
@@ -152,7 +135,7 @@
             const content = header ? header.nextElementSibling : null;
             if (!header || !content) return;
             if (header.classList.contains('active')) return;
-            header.click();
+            moduleDisclosure.expand(header);
         }
 
         function resolveStatusFilterForCard(card) {

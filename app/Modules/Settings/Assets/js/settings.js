@@ -21,7 +21,6 @@
 
             const rawConfig = String(configNode.getAttribute('data-config') || '{}');
             const modalError = String(configNode.getAttribute('data-modal-error') || '');
-            const mediaModal = document.getElementById('mediaModal');
 
             let baseConfig = {};
             try {
@@ -39,22 +38,20 @@
             }
 
             function openMediaModal(options) {
-                if (!mediaModal || typeof window.initMediaModal !== 'function') {
+                if (!window.FlatCMS || !window.FlatCMS.AdminUI || !window.FlatCMS.AdminUI.media) {
                     showModalError();
                     return;
                 }
 
-                mediaModal.classList.remove('hidden');
-                mediaModal.style.display = 'flex';
-                window.initMediaModal(options);
+                if (!window.FlatCMS.AdminUI.media.open(options)) {
+                    showModalError();
+                }
             }
 
             function closeMediaModal() {
-                if (!mediaModal) {
-                    return;
+                if (window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.media) {
+                    window.FlatCMS.AdminUI.media.close();
                 }
-                mediaModal.classList.add('hidden');
-                mediaModal.style.display = 'none';
             }
 
             function normalizePreviewUrl(rawValue, mediaKind) {
@@ -425,7 +422,8 @@
 
         function initIntegrationsAccordions() {
             const root = document.querySelector('[data-settings-integrations-accordion]');
-            if (!root) {
+            const disclosure = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.disclosure;
+            if (!root || !disclosure || typeof disclosure.attach !== 'function') {
                 return function() {};
             }
 
@@ -434,7 +432,7 @@
                 return function() {};
             }
 
-            headers.forEach(function(header) {
+            headers.forEach(function(header, index) {
                 const content = header.nextElementSibling;
                 if (!content) {
                     return;
@@ -442,30 +440,21 @@
 
                 const card = header.closest('[data-settings-integration-card]');
                 const shouldOpen = card && String(card.getAttribute('data-settings-initial-open') || '').toLowerCase() === 'true';
+                const panelId = content.id || 'settingsIntegrationPanel' + String(index + 1);
+                content.id = panelId;
+                content.setAttribute('data-settings-integration-content', panelId);
+                header.setAttribute('aria-controls', panelId);
+                header.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            });
 
-                if (shouldOpen) {
-                    header.classList.add('active');
-                    content.classList.add('active');
-                } else {
-                    content.style.maxHeight = '0px';
-                    header.classList.remove('active');
-                    content.classList.remove('active');
+            disclosure.attach({
+                root: root,
+                triggerSelector: '[data-settings-integration-toggle]',
+                panelSelector: '[data-settings-integration-content]',
+                activeClass: 'active',
+                onChange: function(expanded, header, content) {
+                    content.style.maxHeight = expanded ? content.scrollHeight + 'px' : '0px';
                 }
-
-                header.addEventListener('click', function() {
-                    const isOpen = header.classList.contains('active');
-                    if (isOpen) {
-                        content.style.maxHeight = content.scrollHeight + 'px';
-                        content.offsetHeight;
-                        content.style.maxHeight = '0';
-                        header.classList.remove('active');
-                        content.classList.remove('active');
-                        return;
-                    }
-                    content.style.maxHeight = content.scrollHeight + 'px';
-                    header.classList.add('active');
-                    content.classList.add('active');
-                });
             });
 
             return function syncIntegrationsAccordionHeights() {
@@ -496,6 +485,10 @@
             const modalCloseIcon = modal ? modal.querySelector('[data-site-branding-close-icon]') : null;
             const modalCloseButton = modal ? modal.querySelector('[data-site-branding-close-btn]') : null;
             const modalSaveButton = modal ? modal.querySelector('[data-site-branding-save-btn]') : null;
+            const modalController = modal && window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal
+                ? window.FlatCMS.AdminUI.modal.attach(modal)
+                : null;
+            let brandingTabs = null;
             const mainFields = {
                 site_name: document.querySelector('[data-site-branding-main-field="site_name"]'),
                 site_description: document.querySelector('[data-site-branding-main-field="site_description"]'),
@@ -603,10 +596,9 @@
             }
 
             function openBrandingModal() {
-                modal.classList.remove('is-initially-hidden');
-                modal.style.display = 'flex';
-                modal.setAttribute('aria-hidden', 'false');
-                document.body.style.overflow = 'hidden';
+                if (modalController) {
+                    modalController.open();
+                }
 
                 Object.keys(mainFields).forEach(function(fieldName) {
                     syncMainToActiveLocale(fieldName);
@@ -627,18 +619,10 @@
                 }
             }
 
-            function updateModalBodyOverflow() {
-                const anyVisibleModal = Array.from(document.querySelectorAll('.modal-overlay')).some(function(modalNode) {
-                    return window.getComputedStyle(modalNode).display !== 'none';
-                });
-                document.body.style.overflow = anyVisibleModal ? 'hidden' : '';
-            }
-
             function closeBrandingModal() {
-                modal.style.display = 'none';
-                modal.setAttribute('aria-hidden', 'true');
-                modal.classList.add('is-initially-hidden');
-                updateModalBodyOverflow();
+                if (modalController) {
+                    modalController.close();
+                }
             }
 
             function activateBrandingTab(tabCode) {
@@ -647,24 +631,12 @@
                     return;
                 }
 
+                if (brandingTabs && brandingTabs.current() !== target) {
+                    brandingTabs.activate(target);
+                    return;
+                }
                 activeLocale = target;
                 modal.setAttribute('data-site-branding-active-locale', target);
-
-                tabButtons.forEach(function(button) {
-                    const active = String(button.getAttribute('data-tab') || '') === target;
-                    button.classList.toggle('is-active', active);
-                    button.setAttribute('aria-selected', active ? 'true' : 'false');
-                });
-
-                panels.forEach(function(panel) {
-                    const active = String(panel.getAttribute('data-site-branding-panel') || '') === target;
-                    panel.classList.toggle('is-active', active);
-                    if (active) {
-                        panel.removeAttribute('hidden');
-                    } else {
-                        panel.setAttribute('hidden', 'hidden');
-                    }
-                });
 
                 applyModalLocaleUi(target);
             }
@@ -695,11 +667,18 @@
                 });
             });
 
-            tabButtons.forEach(function(button) {
-                button.addEventListener('click', function() {
-                    activateBrandingTab(String(button.getAttribute('data-tab') || ''));
+            if (modalTablist && window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.translationTabs) {
+                brandingTabs = window.FlatCMS.AdminUI.translationTabs.attach({
+                    root: modalTablist,
+                    panelsRoot: modal,
+                    tabSelector: '[data-site-branding-tab-btn]',
+                    panelSelector: '[data-site-branding-panel]',
+                    tabAttribute: 'data-tab',
+                    panelAttribute: 'data-site-branding-panel',
+                    initialValue: activeLocale,
+                    onChange: activateBrandingTab,
                 });
-            });
+            }
 
             localeFields.forEach(function(field) {
                 const name = String(field.getAttribute('data-site-branding-locale-field') || '').trim();
@@ -723,27 +702,6 @@
                 field.addEventListener('change', function() {
                     syncIfActive();
                 });
-            });
-
-            Array.from(modal.querySelectorAll('[data-modal-close="siteBrandingModal"]')).forEach(function(button) {
-                button.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    closeBrandingModal();
-                });
-            });
-
-            modal.addEventListener('click', function(event) {
-                if (event.target === modal) {
-                    closeBrandingModal();
-                }
-            });
-
-            document.addEventListener('keydown', function(event) {
-                if (event.key !== 'Escape' || modal.getAttribute('aria-hidden') === 'true') {
-                    return;
-                }
-
-                closeBrandingModal();
             });
 
             Object.keys(mainFields).forEach(function(fieldName) {
@@ -827,8 +785,10 @@
             const buttons = Array.from(root.querySelectorAll('[data-promo-banner-tab-btn]'));
             const panels = Array.from(document.querySelectorAll('[data-promo-banner-panel]'));
             const activeLocaleInput = document.querySelector('[data-promo-banner-active-locale]');
+            const translationTabs = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.translationTabs;
 
-            if (!buttons.length || !panels.length || !activeLocaleInput) {
+            if (!buttons.length || !panels.length || !activeLocaleInput
+                || !translationTabs || typeof translationTabs.attach !== 'function') {
                 return;
             }
 
@@ -860,39 +820,21 @@
                 });
             }
 
-            function activateTab(target) {
-                const locale = String(target || '').trim();
-                if (!locale) {
-                    return;
-                }
-
-                const activeButton = buttons.find(function(button) {
-                    return String(button.getAttribute('data-tab') || '') === locale;
-                }) || null;
-
-                activeLocaleInput.value = locale;
+            function handleLocaleChange(locale, activeButton) {
                 updateBadgeLabels(activeButton);
-
-                buttons.forEach(function(button) {
-                    const isActive = String(button.getAttribute('data-tab') || '') === locale;
-                    button.classList.toggle('is-active', isActive);
-                    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-                });
-
-                panels.forEach(function(panel) {
-                    const isActive = String(panel.getAttribute('data-promo-banner-panel') || '') === locale;
-                    panel.classList.toggle('is-active', isActive);
-                    panel.hidden = !isActive;
-                });
             }
 
-            buttons.forEach(function(button) {
-                button.addEventListener('click', function() {
-                    activateTab(String(button.getAttribute('data-tab') || ''));
-                });
+            translationTabs.attach({
+                root: root,
+                panelsRoot: document,
+                tabSelector: '[data-promo-banner-tab-btn]',
+                panelSelector: '[data-promo-banner-panel]',
+                tabAttribute: 'data-tab',
+                panelAttribute: 'data-promo-banner-panel',
+                activeInput: activeLocaleInput,
+                initialValue: String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''),
+                onChange: handleLocaleChange
             });
-
-            activateTab(String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''));
         }
 
         function initSeoTranslations() {
@@ -904,7 +846,9 @@
             const buttons = Array.from(root.querySelectorAll('[data-seo-tab-btn]'));
             const panels = Array.from(document.querySelectorAll('[data-seo-panel]'));
             const activeLocaleInput = document.querySelector('[data-seo-active-locale]');
-            if (!buttons.length || !panels.length || !activeLocaleInput) {
+            const translationTabs = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.translationTabs;
+            if (!buttons.length || !panels.length || !activeLocaleInput
+                || !translationTabs || typeof translationTabs.attach !== 'function') {
                 return;
             }
 
@@ -925,39 +869,21 @@
                 });
             }
 
-            function activateTab(target) {
-                const locale = String(target || '').trim();
-                const activeButton = buttons.find(function(button) {
-                    return String(button.getAttribute('data-tab') || '') === locale;
-                }) || buttons[0];
-                if (!activeButton) {
-                    return;
-                }
-
-                const activeLocale = String(activeButton.getAttribute('data-tab') || '').trim();
-                activeLocaleInput.value = activeLocale;
+            function handleLocaleChange(activeLocale, activeButton) {
                 updateBadgeLabels(activeButton);
-
-                buttons.forEach(function(button) {
-                    const isActive = String(button.getAttribute('data-tab') || '') === activeLocale;
-                    button.classList.toggle('is-active', isActive);
-                    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-                });
-
-                panels.forEach(function(panel) {
-                    const isActive = String(panel.getAttribute('data-seo-panel') || '') === activeLocale;
-                    panel.classList.toggle('is-active', isActive);
-                    panel.hidden = !isActive;
-                });
             }
 
-            buttons.forEach(function(button) {
-                button.addEventListener('click', function() {
-                    activateTab(String(button.getAttribute('data-tab') || ''));
-                });
+            translationTabs.attach({
+                root: root,
+                panelsRoot: document,
+                tabSelector: '[data-seo-tab-btn]',
+                panelSelector: '[data-seo-panel]',
+                tabAttribute: 'data-tab',
+                panelAttribute: 'data-seo-panel',
+                activeInput: activeLocaleInput,
+                initialValue: String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''),
+                onChange: handleLocaleChange
             });
-
-            activateTab(String(activeLocaleInput.value || buttons[0].getAttribute('data-tab') || ''));
         }
 
         function initAlignControls() {
@@ -1097,41 +1023,34 @@
         const tabButtons = Array.from(tabsRoot.querySelectorAll('[data-settings-tab-btn]'));
         const tabPanels = Array.from(document.querySelectorAll('[data-settings-panel]'));
         const activeTabInput = document.querySelector('[data-settings-active-tab]');
-        if (!tabButtons.length || !tabPanels.length) {
+        const tabsApi = window.FlatCMS && window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.tabs;
+        if (!tabButtons.length || !tabPanels.length || !tabsApi || typeof tabsApi.attach !== 'function') {
             return;
         }
 
         const storageKey = 'flatcms.settings.active_tab';
         let syncIntegrationsAccordions = function() {};
+        let settingsTabs = null;
+        let updateHashOnChange = false;
 
         function activateTab(tabName, updateHash) {
             const normalized = String(tabName || '').trim();
             const hasTarget = tabPanels.some((panel) => panel.dataset.settingsPanel === normalized);
             const target = hasTarget ? normalized : String(tabButtons[0].dataset.tab || '');
+            updateHashOnChange = updateHash === true;
+            if (settingsTabs) {
+                settingsTabs.activate(target);
+            }
+        }
 
-            tabButtons.forEach((button) => {
-                const active = button.dataset.tab === target;
-                button.classList.toggle('is-active', active);
-                button.setAttribute('aria-selected', active ? 'true' : 'false');
-            });
-
-            tabPanels.forEach((panel) => {
-                const active = panel.dataset.settingsPanel === target;
-                panel.classList.toggle('is-active', active);
-                if (active) {
-                    panel.removeAttribute('hidden');
-                } else {
-                    panel.setAttribute('hidden', 'hidden');
-                }
-            });
-
+        function handleTabChange(target) {
             try {
                 window.localStorage.setItem(storageKey, target);
             } catch (error) {
                 // no-op
             }
 
-            if (updateHash) {
+            if (updateHashOnChange) {
                 const nextHash = '#settings-' + target;
                 if (window.location.hash !== nextHash) {
                     if (window.history && typeof window.history.replaceState === 'function') {
@@ -1141,10 +1060,7 @@
                     }
                 }
             }
-
-            if (activeTabInput) {
-                activeTabInput.value = target;
-            }
+            updateHashOnChange = false;
 
             if (target === 'integrations') {
                 window.requestAnimationFrame(function() {
@@ -1181,7 +1097,12 @@
 
         tabButtons.forEach((button) => {
             button.addEventListener('click', function() {
-                activateTab(button.dataset.tab || '', true);
+                updateHashOnChange = true;
+            });
+            button.addEventListener('keydown', function(event) {
+                if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(event.key) !== -1) {
+                    updateHashOnChange = true;
+                }
             });
         });
 
@@ -1209,7 +1130,20 @@
         }
 
         syncIntegrationsAccordions = initIntegrationsAccordions();
-        activateTab(initialTab, false);
+        const initialTarget = tabPanels.some((panel) => panel.dataset.settingsPanel === initialTab)
+            ? initialTab
+            : String(tabButtons[0].dataset.tab || '');
+        settingsTabs = tabsApi.attach({
+            root: tabsRoot,
+            panelsRoot: document,
+            tabSelector: '[data-settings-tab-btn]',
+            panelSelector: '[data-settings-panel]',
+            tabAttribute: 'data-tab',
+            panelAttribute: 'data-settings-panel',
+            activeInput: activeTabInput,
+            initialValue: initialTarget,
+            onChange: handleTabChange
+        });
         window.requestAnimationFrame(openGoogleOAuthCardFromHash);
         window.addEventListener('hashchange', function() {
             const currentHash = String(window.location.hash || '');

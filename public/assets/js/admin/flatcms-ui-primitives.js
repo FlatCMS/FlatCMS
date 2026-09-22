@@ -607,6 +607,516 @@
         return { element: element, label: label };
     }
 
+    function resolveElement(target) {
+        if (!target) {
+            return null;
+        }
+        if (typeof target === 'string') {
+            return document.getElementById(target) || document.querySelector(target);
+        }
+        return typeof target === 'object' ? target : null;
+    }
+
+    function isDisabledControl(control) {
+        return !control
+            || control.disabled === true
+            || control.getAttribute('aria-disabled') === 'true'
+            || control.classList.contains('is-disabled');
+    }
+
+    var modalStates = [];
+
+    function findModalState(element) {
+        return modalStates.find(function (state) {
+            return state.element === element;
+        }) || null;
+    }
+
+    function isModalOpen(target) {
+        var element = resolveElement(target);
+        return !!element
+            && element.hidden !== true
+            && element.getAttribute('aria-hidden') !== 'true'
+            && element.classList.contains('is-open');
+    }
+
+    function syncModalBodyState() {
+        if (!document.body || !document.body.classList) {
+            return;
+        }
+        document.body.classList.toggle('fc-ui-modal-open', modalStates.some(function (state) {
+            return isModalOpen(state.element);
+        }));
+    }
+
+    function modalFocusableElements(element) {
+        if (!element || typeof element.querySelectorAll !== 'function') {
+            return [];
+        }
+        return Array.prototype.slice.call(element.querySelectorAll(
+            'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(function (control) {
+            return !isDisabledControl(control) && control.hidden !== true;
+        });
+    }
+
+    function closeModal(target, options) {
+        var element = resolveElement(target);
+        var cfg = options && typeof options === 'object' ? options : {};
+        var state = element ? findModalState(element) : null;
+        if (!element || !isModalOpen(element)) {
+            return false;
+        }
+        if (state && state.config && typeof state.config.beforeClose === 'function'
+            && state.config.beforeClose(element) === false) {
+            return false;
+        }
+
+        element.classList.remove('is-open');
+        if (state && state.config && state.config.activeClass) {
+            element.classList.remove(String(state.config.activeClass));
+        }
+        element.classList.add('is-initially-hidden');
+        element.hidden = true;
+        element.setAttribute('aria-hidden', 'true');
+        syncModalBodyState();
+
+        if (state && state.config && typeof state.config.onClose === 'function') {
+            state.config.onClose(element);
+        }
+        if (cfg.restoreFocus !== false && state && state.trigger && typeof state.trigger.focus === 'function') {
+            state.trigger.focus({ preventScroll: true });
+        }
+        return true;
+    }
+
+    function closeOtherModals(current) {
+        modalStates.slice().forEach(function (state) {
+            if (state.element !== current && isModalOpen(state.element)) {
+                closeModal(state.element, { restoreFocus: false });
+            }
+        });
+    }
+
+    function openModal(target, trigger, options) {
+        var element = resolveElement(target);
+        var cfg = options && typeof options === 'object' ? options : {};
+        if (!element) {
+            return false;
+        }
+        var state = findModalState(element);
+        if (!state) {
+            attachModal(element, cfg);
+            state = findModalState(element);
+        }
+        if (!state) {
+            return false;
+        }
+        state.config = Object.assign({}, state.config || {}, cfg);
+        state.trigger = trigger && typeof trigger === 'object' ? trigger : document.activeElement;
+        if (state.config.exclusive !== false) {
+            closeOtherModals(element);
+        }
+
+        element.hidden = false;
+        element.classList.remove('hidden');
+        element.classList.remove('is-initially-hidden');
+        element.classList.add('is-open');
+        if (state.config.activeClass) {
+            element.classList.add(String(state.config.activeClass));
+        }
+        element.setAttribute('aria-hidden', 'false');
+        if (!element.getAttribute('role')) {
+            element.setAttribute('role', 'dialog');
+        }
+        element.setAttribute('aria-modal', 'true');
+        syncModalBodyState();
+
+        var initialFocus = state.config.initialFocus
+            ? element.querySelector(state.config.initialFocus)
+            : null;
+        var focusables = modalFocusableElements(element);
+        var focusTarget = initialFocus || focusables[0] || element;
+        if (focusTarget === element && !element.getAttribute('tabindex')) {
+            element.setAttribute('tabindex', '-1');
+        }
+        if (typeof focusTarget.focus === 'function') {
+            focusTarget.focus({ preventScroll: true });
+        }
+        if (typeof state.config.onOpen === 'function') {
+            state.config.onOpen(element);
+        }
+        return true;
+    }
+
+    function attachModal(target, options) {
+        var element = resolveElement(target);
+        var cfg = options && typeof options === 'object' ? options : {};
+        if (!element) {
+            return null;
+        }
+        var existing = findModalState(element);
+        if (existing) {
+            existing.config = Object.assign({}, existing.config, cfg);
+            return existing.controller;
+        }
+
+        var state = {
+            element: element,
+            config: Object.assign({
+                closeOnBackdrop: true,
+                closeOnEscape: true,
+                trapFocus: true,
+                exclusive: true
+            }, cfg),
+            trigger: null,
+            controller: null
+        };
+
+        function handleClick(event) {
+            var closeTrigger = event.target && typeof event.target.closest === 'function'
+                ? event.target.closest('[data-modal-close], [data-fc-modal-close]')
+                : null;
+            if (closeTrigger && element.contains(closeTrigger)) {
+                var requested = closeTrigger.getAttribute('data-modal-close')
+                    || closeTrigger.getAttribute('data-fc-modal-close');
+                if (!requested || requested === element.id || requested === '#'+ element.id) {
+                    event.preventDefault();
+                    closeModal(element);
+                }
+                return;
+            }
+            if (state.config.closeOnBackdrop !== false && event.target === element) {
+                closeModal(element);
+            }
+        }
+
+        function handleKeydown(event) {
+            if (!isModalOpen(element)) {
+                return;
+            }
+            if (event.key === 'Escape' && state.config.closeOnEscape !== false) {
+                event.preventDefault();
+                closeModal(element);
+                return;
+            }
+            if (event.key !== 'Tab' || state.config.trapFocus === false) {
+                return;
+            }
+            var focusables = modalFocusableElements(element);
+            if (!focusables.length) {
+                event.preventDefault();
+                element.focus({ preventScroll: true });
+                return;
+            }
+            var first = focusables[0];
+            var last = focusables[focusables.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus({ preventScroll: true });
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus({ preventScroll: true });
+            }
+        }
+
+        element.addEventListener('click', handleClick);
+        document.addEventListener('keydown', handleKeydown);
+        state.controller = {
+            element: element,
+            open: function (trigger, nextOptions) {
+                return openModal(element, trigger, nextOptions);
+            },
+            close: function (nextOptions) {
+                return closeModal(element, nextOptions);
+            },
+            isOpen: function () {
+                return isModalOpen(element);
+            },
+            destroy: function () {
+                closeModal(element, { restoreFocus: false });
+                element.removeEventListener('click', handleClick);
+                document.removeEventListener('keydown', handleKeydown);
+                modalStates = modalStates.filter(function (candidate) {
+                    return candidate !== state;
+                });
+            }
+        };
+        modalStates.push(state);
+        return state.controller;
+    }
+
+    function createTabs(config) {
+        var cfg = config && typeof config === 'object' ? config : {};
+        var root = resolveElement(cfg.root || cfg.element);
+        if (!root) {
+            return null;
+        }
+        var tabSelector = cfg.tabSelector || '[data-fc-tab]';
+        var panelSelector = cfg.panelSelector || '[data-fc-tab-panel]';
+        var tabAttribute = cfg.tabAttribute || 'data-fc-tab';
+        var panelAttribute = cfg.panelAttribute || 'data-fc-tab-panel';
+        var activeClass = cfg.activeClass || 'is-active';
+        var panelActiveClass = cfg.panelActiveClass || activeClass;
+        var tabs = Array.prototype.slice.call(root.querySelectorAll(tabSelector));
+        var panelsRoot = resolveElement(cfg.panelsRoot) || root;
+        var panels = Array.prototype.slice.call(panelsRoot.querySelectorAll(panelSelector));
+        var activeValue = '';
+        var bindings = [];
+
+        function tabValue(tab) {
+            return String(tab.getAttribute(tabAttribute) || tab.getAttribute('aria-controls') || '').trim();
+        }
+
+        function panelValue(panel) {
+            return String(panel.getAttribute(panelAttribute) || panel.id || '').trim();
+        }
+
+        function activate(value, activateOptions) {
+            var nextValue = String(value || '').trim();
+            var nextTab = tabs.find(function (tab) {
+                return tabValue(tab) === nextValue && !isDisabledControl(tab);
+            });
+            if (!nextTab) {
+                return false;
+            }
+            activeValue = nextValue;
+            tabs.forEach(function (tab) {
+                var active = tab === nextTab;
+                tab.classList.toggle(activeClass, active);
+                tab.setAttribute('aria-selected', active ? 'true' : 'false');
+                tab.setAttribute('tabindex', active ? '0' : '-1');
+            });
+            panels.forEach(function (panel) {
+                var active = panelValue(panel) === nextValue;
+                panel.classList.toggle(panelActiveClass, active);
+                panel.hidden = !active;
+                panel.setAttribute('aria-hidden', active ? 'false' : 'true');
+            });
+            if (cfg.activeInput) {
+                var input = resolveElement(cfg.activeInput);
+                if (input) {
+                    input.value = nextValue;
+                }
+            }
+            if (activateOptions && activateOptions.focus === true && typeof nextTab.focus === 'function') {
+                nextTab.focus({ preventScroll: true });
+            }
+            if (typeof cfg.onChange === 'function') {
+                cfg.onChange(nextValue, nextTab);
+            }
+            return true;
+        }
+
+        tabs.forEach(function (tab, index) {
+            if (!tab.getAttribute('role')) {
+                tab.setAttribute('role', 'tab');
+            }
+            var click = function (event) {
+                if (isDisabledControl(tab)) {
+                    event.preventDefault();
+                    return;
+                }
+                activate(tabValue(tab));
+            };
+            var keydown = function (event) {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+                    return;
+                }
+                event.preventDefault();
+                var enabled = tabs.filter(function (candidate) {
+                    return !isDisabledControl(candidate);
+                });
+                var current = enabled.indexOf(tab);
+                var next = event.key === 'Home'
+                    ? enabled[0]
+                    : (event.key === 'End'
+                        ? enabled[enabled.length - 1]
+                        : enabled[(current + (event.key === 'ArrowRight' ? 1 : -1) + enabled.length) % enabled.length]);
+                if (next) {
+                    activate(tabValue(next), { focus: true });
+                }
+            };
+            tab.addEventListener('click', click);
+            tab.addEventListener('keydown', keydown);
+            bindings.push({ element: tab, click: click, keydown: keydown, index: index });
+        });
+        panels.forEach(function (panel) {
+            if (!panel.getAttribute('role')) {
+                panel.setAttribute('role', 'tabpanel');
+            }
+        });
+
+        var initial = String(cfg.initialValue || '').trim();
+        if (!initial) {
+            var selected = tabs.find(function (tab) {
+                return tab.getAttribute('aria-selected') === 'true' || tab.classList.contains(activeClass);
+            });
+            initial = selected ? tabValue(selected) : (tabs[0] ? tabValue(tabs[0]) : '');
+        }
+        if (initial) {
+            activate(initial);
+        }
+
+        return {
+            activate: activate,
+            current: function () { return activeValue; },
+            destroy: function () {
+                bindings.forEach(function (binding) {
+                    binding.element.removeEventListener('click', binding.click);
+                    binding.element.removeEventListener('keydown', binding.keydown);
+                });
+            }
+        };
+    }
+
+    function createTranslationTabs(config) {
+        var cfg = Object.assign({}, config || {});
+        cfg.tabSelector = cfg.tabSelector || '.fc-translation-tab[data-tab]';
+        cfg.panelSelector = cfg.panelSelector || '[data-fc-translation-panel]';
+        cfg.tabAttribute = cfg.tabAttribute || 'data-tab';
+        cfg.panelAttribute = cfg.panelAttribute || 'data-fc-translation-panel';
+        cfg.activeClass = cfg.activeClass || 'is-active';
+        cfg.panelActiveClass = cfg.panelActiveClass || 'is-active';
+        return createTabs(cfg);
+    }
+
+    function createDisclosure(config) {
+        var cfg = config && typeof config === 'object' ? config : {};
+        var root = resolveElement(cfg.root || cfg.element);
+        if (!root) {
+            return null;
+        }
+        var triggerSelector = cfg.triggerSelector || '[data-fc-disclosure-trigger]';
+        var panelSelector = cfg.panelSelector || '[data-fc-disclosure-panel]';
+        var activeClass = cfg.activeClass || 'is-expanded';
+        var triggers = Array.prototype.slice.call(root.querySelectorAll(triggerSelector));
+        var panels = Array.prototype.slice.call(root.querySelectorAll(panelSelector));
+        var bindings = [];
+
+        function panelFor(trigger) {
+            var key = String(trigger.getAttribute('aria-controls')
+                || trigger.getAttribute('data-fc-disclosure-trigger') || '').replace(/^#/, '');
+            return panels.find(function (panel) {
+                return panel.id === key || panel.getAttribute('data-fc-disclosure-panel') === key;
+            }) || null;
+        }
+
+        function setExpanded(trigger, expanded) {
+            var panel = panelFor(trigger);
+            if (!panel || isDisabledControl(trigger)) {
+                return false;
+            }
+            if (cfg.single === true && expanded) {
+                triggers.forEach(function (candidate) {
+                    if (candidate !== trigger) {
+                        setExpanded(candidate, false);
+                    }
+                });
+            }
+            trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            trigger.classList.toggle(activeClass, expanded);
+            panel.classList.toggle(activeClass, expanded);
+            if (cfg.hidePanels !== false) {
+                panel.hidden = !expanded;
+            } else {
+                panel.hidden = false;
+            }
+            panel.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+            if (typeof cfg.onChange === 'function') {
+                cfg.onChange(expanded, trigger, panel);
+            }
+            return true;
+        }
+
+        triggers.forEach(function (trigger) {
+            var panel = panelFor(trigger);
+            if (!panel) {
+                return;
+            }
+            if (!['BUTTON', 'A', 'INPUT'].includes(String(trigger.tagName || '').toUpperCase())) {
+                if (!trigger.getAttribute('role')) {
+                    trigger.setAttribute('role', 'button');
+                }
+                if (!trigger.getAttribute('tabindex')) {
+                    trigger.setAttribute('tabindex', '0');
+                }
+            }
+            if (!trigger.getAttribute('aria-controls') && panel.id) {
+                trigger.setAttribute('aria-controls', panel.id);
+            }
+            var expanded = trigger.getAttribute('aria-expanded') === 'true' || trigger.classList.contains(activeClass);
+            setExpanded(trigger, expanded);
+            var click = function (event) {
+                event.preventDefault();
+                setExpanded(trigger, trigger.getAttribute('aria-expanded') !== 'true');
+            };
+            var keydown = function (event) {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+                event.preventDefault();
+                setExpanded(trigger, trigger.getAttribute('aria-expanded') !== 'true');
+            };
+            trigger.addEventListener('click', click);
+            trigger.addEventListener('keydown', keydown);
+            bindings.push({ element: trigger, click: click, keydown: keydown });
+        });
+
+        return {
+            expand: function (trigger) { return setExpanded(resolveElement(trigger), true); },
+            collapse: function (trigger) { return setExpanded(resolveElement(trigger), false); },
+            toggle: function (trigger) {
+                var element = resolveElement(trigger);
+                return setExpanded(element, element && element.getAttribute('aria-expanded') !== 'true');
+            },
+            destroy: function () {
+                bindings.forEach(function (binding) {
+                    binding.element.removeEventListener('click', binding.click);
+                    binding.element.removeEventListener('keydown', binding.keydown);
+                });
+            }
+        };
+    }
+
+    var toastProvider = null;
+
+    function setToastProvider(provider) {
+        toastProvider = typeof provider === 'function' ? provider : null;
+    }
+
+    function showToast(message, type, duration) {
+        if (typeof toastProvider !== 'function') {
+            return false;
+        }
+        toastProvider(message, type, duration);
+        return true;
+    }
+
+    function openMedia(config) {
+        if (typeof window.initMediaModal === 'function') {
+            window.initMediaModal(config || {});
+        }
+        var provider = window.FlatCMS && window.FlatCMS.mediaModal;
+        if (!provider || typeof provider.open !== 'function') {
+            return false;
+        }
+        if (typeof provider.updateConfig === 'function' && config && typeof config === 'object') {
+            provider.updateConfig(config);
+        }
+        provider.open();
+        return true;
+    }
+
+    function closeMedia() {
+        var provider = window.FlatCMS && window.FlatCMS.mediaModal;
+        if (!provider || typeof provider.close !== 'function') {
+            return false;
+        }
+        provider.close();
+        return true;
+    }
+
     window.FlatCMSUIPrimitives = Object.assign({}, window.FlatCMSUIPrimitives || {}, {
         createCompactSelectControl: createCompactSelectControl,
         createCompactColorControl: createCompactColorControl,
@@ -633,6 +1143,29 @@
         inspector: Object.assign({}, window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.inspector || {}, {
             createGroup: createInspectorGroup,
             createFieldShell: createInspectorFieldShell
+        }),
+        modal: Object.assign({}, window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.modal || {}, {
+            attach: attachModal,
+            open: openModal,
+            close: closeModal,
+            isOpen: isModalOpen
+        }),
+        tabs: Object.assign({}, window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.tabs || {}, {
+            attach: createTabs
+        }),
+        translationTabs: Object.assign({}, window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.translationTabs || {}, {
+            attach: createTranslationTabs
+        }),
+        disclosure: Object.assign({}, window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.disclosure || {}, {
+            attach: createDisclosure
+        }),
+        toast: Object.assign({}, window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.toast || {}, {
+            setProvider: setToastProvider,
+            show: showToast
+        }),
+        media: Object.assign({}, window.FlatCMS.AdminUI && window.FlatCMS.AdminUI.media || {}, {
+            open: openMedia,
+            close: closeMedia
         })
     });
 })(window, document);

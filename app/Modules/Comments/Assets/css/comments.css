@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Comments/Assets/css/comments.css
+ * Version: 2.0.0-dev
  */
 
 .comments-filter-form {
@@ -154,10 +157,6 @@
   word-break: break-word;
   max-height: 55vh;
   overflow: auto;
-}
-
-body.comments-modal-open {
-  overflow: hidden;
 }
 
 /* Responsive */
