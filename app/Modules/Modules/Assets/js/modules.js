@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Modules/Assets/js/modules.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -225,7 +228,8 @@
                 const form = btn.closest('form');
                 if (!form) return;
 
-                const message = btn.dataset.message || 'Êtes-vous sûr ?';
+                const message = btn.dataset.message || '';
+                if (!message) return;
                 if (!window.confirm(message)) {
                     e.preventDefault();
                     e.stopPropagation();

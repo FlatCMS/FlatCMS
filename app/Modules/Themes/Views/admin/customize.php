@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Themes/Views/admin/customize.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -349,7 +352,7 @@ $previewBoxAttributes = sprintf(
     <div class="modal-overlay is-initially-hidden" id="themeComponentsModal" data-theme-components-modal hidden>
         <div
             class="modal-container modal-lg theme-components-modal-container"
-            data-theme-icons-endpoint="<?= e(url('/admin/menus/icons')) ?>"
+            data-theme-icons-endpoint="<?= e(url('/admin/ui/icons')) ?>"
             data-theme-icon-picker-title="<?= e(__('theme_icon_picker_title', 'Themes')) ?>"
             data-theme-icon-search-placeholder="<?= e(__('theme_icon_search_placeholder', 'Themes')) ?>"
             data-theme-icon-loading-label="<?= e(__('theme_icon_loading', 'Themes')) ?>"

@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Languages/Assets/js/languages-index.js
+ * Version: 2.0.0-dev
  */
 
 (function () {
@@ -26,13 +29,13 @@
                 '<div class="modal-container modal-sm" role="dialog" aria-modal="true" aria-labelledby="scanFillResultTitle">' +
                     '<div class="modal-header">' +
                         '<h3 class="modal-title" id="scanFillResultTitle"></h3>' +
-                        '<button type="button" class="modal-close" data-modal-close="scanFillResultModal" aria-label="' + escapeHtml(closeLabel || 'Close') + '">&times;</button>' +
+                        '<button type="button" class="modal-close" data-modal-close="scanFillResultModal" aria-label="' + escapeHtml(closeLabel) + '">&times;</button>' +
                     '</div>' +
                     '<div class="modal-body modal-body-centered">' +
                         '<p id="scanFillResultMessage"></p>' +
                     '</div>' +
                     '<div class="modal-footer">' +
-                        '<button type="button" class="btn btn-primary" id="scanFillResultConfirm" data-modal-close="scanFillResultModal">' + escapeHtml(closeLabel || 'Close') + '</button>' +
+                        '<button type="button" class="btn btn-primary" id="scanFillResultConfirm" data-modal-close="scanFillResultModal">' + escapeHtml(closeLabel) + '</button>' +
                     '</div>' +
                 '</div>';
 
@@ -54,7 +57,7 @@
                 messageEl.textContent = message || '';
             }
             if (confirmBtn) {
-                confirmBtn.textContent = closeLabel || 'Close';
+                confirmBtn.textContent = closeLabel;
             }
 
             reloadAfterModalClose = !!shouldReloadAfterClose;
@@ -113,7 +116,7 @@
             var msgSuccess = btn.dataset.msgSuccess;
             var msgNone    = btn.dataset.msgNone;
             var modalTitle = btn.dataset.modalTitle || '';
-            var modalClose = btn.dataset.modalClose || 'OK';
+            var modalClose = btn.dataset.modalClose || '';
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';

@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/js/admin/editor-provider-init.js
+ * Version: 2.0.0-dev
  */
 
 /**
@@ -18,33 +21,7 @@
     'use strict';
 
     const root = document.body || document.documentElement;
-    const search = (window.location && window.location.search) ? String(window.location.search) : '';
-    const params = new URLSearchParams(search);
-    const routePath = String(params.get('path') || '').toLowerCase();
-    const isBuilderRoute = routePath.indexOf('admin/pages-builder') === 0
-        || routePath.indexOf('admin/menu-builder') === 0
-        || routePath.indexOf('admin/footer-builder') === 0;
-    const hasBuilderConfigNode = !!(
-        document.getElementById('pagesBuilderConfig')
-        || document.getElementById('footerBuilderConfig')
-        || document.getElementById('megaMenuConfig')
-    );
-    const isBuilderMode = !!(root
-        && root.classList
-        && (
-            root.classList.contains('pb-editor-mode')
-            || root.classList.contains('fb-editor-mode')
-            || root.classList.contains('menu-mega-mode')
-        ));
-
-    // Builders manage their own editor lifecycle per widget field.
-    if (isBuilderRoute || hasBuilderConfigNode || isBuilderMode) {
-        if (window.FlatCMSCKEditor && typeof window.FlatCMSCKEditor.setProviderDisabled === 'function') {
-            window.FlatCMSCKEditor.setProviderDisabled(true);
-        }
-        return;
-    }
-
+    const adapterScript = document.currentScript;
     const providerRaw = String(root.getAttribute('data-wysiwyg-provider') || 'ckeditor').toLowerCase();
     const provider = providerRaw === 'tinymce' ? 'tinymce' : 'ckeditor';
 
@@ -155,25 +132,19 @@
             return false;
         }
 
-        const adminTheme = String(root.getAttribute('data-theme') || '').toLowerCase();
-        const isModernPro = adminTheme === 'modern-pro';
         const isLightMode = !!(root.classList.contains('light-mode') || document.documentElement.classList.contains('theme-light-init'));
-        const tinySkin = isModernPro && !isLightMode ? 'oxide-dark' : 'oxide';
-        const tinyContentCss = isModernPro && !isLightMode ? 'dark' : 'default';
-        const tinyContentStyle = isModernPro && !isLightMode
-            ? [
-                'body{background:#1e293b;color:#e2e8f0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;padding:12px;}',
-                'a{color:#818cf8;}',
-                'h1,h2,h3,h4,h5,h6{color:#f8fafc;}',
-                'blockquote{border-left:3px solid #334155;color:#cbd5e1;margin:0;padding-left:12px;}',
-                'pre,code{background:#0f172a;color:#e2e8f0;}'
-            ].join('')
-            : [
-                'body{background:#ffffff;color:#0f172a;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;padding:12px;}',
-                'a{color:#4f46e5;}',
-                'blockquote{border-left:3px solid #e2e8f0;color:#334155;margin:0;padding-left:12px;}',
-                'pre,code{background:#f8fafc;color:#0f172a;}'
-            ].join('');
+        const isDarkMode = !isLightMode && window.getComputedStyle(root).colorScheme.split(/\s+/).includes('dark');
+        const tinySkin = isDarkMode ? 'oxide-dark' : 'oxide';
+        const contentCss = adapterScript && adapterScript.getAttribute('data-content-css');
+        const tinyContentCss = [isDarkMode ? 'dark' : 'default'];
+        if (contentCss) {
+            tinyContentCss.push(contentCss);
+        }
+        document.querySelectorAll('link[data-editor-content-theme]').forEach((link) => {
+            if (link.href) {
+                tinyContentCss.push(link.href);
+            }
+        });
 
         markAsExternalEditor(textareas);
 
@@ -193,7 +164,8 @@
                     height: 320,
                     skin: tinySkin,
                     content_css: tinyContentCss,
-                    content_style: tinyContentStyle,
+                    body_id: 'flatcms',
+                    body_class: 'flatcms-editor-content admin-body' + (isLightMode ? ' light-mode' : ''),
                     convert_urls: false,
                     relative_urls: false,
                     plugins: 'autolink autoresize code image link lists table',
@@ -205,6 +177,15 @@
                         }
                         openMediaModalForImage(function(src) {
                             callback(src, { alt: '' });
+                        });
+                    },
+                    setup: function(editor) {
+                        editor.on('input change undo redo SetContent', function() {
+                            textarea.value = editor.getContent();
+                            textarea.dispatchEvent(new CustomEvent('flatcms:editor-change', {
+                                bubbles: true,
+                                detail: { provider: 'tinymce' }
+                            }));
                         });
                     },
                 });

@@ -1,15 +1,46 @@
 <?php
-/** FlatCMS standalone recovery runtime. No Core/bootstrap dependency. */
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/UpdateManager/Recovery/recovery-runtime.php
+ * Version: 2.0.0-dev
+ */
 declare(strict_types=1);
 
 if (!function_exists('flatcms_recovery_run')) {
     function flatcms_recovery_run(string $basePath): void
     {
+        try {
+            $store = flatcms_recovery_state_store($basePath);
+            $state = $store->read();
+            if (($state['kind'] ?? '') !== 'flatcms-recovery-state') { flatcms_recovery_not_found(); }
+            $cookie = (string) ($state['cookie_name'] ?? 'flatcms_recovery');
+            $token = trim((string) ($_GET['token'] ?? $_COOKIE[$cookie] ?? ''));
+            if ($token === '' || !hash_equals((string) ($state['token_hash'] ?? ''), hash('sha256', $token))) {
+                flatcms_recovery_forbidden();
+            }
+            // Application barrier precedes journal locks; otherwise draining workers can deadlock.
+            flatcms_recovery_application_lock($basePath)->exclusive(
+                static fn () => $store->exclusive(static fn () => flatcms_recovery_run_locked($basePath)), ['full-restoration', 'core-update']
+            );
+        } catch (Throwable) {
+            // Fail closed without discarding an unreadable recovery journal.
+            http_response_code(503);
+            exit;
+        }
+    }
+
+    function flatcms_recovery_run_locked(string $basePath): void
+    {
         $basePath = rtrim($basePath, '/\\');
         $recoveryRoot = $basePath . '/storage/recovery';
         $statePath = $recoveryRoot . '/active.json';
         $runtimeService = $recoveryRoot . '/runtime/FullBackupService.php';
-        $state = flatcms_recovery_read_json($statePath);
+        $state = flatcms_recovery_state_store($basePath)->read();
         if ($state === [] || ($state['kind'] ?? '') !== 'flatcms-recovery-state') {
             flatcms_recovery_not_found();
         }
@@ -27,6 +58,7 @@ if (!function_exists('flatcms_recovery_run')) {
 
         flatcms_recovery_headers();
         $status = (string) ($state['status'] ?? 'armed');
+        if ($status === 'finalizing') { flatcms_recovery_forbidden(); }
         if (in_array($status, ['armed', 'backup_ready', 'updating'], true) && flatcms_recovery_update_lock_held($basePath)) {
             flatcms_recovery_render($state, 'updating', flatcms_recovery_t('recovery_updating_title'), flatcms_recovery_t('recovery_updating_message'), false, true);
         }
@@ -41,11 +73,6 @@ if (!function_exists('flatcms_recovery_run')) {
         }
 
         if ($status === 'monitoring') {
-            if ((int) ($state['monitor_until'] ?? 0) < time()) {
-                @unlink($statePath);
-                setcookie($cookieName, '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Strict']);
-                flatcms_recovery_not_found();
-            }
             flatcms_recovery_render(
                 $state,
                 'monitoring',
@@ -68,7 +95,8 @@ if (!function_exists('flatcms_recovery_run')) {
             flatcms_recovery_restore($basePath, $statePath, $runtimeService, $state);
         }
 
-        $hasBackup = is_file((string) ($state['full_backup_path'] ?? ''));
+        try { $hasBackup = is_file(flatcms_recovery_backup_reference($basePath)->path((string) ($state['full_backup_path'] ?? ''))); }
+        catch (Throwable) { $hasBackup = false; }
         $message = !empty($state['auto_rollback_succeeded'])
             ? flatcms_recovery_t('recovery_rollback_done_message')
             : flatcms_recovery_t('recovery_failure_message');
@@ -78,6 +106,20 @@ if (!function_exists('flatcms_recovery_run')) {
     /** @param array<string,mixed> $state */
     function flatcms_recovery_restore(string $basePath, string $statePath, string $runtimeService, array $state): void
     {
+        flatcms_recovery_application_lock($basePath)->exclusive(static fn () => flatcms_recovery_state_store($basePath)->exclusive(static function () use ($basePath, $statePath, $runtimeService, $state): void {
+            $current = flatcms_recovery_state_store($basePath)->read();
+            if ($current === [] || ($current['recovery_id'] ?? '') !== ($state['recovery_id'] ?? '')
+                || ($current['token_hash'] ?? '') !== ($state['token_hash'] ?? '')
+                || in_array($current['status'] ?? '', ['finalizing', 'recovered', 'success'], true)
+                || flatcms_recovery_update_lock_held($basePath)) {
+                flatcms_recovery_forbidden();
+            }
+            flatcms_recovery_restore_locked($basePath, $statePath, $runtimeService, $current);
+        }), ['full-restoration', 'core-update']);
+    }
+
+    function flatcms_recovery_restore_locked(string $basePath, string $statePath, string $runtimeService, array $state): void
+    {
         $lockPath = dirname($statePath) . '/recovery.lock';
         $lock = @fopen($lockPath, 'c+');
         if (!is_resource($lock) || !flock($lock, LOCK_EX | LOCK_NB)) {
@@ -85,21 +127,23 @@ if (!function_exists('flatcms_recovery_run')) {
             flatcms_recovery_render($state, 'failed', flatcms_recovery_t('recovery_in_progress_title'), flatcms_recovery_t('recovery_in_progress_message'), false);
         }
         try {
-            $archive = (string) ($state['full_backup_path'] ?? '');
-            $keyPath = (string) ($state['full_backup_key_path'] ?? '');
-            $expectedSha = strtolower(trim((string) ($state['full_backup_sha256'] ?? '')));
-            if (!is_file($archive) || !is_file($keyPath) || $expectedSha === '') {
-                throw new RuntimeException('recovery_backup_missing');
-            }
-            $actualSha = strtolower((string) hash_file('sha256', $archive));
-            if (!hash_equals($expectedSha, $actualSha)) {
-                throw new RuntimeException('recovery_backup_hash_mismatch');
-            }
+            $verified = flatcms_recovery_backup_reference($basePath)->verify($state);
+            $archive = $verified['path'];
+            $keyPath = $verified['key_path'];
             if (!is_file($runtimeService)) {
                 throw new RuntimeException('recovery_runtime_missing');
             }
+            $barrierRuntime = dirname($runtimeService) . '/ApplicationLock.php';
+            if (!is_file($barrierRuntime)) { throw new RuntimeException('recovery_runtime_missing'); }
+            require_once $barrierRuntime;
+            $streamRuntime = dirname($runtimeService) . '/StreamFileTransaction.php';
+            if (!is_file($streamRuntime)) { throw new RuntimeException('recovery_runtime_missing'); }
+            require_once $streamRuntime;
+            $cipherRuntime = dirname($runtimeService) . '/BackupSecretCipher.php';
+            if (!is_file($cipherRuntime)) { throw new RuntimeException('recovery_runtime_missing'); }
+            require_once $cipherRuntime;
             require_once $runtimeService;
-            if (!class_exists('App\\Modules\\Backups\\Services\\FullBackupService')) {
+            if (!class_exists('FlatCMS\\RecoverySnapshot\\FullBackupService', false)) {
                 throw new RuntimeException('recovery_runtime_invalid');
             }
 
@@ -108,22 +152,31 @@ if (!function_exists('flatcms_recovery_run')) {
             $state['updated_at'] = gmdate('c');
             flatcms_recovery_write_json($statePath, $state);
 
-            $failedRoot = $basePath . '/storage/backups/recovery/failed-state';
-            $keyRoot = $basePath . '/storage/recovery/keys';
-            $service = new \App\Modules\Backups\Services\FullBackupService($basePath, $failedRoot, $keyRoot);
-            $failed = $service->createBackup([
-                'reason' => 'failed_update_state',
-                'created_by' => 'RecoveryCapsule',
-                'target_version' => (string) ($state['target_version'] ?? ''),
-                'include_diagnostics' => true,
-            ]);
-            $state['failed_state_backup_path'] = (string) ($failed['path'] ?? '');
-            $state['failed_state_backup_key_path'] = (string) ($failed['key_path'] ?? '');
-            $state['failed_state_backup_sha256'] = (string) ($failed['sha256'] ?? '');
-            $state['failed_state_created_at'] = gmdate('c');
-            flatcms_recovery_write_json($statePath, $state);
-
-            $result = $service->restoreBackupTo($archive, $basePath, $keyPath);
+            if (isset($state['core_transaction'])) {
+                foreach (['CoreUpdatePathPolicy', 'CoreUpdateRecoveryService'] as $class) {
+                    $path = dirname($runtimeService) . '/' . $class . '.php';
+                    if (!is_file($path)) { throw new RuntimeException('recovery_runtime_missing'); }
+                    require_once $path;
+                }
+                // A Core operation never restores an older generation of user content or licences.
+                $result = (new \FlatCMS\RecoverySnapshot\CoreUpdateRecoveryService($basePath, flatcms_recovery_state_store($basePath)))->rollback();
+                $state = flatcms_recovery_state_store($basePath)->read();
+                if (isset($state['previous_maintenance']) && is_bool($state['previous_maintenance'])) {
+                    $settings = new \FlatCMS\RecoverySnapshot\Storage\JsonStore($basePath . '/data',
+                        new \FlatCMS\RecoverySnapshot\Storage\AtomicFileWriter($basePath . '/data',
+                            new \FlatCMS\RecoverySnapshot\Storage\FileLockManager($basePath . '/storage/cache/locks/update-settings')));
+                    $settings->mutate('settings.json', static function (array $value) use ($state): array {
+                        if ($value === []) { throw new RuntimeException('update_maintenance_settings_invalid'); }
+                        $value['maintenance_mode'] = $state['previous_maintenance'];
+                        return $value;
+                    });
+                }
+            } else {
+                // Compatibility for capsules created before targeted Core plans existed.
+                $service = new \FlatCMS\RecoverySnapshot\FullBackupService($basePath);
+                $service->recoverRestoration($basePath);
+                $result = $service->restoreBackupTo($archive, $basePath, $keyPath);
+            }
             if (!flatcms_recovery_health_check($basePath, (string) ($state['from_version'] ?? ''))) {
                 throw new RuntimeException('recovery_health_check_failed');
             }
@@ -138,7 +191,7 @@ if (!function_exists('flatcms_recovery_run')) {
             flatcms_recovery_write_json($statePath, $state);
             $cookieName = trim((string) ($state['cookie_name'] ?? 'flatcms_recovery')) ?: 'flatcms_recovery';
             setcookie($cookieName, '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Strict']);
-            flatcms_recovery_render($state, 'success', flatcms_recovery_t('recovery_success_title'), flatcms_recovery_t('recovery_success_diagnostic_message'), false);
+            flatcms_recovery_render($state, 'success', flatcms_recovery_t('recovery_success_title'), flatcms_recovery_t('recovery_success_message'), false);
         } catch (Throwable $exception) {
             $state['status'] = 'recovery_failed';
             $state['recovery_error'] = $exception->getMessage();
@@ -187,13 +240,11 @@ if (!function_exists('flatcms_recovery_run')) {
 
     function flatcms_recovery_health_check(string $basePath, string $expectedVersion): bool
     {
-        foreach (['public/index.php', 'app/Core/App.php', 'data/settings.json', 'VERSION'] as $relative) {
-            if (!is_file($basePath . '/' . $relative)) return false;
-        }
-        $raw = trim((string) @file_get_contents($basePath . '/VERSION'));
-        if ($expectedVersion !== '' && $expectedVersion !== 'unknown' && !str_contains($raw, $expectedVersion)) return false;
-        $settings = json_decode((string) @file_get_contents($basePath . '/data/settings.json'), true);
-        return is_array($settings);
+        flatcms_recovery_application_lock($basePath);
+        $probe = $basePath . '/storage/recovery/runtime/RuntimeProbe.php';
+        if (!is_file($probe)) { return false; }
+        require_once $probe;
+        return (new \FlatCMS\RecoverySnapshot\RuntimeProbe())->check($basePath, $expectedVersion, ['core-update']);
     }
 
     function flatcms_recovery_update_lock_held(string $basePath): bool
@@ -219,13 +270,46 @@ if (!function_exists('flatcms_recovery_run')) {
     /** @param array<string,mixed> $data */
     function flatcms_recovery_write_json(string $path, array $data): void
     {
-        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (!is_string($json)) throw new RuntimeException('recovery_state_encode_failed');
-        $tmp = $path . '.tmp';
-        if (@file_put_contents($tmp, $json, LOCK_EX) === false || !@rename($tmp, $path)) {
-            @unlink($tmp); throw new RuntimeException('recovery_state_write_failed');
+        $basePath = dirname($path, 3);
+        if ($path !== $basePath . '/storage/recovery/active.json') {
+            throw new RuntimeException('recovery_state_path_invalid');
         }
-        @chmod($path, 0640);
+        flatcms_recovery_state_store($basePath)->write($data);
+    }
+
+    function flatcms_recovery_state_store(string $basePath): \FlatCMS\RecoverySnapshot\RecoveryStateStore
+    {
+        static $stores = [];
+        $basePath = rtrim($basePath, '/\\');
+        if (!isset($stores[$basePath])) {
+            $runtime = $basePath . '/storage/recovery/runtime/';
+            foreach (['StorageException', 'StoragePathGuard', 'FileLockManager', 'AtomicFileWriter', 'JsonStore', 'RecoveryStateStore'] as $class) {
+                if (!is_file($runtime . $class . '.php')) { throw new RuntimeException('recovery_runtime_missing'); }
+                require_once $runtime . $class . '.php';
+            }
+            $stores[$basePath] = new \FlatCMS\RecoverySnapshot\RecoveryStateStore($basePath);
+        }
+        return $stores[$basePath];
+    }
+
+    function flatcms_recovery_application_lock(string $basePath): \FlatCMS\RecoverySnapshot\Storage\ApplicationLock
+    {
+        flatcms_recovery_state_store($basePath);
+        $path = $basePath . '/storage/recovery/runtime/ApplicationLock.php';
+        if (!is_file($path)) { throw new RuntimeException('recovery_runtime_missing'); }
+        require_once $path;
+        return \FlatCMS\RecoverySnapshot\Storage\ApplicationLock::for($basePath);
+    }
+
+    function flatcms_recovery_backup_reference(string $basePath): \FlatCMS\RecoverySnapshot\RecoveryBackupReference
+    {
+        flatcms_recovery_application_lock($basePath);
+        foreach (['StreamFileTransaction', 'BackupSecretCipher', 'FullBackupService', 'RecoveryBackupReference'] as $class) {
+            $path = $basePath . '/storage/recovery/runtime/' . $class . '.php';
+            if (!is_file($path)) { throw new RuntimeException('recovery_runtime_missing'); }
+            require_once $path;
+        }
+        return new \FlatCMS\RecoverySnapshot\RecoveryBackupReference($basePath);
     }
 
     function flatcms_recovery_headers(): void
@@ -260,7 +344,6 @@ if (!function_exists('flatcms_recovery_run')) {
         $badge = $mode === 'success' ? flatcms_recovery_t('recovery_badge_success') : ($mode === 'updating' ? flatcms_recovery_t('recovery_badge_updating') : ($mode === 'monitoring' ? flatcms_recovery_t('recovery_badge_monitoring') : flatcms_recovery_t('recovery_badge_recovery')));
         $csrf = $token !== '' ? hash_hmac('sha256', 'flatcms-recover', $token) : '';
         $action = htmlspecialchars((string) ($_SERVER['REQUEST_URI'] ?? '/recovery.php'), ENT_QUOTES, 'UTF-8');
-        $failedName = basename((string) ($state['failed_state_backup_path'] ?? ''));
         $localeEsc = htmlspecialchars(flatcms_recovery_locale(), ENT_QUOTES, 'UTF-8');
         echo '<!doctype html><html lang="' . $localeEsc . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">';
         echo '<title>' . $titleEsc . ' — FlatCMS</title><link rel="stylesheet" href="recovery.css"></head><body><main class="card">';
@@ -272,7 +355,6 @@ if (!function_exists('flatcms_recovery_run')) {
             echo '<p class="note">' . htmlspecialchars(flatcms_recovery_t('recovery_diagnostic_note'), ENT_QUOTES, 'UTF-8') . '</p>';
         } elseif ($mode === 'success') {
             echo '<p><a class="btn btn-link" href="/">' . htmlspecialchars(flatcms_recovery_t('recovery_action_return'), ENT_QUOTES, 'UTF-8') . '</a></p>';
-            if ($failedName !== '') echo '<p class="note">' . htmlspecialchars(flatcms_recovery_t('recovery_failed_state_note', ['archive' => $failedName]), ENT_QUOTES, 'UTF-8') . '</p>';
         }
         echo '</main></body></html>'; exit;
     }

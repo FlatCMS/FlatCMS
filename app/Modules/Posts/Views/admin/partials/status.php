@@ -1,5 +1,16 @@
 <?php
-/** Native Posts status editor. Replaced by plugins through posts.form.status. */
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Posts/Views/admin/partials/status.php
+ * Version: 2.0.0-dev
+ *
+ * Native Posts status editor. Replaced by plugins through posts.form.status.
+ */
 ?>
 <h3 class="card-title card-title-spaced"><?= e($postLabel('status', __('status', 'Posts'))) ?></h3>
 <div class="form-group">
@@ -10,7 +21,7 @@
         </select>
     <?php else: ?>
         <?php $sourceStatus = (string) old('status', $translationUi['source_status'] ?? 'draft'); ?>
-        <input type="hidden" name="status" value="<?= e($sourceStatus) ?>">
+        <input type="hidden" id="status" name="status" value="<?= e($sourceStatus) ?>">
         <div class="posts-status-lock">
             <span class="badge <?= $sourceStatus === 'published' ? 'badge-success' : 'badge-warning' ?>">
                 <?= e($postLabel('status_' . $sourceStatus, __('status_' . $sourceStatus, 'Posts'))) ?>

@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Pages/Views/admin/form.php
+ * Version: 2.0.0-dev
  */
 
 $page = is_array($page ?? null) ? $page : null;
@@ -124,6 +127,7 @@ $pagesLocaleFlag = static function (string $locale): string {
     action="<?= $formAction ?>"
     <?= $hasTranslationTabs ? ' data-pages-translations-root' : '' ?>
     data-ai-agent-form="pages"
+    data-seo-analysis-form
     data-tour-state="<?= $page ? 'edit' : 'create' ?>"
 >
     <?= csrf_field() ?>
@@ -427,6 +431,19 @@ $pagesLocaleFlag = static function (string $locale): string {
                                     data-no-editor
                                 ><?= e((string) ($tabValues['meta_description'] ?? '')) ?></textarea>
                             </div>
+
+                            <?php
+                            $seoAnalysisEntity = 'page';
+                            $seoAnalysisFields = [
+                                'title' => 'page_' . $localeCode . '_title',
+                                'slug' => 'page_' . $localeCode . '_slug',
+                                'content' => 'page_' . $localeCode . '_content',
+                                'meta_title' => 'page_' . $localeCode . '_meta_title',
+                                'meta_description' => 'page_' . $localeCode . '_meta_description',
+                                'status' => 'status',
+                            ];
+                            include BASE_PATH . '/app/Modules/Core/Views/admin/partials/seo-analysis.php';
+                            ?>
                         </section>
                     <?php endforeach; ?>
                 </div>
@@ -475,12 +492,26 @@ $pagesLocaleFlag = static function (string $locale): string {
                             data-no-editor
                         ><?= e(old('meta_description', $page['meta_description'] ?? '')) ?></textarea>
                     </div>
+
+                    <?php
+                    $seoAnalysisEntity = 'page';
+                    $seoAnalysisFields = [
+                        'title' => 'title',
+                        'slug' => 'slug',
+                        'content' => 'content',
+                        'meta_title' => 'meta_title',
+                        'meta_description' => 'meta_description',
+                        'status' => 'status',
+                    ];
+                    include BASE_PATH . '/app/Modules/Core/Views/admin/partials/seo-analysis.php';
+                    ?>
                 </div>
             <?php endif; ?>
         </div>
     </div>
 </form>
 
+<script src="<?= asset('js/admin/seo-analysis.js') ?>"></script>
 <script src="<?= module_asset('Pages', 'js/pages.js') ?>"></script>
 
 <?php

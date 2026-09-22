@@ -5,44 +5,51 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/index.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
 
 /*
  * Disaster Recovery bridge.
- * This shutdown handler deliberately uses only PHP built-ins so it can still
- * mark a post-update fatal error even when the FlatCMS Core cannot bootstrap.
+ * The captured runtime uses its own namespace and does not autoload live Core
+ * classes. Its journal lock is shared with the updater and recovery page.
  */
 $flatcmsRecoveryStatePath = dirname(__DIR__) . '/storage/recovery/active.json';
 if (is_file($flatcmsRecoveryStatePath)) {
     register_shutdown_function(static function () use ($flatcmsRecoveryStatePath): void {
+        // The isolated CLI probe reports failure to its parent, which owns the journal lock.
+        if (PHP_SAPI === 'cli' && defined('FLATCMS_RUNTIME_PROBE') && FLATCMS_RUNTIME_PROBE === true) { return; }
         $error = error_get_last();
         $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR];
         if (!is_array($error) || !in_array((int) ($error['type'] ?? 0), $fatalTypes, true)) {
             return;
         }
-        $state = json_decode((string) @file_get_contents($flatcmsRecoveryStatePath), true);
-        if (!is_array($state) || !in_array((string) ($state['status'] ?? ''), ['updating', 'monitoring', 'backup_ready'], true)) {
+        try {
+            require_once dirname($flatcmsRecoveryStatePath) . '/runtime/recovery-runtime.php';
+            $changed = false;
+            flatcms_recovery_state_store(dirname(__DIR__))->mutate(static function (array $state) use ($error, &$changed): array {
+                if (!in_array((string) ($state['status'] ?? ''), ['updating', 'monitoring', 'backup_ready'], true)) {
+                    return $state;
+                }
+                $changed = true;
+                $state['status'] = $state['status'] === 'monitoring' ? 'failed_post_update' : 'failed';
+                $state['failed_at'] = gmdate('c');
+                $state['error'] = 'fatal_php_after_update';
+                $state['fatal'] = [
+                    'type' => (int) ($error['type'] ?? 0),
+                    'message' => (string) ($error['message'] ?? ''),
+                    'file' => basename((string) ($error['file'] ?? '')),
+                    'line' => (int) ($error['line'] ?? 0),
+                ];
+                return $state;
+            });
+            if (!$changed) { return; }
+        } catch (Throwable) {
+            // Preserve the original failure and journal if the capsule is unavailable.
             return;
-        }
-        $state['status'] = (string) ($state['status'] ?? '') === 'monitoring' ? 'failed_post_update' : 'failed';
-        $state['failed_at'] = gmdate('c');
-        $state['updated_at'] = gmdate('c');
-        $state['error'] = 'fatal_php_after_update';
-        $state['fatal'] = [
-            'type' => (int) ($error['type'] ?? 0),
-            'message' => (string) ($error['message'] ?? ''),
-            'file' => basename((string) ($error['file'] ?? '')),
-            'line' => (int) ($error['line'] ?? 0),
-        ];
-        $json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (is_string($json)) {
-            $tmp = $flatcmsRecoveryStatePath . '.fatal.tmp';
-            if (@file_put_contents($tmp, $json, LOCK_EX) !== false) {
-                @rename($tmp, $flatcmsRecoveryStatePath);
-                @chmod($flatcmsRecoveryStatePath, 0640);
-            }
         }
         $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php'));
         $base = rtrim(dirname($scriptName), '/.');
@@ -55,46 +62,26 @@ if (is_file($flatcmsRecoveryStatePath)) {
     });
 }
 
+// Admit before loading configuration, starting a session or reading canonical data.
+try {
+    foreach (['StorageException', 'StoragePathGuard', 'ApplicationLock'] as $class) {
+        require_once dirname(__DIR__) . '/app/Core/Storage/' . $class . '.php';
+    }
+    \App\Core\Storage\ApplicationLock::for(dirname(__DIR__))->enter();
+} catch (Throwable) {
+    http_response_code(503);
+    header('Retry-After: 5');
+    header('Cache-Control: no-store');
+    exit;
+}
+
 /**
  * Charge un fichier .env (format simple KEY=VALUE) dans $_ENV.
  */
 function flatcms_load_env_file(string $path): void
 {
-    if (!is_file($path)) {
-        return;
-    }
-
-    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if (!is_array($lines)) {
-        return;
-    }
-
-    foreach ($lines as $line) {
-        $line = trim((string) $line);
-        if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
-            continue;
-        }
-
-        [$name, $value] = explode('=', $line, 2);
-        $name = trim($name);
-        if ($name === '') {
-            continue;
-        }
-
-        $value = trim($value);
-        if (strlen($value) >= 2 && (
-            (str_starts_with($value, '"') && str_ends_with($value, '"'))
-            || (str_starts_with($value, "'") && str_ends_with($value, "'"))
-        )) {
-            $value = substr($value, 1, -1);
-        }
-
-        $value = str_replace(['\\n', '\\"', "\\'"], ["\n", '"', "'"], $value);
-        $_ENV[$name] = $value;
-        if (function_exists('putenv')) {
-            @putenv($name . '=' . $value);
-        }
-    }
+    require_once dirname(__DIR__) . '/app/Core/EnvironmentFile.php';
+    \App\Core\EnvironmentFile::load($path);
 }
 
 // Charger les variables d'environnement le plus tôt possible:

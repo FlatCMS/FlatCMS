@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Posts/Views/admin/form.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -111,6 +114,7 @@ $postsLocaleFlag = static function (string $locale): string {
     method="POST"
     action="<?= $post ? url('/admin/posts/' . $post['id']) : url('/admin/posts') ?>"
     data-ai-agent-form="posts"
+    data-seo-analysis-form
     data-tour-state="<?= $post ? 'edit' : 'create' ?>"
 >
     <?= csrf_field() ?>
@@ -353,11 +357,24 @@ $postsLocaleFlag = static function (string $locale): string {
                     <label for="meta_description" class="form-label"><?= e($postLabel('meta_description', __('meta_description', 'Posts'))) ?></label>
                     <textarea id="meta_description" name="meta_description" class="form-input" rows="3" data-no-editor><?= e(old('meta_description', $formData['meta_description'] ?? '')) ?></textarea>
                 </div>
+                <?php
+                $seoAnalysisEntity = 'post';
+                $seoAnalysisFields = [
+                    'title' => 'title',
+                    'slug' => 'slug',
+                    'content' => 'content',
+                    'meta_title' => 'meta_title',
+                    'meta_description' => 'meta_description',
+                    'status' => 'status',
+                ];
+                include BASE_PATH . '/app/Modules/Core/Views/admin/partials/seo-analysis.php';
+                ?>
             </div>
         </div>
     </div>
 </form>
 
+<script src="<?= asset('js/admin/seo-analysis.js') ?>"></script>
 <script src="<?= module_asset('Posts', 'js/posts.js') ?>"></script>
 
 <?php if ($mediaEnabled): ?>

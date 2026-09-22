@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: themes/admin/admin-modern-pro/assets/js/admin.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -196,12 +199,15 @@
 
   function getToastLabels() {
     const configNode = document.getElementById('flatcms-admin-toast-config');
+    const readLabel = (key) => String(
+      configNode && configNode.dataset[key] ? configNode.dataset[key] : ''
+    ).trim();
 
     return {
-      success: String(configNode && configNode.dataset.titleSuccess ? configNode.dataset.titleSuccess : 'Success').trim() || 'Success',
-      warning: String(configNode && configNode.dataset.titleWarning ? configNode.dataset.titleWarning : 'Information').trim() || 'Information',
-      error: String(configNode && configNode.dataset.titleError ? configNode.dataset.titleError : 'Error').trim() || 'Error',
-      close: String(configNode && configNode.dataset.closeLabel ? configNode.dataset.closeLabel : 'Close').trim() || 'Close'
+      success: readLabel('titleSuccess'),
+      warning: readLabel('titleWarning'),
+      error: readLabel('titleError'),
+      close: readLabel('closeLabel')
     };
   }
 
@@ -736,7 +742,7 @@
     const form = btn.closest('form');
     if (!form) return;
 
-    const message = btn.dataset.message || defaultConfirmMessage || (confirmModalMessage ? confirmModalMessage.textContent : 'Êtes-vous sûr ?');
+    const message = btn.dataset.message || defaultConfirmMessage || (confirmModalMessage ? confirmModalMessage.textContent : '');
     const itemName = btn.dataset.itemName || btn.dataset.name || '';
     const warning = btn.dataset.warning || defaultConfirmWarning || '';
     showConfirm(message, function() {

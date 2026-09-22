@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/js/admin/ckeditor-provider-init.js
+ * Version: 2.0.0-dev
  */
 
 /**
@@ -347,7 +350,7 @@
     function openMediaModalForEditor(editor, textarea, options) {
         var modal = document.getElementById('mediaModal');
         if (!modal || typeof window.initMediaModal !== 'function') {
-            showToast(textareaMediaErrorLabel(textarea) || translatedEditorLabel(textareaEditorLocale(textarea), 'Media unavailable', 'Media unavailable'), 'warning');
+            showToast(textareaMediaErrorLabel(textarea), 'warning');
             return;
         }
 
@@ -971,6 +974,10 @@
         editor.model.document.on('change:data', function () {
             syncToTextarea(editor, textarea);
             var html = textarea.value;
+            textarea.dispatchEvent(new CustomEvent('flatcms:editor-change', {
+                bubbles: true,
+                detail: { provider: 'ckeditor' }
+            }));
             if (overrides && typeof overrides.onChange === 'function') {
                 overrides.onChange(html);
             } else if (overrides && typeof overrides.onInput === 'function') {

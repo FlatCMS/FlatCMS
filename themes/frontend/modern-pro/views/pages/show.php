@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: themes/frontend/modern-pro/views/pages/show.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -21,19 +24,11 @@ $pageArticleClasses = ['content'];
 if ($pageRenderMode === 'classic') {
     $pageArticleClasses[] = 'prose';
 } else {
-    $pageArticleClasses[] = 'content-builder';
+    $pageArticleClasses[] = 'content-layout';
 }
-$pageBuilderAssets = is_array($page['builder_assets'] ?? null) ? $page['builder_assets'] : [];
-$pageBuilderCss = is_array($pageBuilderAssets['css'] ?? null) ? $pageBuilderAssets['css'] : [];
-$pageBuilderJs = is_array($pageBuilderAssets['js'] ?? null) ? $pageBuilderAssets['js'] : [];
 $pageNotices = is_array($pageNotices ?? null) ? $pageNotices : [];
 ?>
 
-<?php foreach ($pageBuilderCss as $href): ?>
-    <?php if (is_string($href) && trim($href) !== ''): ?>
-        <link rel="stylesheet" href="<?= e($href) ?>">
-    <?php endif; ?>
-<?php endforeach; ?>
 
 <?php if ($pageHeaderEnabled): ?>
 <header class="page-header">
@@ -73,9 +68,3 @@ $pageNotices = is_array($pageNotices ?? null) ? $pageNotices : [];
         </article>
     </div>
 </div>
-
-<?php foreach ($pageBuilderJs as $src): ?>
-    <?php if (is_string($src) && trim($src) !== ''): ?>
-        <script src="<?= e($src) ?>"></script>
-    <?php endif; ?>
-<?php endforeach; ?>

@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Core/View.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -149,14 +152,7 @@ class View
 
     private function getActiveTheme(string $type): string
     {
-        // Read from settings.json (dynamic) first, fallback to config (static)
-        $settings = FlatFile::settings();
-        
-        if ($type === 'admin') {
-            return $settings['admin_theme'] ?? config('app.admin_theme', 'admin-modern-pro');
-        }
-        
-        return $settings['frontend_theme'] ?? config('app.frontend_theme', 'default');
+        return ThemeResolver::active($type);
     }
 
     private function renderFile(string $path, array $data): string
@@ -205,7 +201,7 @@ class View
 
     public function component(string $name, array $data = []): void
     {
-        $theme = config('app.admin_theme', 'admin-modern-pro');
+        $theme = $this->getActiveTheme('admin');
         $path = BASE_PATH . "/themes/admin/{$theme}/views/components/{$name}.php";
         if (!file_exists($path)) {
             $path = BASE_PATH . "/public/themes/admin/{$theme}/views/components/{$name}.php";

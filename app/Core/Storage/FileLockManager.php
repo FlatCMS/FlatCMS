@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Core/Storage/FileLockManager.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -13,7 +16,7 @@ namespace App\Core\Storage;
 
 final class FileLockManager
 {
-    private string $lockRoot;
+    private StoragePathGuard $paths;
     private int $timeoutMilliseconds;
 
     /** @var array<string, array{handle: resource, depth: int}> */
@@ -21,26 +24,10 @@ final class FileLockManager
 
     public function __construct(string $lockRoot, int $timeoutMilliseconds = 2000)
     {
-        $lockRoot = rtrim(str_replace('\\', '/', trim($lockRoot)), '/');
-        if ($lockRoot === '' || !str_starts_with($lockRoot, '/') || str_contains($lockRoot, "\0")) {
-            throw new StorageException('Lock root must be an absolute path.');
-        }
         if ($timeoutMilliseconds < 1) {
             throw new StorageException('Lock timeout must be greater than zero.');
         }
-        if (is_link($lockRoot)) {
-            throw new StorageException('Lock root cannot be a symbolic link: ' . $lockRoot);
-        }
-        if (!is_dir($lockRoot) && !mkdir($lockRoot, 0755, true) && !is_dir($lockRoot)) {
-            throw new StorageException('Unable to create lock root: ' . $lockRoot);
-        }
-
-        $resolved = realpath($lockRoot);
-        if ($resolved === false) {
-            throw new StorageException('Unable to resolve lock root: ' . $lockRoot);
-        }
-
-        $this->lockRoot = rtrim(str_replace('\\', '/', $resolved), '/');
+        $this->paths = new StoragePathGuard($lockRoot);
         $this->timeoutMilliseconds = $timeoutMilliseconds;
     }
 
@@ -51,7 +38,7 @@ final class FileLockManager
             throw new StorageException('Lock scope cannot be empty or contain null bytes.');
         }
 
-        $key = hash('sha256', $scope);
+        $key = hash('sha256', PHP_OS_FAMILY === 'Windows' ? StoragePathGuard::foldWindowsCase($scope) : $scope);
         if (isset($this->heldLocks[$key])) {
             $this->heldLocks[$key]['depth']++;
             try {
@@ -61,7 +48,7 @@ final class FileLockManager
             }
         }
 
-        $lockPath = $this->lockRoot . '/' . $key . '.lock';
+        $lockPath = $this->paths->resolve($key . '.lock');
         $handle = fopen($lockPath, 'c+b');
         if (!is_resource($handle)) {
             throw new StorageException('Unable to open storage lock: ' . $lockPath);

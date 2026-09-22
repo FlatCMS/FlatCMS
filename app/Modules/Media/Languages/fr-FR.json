@@ -104,7 +104,7 @@
     "media_tour_files_title": "Gérer les fichiers stockés",
     "media_tour_files_content": "La grille affiche les médias du dossier courant. Vous pouvez les consulter, les copier dans d’autres modules ou les supprimer.",
     "media_tour_next_action_title": "Prochaine étape recommandée",
-    "media_tour_initial_content": "Commencez par choisir une famille de fichiers. Une fois le dossier actif sélectionné, vous pourrez importer vos médias, vérifier le résultat dans la grille puis les réutiliser dans Pages, Posts, Contact ou les Builders.",
+    "media_tour_initial_content": "Commencez par choisir une famille de fichiers. Une fois le dossier actif sélectionné, vous pourrez importer vos médias, vérifier le résultat dans la grille puis les réutiliser dans Pages, Posts, Contact.",
     "media_help_badge": "Workflow",
     "media_help_title": "Organiser vos médias par famille",
     "media_help_intro": "Choisissez d’abord le bon dossier logique, importez ensuite vos fichiers puis utilisez la synchronisation quand le disque a changé hors admin.",

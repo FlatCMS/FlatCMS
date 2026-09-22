@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Trash/Services/TrashService.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -27,6 +30,7 @@ final class TrashService
     private ContentDocumentStore $posts;
     private FlatFile $categories;
     private MediaRepository $mediaRepository;
+    private MediaDirectoryTrashTransaction $mediaDirectories;
     private string $themeArchivesPath;
     private string $mediaUploadsPath;
     private string $mediaArchivesPath;
@@ -42,6 +46,7 @@ final class TrashService
         $this->posts = ContentDocumentStore::for('core/posts');
         $this->categories = FlatFile::for('core/categories');
         $this->mediaRepository = new MediaRepository();
+        $this->mediaDirectories = new MediaDirectoryTrashTransaction();
         $this->themeArchivesPath = BASE_PATH . '/storage/trash/themes';
         $this->mediaUploadsPath = BASE_PATH . '/public/uploads';
         $this->mediaArchivesPath = BASE_PATH . '/storage/trash/media';
@@ -334,72 +339,7 @@ final class TrashService
 
     public function archiveMediaDirectory(string $mediaPath, string $deletedBy = ''): ?array
     {
-        $mediaPath = $this->normalizeMediaPath($mediaPath);
-        $parts = $mediaPath === '' ? [] : explode('/', $mediaPath);
-        $sourcePath = $this->resolveMediaUploadPath($mediaPath);
-        if (
-            count($parts) < 2
-            || $sourcePath === ''
-            || !is_dir($sourcePath)
-            || $this->hasSymlinkInMediaPath($mediaPath)
-            || $this->directoryContainsSymlink($sourcePath)
-        ) {
-            return null;
-        }
-
-        $entityId = 'media-directory:' . $mediaPath;
-        if ($this->findEntityByEntityId($this->trashMedia, 'media', $entityId) !== null) {
-            return null;
-        }
-
-        $archiveSlug = preg_replace('/[^a-zA-Z0-9_-]/', '_', implode('_', $parts) . '_' . uniqid('', true)) ?? '';
-        if ($archiveSlug === '') {
-            return null;
-        }
-
-        $archiveRoot = $this->mediaArchivesPath . '/' . $archiveSlug;
-        $archiveDirectory = $archiveRoot . '/directory';
-        $repositoryBefore = $this->mediaRepository->all();
-        $repositoryEntries = $this->snapshotRepositoryEntries($repositoryBefore, $mediaPath, true);
-        if (!$this->movePath($sourcePath, $archiveDirectory)) {
-            return null;
-        }
-
-        $record = [
-            'entity_type' => 'media',
-            'entity_id' => $entityId,
-            'entity_title' => basename($mediaPath),
-            'entity_slug' => $mediaPath,
-            'deleted_at' => date('Y-m-d H:i:s'),
-            'deleted_by' => $deletedBy,
-            'payload' => [
-                'kind' => 'directory',
-                'path' => $mediaPath,
-                'folder' => $parts[0],
-                'name' => basename($mediaPath),
-                'archive_root' => 'storage/trash/media/' . $archiveSlug,
-                'archive_directory' => 'storage/trash/media/' . $archiveSlug . '/directory',
-                'repository_entries' => $repositoryEntries,
-            ],
-        ];
-
-        $created = $this->trashMedia->create($record);
-        $trashId = trim((string) ($created['id'] ?? ''));
-        if ($trashId === '' || $this->findMedia($trashId) === null) {
-            $this->movePath($archiveDirectory, $sourcePath);
-            $this->removePath($archiveRoot);
-            return null;
-        }
-
-        $repositoryAfter = $this->withoutRepositoryEntries($repositoryBefore, $mediaPath, true);
-        if ($repositoryEntries !== [] && !$this->mediaRepository->replaceAll($repositoryAfter)) {
-            $this->trashMedia->delete($trashId);
-            $this->movePath($archiveDirectory, $sourcePath);
-            $this->removePath($archiveRoot);
-            return null;
-        }
-
-        return $created;
+        return $this->mediaDirectories->archive($mediaPath, $deletedBy);
     }
 
     public function restoreItem(string $trashId): array
@@ -448,6 +388,9 @@ final class TrashService
         $mediaItem = $this->findMedia($trashId);
         if ($mediaItem !== null) {
             $payload = is_array($mediaItem['payload'] ?? null) ? $mediaItem['payload'] : [];
+            if ((string) ($payload['kind'] ?? '') === 'directory') {
+                return $this->mediaDirectories->purge($mediaItem);
+            }
             $archiveRoot = $this->resolveArchivePath((string) ($payload['archive_root'] ?? ''));
             if ($archiveRoot !== '' && file_exists($archiveRoot) && !$this->removePath($archiveRoot)) {
                 return false;
@@ -739,54 +682,8 @@ final class TrashService
      */
     private function restoreMediaDirectory(array $item, array $payload): array
     {
-        $mediaPath = $this->normalizeMediaPath((string) ($payload['path'] ?? ''));
-        $archiveRoot = $this->resolveArchivePath((string) ($payload['archive_root'] ?? ''));
-        $archiveDirectory = $this->resolveArchivePath((string) ($payload['archive_directory'] ?? ''));
-        $targetPath = $this->resolveMediaUploadPath($mediaPath);
-        $repositorySnapshots = $this->normalizeRepositorySnapshots($payload['repository_entries'] ?? []);
-        $repositoryBefore = $this->mediaRepository->all();
-
-        if (
-            $mediaPath === ''
-            || count(explode('/', $mediaPath)) < 2
-            || $archiveRoot === ''
-            || $archiveDirectory === ''
-            || $targetPath === ''
-            || !is_dir($archiveDirectory)
-        ) {
-            return ['success' => false, 'code' => 'not_found'];
-        }
-
-        if (file_exists($targetPath) || $this->repositorySnapshotsConflict($repositorySnapshots, $repositoryBefore)) {
-            return ['success' => false, 'code' => 'id_conflict'];
-        }
-
-        if (!$this->movePath($archiveDirectory, $targetPath)) {
-            return ['success' => false, 'code' => 'restore_failed'];
-        }
-
-        if ($repositorySnapshots !== [] && !$this->mediaRepository->replaceAll(
-            $this->restoreRepositorySnapshots($repositoryBefore, $repositorySnapshots)
-        )) {
-            $this->movePath($targetPath, $archiveDirectory);
-            return ['success' => false, 'code' => 'restore_failed'];
-        }
-
-        if (!$this->trashMedia->delete((string) ($item['id'] ?? ''))) {
-            if ($repositorySnapshots !== []) {
-                $this->mediaRepository->replaceAll($repositoryBefore);
-            }
-            $this->movePath($targetPath, $archiveDirectory);
-            return ['success' => false, 'code' => 'restore_failed'];
-        }
-
-        $this->removePath($archiveRoot);
-
-        return [
-            'success' => true,
-            'item' => ['path' => $mediaPath, 'kind' => 'directory'],
-            'entity_type' => 'media',
-        ];
+        unset($payload);
+        return $this->mediaDirectories->restore($item);
     }
 
     private function resolveArchivePath(string $relativePath): string

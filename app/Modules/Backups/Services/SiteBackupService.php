@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Backups/Services/SiteBackupService.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -14,14 +17,17 @@ namespace App\Modules\Backups\Services;
 use App\Core\CoreManifest;
 use App\Core\FlatFile;
 use App\Core\Security\SecretBox;
+use App\Core\Storage\StoragePathGuard;
+use App\Core\Storage\StreamFileTransaction;
 
 final class SiteBackupService
 {
     private const ARCHIVE_KIND = 'flatcms-site-backup';
-    private const ARCHIVE_VERSION = 1;
+    private const ARCHIVE_VERSION = 2;
+    private const SUPPORTED_ARCHIVE_VERSIONS = [1, 2];
     private const TMP_UPLOAD_PREFIX = 'site-upload-';
     private const BACKUP_PREFIX = 'flatcms-site-backup';
-    private const ROLLBACK_PREFIX = 'flatcms-site-pre-restore';
+    private ?StreamFileTransaction $restoration = null;
 
     private string $dataRoot;
     private string $backupRoot;
@@ -33,6 +39,8 @@ final class SiteBackupService
     private string $uploadsRoot;
     private string $storageAvatarsRoot;
     private string $storageSecretKeyPath;
+    private string $keyRoot;
+    private BackupSecretCipher $secretCipher;
 
     public function __construct()
     {
@@ -48,6 +56,13 @@ final class SiteBackupService
         $this->uploadsRoot = rtrim(BASE_PATH, '/') . '/uploads';
         $this->storageAvatarsRoot = rtrim($storageRoot, '/') . '/uploads/avatars';
         $this->storageSecretKeyPath = (new SecretBox())->storagePath();
+        $this->keyRoot = rtrim($storageRoot, '/') . '/recovery/keys';
+        $this->secretCipher = new BackupSecretCipher(
+            BASE_PATH,
+            $this->keyRoot,
+            'site-backups',
+            'backups_site'
+        );
     }
 
     public function zipAvailable(): bool
@@ -83,6 +98,11 @@ final class SiteBackupService
      */
     public function createBackup(array $context = []): array
     {
+        return $this->transaction()->synchronized(fn (): array => $this->createBackupUnlocked($context));
+    }
+
+    private function createBackupUnlocked(array $context): array
+    {
         $this->assertZipAvailable();
         $this->ensureDirectories();
 
@@ -91,35 +111,62 @@ final class SiteBackupService
             throw new \RuntimeException('backups_error_no_data');
         }
 
-        $filename = $this->buildBackupFilename(self::BACKUP_PREFIX);
+        $backupId = $this->buildBackupId();
+        $filename = self::BACKUP_PREFIX . '-' . $backupId . '.zip';
         $path = $this->backupRoot . '/' . $filename;
-        $manifest = $this->buildManifest($files, $context);
+        $partial = $path . '.partial';
+        $keyPath = '';
+        $secretKey = null;
+        $manifest = $this->buildManifest($backupId, $files, $context);
 
-        $this->writeArchive($path, $files, $manifest);
+        try {
+            if (isset($files['storage/app/secretbox.key'])) {
+                $secretKey = $this->secretCipher->generate();
+                $keyPath = $this->secretCipher->persist('site-' . $backupId . '.key', $secretKey);
+            }
+            $this->writeArchive($partial, $files, $manifest, $secretKey, $keyPath !== '' ? $keyPath : null);
+            if (!@rename($partial, $path)) {
+                throw new \RuntimeException('backups_archive_write_failed');
+            }
+            @chmod($path, 0600);
+        } catch (\Throwable $exception) {
+            @unlink($partial);
+            if ($keyPath !== '') {
+                @unlink($keyPath);
+            }
+            throw $exception;
+        }
 
         return $this->backupItemFromPath($path);
     }
 
     /**
      * @param array<string, string> $context
+     * @param callable():bool|null $accept
      * @return array<string, mixed>
      */
-    public function restoreStoredBackup(string $filename, array $context = []): array
+    public function restoreStoredBackup(string $filename, array $context = [], ?callable $accept = null): array
     {
         $path = $this->resolveStoredBackupPath($filename);
         if ($path === null) {
             throw new \RuntimeException('backups_archive_not_found');
         }
 
-        return $this->restoreArchive($path, $context);
+        return $this->restoreArchive($path, $context, $accept, $this->resolveStoredKeyPath($filename));
     }
 
     /**
      * @param array<string, mixed>|null $upload
      * @param array<string, string> $context
+     * @param callable():bool|null $accept
      * @return array<string, mixed>
      */
-    public function restoreUploadedBackup(?array $upload, array $context = []): array
+    public function restoreUploadedBackup(
+        ?array $upload,
+        array $context = [],
+        ?callable $accept = null,
+        ?array $keyUpload = null
+    ): array
     {
         $this->assertZipAvailable();
         $this->ensureDirectories();
@@ -152,11 +199,18 @@ final class SiteBackupService
             throw new \RuntimeException('backups_upload_failed');
         }
 
+        $targetKeyPath = null;
         try {
-            return $this->restoreArchive($targetPath, $context);
+            if (is_array($keyUpload) && (int) ($keyUpload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $targetKeyPath = $this->moveUploadedKey($keyUpload);
+            }
+            return $this->restoreArchive($targetPath, $context, $accept, $targetKeyPath);
         } finally {
             if (is_file($targetPath)) {
                 @unlink($targetPath);
+            }
+            if (is_string($targetKeyPath) && is_file($targetKeyPath)) {
+                @unlink($targetKeyPath);
             }
         }
     }
@@ -176,6 +230,26 @@ final class SiteBackupService
         return $path;
     }
 
+    public function resolveStoredKeyPath(string $filename): ?string
+    {
+        $path = $this->resolveStoredBackupPath($filename);
+        if ($path === null) {
+            return null;
+        }
+
+        $manifest = $this->readManifestFromArchive($path);
+        if ((int) ($manifest['version'] ?? 1) < 2 || empty($manifest['secret_key_required'])) {
+            return null;
+        }
+        $backupId = trim((string) ($manifest['backup_id'] ?? ''));
+        if (preg_match('/^[0-9]{14}-[a-f0-9]{12}$/D', $backupId) !== 1) {
+            return null;
+        }
+        $keyPath = $this->keyRoot . '/site-' . $backupId . '.key';
+
+        return is_file($keyPath) && !is_link($keyPath) ? $keyPath : null;
+    }
+
     public function deleteStoredBackup(string $filename): void
     {
         $path = $this->resolveStoredBackupPath($filename);
@@ -183,8 +257,12 @@ final class SiteBackupService
             throw new \RuntimeException('backups_archive_not_found');
         }
 
+        $keyPath = $this->resolveStoredKeyPath($filename);
         if (!@unlink($path)) {
             throw new \RuntimeException('backups_delete_failed');
+        }
+        if ($keyPath !== null && is_file($keyPath)) {
+            @unlink($keyPath);
         }
     }
 
@@ -194,26 +272,12 @@ final class SiteBackupService
      */
     public function resetSiteContent(array $context = []): array
     {
-        $this->assertZipAvailable();
-        $this->ensureDirectories();
-
-        $currentFiles = $this->snapshotArchiveFiles();
-        $rollback = $this->createRollbackBackup($currentFiles, array_merge($context, ['reason' => 'pre_reset']));
-        $resetFiles = $this->buildResetSnapshot();
-
-        try {
+        return $this->transaction()->synchronized(function (): array {
+            $resetFiles = $this->buildResetSnapshot();
             $this->mirrorArchiveFiles($resetFiles);
             $this->clearRuntimeCaches();
-        } catch (\Throwable $exception) {
-            $this->mirrorArchiveFiles($currentFiles);
-            $this->clearRuntimeCaches();
-            throw $exception;
-        }
-
-        return [
-            'reset_files_count' => count($resetFiles),
-            'rollback' => $rollback,
-        ];
+            return ['reset_files_count' => count($resetFiles)];
+        });
     }
 
     /**
@@ -222,62 +286,56 @@ final class SiteBackupService
      */
     public function factoryResetSite(array $context = []): array
     {
-        $this->assertZipAvailable();
-        $this->ensureDirectories();
-
-        $currentFiles = $this->snapshotArchiveFiles();
-        $rollback = $this->createRollbackBackup($currentFiles, array_merge($context, ['reason' => 'pre_factory_reset']));
-        $bootstrapFiles = $this->buildFactoryResetBootstrapSnapshot();
-
-        try {
-            $this->mirrorArchiveFiles($bootstrapFiles);
-            $this->deleteFactoryResetResidualFiles();
+        return $this->transaction()->synchronized(function (): array {
+            $bootstrapFiles = $this->buildFactoryResetBootstrapSnapshot();
+            $this->mirrorArchiveFiles($bootstrapFiles, null, $this->factoryResetResidualFiles());
             $this->clearRuntimeCaches();
-        } catch (\Throwable $exception) {
-            $this->mirrorArchiveFiles($currentFiles);
-            $this->clearRuntimeCaches();
-            throw $exception;
-        }
+            return ['bootstrap_files_count' => count($bootstrapFiles)];
+        });
+    }
 
-        return [
-            'bootstrap_files_count' => count($bootstrapFiles),
-            'rollback' => $rollback,
-        ];
+    public function recoverRestoration(): void
+    {
+        $this->transaction()->recover();
+        $this->clearRuntimeCaches();
+    }
+
+    private function transaction(): StreamFileTransaction
+    {
+        return $this->restoration ??= new StreamFileTransaction(BASE_PATH, 'site-restoration');
     }
 
     /**
      * @param array<string, string> $context
+     * @param callable():bool|null $accept
      * @return array<string, mixed>
      */
-    private function restoreArchive(string $archivePath, array $context = []): array
+    private function restoreArchive(
+        string $archivePath,
+        array $context = [],
+        ?callable $accept = null,
+        ?string $keyPath = null
+    ): array
     {
         $this->assertZipAvailable();
         $this->ensureDirectories();
 
-        $payload = $this->readArchivePayload($archivePath);
-        $payload['files'] = $this->adaptRestoredFilesToCurrentInstallation($payload['files']);
-        $currentFiles = $this->snapshotArchiveFiles();
-        $rollback = $this->createRollbackBackup($currentFiles, $context);
-
-        try {
-            $this->mirrorArchiveFiles($payload['files']);
-            $this->clearRuntimeCaches();
-        } catch (\Throwable $exception) {
-            $this->mirrorArchiveFiles($currentFiles);
-            $this->clearRuntimeCaches();
-            throw $exception;
-        }
-
-        return [
-            'restored_files_count' => count($payload['files']),
-            'manifest' => $payload['manifest'],
-            'rollback' => $rollback,
-        ];
+        return $this->transaction()->synchronized(function () use ($archivePath, $accept, $keyPath): array {
+            $zip = new \ZipArchive();
+            if ($zip->open($archivePath) !== true) { throw new \RuntimeException('backups_archive_open_failed'); }
+            try {
+                $payload = $this->readArchivePayload($archivePath, $zip, $keyPath);
+                $payload['files'] = $this->adaptRestoredFilesToCurrentInstallation($payload['files']);
+                $this->mirrorArchiveFiles($payload['files'], $zip, [], $accept);
+                $this->clearRuntimeCaches();
+                return ['restored_files_count' => count($payload['files']), 'manifest' => $payload['manifest']];
+            } finally { $zip->close(); }
+        });
     }
 
     /**
-     * @param array<string, string> $files
-     * @return array<string, string>
+     * @param array<string, string|array<string,mixed>> $files
+     * @return array<string, string|array<string,mixed>>
      */
     private function adaptRestoredFilesToCurrentInstallation(array $files): array
     {
@@ -307,130 +365,314 @@ final class SiteBackupService
     }
 
     /**
-     * @param array<string, string> $files
-     * @param array<string, string> $context
-     * @return array<string, mixed>
+     * Text stays readable; media payloads are stream descriptors, never an in-memory site image.
+     * @param array<string, string|array<string,mixed>> $files
+     * @param list<string> $extraDeletes Private files owned by factory reset only.
+     * @param callable():bool|null $accept
      */
-    private function createRollbackBackup(array $files, array $context = []): array
+    private function mirrorArchiveFiles(
+        array $files,
+        ?\ZipArchive $zip = null,
+        array $extraDeletes = [],
+        ?callable $accept = null
+    ): void
     {
-        $manifest = $this->buildManifest($files, array_merge($context, [
-            'reason' => (string) ($context['reason'] ?? 'pre_restore'),
-        ]));
-
-        if ($files === []) {
-            $filename = $this->buildBackupFilename(self::ROLLBACK_PREFIX);
-            $path = $this->backupRoot . '/' . $filename;
-            $this->writeArchive($path, $files, $manifest);
-            return $this->backupItemFromPath($path);
-        }
-
-        $filename = $this->buildBackupFilename(self::ROLLBACK_PREFIX);
-        $path = $this->backupRoot . '/' . $filename;
-        $this->writeArchive($path, $files, $manifest);
-
-        return $this->backupItemFromPath($path);
+        $this->transaction()->synchronized(function () use ($files, $zip, $extraDeletes, $accept): void {
+            $operations = [];
+            $existing = $this->existingArchivePaths();
+            foreach ($files as $relative => $content) {
+                $this->absolutePathForRelative($relative);
+                $operation = ['path' => $relative];
+                if ($this->isSecretEntry($relative)) { $operation['mode'] = 0600; }
+                if (is_string($content)) {
+                    $operation += ['sha256' => hash('sha256', $content), 'size' => strlen($content),
+                        'open' => static function () use ($content) {
+                            $stream = fopen('php://temp', 'w+b');
+                            if (!is_resource($stream)) { throw new \RuntimeException('backups_restore_write_failed'); }
+                            if (fwrite($stream, $content) !== strlen($content) || !rewind($stream)) {
+                                fclose($stream);
+                                throw new \RuntimeException('backups_restore_write_failed');
+                            }
+                            return $stream;
+                        }];
+                } else {
+                    $operation += ['sha256' => $content['sha256'], 'size' => $content['size'],
+                        'open' => isset($content['source'])
+                            ? static fn () => fopen((new StoragePathGuard(BASE_PATH))->resolve($content['source']), 'rb')
+                            : static fn () => $zip?->getStreamIndex($content['zip_index'])];
+                }
+                $operations[] = $operation;
+            }
+            foreach (array_diff($existing, array_keys($files)) as $relative) {
+                $this->absolutePathForRelative($relative);
+                $operations[] = ['path' => $relative, 'open' => null];
+            }
+            foreach ($extraDeletes as $relative) {
+                if ($relative !== 'data/installed.lock' && !str_starts_with($relative, 'resources/uploads/contact/')) {
+                    throw new \RuntimeException('backups_restore_write_failed');
+                }
+                $operations[] = ['path' => $relative, 'open' => null];
+            }
+            $this->transaction()->commit($operations, $accept);
+        });
     }
 
     /**
-     * @param array<string, string> $files
+     * @return array{manifest: array<string, mixed>, files: array<string, string|array<string,mixed>>}
      */
-    private function mirrorArchiveFiles(array $files): void
-    {
-        $existingFiles = array_keys($this->snapshotArchiveFiles());
-        $nextFiles = array_keys($files);
-
-        foreach (array_diff($existingFiles, $nextFiles) as $relativePath) {
-            $absolutePath = $this->absolutePathForRelative($relativePath);
-            if (is_file($absolutePath) && !@unlink($absolutePath)) {
-                throw new \RuntimeException('backups_restore_write_failed');
-            }
-        }
-
-        foreach ($files as $relativePath => $content) {
-            $absolutePath = $this->absolutePathForRelative($relativePath);
-            $targetDir = dirname($absolutePath);
-            if (!is_dir($targetDir) && !@mkdir($targetDir, 0755, true) && !is_dir($targetDir)) {
-                throw new \RuntimeException('backups_restore_write_failed');
-            }
-
-            if (@file_put_contents($absolutePath, $content, LOCK_EX) === false) {
-                throw new \RuntimeException('backups_restore_write_failed');
-            }
-        }
-    }
-
-    /**
-     * @return array{manifest: array<string, mixed>, files: array<string, string>}
-     */
-    private function readArchivePayload(string $archivePath): array
+    private function readArchivePayload(
+        string $archivePath,
+        ?\ZipArchive $openedZip = null,
+        ?string $keyPath = null
+    ): array
     {
         if (!is_file($archivePath)) {
             throw new \RuntimeException('backups_archive_not_found');
         }
 
-        $zip = new \ZipArchive();
-        if ($zip->open($archivePath) !== true) {
+        $zip = $openedZip ?? new \ZipArchive();
+        if ($openedZip === null && $zip->open($archivePath) !== true) {
             throw new \RuntimeException('backups_archive_open_failed');
         }
 
         try {
+            $rawManifest = $zip->getFromName('manifest.json');
             $manifest = [];
-            $files = [];
-
-            for ($index = 0; $index < $zip->numFiles; $index++) {
-                $entryName = $zip->getNameIndex($index);
-                if (!is_string($entryName) || $entryName === '') {
-                    continue;
+            if (is_string($rawManifest)) {
+                $manifest = json_decode($rawManifest, true);
+                if (!is_array($manifest)) {
+                    throw new \RuntimeException('backups_archive_invalid_manifest');
                 }
-
-                $normalizedEntry = $this->normalizeRestorableArchiveEntry($entryName);
-                if ($normalizedEntry === '' || str_ends_with($normalizedEntry, '/')) {
-                    continue;
-                }
-
-                if (!$this->isAllowedArchiveEntry($normalizedEntry)) {
-                    throw new \RuntimeException('backups_archive_invalid');
-                }
-
-                $content = $zip->getFromIndex($index);
-                if (!is_string($content)) {
-                    throw new \RuntimeException('backups_archive_invalid');
-                }
-
-                if ($normalizedEntry === 'manifest.json') {
-                    $decoded = json_decode($content, true);
-                    if (!is_array($decoded)) {
-                        throw new \RuntimeException('backups_archive_invalid_manifest');
-                    }
-                    $manifest = $decoded;
-                    continue;
-                }
-
-                if ($this->isDataJsonEntry($normalizedEntry) && !$this->isValidJson($content)) {
-                    throw new \RuntimeException('backups_archive_invalid_json');
-                }
-
-                $files[$normalizedEntry] = $content;
             }
 
-            if ($files === []) {
-                throw new \RuntimeException('backups_archive_empty');
+            $kind = trim((string) ($manifest['kind'] ?? ''));
+            $version = (int) ($manifest['version'] ?? 0);
+            if ($kind === self::ARCHIVE_KIND && $version === self::ARCHIVE_VERSION) {
+                return $this->readVersionTwoPayload($zip, $manifest, $keyPath);
+            }
+            if (($kind !== '' && $kind !== self::ARCHIVE_KIND)
+                || ($version !== 0 && !in_array($version, self::SUPPORTED_ARCHIVE_VERSIONS, true))) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
             }
 
-            return [
-                'manifest' => $manifest,
-                'files' => $files,
-            ];
+            return $this->readLegacyPayload($zip, $manifest);
         } finally {
-            $zip->close();
+            if ($openedZip === null) { $zip->close(); }
         }
     }
 
     /**
-     * @param array<string, string> $files
+     * @param array<string,mixed> $manifest
+     * @return array{manifest:array<string,mixed>,files:array<string,string|array<string,mixed>>}
+     */
+    private function readVersionTwoPayload(\ZipArchive $zip, array $manifest, ?string $keyPath): array
+    {
+        $backupId = trim((string) ($manifest['backup_id'] ?? ''));
+        $inventory = is_array($manifest['files'] ?? null) ? $manifest['files'] : [];
+        if (preg_match('/^[0-9]{14}-[a-f0-9]{12}$/D', $backupId) !== 1 || $inventory === []) {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+
+        $secretRequired = !empty($manifest['secret_key_required']);
+        $secretKey = null;
+        if ($secretRequired) {
+            if ($keyPath === null || !is_file($keyPath)) {
+                throw new \RuntimeException('backups_site_key_invalid');
+            }
+            $secretKey = $this->secretCipher->read($keyPath);
+        }
+
+        $files = [];
+        $declaredEntries = ['manifest.json' => true];
+        $secretCount = 0;
+        foreach ($inventory as $relative => $meta) {
+            if (!is_string($relative) || !is_array($meta)) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $normalized = $this->normalizeArchiveEntry($relative);
+            if ($normalized !== $relative || !$this->isAllowedArchiveEntry($normalized) || $normalized === 'manifest.json'
+                || isset($files[$normalized])) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $secret = !empty($meta['secret']);
+            $entry = trim((string) ($meta['entry'] ?? ''));
+            $expectedEntry = $secret
+                ? 'secrets/' . $this->secretCipher->entryName($normalized) . '.json'
+                : $normalized;
+            $sha256 = strtolower(trim((string) ($meta['sha256'] ?? '')));
+            $size = (int) ($meta['size_bytes'] ?? -1);
+            if ($entry !== $expectedEntry || isset($declaredEntries[$entry])
+                || preg_match('/^[a-f0-9]{64}$/D', $sha256) !== 1 || $size < 0) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $index = $zip->locateName($entry);
+            if (!is_int($index)) {
+                throw new \RuntimeException('backups_archive_invalid');
+            }
+            $declaredEntries[$entry] = true;
+
+            if ($secret) {
+                $secretCount++;
+                if (!$secretRequired || !is_string($secretKey)) {
+                    throw new \RuntimeException('backups_archive_invalid_manifest');
+                }
+                try {
+                    $payload = json_decode((string) $zip->getFromIndex($index), true, 512, JSON_THROW_ON_ERROR);
+                } catch (\JsonException $exception) {
+                    throw new \RuntimeException('backups_site_secret_invalid', 0, $exception);
+                }
+                if (!is_array($payload)) {
+                    throw new \RuntimeException('backups_site_secret_invalid');
+                }
+                $plain = $this->secretCipher->decrypt($payload, $secretKey);
+                if (strlen($plain) !== $size || !hash_equals($sha256, hash('sha256', $plain))) {
+                    throw new \RuntimeException('backups_site_secret_decrypt_failed');
+                }
+                $files[$normalized] = $plain;
+                continue;
+            }
+
+            if ($this->isMediaEntry($normalized)) {
+                $metadata = $this->streamMetadata($zip->getStreamIndex($index));
+                if ($metadata['size'] !== $size || !hash_equals($sha256, $metadata['sha256'])) {
+                    throw new \RuntimeException('backups_archive_invalid');
+                }
+                $files[$normalized] = $metadata + ['zip_index' => $index];
+                continue;
+            }
+
+            $content = $zip->getFromIndex($index);
+            if (!is_string($content) || strlen($content) !== $size || !hash_equals($sha256, hash('sha256', $content))) {
+                throw new \RuntimeException('backups_archive_invalid');
+            }
+            if ($this->isDataJsonEntry($normalized) && !$this->isValidJson($content)) {
+                throw new \RuntimeException('backups_archive_invalid_json');
+            }
+            $files[$normalized] = $content;
+        }
+
+        if (($secretCount > 0) !== $secretRequired) {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+        if ((int) ($manifest['total_files_count'] ?? -1) !== count($files)
+            || (int) ($manifest['json_files_count'] ?? -1) !== $this->countDataFilesByExtension($files, 'json')
+            || (int) ($manifest['html_files_count'] ?? -1) !== $this->countDataFilesByExtension($files, 'html')
+            || (int) ($manifest['media_files_count'] ?? -1) !== $this->countMediaFiles($files)) {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+        $this->assertNoUndeclaredArchiveEntries($zip, $declaredEntries);
+
+        return ['manifest' => $manifest, 'files' => $files];
+    }
+
+    /**
+     * @param array<string,mixed> $manifest
+     * @return array{manifest:array<string,mixed>,files:array<string,string|array<string,mixed>>}
+     */
+    private function readLegacyPayload(\ZipArchive $zip, array $manifest): array
+    {
+        $files = [];
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $entryName = $zip->getNameIndex($index);
+            if (!is_string($entryName) || $entryName === '') {
+                continue;
+            }
+            $normalized = $this->normalizeRestorableArchiveEntry($entryName);
+            if ($normalized === '' || str_ends_with($normalized, '/') || $normalized === 'manifest.json') {
+                continue;
+            }
+            if (!$this->isAllowedArchiveEntry($normalized) || isset($files[$normalized])) {
+                throw new \RuntimeException('backups_archive_invalid');
+            }
+            if ($this->isMediaEntry($normalized)) {
+                $metadata = $this->streamMetadata($zip->getStreamIndex($index));
+                $stat = $zip->statIndex($index);
+                if (!is_array($stat) || $metadata['size'] !== $stat['size']) {
+                    throw new \RuntimeException('backups_archive_invalid');
+                }
+                $files[$normalized] = $metadata + ['zip_index' => $index];
+                continue;
+            }
+            $content = $zip->getFromIndex($index);
+            if (!is_string($content)) {
+                throw new \RuntimeException('backups_archive_invalid');
+            }
+            if ($this->isDataJsonEntry($normalized) && !$this->isValidJson($content)) {
+                throw new \RuntimeException('backups_archive_invalid_json');
+            }
+            $files[$normalized] = $content;
+        }
+        if ($files === []) {
+            throw new \RuntimeException('backups_archive_empty');
+        }
+
+        return ['manifest' => $manifest, 'files' => $files];
+    }
+
+    /** @param array<string,bool> $declared */
+    private function assertNoUndeclaredArchiveEntries(\ZipArchive $zip, array $declared): void
+    {
+        $seen = [];
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $entry = $zip->getNameIndex($index);
+            if (!is_string($entry) || $entry === '' || str_ends_with($entry, '/')) {
+                continue;
+            }
+            $normalized = $this->normalizeArchiveEntry($entry);
+            if ($normalized !== $entry || isset($seen[$normalized]) || !isset($declared[$normalized])) {
+                throw new \RuntimeException('backups_archive_invalid');
+            }
+            $seen[$normalized] = true;
+        }
+    }
+
+    /** @param resource|false $stream @return array{sha256:string,size:int} */
+    private function streamMetadata(mixed $stream): array
+    {
+        if (!is_resource($stream)) { throw new \RuntimeException('backups_archive_invalid'); }
+        try {
+            $hash = hash_init('sha256');
+            $size = hash_update_stream($hash, $stream);
+            if (!is_int($size) || !feof($stream)) { throw new \RuntimeException('backups_archive_invalid'); }
+            return ['sha256' => hash_final($hash), 'size' => $size];
+        } finally { fclose($stream); }
+    }
+
+    /** List the prune scope without reading old payloads or treating corrupt JSON as missing. @return list<string> */
+    private function existingArchivePaths(): array
+    {
+        $guard = new StoragePathGuard(BASE_PATH);
+        $roots = ['data', 'public/uploads', 'storage/uploads/avatars'];
+        if (!$this->uploadsAliasesPublicUploads()) { $roots[] = 'uploads'; }
+        $files = [];
+        foreach ($roots as $relativeRoot) {
+            $root = $guard->resolve($relativeRoot);
+            if (!is_dir($root)) { continue; }
+            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
+            foreach ($iterator as $item) {
+                $guard->resolve($item->getPathname());
+                if (!$item->isFile() || in_array($item->getBasename(), ['.gitkeep', '.DS_Store'], true)) { continue; }
+                $relative = $this->buildArchiveRelativePath($root, $relativeRoot, $item->getPathname());
+                if ($this->isAllowedArchiveEntry($relative)) { $files[] = $relative; }
+            }
+        }
+        $key = $guard->resolve($this->storageSecretKeyPath);
+        if (is_file($key)) { $files[] = 'storage/app/secretbox.key'; }
+        sort($files);
+        return $files;
+    }
+
+    /**
+     * @param array<string, string|array<string,mixed>> $files
      * @param array<string, mixed> $manifest
      */
-    private function writeArchive(string $archivePath, array $files, array $manifest): void
+    private function writeArchive(
+        string $archivePath,
+        array $files,
+        array $manifest,
+        ?string $secretKey,
+        ?string $keyPath
+    ): void
     {
         $zip = new \ZipArchive();
         if ($zip->open($archivePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
@@ -438,27 +680,51 @@ final class SiteBackupService
         }
 
         try {
-            $manifestContent = json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            if (!is_string($manifestContent) || !$zip->addFromString('manifest.json', $manifestContent)) {
-                throw new \RuntimeException('backups_archive_write_failed');
-            }
-
             foreach ($files as $relativePath => $content) {
-                if (!$zip->addFromString($relativePath, $content)) {
+                $meta = $manifest['files'][$relativePath] ?? null;
+                if (!is_array($meta)) {
+                    throw new \RuntimeException('backups_archive_write_failed');
+                }
+                $entry = (string) ($meta['entry'] ?? '');
+                if (!empty($meta['secret'])) {
+                    if (!is_string($content) || !is_string($secretKey)) {
+                        throw new \RuntimeException('backups_site_secret_encrypt_failed');
+                    }
+                    $encoded = json_encode(
+                        $this->secretCipher->encrypt($content, $secretKey),
+                        JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES
+                    );
+                    $added = $zip->addFromString($entry, $encoded);
+                } else {
+                    $added = is_string($content) ? $zip->addFromString($entry, $content)
+                        : $zip->addFile((new StoragePathGuard(BASE_PATH))->resolve($content['source']), $entry);
+                }
+                if (!$added) {
                     throw new \RuntimeException('backups_archive_write_failed');
                 }
             }
-        } finally {
-            $zip->close();
+            $manifestContent = json_encode(
+                $manifest,
+                JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+            );
+            if (!$zip->addFromString('manifest.json', $manifestContent)) {
+                throw new \RuntimeException('backups_archive_write_failed');
+            }
+            if (!$zip->close()) { throw new \RuntimeException('backups_archive_write_failed'); }
+            $this->readArchivePayload($archivePath, null, $keyPath);
+        } catch (\Throwable $exception) {
+            try { $zip->close(); } catch (\Throwable) {}
+            @unlink($archivePath);
+            throw $exception;
         }
     }
 
     /**
-     * @param array<string, string> $files
+     * @param array<string, string|array<string,mixed>> $files
      * @param array<string, string> $context
      * @return array<string, mixed>
      */
-    private function buildManifest(array $files, array $context = []): array
+    private function buildManifest(string $backupId, array $files, array $context = []): array
     {
         $settings = FlatFile::settings();
         $siteName = trim((string) ($settings['site_name'] ?? config('app.name', 'FlatCMS')));
@@ -475,6 +741,7 @@ final class SiteBackupService
         return [
             'kind' => self::ARCHIVE_KIND,
             'version' => self::ARCHIVE_VERSION,
+            'backup_id' => $backupId,
             'created_at' => $createdAt,
             'created_unix' => time(),
             'reason' => $reason,
@@ -482,18 +749,56 @@ final class SiteBackupService
             'site_name' => $siteName,
             'default_language' => $defaultLanguage,
             'source_url' => $sourceUrl,
-            'json_files_count' => $this->countFilesByPrefix($files, 'data/'),
+            'json_files_count' => $this->countDataFilesByExtension($files, 'json'),
+            'html_files_count' => $this->countDataFilesByExtension($files, 'html'),
             'media_files_count' => $this->countMediaFiles($files),
             'total_files_count' => count($files),
             'created_by' => $createdBy,
             'created_by_email' => $createdByEmail,
-            'scope' => 'data-json-public-uploads-storage-avatars',
+            'scope' => 'site-data-html-media-avatars-encrypted-instance-key',
             'includes_media' => true,
+            'secret_key_required' => isset($files['storage/app/secretbox.key']),
+            'files' => $this->buildFileInventory($files),
         ];
     }
 
     /**
-     * @return array<string, string>
+     * @param array<string,string|array<string,mixed>> $files
+     * @return array<string,array{sha256:string,size_bytes:int,mode:int,secret:bool,entry:string}>
+     */
+    private function buildFileInventory(array $files): array
+    {
+        $inventory = [];
+        foreach ($files as $relative => $content) {
+            $secret = $this->isSecretEntry($relative);
+            $sha256 = is_string($content) ? hash('sha256', $content) : (string) ($content['sha256'] ?? '');
+            $size = is_string($content) ? strlen($content) : (int) ($content['size'] ?? -1);
+            $mode = $secret ? 0600 : 0644;
+            if (!is_string($content) && isset($content['source'])) {
+                $permissions = @fileperms((string) $content['source']);
+                if (is_int($permissions)) {
+                    $mode = $permissions & 0777;
+                }
+            }
+            if (preg_match('/^[a-f0-9]{64}$/D', $sha256) !== 1 || $size < 0) {
+                throw new \RuntimeException('backups_archive_write_failed');
+            }
+            $inventory[$relative] = [
+                'sha256' => $sha256,
+                'size_bytes' => $size,
+                'mode' => $mode,
+                'secret' => $secret,
+                'entry' => $secret
+                    ? 'secrets/' . $this->secretCipher->entryName($relative) . '.json'
+                    : $relative,
+            ];
+        }
+
+        return $inventory;
+    }
+
+    /**
+     * @return array<string, string|array<string,mixed>>
      */
     private function snapshotArchiveFiles(): array
     {
@@ -529,8 +834,11 @@ final class SiteBackupService
         }
 
         $reason = trim((string) ($manifest['reason'] ?? 'manual'));
+        $keyRequired = (int) ($manifest['version'] ?? 1) >= 2 && !empty($manifest['secret_key_required']);
+        $keyPath = $keyRequired ? $this->resolveStoredKeyPath($filename) : null;
 
         return [
+            'backup_type' => 'site',
             'filename' => $filename,
             'path' => $path,
             'size_bytes' => (int) (@filesize($path) ?: 0),
@@ -541,12 +849,15 @@ final class SiteBackupService
             'default_language' => trim((string) ($manifest['default_language'] ?? '')),
             'source_url' => trim((string) ($manifest['source_url'] ?? '')),
             'json_files_count' => (int) ($manifest['json_files_count'] ?? $this->countArchiveJsonFiles($path)),
+            'html_files_count' => (int) ($manifest['html_files_count'] ?? 0),
             'media_files_count' => (int) ($manifest['media_files_count'] ?? $this->countArchiveMediaFiles($path)),
             'total_files_count' => (int) ($manifest['total_files_count'] ?? ($this->countArchiveJsonFiles($path) + $this->countArchiveMediaFiles($path))),
             'created_by' => trim((string) ($manifest['created_by'] ?? '')),
             'created_by_email' => trim((string) ($manifest['created_by_email'] ?? '')),
             'reason' => $reason,
             'is_rollback' => $reason === 'pre_restore',
+            'key_required' => $keyRequired,
+            'key_available' => !$keyRequired || $keyPath !== null,
         ];
     }
 
@@ -732,19 +1043,28 @@ final class SiteBackupService
         return $safePrefix . '-' . date('Ymd_His') . '-' . substr(bin2hex(random_bytes(4)), 0, 8) . '.zip';
     }
 
+    private function buildBackupId(): string
+    {
+        return gmdate('YmdHis') . '-' . bin2hex(random_bytes(6));
+    }
+
     private function absolutePathForRelative(string $relativePath): string
     {
         $normalized = $this->normalizeArchiveEntry($relativePath);
-        if (!$this->isDataJsonEntry($normalized) && !$this->isMediaEntry($normalized) && !$this->isSecretEntry($normalized)) {
+        if (!$this->isAllowedArchiveEntry($normalized) || $normalized === 'manifest.json') {
             throw new \RuntimeException('backups_restore_write_failed');
         }
 
-        return rtrim(BASE_PATH, '/') . '/' . $normalized;
+        return (new StoragePathGuard(BASE_PATH))->resolve($normalized);
     }
 
     private function normalizeArchiveEntry(string $entryName): string
     {
         $normalized = str_replace('\\', '/', trim($entryName));
+        if (str_starts_with($normalized, '/') || str_contains($normalized, ':') || str_contains($normalized, "\0")
+            || preg_match('#(^|/)\.{1,2}(/|$)#', $normalized)) {
+            throw new \RuntimeException('backups_archive_invalid');
+        }
         $normalized = ltrim($normalized, '/');
         $normalized = preg_replace('#/+#', '/', $normalized) ?? '';
 
@@ -795,7 +1115,7 @@ final class SiteBackupService
             return true;
         }
 
-        if ($this->isDataJsonEntry($entryName)) {
+        if ($this->isDataJsonEntry($entryName) || $this->isDataHtmlEntry($entryName)) {
             return true;
         }
 
@@ -818,6 +1138,8 @@ final class SiteBackupService
 
     private function clearRuntimeCaches(): void
     {
+        \App\Core\ContentDocumentStore::resetRequestCache();
+        \App\Core\Storage\JsonStore::resetRequestCache(BASE_PATH . '/data');
         $this->purgeDirectoryContents($this->cacheDataRoot);
         $this->purgeDirectoryContents($this->cacheViewsRoot);
         $this->purgeDirectoryContents($this->runtimeCssRoot);
@@ -830,6 +1152,8 @@ final class SiteBackupService
     private function snapshotJsonDirectory(string $absoluteRoot, string $archiveRoot): array
     {
         $files = [];
+        $paths = new StoragePathGuard(BASE_PATH);
+        $paths->resolve($absoluteRoot);
         if (!is_dir($absoluteRoot)) {
             return $files;
         }
@@ -839,18 +1163,20 @@ final class SiteBackupService
         );
 
         foreach ($iterator as $item) {
+            $paths->resolve($item->getPathname());
             if (!$item->isFile()) {
                 continue;
             }
 
             $pathname = $item->getPathname();
-            if (strtolower(pathinfo($pathname, PATHINFO_EXTENSION)) !== 'json') {
+            $extension = strtolower(pathinfo($pathname, PATHINFO_EXTENSION));
+            if (!in_array($extension, ['json', 'html'], true)) {
                 continue;
             }
 
             $content = @file_get_contents($pathname);
-            if (!is_string($content) || !$this->isValidJson($content)) {
-                continue;
+            if (!is_string($content) || ($extension === 'json' && !$this->isValidJson($content))) {
+                throw new \RuntimeException('backups_archive_invalid_json');
             }
 
             $files[$this->buildArchiveRelativePath($absoluteRoot, $archiveRoot, $pathname)] = $content;
@@ -861,11 +1187,13 @@ final class SiteBackupService
 
     /**
      * @param array<int, string> $excludedPrefixes
-     * @return array<string, string>
+     * @return array<string, array{sha256:string,size:int,source:string}>
      */
     private function snapshotFileDirectory(string $absoluteRoot, string $archiveRoot, array $excludedPrefixes = []): array
     {
         $files = [];
+        $paths = new StoragePathGuard(BASE_PATH);
+        $paths->resolve($absoluteRoot);
         if (!is_dir($absoluteRoot)) {
             return $files;
         }
@@ -875,6 +1203,7 @@ final class SiteBackupService
         );
 
         foreach ($iterator as $item) {
+            $paths->resolve($item->getPathname());
             if (!$item->isFile() || $item->isLink()) {
                 continue;
             }
@@ -890,12 +1219,8 @@ final class SiteBackupService
                 continue;
             }
 
-            $content = @file_get_contents($pathname);
-            if (!is_string($content)) {
-                continue;
-            }
-
-            $files[$archiveRoot . '/' . $relativeWithinRoot] = $content;
+            $files[$archiveRoot . '/' . $relativeWithinRoot] =
+                $this->streamMetadata(fopen($pathname, 'rb')) + ['source' => $pathname];
         }
 
         return $files;
@@ -906,13 +1231,14 @@ final class SiteBackupService
      */
     private function snapshotExactFile(string $absolutePath, string $archivePath): array
     {
+        (new StoragePathGuard(BASE_PATH))->resolve($absolutePath);
         if (!is_file($absolutePath) || is_link($absolutePath)) {
             return [];
         }
 
         $content = @file_get_contents($absolutePath);
         if (!is_string($content)) {
-            return [];
+            throw new \RuntimeException('backups_archive_write_failed');
         }
 
         return [$archivePath => $content];
@@ -958,6 +1284,11 @@ final class SiteBackupService
         return str_starts_with($entryName, 'data/') && str_ends_with($entryName, '.json');
     }
 
+    private function isDataHtmlEntry(string $entryName): bool
+    {
+        return str_starts_with($entryName, 'data/') && str_ends_with($entryName, '.html');
+    }
+
     private function isSecretEntry(string $entryName): bool
     {
         return $entryName === 'storage/app/secretbox.key';
@@ -977,13 +1308,13 @@ final class SiteBackupService
     }
 
     /**
-     * @param array<string, string> $files
+     * @param array<string, string|array<string,mixed>> $files
      */
-    private function countFilesByPrefix(array $files, string $prefix): int
+    private function countDataFilesByExtension(array $files, string $extension): int
     {
         $count = 0;
         foreach (array_keys($files) as $relativePath) {
-            if (str_starts_with($relativePath, $prefix)) {
+            if (str_starts_with($relativePath, 'data/') && str_ends_with($relativePath, '.' . $extension)) {
                 $count++;
             }
         }
@@ -992,7 +1323,7 @@ final class SiteBackupService
     }
 
     /**
-     * @param array<string, string> $files
+     * @param array<string, string|array<string,mixed>> $files
      */
     private function countMediaFiles(array $files): int
     {
@@ -1007,7 +1338,7 @@ final class SiteBackupService
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, string|array<string,mixed>>
      */
     private function buildResetSnapshot(): array
     {
@@ -1022,6 +1353,7 @@ final class SiteBackupService
         $files += $this->snapshotJsonDirectory($this->dataRoot . '/themes', 'data/themes');
         $files += $this->snapshotJsonDirectory($this->dataRoot . '/users', 'data/users');
         $files += $this->snapshotFileDirectory($this->publicUploadsRoot . '/logo', 'public/uploads/logo');
+        $files += $this->snapshotFileDirectory($this->storageAvatarsRoot, 'storage/uploads/avatars');
         $files += $this->snapshotExactFile($this->storageSecretKeyPath, 'storage/app/secretbox.key');
 
         if (!$this->uploadsAliasesPublicUploads()) {
@@ -1074,23 +1406,28 @@ final class SiteBackupService
     {
         $state = [];
         $roots = [
-            BASE_PATH . '/app/Modules',
-            BASE_PATH . '/app/Extensions',
-        BASE_PATH . '/app/Plugins',
+            BASE_PATH . '/app/Modules' => 'module.json',
+            BASE_PATH . '/app/Extensions' => 'extension.json',
+            BASE_PATH . '/app/Plugins' => 'plugin.json',
         ];
 
-        foreach ($roots as $root) {
+        foreach ($roots as $root => $manifestName) {
+            (new StoragePathGuard(BASE_PATH))->resolve($root);
             if (!is_dir($root)) {
                 continue;
             }
 
             foreach (glob($root . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+                (new StoragePathGuard(BASE_PATH))->resolve($dir);
                 $name = basename($dir);
                 if ($name === '') {
                     continue;
                 }
 
-                $manifest = $this->readJsonFile($dir . '/module.json');
+                $manifestPath = $dir . '/' . $manifestName;
+                if (!is_file($manifestPath)) { continue; }
+                try { $manifest = $this->readJsonFile($manifestPath); }
+                catch (\RuntimeException) { continue; }
                 $enabled = (bool) ($manifest['enabled'] ?? true);
                 if ((bool) ($manifest['required'] ?? false)) {
                     $enabled = true;
@@ -1116,21 +1453,25 @@ final class SiteBackupService
         return $state;
     }
 
-    private function deleteFactoryResetResidualFiles(): void
+    /** @return list<string> */
+    private function factoryResetResidualFiles(): array
     {
-        foreach ([
-            $this->dataRoot . '/installed.lock',
-            BASE_PATH . '/resources/uploads/contact',
-        ] as $path) {
-            if (is_dir($path)) {
-                $this->purgeDirectoryContents($path);
-                continue;
-            }
-
-            if (is_file($path)) {
-                @unlink($path);
+        $guard = new StoragePathGuard(BASE_PATH);
+        $installed = $guard->resolve('data/installed.lock');
+        if (is_dir($installed)) { throw new \RuntimeException('backups_restore_write_failed'); }
+        $files = is_file($installed) ? ['data/installed.lock'] : [];
+        $root = $guard->resolve('resources/uploads/contact');
+        if (is_file($root)) { throw new \RuntimeException('backups_restore_write_failed'); }
+        if (!is_dir($root)) { return $files; }
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
+        foreach ($iterator as $item) {
+            $guard->resolve($item->getPathname());
+            if ($item->isFile()) {
+                $files[] = $this->buildArchiveRelativePath($root, 'resources/uploads/contact', $item->getPathname());
             }
         }
+        sort($files);
+        return $files;
     }
 
     /**
@@ -1199,17 +1540,19 @@ final class SiteBackupService
      */
     private function readJsonFile(string $path): array
     {
+        (new StoragePathGuard(BASE_PATH))->resolve($path);
         if (!is_file($path)) {
             return [];
         }
 
         $content = @file_get_contents($path);
         if (!is_string($content) || !$this->isValidJson($content)) {
-            return [];
+            throw new \RuntimeException('backups_archive_invalid_json');
         }
 
         $decoded = json_decode($content, true);
-        return is_array($decoded) ? $decoded : [];
+        if (!is_array($decoded)) { throw new \RuntimeException('backups_archive_invalid_json'); }
+        return $decoded;
     }
 
     private function readJsonFileContent(string $path, array $fallback): string
@@ -1238,6 +1581,8 @@ final class SiteBackupService
 
     private function purgeDirectoryContents(string $path): void
     {
+        $guard = new StoragePathGuard(BASE_PATH);
+        $guard->resolve($path);
         if (!is_dir($path)) {
             return;
         }
@@ -1254,6 +1599,7 @@ final class SiteBackupService
             }
 
             $pathname = $item->getPathname();
+            $guard->resolve($pathname);
             if ($item->isDir()) {
                 @rmdir($pathname);
                 continue;
@@ -1263,10 +1609,46 @@ final class SiteBackupService
         }
     }
 
+    /** @param array<string,mixed> $upload */
+    private function moveUploadedKey(array $upload): string
+    {
+        $error = (int) ($upload['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($error !== UPLOAD_ERR_OK) {
+            throw new \RuntimeException($error === UPLOAD_ERR_NO_FILE
+                ? 'backups_site_key_invalid'
+                : $this->uploadErrorKey($error));
+        }
+        $name = trim((string) ($upload['name'] ?? ''));
+        if (strtolower(pathinfo($name, PATHINFO_EXTENSION)) !== 'key') {
+            throw new \RuntimeException('backups_site_key_invalid');
+        }
+        $source = (string) ($upload['tmp_name'] ?? '');
+        $target = $this->tmpRoot . '/site-restore-' . bin2hex(random_bytes(8)) . '.key';
+        $moved = $source !== '' && @move_uploaded_file($source, $target);
+        if (!$moved && $source !== '') {
+            $moved = @rename($source, $target);
+        }
+        if (!$moved && $source !== '') {
+            $moved = @copy($source, $target);
+        }
+        if (!$moved) {
+            throw new \RuntimeException('backups_upload_failed');
+        }
+        @chmod($target, 0600);
+        try {
+            $this->secretCipher->read($target);
+        } catch (\Throwable $exception) {
+            @unlink($target);
+            throw new \RuntimeException('backups_site_key_invalid', 0, $exception);
+        }
+
+        return $target;
+    }
+
     private function ensureDirectories(): void
     {
-        foreach ([$this->backupRoot, $this->tmpRoot] as $path) {
-            if (!is_dir($path) && !@mkdir($path, 0755, true) && !is_dir($path)) {
+        foreach ([$this->backupRoot => 0750, $this->tmpRoot => 0750, $this->keyRoot => 0700] as $path => $mode) {
+            if (!is_dir($path) && !@mkdir($path, $mode, true) && !is_dir($path)) {
                 throw new \RuntimeException('backups_storage_unavailable');
             }
         }

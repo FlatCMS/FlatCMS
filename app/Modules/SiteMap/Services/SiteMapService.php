@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/SiteMap/Services/SiteMapService.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -304,7 +307,7 @@ final class SiteMapService
         if ($locale === '') {
             $locale = trim((string) ($settings['default_language'] ?? 'fr-FR'));
         }
-        $frontendTheme = trim((string) ($settings['frontend_theme'] ?? 'default'));
+        $frontendTheme = \App\Core\ThemeResolver::active('frontend', $settings);
         $bodyClass = 'theme-' . preg_replace('/[^a-zA-Z0-9_-]+/', '-', $frontendTheme);
 
         ob_start();
@@ -509,13 +512,14 @@ final class SiteMapService
 
     private function writePublicFile(string $path, string $content, string $errorKey): string
     {
-        $directory = dirname($path);
-        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
-            throw new \RuntimeException('sitemap_directory_missing');
-        }
-
-        if (file_put_contents($path, $content, LOCK_EX) === false) {
-            throw new \RuntimeException($errorKey);
+        try {
+            $writer = new \App\Core\Storage\AtomicFileWriter(
+                defined('PUBLIC_PATH') ? PUBLIC_PATH : BASE_PATH . '/public',
+                new \App\Core\Storage\FileLockManager(STORAGE_PATH . '/cache/locks/sitemap')
+            );
+            $writer->write($path, $content);
+        } catch (\App\Core\Storage\StorageException $exception) {
+            throw new \RuntimeException($errorKey, 0, $exception);
         }
 
         return $path;

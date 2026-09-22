@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Settings/Assets/js/settings.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -17,7 +20,7 @@
             }
 
             const rawConfig = String(configNode.getAttribute('data-config') || '{}');
-            const modalError = String(configNode.getAttribute('data-modal-error') || 'Media modal unavailable');
+            const modalError = String(configNode.getAttribute('data-modal-error') || '');
             const mediaModal = document.getElementById('mediaModal');
 
             let baseConfig = {};

@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Helpers/IconHelper.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -44,19 +47,22 @@ class IconHelper
     {
         if (self::$availableIcons === null) {
             $jsonPaths = [
-                BASE_PATH . '/data/core/icons/fw-672.json',
                 BASE_PATH . '/app/Modules/Core/Assets/icons/fw-672.json',
+                BASE_PATH . '/data/core/icons/fw-672.json',
             ];
 
             foreach ($jsonPaths as $jsonPath) {
-                if (!file_exists($jsonPath)) {
+                if (!is_file($jsonPath) || is_link($jsonPath)) {
                     continue;
                 }
 
                 $content = file_get_contents($jsonPath);
-                $decoded = json_decode($content, true);
-                if (is_array($decoded) && !empty($decoded)) {
-                    self::$availableIcons = $decoded;
+                $decoded = is_string($content) ? json_decode($content, true) : null;
+                $icons = is_array($decoded) ? array_values(array_unique(array_filter($decoded, static fn ($icon): bool =>
+                    is_string($icon) && preg_match('/^(?:fa-classic )?fa-(?:solid|regular|brands) fa-[a-z0-9-]+(?: fa-fw)?$/D', $icon) === 1
+                ))) : [];
+                if ($icons !== []) {
+                    self::$availableIcons = $icons;
                     return;
                 }
             }
@@ -64,6 +70,11 @@ class IconHelper
             // Fallback robuste pour éviter un icon-picker vide si le JSON a été supprimé.
             self::$availableIcons = self::getFallbackIcons();
         }
+    }
+
+    public static function resetCache(): void
+    {
+        self::$availableIcons = null;
     }
 
     /**

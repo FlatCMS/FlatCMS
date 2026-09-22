@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Core/App.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -312,6 +315,7 @@ class App
 
     private function handleException(\Throwable $e): void
     {
+        http_response_code(500);
         error_log(sprintf(
             '[FlatCMS] Uncaught %s: %s in %s:%d\n%s',
             get_class($e),
@@ -329,7 +333,6 @@ class App
             echo '<p><strong>File:</strong> ' . $e->getFile() . ':' . $e->getLine() . '</p>';
             echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
         } else {
-            http_response_code(500);
             echo e(__('error.server', 'Core'));
         }
     }

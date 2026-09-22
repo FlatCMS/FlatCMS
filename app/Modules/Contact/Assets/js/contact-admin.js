@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Contact/Assets/js/contact-admin.js
+ * Version: 2.0.0-dev
  */
 
 (function () {
@@ -255,12 +258,12 @@
         function statusLabel(status) {
             var normalized = String(status || '').toLowerCase();
             if (normalized === 'read') {
-                return modal.getAttribute('data-status-read') || 'Read';
+                return modal.getAttribute('data-status-read') || '';
             }
             if (normalized === 'archived') {
-                return modal.getAttribute('data-status-archived') || 'Archived';
+                return modal.getAttribute('data-status-archived') || '';
             }
-            return modal.getAttribute('data-status-new') || 'New';
+            return modal.getAttribute('data-status-new') || '';
         }
 
         function normalizeStatus(status) {

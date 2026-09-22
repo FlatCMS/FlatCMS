@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Themes/Services/ThemeCustomizationService.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -24,7 +27,7 @@ final class ThemeCustomizationService
         }
 
         $settings = $settings ?? FlatFile::settings();
-        $theme = trim((string) ($settings[$type . '_theme'] ?? ($type === 'admin' ? 'admin-modern-pro' : 'default')));
+        $theme = \App\Core\ThemeResolver::active($type, $settings);
         if ($theme === '') {
             return '';
         }
@@ -45,7 +48,7 @@ final class ThemeCustomizationService
     public function editorPreviewAssetForActiveFrontendTheme(?array $settings = null): string
     {
         $settings = $settings ?? FlatFile::settings();
-        $theme = trim((string) ($settings['frontend_theme'] ?? 'default'));
+        $theme = \App\Core\ThemeResolver::active('frontend', $settings);
         if ($theme === '') {
             return '';
         }

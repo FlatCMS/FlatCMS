@@ -27,7 +27,6 @@
   "guided_tour_start_now": "Comece o passeio agora",
   "guided_tour_title": "Admin guided tour",
   "homepage_canonical_hint": "Quando uma página é usada como inicial, a sua URL /page/... redireciona para a raiz do site.",
-  "homepage_editor_builder": "Builder",
   "homepage_editor_classic": "Clássico",
   "homepage_mode": "Comportamento da página inicial",
   "homepage_mode_hint": "Escolha entre a home nativa do tema e uma página publicada servida na URL raiz.",

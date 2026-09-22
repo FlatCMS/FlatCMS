@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Core/Request.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -63,9 +66,13 @@ class Request
         $uri = rawurldecode($uri);
         
         // Remove base path (subfolder) from URI
-        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-        $basePath = dirname(dirname($scriptName)); // Go up from /public/index.php to app root
-        if ($basePath !== '/' && $basePath !== '\\' && $basePath !== '.' && str_starts_with($uri, $basePath)) {
+        // Use the same mount as generated URLs; /public may be an internal rewrite,
+        // but a public document root does not add another directory to SCRIPT_NAME.
+        $basePath = function_exists('base_url')
+            ? (string) parse_url(base_url(), PHP_URL_PATH)
+            : dirname(str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '')));
+        $basePath = rtrim(rawurldecode($basePath), '/');
+        if ($basePath !== '' && $basePath !== '.' && ($uri === $basePath || str_starts_with($uri, $basePath . '/'))) {
             $uri = substr($uri, strlen($basePath));
         }
         

@@ -3,11 +3,29 @@
  * FlatCMS - Flat-File Content Management System
  * Copyright (C) 2026 Alain BROYE
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/UpdateManager/bin/update-worker.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
 
 $basePath = dirname(__DIR__, 4);
+try {
+    foreach (['StorageException', 'StoragePathGuard', 'ApplicationLock'] as $class) {
+        require_once $basePath . '/app/Core/Storage/' . $class . '.php';
+    }
+    \App\Core\Storage\ApplicationLock::for($basePath)->enter();
+} catch (\Throwable) {
+    fwrite(STDERR, '__FLATCMS_ERROR__' . json_encode(['ok' => false, 'error' => 'runtime_unavailable']) . PHP_EOL);
+    exit(3);
+}
+require_once $basePath . '/app/Core/EnvironmentFile.php';
+foreach ([$basePath . '/.env', $basePath . '/.env.local'] as $envFile) {
+    \App\Core\EnvironmentFile::load($envFile);
+}
 define('BASE_PATH', $basePath);
 define('APP_PATH', BASE_PATH . '/app');
 define('PUBLIC_PATH', BASE_PATH . '/public');

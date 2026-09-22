@@ -3,6 +3,11 @@
  * FlatCMS - Flat-File Content Management System
  * Copyright (C) 2026 Alain BROYE
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Core/TaskRunner.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -14,6 +19,11 @@ final class TaskRunner
     private static bool $listenersLoaded = false;
 
     public static function run(?\DateTimeImmutable $now = null): array
+    {
+        return \App\Core\Storage\ApplicationLock::for(BASE_PATH)->shared(fn (): array => self::runUnderLease($now));
+    }
+
+    private static function runUnderLease(?\DateTimeImmutable $now): array
     {
         self::loadListeners();
         $timezone = new \DateTimeZone(date_default_timezone_get());

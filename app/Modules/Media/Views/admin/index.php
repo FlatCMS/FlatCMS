@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Media/Views/admin/index.php
+ * Version: 2.0.0-dev
  */
 
 $stats = $stats ?? [];
@@ -89,7 +92,7 @@ $mediaConfig = [
         'files_label' => __('files_label', 'Media'),
         'root_directory' => __('root_directory', 'Media'),
     ],
-    'i18n' => \App\Core\I18n::all('Media'),
+    'i18n' => array_replace(\App\Core\I18n::all('Core'), \App\Core\I18n::all('Media')),
 ];
 
 $mediaConfigJson = e(json_encode($mediaConfig));

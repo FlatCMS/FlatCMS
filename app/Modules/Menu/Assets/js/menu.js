@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Menu/Assets/js/menu.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -47,28 +50,33 @@
         .map((localeEntry) => String(localeEntry && localeEntry.code ? localeEntry.code : '').trim())
         .filter(Boolean);
     const levelLabels = Array.isArray(config.levelLabels) ? config.levelLabels : [];
-    const confirmRemove = (config.messages && config.messages.confirmRemove) || 'Etes-vous sur ?';
-    const labelRequired = (config.messages && config.messages.labelRequired) || 'Veuillez renseigner un libelle.';
-    const maxRootItemsMessage = (config.messages && config.messages.maxRootItemsReached)
-        || `More than ${rootItemWarningThreshold} top-level items can make the header denser on some themes.`;
+    const messages = config.messages && typeof config.messages === 'object' ? config.messages : {};
+    const message = (key) => String(messages[key] || '');
+    const confirmRemove = message('confirmRemove');
+    const confirmDelete = message('confirmDelete');
+    const labelRequired = message('labelRequired');
+    const maxRootItemsMessage = message('maxRootItemsReached');
     const defaultIcon = (config.defaults && config.defaults.icon) || '';
     const toastDuration = Number(config.toastDuration || 1500);
-    const toastItemAdded = (config.messages && config.messages.toastItemAdded) || 'Element ajoute au menu.';
-    const toastItemMoved = (config.messages && config.messages.toastItemMoved) || 'Element deplace.';
-    const toastItemRemoved = (config.messages && config.messages.toastItemRemoved) || 'Element supprime.';
-    const toastItemReturned = (config.messages && config.messages.toastItemReturned) || 'Element renvoye dans la bibliotheque.';
-    const toastCustomAdded = (config.messages && config.messages.toastCustomAdded) || 'Lien personnalise ajoute.';
-    const toastIconUpdated = (config.messages && config.messages.toastIconUpdated) || 'Icone appliquee.';
-    const toastIconRemoved = (config.messages && config.messages.toastIconRemoved) || 'Icone retiree.';
-    const toastTranslationSaved = (config.messages && config.messages.toastTranslationSaved) || 'Traductions enregistrees.';
-    const toastCustomIconSelected = (config.messages && config.messages.toastCustomIconSelected) || 'Icone personnalisee appliquee.';
-    const toastCustomIconUploaded = (config.messages && config.messages.toastCustomIconUploaded) || 'Icone personnalisee televersee.';
-    const customIconInvalidType = (config.messages && config.messages.customIconInvalidType) || 'Format invalide.';
-    const customIconUploadError = (config.messages && config.messages.customIconUploadError) || 'Echec du televersement.';
-    const customIconUploadUnavailable = (config.messages && config.messages.customIconUploadUnavailable) || 'Televersement indisponible.';
-    const customIconEmpty = (config.messages && config.messages.customIconEmpty) || 'Aucune icone personnalisee.';
-    const customIconUnavailable = (config.messages && config.messages.customIconUnavailable) || 'Bibliotheque d icones indisponible.';
-    const mediaModalUnavailable = (config.messages && config.messages.mediaModalUnavailable) || 'Media modal indisponible.';
+    const toastItemAdded = message('toastItemAdded');
+    const toastItemMoved = message('toastItemMoved');
+    const toastItemRemoved = message('toastItemRemoved');
+    const toastItemReturned = message('toastItemReturned');
+    const toastCustomAdded = message('toastCustomAdded');
+    const toastIconUpdated = message('toastIconUpdated');
+    const toastIconRemoved = message('toastIconRemoved');
+    const toastTranslationSaved = message('toastTranslationSaved');
+    const toastErrorTitle = message('toastErrorTitle');
+    const toastWarningTitle = message('toastWarningTitle');
+    const toastSuccessTitle = message('toastSuccessTitle');
+    const toastCustomIconSelected = message('toastCustomIconSelected');
+    const toastCustomIconUploaded = message('toastCustomIconUploaded');
+    const customIconInvalidType = message('customIconInvalidType');
+    const customIconUploadError = message('customIconUploadError');
+    const customIconUploadUnavailable = message('customIconUploadUnavailable');
+    const customIconEmpty = message('customIconEmpty');
+    const customIconUnavailable = message('customIconUnavailable');
+    const mediaModalUnavailable = message('mediaModalUnavailable');
 
     const FONT_AWESOME_ALIASES = {
         home: ['accueil', 'maison', 'domicile', 'homepage'],
@@ -102,22 +110,6 @@
         play: ['video', 'lecture', 'start'],
     };
 
-    const FONT_AWESOME_STRUCTURAL_CLASSES = new Set([
-        'fa',
-        'fas',
-        'far',
-        'fab',
-        'fa-classic',
-        'fa-sharp',
-        'fa-solid',
-        'fa-regular',
-        'fa-light',
-        'fa-thin',
-        'fa-duotone',
-        'fa-brands',
-        'fa-fw',
-    ]);
-
     let draggedEl = null;
     let dragPreview = null;
     let startX = 0;
@@ -127,10 +119,7 @@
     let dragHasMoved = false;
     let dragOriginParent = null;
     let dragOriginNextSibling = null;
-    let iconList = [];
-    let iconLoaded = false;
     let iconTarget = null;
-    let iconSearchTimer = null;
     let translationTarget = null;
     let idSeed = Date.now();
     let availableFloatingFrame = 0;
@@ -138,6 +127,26 @@
     let availableFloatingState = 'normal';
     let availableFloatingMetrics = null;
     let availableAccordionScrollFrame = 0;
+    const iconBrowserFactory = window.FlatCMS
+        && window.FlatCMS.AdminUI
+        && window.FlatCMS.AdminUI.icon
+        && window.FlatCMS.AdminUI.icon.createBrowser;
+    const iconBrowser = typeof iconBrowserFactory === 'function' && iconModal && iconGrid && iconSearch
+        ? iconBrowserFactory({
+            overlay: iconModal,
+            grid: iconGrid,
+            searchInput: iconSearch,
+            endpoint: iconsEndpoint,
+            aliases: FONT_AWESOME_ALIASES,
+            labels: {
+                loading: config.messages && config.messages.iconsLoading,
+                error: config.messages && config.messages.iconsError,
+                empty: config.messages && config.messages.iconsEmpty,
+            },
+            onSelect: applyIcon,
+            closeOnSelect: false,
+        })
+        : null;
     if (form) {
         form.addEventListener('submit', handleSubmit);
     }
@@ -148,14 +157,6 @@
     document.addEventListener('pointermove', handlePointerMove);
     document.addEventListener('pointerup', handlePointerUp);
     document.addEventListener('keydown', handleKeydown);
-
-    if (iconModal) {
-        iconModal.addEventListener('click', function(event) {
-            if (event.target === iconModal) {
-                closeIconModal();
-            }
-        });
-    }
 
     if (translationModal) {
         translationModal.addEventListener('click', function(event) {
@@ -226,8 +227,8 @@
             ? 'fas fa-circle-exclamation'
             : (toastType === 'warning' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-check');
         const title = toastType === 'error'
-            ? 'Erreur'
-            : (toastType === 'warning' ? 'Info' : 'Succes');
+            ? toastErrorTitle
+            : (toastType === 'warning' ? toastWarningTitle : toastSuccessTitle);
         toast.innerHTML = `
             <span class="menu-toast-icon" aria-hidden="true"><i class="${iconClass}"></i></span>
             <span class="menu-toast-content">
@@ -300,12 +301,6 @@
             return;
         }
 
-        const modalClose = event.target.closest('[data-action="icon-modal-close"]');
-        if (modalClose) {
-            closeIconModal();
-            return;
-        }
-
         const translationClose = event.target.closest('[data-action="translation-modal-close"]');
         if (translationClose) {
             closeTranslationModal();
@@ -337,15 +332,6 @@
             syncReferenceState(item);
         }
 
-        if (input === iconSearch) {
-            if (iconSearchTimer) {
-                window.clearTimeout(iconSearchTimer);
-            }
-            iconSearchTimer = window.setTimeout(() => {
-                const term = iconSearch.value.trim();
-                renderIcons(term);
-            }, 150);
-        }
     }
 
     function handleKeydown(event) {
@@ -358,9 +344,6 @@
             return;
         }
 
-        if (iconModal && iconModal.classList.contains('is-open')) {
-            closeIconModal();
-        }
     }
 
     function handlePointerDown(event) {
@@ -760,7 +743,7 @@
 
         const finalMessage = String(message || confirmRemove);
         const opts = options || {};
-        const finalConfirmText = String(opts.confirmText || ((config.messages && config.messages.confirmDelete) || 'Supprimer'));
+        const finalConfirmText = String(opts.confirmText || confirmDelete);
         const finalWarning = String(opts.warning || '');
         const finalItemName = String(opts.itemName || '');
         const modal = window.FlatCMS && window.FlatCMS.modal && window.FlatCMS.modal.confirm;
@@ -1443,93 +1426,15 @@
 
     function openIconPicker(button) {
         const item = button.closest('.menu-item');
-        if (!item || !iconModal) return;
+        if (!item || !iconBrowser) return;
         iconTarget = item;
-
-        loadFontAwesomeIcons(iconSearch ? iconSearch.value.trim() : '');
-
-        iconModal.classList.add('is-open');
-        iconModal.setAttribute('aria-hidden', 'false');
-        if (iconSearch) iconSearch.focus();
+        iconBrowser.open(button);
     }
 
     function closeIconModal() {
-        if (!iconModal) return;
-        iconModal.classList.remove('is-open');
-        iconModal.setAttribute('aria-hidden', 'true');
-    }
-
-    function loadFontAwesomeIcons(filter) {
-        if (!iconGrid) return;
-
-        if (iconLoaded) {
-            renderIcons(filter || '');
-            return;
+        if (iconBrowser) {
+            iconBrowser.close();
         }
-
-        const loadingText = (config.messages && config.messages.iconsLoading) || 'Chargement...';
-        iconGrid.innerHTML = `<div class="menu-icon-loading">${loadingText}</div>`;
-
-        fetch(iconsEndpoint)
-            .then(res => res.json())
-            .then(data => {
-                iconList = Array.isArray(data) ? data : [];
-                iconLoaded = true;
-                renderIcons(filter || '');
-            })
-            .catch(() => {
-                const errorText = (config.messages && config.messages.iconsError) || 'Erreur de chargement.';
-                iconGrid.innerHTML = `<div class="menu-icon-loading">${errorText}</div>`;
-            });
-    }
-
-    function renderIcons(filter) {
-        if (!iconGrid) return;
-        iconGrid.innerHTML = '';
-
-        const maxIcons = 300;
-        const query = normalizeSearchText(filter || '');
-        const icons = query === ''
-            ? iconList.slice(0, maxIcons)
-            : iconList
-                .map((iconClass) => ({ iconClass, score: scoreIconMatch(iconClass, query) }))
-                .filter((entry) => entry.score > 0)
-                .sort((a, b) => b.score - a.score || a.iconClass.localeCompare(b.iconClass))
-                .slice(0, maxIcons)
-                .map((entry) => entry.iconClass);
-
-        if (!icons.length) {
-            const emptyText = (config.messages && config.messages.iconsEmpty) || 'Aucune icone.';
-            iconGrid.innerHTML = `<div class="menu-icon-loading">${emptyText}</div>`;
-            return;
-        }
-
-        const fragment = document.createDocumentFragment();
-        icons.forEach(iconClass => {
-            const card = document.createElement('button');
-            card.type = 'button';
-            card.className = 'menu-icon-card';
-            card.dataset.icon = iconClass;
-
-            const iconName = getFontAwesomeIconName(iconClass);
-            const icon = document.createElement('i');
-            const label = document.createElement('span');
-            icon.className = iconClass;
-            icon.setAttribute('aria-hidden', 'true');
-            label.textContent = iconName;
-            card.append(icon, label);
-            card.addEventListener('click', () => applyIcon(iconClass));
-            fragment.appendChild(card);
-        });
-        iconGrid.appendChild(fragment);
-    }
-
-    function getFontAwesomeIconName(iconClass) {
-        const iconToken = String(iconClass || '')
-            .split(/\s+/)
-            .find((className) => className.startsWith('fa-') && !FONT_AWESOME_STRUCTURAL_CLASSES.has(className));
-
-        return iconToken ? iconToken.slice(3) : '';
     }
 
     function applyIcon(iconClass) {
@@ -1835,98 +1740,6 @@
         }
         const url = String(file.url || '').trim();
         return normalizeMediaPath(url);
-    }
-
-    function normalizeSearchText(value) {
-        return String(value || '')
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .replace(/fa-/g, ' ')
-            .replace(/[^a-z0-9]+/g, ' ')
-            .trim();
-    }
-
-    function getIconSearchTerms(iconClass) {
-        const normalized = normalizeSearchText(iconClass);
-        const baseTerms = normalized ? normalized.split(/\s+/).filter(Boolean) : [];
-        const expandedTerms = new Set(baseTerms);
-
-        baseTerms.forEach((term) => {
-            const aliases = FONT_AWESOME_ALIASES[term];
-            if (!Array.isArray(aliases)) {
-                return;
-            }
-            aliases.forEach((alias) => {
-                const normalizedAlias = normalizeSearchText(alias);
-                if (normalizedAlias) {
-                    expandedTerms.add(normalizedAlias);
-                }
-            });
-        });
-
-        return Array.from(expandedTerms);
-    }
-
-    function fuzzySubsequenceScore(haystack, needle) {
-        if (!haystack || !needle) return 0;
-        let index = 0;
-        let matched = 0;
-        for (let i = 0; i < haystack.length && index < needle.length; i += 1) {
-            if (haystack[i] === needle[index]) {
-                matched += 1;
-                index += 1;
-            }
-        }
-
-        return index === needle.length ? matched : 0;
-    }
-
-    function scoreIconMatch(iconClass, query) {
-        const normalizedQuery = normalizeSearchText(query);
-        if (!normalizedQuery) {
-            return 1;
-        }
-
-        const queryTerms = normalizedQuery.split(/\s+/).filter(Boolean);
-        const searchTerms = getIconSearchTerms(iconClass);
-        if (!searchTerms.length) {
-            return 0;
-        }
-
-        let totalScore = 0;
-        for (let i = 0; i < queryTerms.length; i += 1) {
-            const queryTerm = queryTerms[i];
-            let best = 0;
-
-            searchTerms.forEach((searchTerm) => {
-                if (searchTerm === queryTerm) {
-                    best = Math.max(best, 120);
-                    return;
-                }
-                if (searchTerm.startsWith(queryTerm)) {
-                    best = Math.max(best, 90);
-                    return;
-                }
-                if (searchTerm.includes(queryTerm)) {
-                    best = Math.max(best, 70);
-                    return;
-                }
-
-                const fuzzyScore = fuzzySubsequenceScore(searchTerm, queryTerm);
-                if (fuzzyScore > 0) {
-                    best = Math.max(best, 40 + fuzzyScore);
-                }
-            });
-
-            if (best <= 0) {
-                return 0;
-            }
-
-            totalScore += best;
-        }
-
-        return totalScore;
     }
 
     function normalizeMediaPath(value) {

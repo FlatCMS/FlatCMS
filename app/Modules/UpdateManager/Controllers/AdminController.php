@@ -3,6 +3,11 @@
  * FlatCMS - Flat-File Content Management System
  * Copyright (C) 2026 Alain BROYE
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/UpdateManager/Controllers/AdminController.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -12,6 +17,7 @@ namespace App\Modules\UpdateManager\Controllers;
 use App\Core\BaseController;
 use App\Core\I18n;
 use App\Modules\UpdateManager\Services\RecoveryCapsuleService;
+use App\Modules\UpdateManager\Services\RecoveryFinalizationService;
 use App\Modules\UpdateManager\Services\UpdateManagerService;
 use App\Modules\UpdateManager\Services\UpdateWorkerService;
 
@@ -53,11 +59,11 @@ final class AdminController extends BaseController
         $recoveryState = $this->recovery->state();
         $recoveryStatus = (string) ($recoveryState['status'] ?? '');
         $updateInProgress = in_array($recoveryStatus, ['armed', 'backup_ready', 'updating'], true);
-        $updateMonitoring = $recoveryStatus === 'monitoring'
-            && (int) ($recoveryState['monitor_until'] ?? 0) >= time();
+        $updateMonitoring = $recoveryStatus === 'monitoring';
+        $finalizationAvailable = in_array($recoveryStatus, ['monitoring', 'recovered', 'finalizing'], true);
         $recoveryRequired = in_array($recoveryStatus, ['failed', 'failed_post_update', 'restoring', 'recovery_failed'], true)
             && trim((string) ($recoveryState['full_backup_path'] ?? '')) !== '';
-        $updateOperationLocked = $updateInProgress || $updateMonitoring || $recoveryRequired;
+        $updateOperationLocked = $recoveryState !== [];
         if ($updateInProgress && !headers_sent()) {
             header('Refresh: 3');
         }
@@ -69,6 +75,7 @@ final class AdminController extends BaseController
             'recoveryState' => $recoveryState,
             'updateInProgress' => $updateInProgress,
             'updateMonitoring' => $updateMonitoring,
+            'finalizationAvailable' => $finalizationAvailable,
             'recoveryRequired' => $recoveryRequired,
             'updateOperationLocked' => $updateOperationLocked,
         ], 'admin.main');
@@ -182,6 +189,22 @@ final class AdminController extends BaseController
             ]));
             $this->redirect(url('/admin/updates'));
         }
+    }
+
+    public function finalizeRecovery(): void
+    {
+        if (!$this->authorize('updates.manage') || !$this->verifyCsrf()) { return; }
+        try {
+            $id = $this->request->input('recovery_id', '');
+            $verified = $this->request->input('verified', '') === '1';
+            if (!is_string($id)) { throw new \RuntimeException('update_finalization_identity_invalid'); }
+            (new RecoveryFinalizationService(BASE_PATH))->finalize($id, $verified);
+            $this->clearRecoveryCookie();
+            $this->session->flash('success', __('updates_finalization_success', 'UpdateManager'));
+        } catch (\Throwable) {
+            $this->session->flash('error', __('updates_finalization_failed', 'UpdateManager'));
+        }
+        $this->redirect(url('/admin/updates'));
     }
 
     private function formatInstallError(string $error): string

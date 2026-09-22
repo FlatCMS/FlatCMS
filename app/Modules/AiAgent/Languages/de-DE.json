@@ -151,6 +151,7 @@
     "assistant_floating_open": "Vollständiger Assistent",
     "assistant_floating_context_empty": "Wähle ein Feld oder einen Block, damit ich dir gezielt helfen kann.",
     "assistant_floating_aria": "Flatty öffnen",
+    "assistant_optimize_with_flatty": "Mit Flatty optimieren",
     "assistant_contact_form_ready_reply": "Ich habe die passende Contact-Formular-Einbindung vorbereitet.",
     "assistant_contact_form_ready_note": "Ausgewähltes Formular: :name. Verwendeter Shortcode: :shortcode",
     "assistant_contact_form_missing_reply": "Ich habe kein einsatzbereites Formular gefunden.",

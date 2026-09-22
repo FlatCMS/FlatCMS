@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Auth/Assets/js/avatar-upload.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -14,10 +17,12 @@
         maxFileSize: 2 * 1024 * 1024, // 2 Mo
         allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
         messages: {
-            invalidType: 'Veuillez sélectionner une image.',
-            fileTooLarge: 'Le fichier est trop volumineux (max 2 Mo).',
-            confirmRemove: 'Voulez-vous vraiment supprimer votre avatar ?',
-            readonly: 'Action désactivée.'
+            invalidType: '',
+            fileTooLarge: '',
+            confirmRemove: '',
+            readonly: '',
+            deleteLabel: '',
+            avatarAlt: ''
         }
     };
 
@@ -84,6 +89,12 @@
         }
         if (container.dataset.msgReadonly) {
             CONFIG.messages.readonly = container.dataset.msgReadonly;
+        }
+        if (container.dataset.msgDelete) {
+            CONFIG.messages.deleteLabel = container.dataset.msgDelete;
+        }
+        if (container.dataset.msgAvatarAlt) {
+            CONFIG.messages.avatarAlt = container.dataset.msgAvatarAlt;
         }
     }
 
@@ -236,7 +247,7 @@
                 img.id = 'avatarImage';
                 img.className = 'avatar-image';
                 img.src = e.target.result;
-                img.alt = 'Avatar';
+                img.alt = CONFIG.messages.avatarAlt;
                 elements.preview.insertBefore(img, elements.preview.firstChild);
                 elements.image = img;
             }
@@ -290,7 +301,7 @@
         };
 
         confirmDeleteAction(CONFIG.messages.confirmRemove, proceed, {
-            confirmText: 'Supprimer',
+            confirmText: CONFIG.messages.deleteLabel,
             warning: '',
             itemName: ''
         });
@@ -301,9 +312,9 @@
             return;
         }
 
-        const finalMessage = String(message || CONFIG.messages.confirmRemove || 'Êtes-vous sûr ?');
+        const finalMessage = String(message || CONFIG.messages.confirmRemove || '');
         const opts = options || {};
-        const finalConfirmText = String(opts.confirmText || 'Supprimer');
+        const finalConfirmText = String(opts.confirmText || CONFIG.messages.deleteLabel || '');
         const finalWarning = String(opts.warning || '');
         const finalItemName = String(opts.itemName || '');
 

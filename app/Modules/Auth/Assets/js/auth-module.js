@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Auth/Assets/js/auth-module.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -39,9 +42,9 @@
             const text = container.querySelector('.password-strength-text');
 
             const labels = {
-                weak: container.dataset.strengthWeak || 'Weak',
-                medium: container.dataset.strengthMedium || 'Medium',
-                strong: container.dataset.strengthStrong || 'Strong'
+                weak: container.dataset.strengthWeak || '',
+                medium: container.dataset.strengthMedium || '',
+                strong: container.dataset.strengthStrong || ''
             };
 
             const update = () => {
@@ -238,7 +241,7 @@
                     return {};
                 }).then(function(data) {
                     if (!response.ok) {
-                        const error = new Error(data.message || 'Request failed');
+                        const error = new Error(data.message || '');
                         error.payload = data;
                         throw error;
                     }

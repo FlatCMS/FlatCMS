@@ -1,0 +1,48 @@
+/**
+ * FlatCMS - Flat-File Content Management System
+ * Copyright (C) 2026 Alain BROYE
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/css/admin/tinymce-content.css
+ * Version: 2.0.0-dev
+ */
+
+@layer base, theme;
+@import url('../core/variables.css') layer(base);
+
+body.flatcms-editor-content {
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    padding: var(--spacing-3);
+    overflow-wrap: anywhere;
+}
+
+.flatcms-editor-content a {
+    color: var(--color-primary);
+}
+
+.flatcms-editor-content :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--color-text-primary);
+}
+
+.flatcms-editor-content blockquote {
+    border-inline-start: 3px solid var(--color-border);
+    color: var(--color-text-secondary);
+    margin-inline: 0;
+    padding-inline-start: var(--spacing-3);
+}
+
+.flatcms-editor-content :is(pre, code) {
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+}
+
+.flatcms-editor-content :is(img, video) {
+    max-width: 100%;
+    height: auto;
+}

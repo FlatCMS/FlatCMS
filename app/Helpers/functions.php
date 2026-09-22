@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Helpers/functions.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -535,17 +538,19 @@ if (!function_exists('runtime_css_asset')) {
             return '';
         }
 
-        $dir = rtrim($publicPath, '/') . '/uploads/cache/runtime-css';
-        if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
-            return '';
-        }
-
-        $filePath = $dir . '/' . $fileName;
-        if (!is_file($filePath)) {
-            $payload = "/* generated runtime css */\n" . $cleanCss;
-            if (@file_put_contents($filePath, $payload, LOCK_EX) === false) {
-                return '';
+        try {
+            $storageRoot = defined('STORAGE_PATH') ? STORAGE_PATH : dirname($publicPath) . '/storage';
+            $writer = new \App\Core\Storage\AtomicFileWriter(
+                $publicPath,
+                new \App\Core\Storage\FileLockManager($storageRoot . '/cache/locks/runtime-css')
+            );
+            $filePath = $writer->resolvePath('uploads/cache/runtime-css/' . $fileName);
+            if (!is_file($filePath)) {
+                $writer->write($filePath, "/* generated runtime css */\n" . $cleanCss);
             }
+        } catch (\App\Core\Storage\StorageException $exception) {
+            error_log('[FlatCMS] Runtime CSS cache unavailable: ' . $exception->getMessage());
+            return '';
         }
 
         $baseUrl = static_base_url();
@@ -557,14 +562,7 @@ if (!function_exists('runtime_css_asset')) {
 if (!function_exists('theme_asset')) {
     function theme_asset(string $path, string $type = 'admin'): string
     {
-        // Read from settings.json (dynamic) first, fallback to config (static)
-        $settings = \App\Core\FlatFile::settings();
-        
-        if ($type === 'admin') {
-            $theme = $settings['admin_theme'] ?? config('app.admin_theme', 'admin-modern-pro');
-        } else {
-            $theme = $settings['frontend_theme'] ?? config('app.frontend_theme', 'default');
-        }
+        $theme = \App\Core\ThemeResolver::active($type);
         
         $relativePath = ltrim($path, '/');
         $baseUrl = static_base_url();

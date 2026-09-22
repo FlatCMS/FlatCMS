@@ -28,6 +28,7 @@
   "extensions_zip_outside_scope": "Il pacchetto tenta di scrivere fuori dalla sua cartella. Installazione bloccata.",
   "module_conflict_active": "Disattiva :module per attivare questo modulo.",
   "module_delete_failed": "Impossibile eliminare questo modulo.",
+  "module_cleanup_pending": "Il componente è stato disinstallato, ma un residuo temporaneo deve essere rimosso manualmente.",
   "module_deleted_success": "Modulo :module eliminato.",
   "module_dependencies": "Dipendenze",
   "module_dependencies_missing": "Dipendenze mancanti: :modules",

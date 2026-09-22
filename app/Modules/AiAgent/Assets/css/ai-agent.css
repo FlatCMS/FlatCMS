@@ -4,10 +4,48 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/AiAgent/Assets/css/ai-agent.css
+ * Version: 2.0.0-dev
  */
 
 [data-ai-agent-target] {
   position: relative;
+}
+
+.ai-agent-seo-trigger {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-card-bg));
+  color: var(--color-primary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.ai-agent-seo-trigger:hover,
+.ai-agent-seo-trigger:focus-visible {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 20%, var(--color-card-bg));
+  outline: none;
+}
+
+.ai-agent-seo-trigger:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+.ai-agent-seo-trigger .ai-agent-trigger-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .ai-agent-trigger {

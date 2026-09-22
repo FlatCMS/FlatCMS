@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Backups/Controllers/AdminController.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -12,7 +15,9 @@ declare(strict_types=1);
 namespace App\Modules\Backups\Controllers;
 
 use App\Core\BaseController;
+use App\Core\CoreManifest;
 use App\Core\I18n;
+use App\Core\RuntimeProbe;
 use App\Modules\Backups\Services\SiteBackupService;
 use App\Modules\Backups\Services\FullBackupService;
 
@@ -78,7 +83,7 @@ final class AdminController extends BaseController
                 'backup' => (string) ($backup['filename'] ?? ''),
             ]));
         } catch (\RuntimeException $exception) {
-            $this->session->flash('error', __($exception->getMessage(), 'Backups'));
+            $this->session->flash('error', $this->failureMessage($exception));
         }
 
         $this->redirect(url('/admin/backups'));
@@ -101,6 +106,23 @@ final class AdminController extends BaseController
         $this->response->download($path, basename($path));
     }
 
+    public function downloadKey(string $filename): void
+    {
+        if (!$this->authorize('backups.manage')) {
+            return;
+        }
+
+        $path = $this->service->resolveStoredKeyPath($filename)
+            ?? $this->fullService->resolveStoredKeyPath($filename);
+        if ($path === null) {
+            $this->session->flash('error', __('backups_key_not_found', 'Backups'));
+            $this->redirect(url('/admin/backups'));
+            return;
+        }
+
+        $this->response->download($path, basename($path));
+    }
+
     public function restore(string $filename): void
     {
         if (!$this->authorize('backups.manage')) {
@@ -113,17 +135,25 @@ final class AdminController extends BaseController
 
         try {
             if ($this->fullService->resolveStoredBackupPath($filename) !== null) {
-                $result = $this->fullService->restoreStoredBackup($filename, $this->backupContext('restore'));
+                $result = $this->fullService->restoreStoredBackup(
+                    $filename,
+                    $this->backupContext('restore'),
+                    fn (string $version): bool => $this->acceptRestoredRuntime($version, 'full-restoration')
+                );
             } else {
-                $result = $this->service->restoreStoredBackup($filename, $this->backupContext('restore'));
+                $result = $this->service->restoreStoredBackup(
+                    $filename,
+                    $this->backupContext('restore'),
+                    fn (): bool => $this->acceptRestoredRuntime(CoreManifest::version(), 'site-restoration')
+                );
             }
             $rollbackName = (string) (($result['rollback']['filename'] ?? ''));
-            $this->session->flash('success', __('backups_restore_success', 'Backups', [
+            $this->session->flash('success', __($rollbackName === '' ? 'backups_restore_verified' : 'backups_restore_success', 'Backups', [
                 'count' => (string) ((int) ($result['restored_files_count'] ?? 0)),
                 'backup' => $rollbackName,
             ]));
         } catch (\RuntimeException $exception) {
-            $this->session->flash('error', __($exception->getMessage(), 'Backups'));
+            $this->session->flash('error', $this->failureMessage($exception));
         }
 
         $this->redirect(url('/admin/backups'));
@@ -140,14 +170,19 @@ final class AdminController extends BaseController
         }
 
         try {
-            $result = $this->service->restoreUploadedBackup($this->request->file('backup_zip'), $this->backupContext('upload_restore'));
+            $result = $this->service->restoreUploadedBackup(
+                $this->request->file('backup_zip'),
+                $this->backupContext('upload_restore'),
+                fn (): bool => $this->acceptRestoredRuntime(CoreManifest::version(), 'site-restoration'),
+                $this->request->file('backup_key')
+            );
             $rollbackName = (string) (($result['rollback']['filename'] ?? ''));
-            $this->session->flash('success', __('backups_restore_success', 'Backups', [
+            $this->session->flash('success', __($rollbackName === '' ? 'backups_restore_verified' : 'backups_restore_success', 'Backups', [
                 'count' => (string) ((int) ($result['restored_files_count'] ?? 0)),
                 'backup' => $rollbackName,
             ]));
         } catch (\RuntimeException $exception) {
-            $this->session->flash('error', __($exception->getMessage(), 'Backups'));
+            $this->session->flash('error', $this->failureMessage($exception));
         }
 
         $this->redirect(url('/admin/backups'));
@@ -173,7 +208,7 @@ final class AdminController extends BaseController
                 'backup' => $filename,
             ]));
         } catch (\RuntimeException $exception) {
-            $this->session->flash('error', __($exception->getMessage(), 'Backups'));
+            $this->session->flash('error', $this->failureMessage($exception));
         }
 
         $this->redirect(url('/admin/backups'));
@@ -190,13 +225,10 @@ final class AdminController extends BaseController
         }
 
         try {
-            $result = $this->service->resetSiteContent($this->backupContext('reset'));
-            $rollbackName = (string) (($result['rollback']['filename'] ?? ''));
-            $this->session->flash('success', __('backups_reset_success', 'Backups', [
-                'backup' => $rollbackName,
-            ]));
+            $this->service->resetSiteContent($this->backupContext('reset'));
+            $this->session->flash('success', __('backups_reset_success', 'Backups'));
         } catch (\RuntimeException $exception) {
-            $this->session->flash('error', __($exception->getMessage(), 'Backups'));
+            $this->session->flash('error', $this->failureMessage($exception));
         }
 
         $this->redirect(url('/admin/backups'));
@@ -215,13 +247,33 @@ final class AdminController extends BaseController
         try {
             $this->service->factoryResetSite($this->backupContext('factory_reset'));
         } catch (\RuntimeException $exception) {
-            $this->session->flash('error', __($exception->getMessage(), 'Backups'));
+            $this->session->flash('error', $this->failureMessage($exception));
             $this->redirect(url('/admin/backups'));
             return;
         }
 
         $this->session->destroy();
         $this->redirect(base_url() . '/?step=1');
+    }
+
+    private function failureMessage(\RuntimeException $exception): string
+    {
+        for ($cause = $exception; $cause !== null; $cause = $cause->getPrevious()) {
+            if ($cause->getMessage() === 'runtime_transaction_acceptance_failed') {
+                return __('backups_restore_health_check_failed', 'Backups');
+            }
+        }
+        $key = $exception->getMessage();
+        if (preg_match('/^backups_[a-z0-9_]+$/D', $key) !== 1) {
+            error_log('[Backups] ' . $exception::class . ': ' . $key);
+            $key = 'backups_operation_failed';
+        }
+        return __($key, 'Backups');
+    }
+
+    private function acceptRestoredRuntime(string $version, string $scope): bool
+    {
+        return (new RuntimeProbe())->check(BASE_PATH, trim($version), [$scope]);
     }
 
     /**

@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/AiAgent/Assets/js/ai-agent.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -2546,6 +2549,74 @@
 
     var floatingDragState = null;
 
+    function targetAllowsContextualAssistant(target) {
+      if (!(target instanceof HTMLElement)) {
+        return false;
+      }
+
+      return !target.closest('[data-seo-analysis-form]');
+    }
+
+    function removeSeoRecommendationButton(target) {
+      var button = target.querySelector('[data-ai-agent-seo-trigger]');
+      if (button) {
+        button.remove();
+      }
+    }
+
+    function syncSeoRecommendationButton(target) {
+      if (!(target instanceof HTMLElement) || !target.closest('[data-seo-analysis-form]')) {
+        return;
+      }
+
+      if (target.getAttribute('data-ai-agent-recommended') !== '1') {
+        removeSeoRecommendationButton(target);
+        return;
+      }
+
+      if (target.querySelector('[data-ai-agent-seo-trigger]')) {
+        return;
+      }
+
+      var label = String(i18n.optimizeWithFlatty || '').trim();
+      if (label === '') {
+        return;
+      }
+
+      var button = document.createElement('button');
+      var darkIcon = document.createElement('img');
+      var lightIcon = document.createElement('img');
+      button.type = 'button';
+      button.className = 'ai-agent-seo-trigger';
+      button.setAttribute('data-ai-agent-seo-trigger', '1');
+      button.setAttribute('aria-label', label);
+      button.setAttribute('title', label);
+
+      darkIcon.className = 'ai-agent-trigger-icon is-dark';
+      darkIcon.src = iconDark;
+      darkIcon.alt = '';
+      darkIcon.setAttribute('aria-hidden', 'true');
+      lightIcon.className = 'ai-agent-trigger-icon is-light';
+      lightIcon.src = iconLight;
+      lightIcon.alt = '';
+      lightIcon.setAttribute('aria-hidden', 'true');
+      button.appendChild(darkIcon);
+      button.appendChild(lightIcon);
+      button.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        openDrawerForTarget(target, { prefillAction: 'field_improve' });
+      });
+      target.appendChild(button);
+    }
+
+    function syncSeoRecommendationButtons() {
+      Array.prototype.forEach.call(
+        document.querySelectorAll('[data-seo-analysis-form] [data-ai-agent-target]'),
+        syncSeoRecommendationButton
+      );
+    }
+
     function bindAiAgentTarget(target) {
       if (!(target instanceof HTMLElement)) {
         return;
@@ -2558,10 +2629,18 @@
       target.setAttribute('data-ai-agent-bound', '1');
 
       target.addEventListener('mouseenter', function() {
+        if (!targetAllowsContextualAssistant(target)) {
+          hideFloating();
+          return;
+        }
         scheduleFloatingShow(target, floatingHoverDelayMs);
       });
 
       target.addEventListener('focusin', function() {
+        if (!targetAllowsContextualAssistant(target)) {
+          hideFloating();
+          return;
+        }
         if (state.currentTarget instanceof HTMLElement && state.currentTarget !== target) {
           hideFloatingForWorkspaceMove();
         }
@@ -2593,6 +2672,13 @@
     }
 
     bindAiAgentTargets(document);
+
+    document.addEventListener('flatcms:seo-analysis-updated', function() {
+      syncSeoRecommendationButtons();
+      if (state.currentTarget instanceof HTMLElement && state.currentTarget.closest('[data-seo-analysis-form]')) {
+        hideFloating();
+      }
+    });
 
     if (typeof MutationObserver === 'function') {
       var targetObserver = new MutationObserver(function(mutations) {

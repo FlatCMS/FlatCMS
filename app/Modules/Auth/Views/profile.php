@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Auth/Views/profile.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -111,12 +114,14 @@ $profileExtensionSections = array_values(array_filter(
                     <div class="avatar-upload-container"
                         data-msg-invalid-type="<?= __('invalid_file_type', 'Auth') ?>"
                         data-msg-file-too-large="<?= __('file_too_large', 'Auth') ?>"
-                        data-msg-confirm-remove="<?= __('confirm_remove_avatar', 'Auth') ?>">
+                        data-msg-confirm-remove="<?= __('confirm_remove_avatar', 'Auth') ?>"
+                        data-msg-delete="<?= __('delete', 'Core') ?>"
+                        data-msg-avatar-alt="<?= __('avatar', 'Users') ?>">
                         <!-- Preview Circle -->
                         <div class="avatar-preview-wrapper">
                             <div class="avatar-preview" id="avatarPreview">
                                 <?php if (!empty($avatarUrl)): ?>
-                                    <img src="<?= $avatarUrl ?>" alt="Avatar" class="avatar-image" id="avatarImage">
+                                    <img src="<?= $avatarUrl ?>" alt="<?= e(__('avatar', 'Users')) ?>" class="avatar-image" id="avatarImage">
                                 <?php else: ?>
                                     <div class="avatar-placeholder" id="avatarPlaceholder">
                                         <svg class="avatar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

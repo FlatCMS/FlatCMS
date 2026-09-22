@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Core/Storage/AtomicFileWriter.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -60,7 +63,31 @@ final class AtomicFileWriter
 
     public function write(string $path, string $contents, ?callable $validator = null): void
     {
-        $this->synchronized($path, function () use ($path, $contents, $validator): void {
+        $this->writePrepared($path, function (string $temporary, int $mode) use ($contents, $validator): string {
+            $this->writeCompleteFile($temporary, $contents, $mode);
+            if ($validator !== null) { $validator($temporary, $contents); }
+            return hash('sha256', $contents);
+        });
+    }
+
+    /** @param resource $stream Read from the current position, without closing caller's stream. */
+    public function writeStream(string $path, $stream, string $sha256, int $size, ?int $mode = null): void
+    {
+        if (!is_resource($stream) || $size < 0 || !preg_match('/^[a-f0-9]{64}$/D', $sha256)) {
+            throw new StorageException('Invalid stream generation.');
+        }
+        $this->writePrepared($path, function (string $temporary, int $fileMode) use ($stream, $sha256, $size): string {
+            $actual = $this->writeCompleteStream($temporary, $stream, $fileMode);
+            if ($actual['size'] !== $size || !hash_equals($sha256, $actual['sha256'])) {
+                throw new StorageException('Stream generation does not match its expected size or digest.');
+            }
+            return $actual['sha256'];
+        }, $mode);
+    }
+
+    private function writePrepared(string $path, callable $prepare, ?int $requestedMode = null): void
+    {
+        $this->synchronized($path, function () use ($path, $prepare, $requestedMode): void {
             $target = $this->paths->resolve($path);
             $this->paths->ensureDirectory(dirname($target), $this->directoryMode);
             $target = $this->paths->resolve($target);
@@ -75,20 +102,19 @@ final class AtomicFileWriter
             $backup = $directory . '/.' . basename($target) . '.' . $suffix . '.bak';
             $hadTarget = is_file($target);
             $originalHash = $hadTarget ? hash_file('sha256', $target) : null;
-            $mode = $hadTarget ? (fileperms($target) & 0777) : $this->fileMode;
+            $mode = $requestedMode ?? ($hadTarget ? (fileperms($target) & 0777) : $this->fileMode);
             $backupCreated = false;
             $committed = false;
 
             try {
-                $this->writeCompleteFile($temporary, $contents, $mode);
-
-                if ($validator !== null) {
-                    $validator($temporary, $contents);
-                }
+                $writtenHash = $prepare($temporary, $mode);
 
                 if ($hadTarget) {
-                    $this->copyCompleteFile($target, $backup, $mode);
                     $backupCreated = true;
+                    $this->copyCompleteFile($target, $backup, $mode);
+                    if (hash_file('sha256', $backup) !== $originalHash) {
+                        throw new StorageException('Previous generation backup is incomplete: ' . $target);
+                    }
                     if (!is_file($target) || hash_file('sha256', $target) !== $originalHash) {
                         throw new StorageException('Storage target changed outside its lock: ' . $target);
                     }
@@ -101,7 +127,6 @@ final class AtomicFileWriter
                 }
 
                 $committed = true;
-                $writtenHash = hash('sha256', $contents);
                 if (!is_file($target) || hash_file('sha256', $target) !== $writtenHash) {
                     $this->restorePreviousGeneration($target, $backup, $backupCreated);
                     $backupCreated = false;
@@ -237,12 +262,39 @@ final class AtomicFileWriter
 
     private function copyCompleteFile(string $source, string $destination, int $mode): void
     {
-        $contents = file_get_contents($source);
-        if (!is_string($contents)) {
+        $stream = fopen($source, 'rb');
+        if (!is_resource($stream)) {
             throw new StorageException('Unable to read previous storage generation: ' . $source);
         }
+        try { $this->writeCompleteStream($destination, $stream, $mode); }
+        finally { fclose($stream); }
+    }
 
-        $this->writeCompleteFile($destination, $contents, $mode);
+    /** @param resource $stream @return array{size: int, sha256: string} */
+    private function writeCompleteStream(string $path, $stream, int $mode): array
+    {
+        $out = fopen($path, 'xb');
+        if (!is_resource($out)) { throw new StorageException('Unable to create stream temporary file.'); }
+        $hash = hash_init('sha256');
+        $size = 0;
+        try {
+            while (!feof($stream)) {
+                $chunk = fread($stream, 1048576);
+                if ($chunk === false || ($chunk === '' && !feof($stream))) { throw new StorageException('Stream read failed.'); }
+                $length = strlen($chunk);
+                $offset = 0;
+                while ($offset < $length) {
+                    $written = fwrite($out, substr($chunk, $offset));
+                    if (!is_int($written) || $written < 1) { throw new StorageException('Stream short write.'); }
+                    $offset += $written;
+                }
+                hash_update($hash, $chunk);
+                $size += $length;
+            }
+            if (!fflush($out) || (function_exists('fsync') && !fsync($out))) { throw new StorageException('Stream flush failed.'); }
+        } finally { fclose($out); }
+        if (!chmod($path, $mode & 0777)) { throw new StorageException('Stream permission update failed.'); }
+        return ['size' => $size, 'sha256' => hash_final($hash)];
     }
 
     private function restorePreviousGeneration(string $target, string $backup, bool $backupCreated): void

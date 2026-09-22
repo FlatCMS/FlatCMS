@@ -3,6 +3,11 @@
  * FlatCMS - Flat-File Content Management System
  * Copyright (C) 2026 Alain BROYE
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/UpdateManager/Services/UpdateApplyService.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -40,6 +45,13 @@ final class UpdateApplyService
     /** @return array<string,mixed> */
     public function apply(string $catalog, string $slug, string $version): array
     {
+        return \App\Core\Storage\ApplicationLock::for($this->basePath)->exclusive(
+            fn (): array => $this->applyUnderLease($catalog, $slug, $version)
+        );
+    }
+
+    private function applyUnderLease(string $catalog, string $slug, string $version): array
+    {
         $catalog = strtolower(trim($catalog));
         $slug = trim($slug);
         $version = trim($version);
@@ -69,8 +81,6 @@ final class UpdateApplyService
             $recoveryState = $this->recovery->prepareFullBackup($version);
             $package['full_backup_path'] = (string) ($recoveryState['full_backup_path'] ?? '');
             $package['recovery_id'] = (string) ($recoveryState['recovery_id'] ?? '');
-            $siteBackup = $this->createSiteBackup($version);
-            $package['site_backup_path'] = (string) ($siteBackup['path'] ?? '');
             $this->recovery->markUpdating();
             $previousMaintenance = $this->enableMaintenance();
             $assetPublisher = new RuntimeAssetPublisher($this->basePath);
@@ -86,7 +96,6 @@ final class UpdateApplyService
                 }
             );
             if (is_array($result)) {
-                $result['site_backup'] = $siteBackup;
                 $result['full_backup_path'] = (string) ($recoveryState['full_backup_path'] ?? '');
                 $result['recovery_id'] = (string) ($recoveryState['recovery_id'] ?? '');
             }
@@ -116,7 +125,7 @@ final class UpdateApplyService
             }
             if ($maintenanceFailure !== null) {
                 $combined = 'update_failed_and_maintenance_restore_failed:' . $message . ':' . $maintenanceFailure;
-                $this->recovery->markFailure($combined, $autoRollback);
+                $this->recovery->markFailure($combined, false);
                 throw new \RuntimeException($combined);
             }
             throw $failure;
@@ -135,24 +144,6 @@ final class UpdateApplyService
 
     }
 
-
-    /** @return array<string,mixed> */
-    private function createSiteBackup(string $version): array
-    {
-        if (!class_exists(\App\Modules\Backups\Services\SiteBackupService::class)) {
-            throw new \RuntimeException('update_site_backup_service_unavailable');
-        }
-        try {
-            return (new \App\Modules\Backups\Services\SiteBackupService())->createBackup([
-                'reason' => 'pre_core_update',
-                'created_by' => 'UpdateManager',
-                'created_by_email' => '',
-                'target_version' => $version,
-            ]);
-        } catch (\Throwable $exception) {
-            throw new \RuntimeException('update_site_backup_failed:' . $exception->getMessage(), 0, $exception);
-        }
-    }
 
     /** @return array<string,mixed> */
     private function findCachedPackage(string $catalog, string $slug, string $version): array
@@ -181,12 +172,15 @@ final class UpdateApplyService
 
     private function enableMaintenance(): bool
     {
-        $settings = $this->readSettings();
-        $previous = !empty($settings['maintenance_mode']);
-        if (!$previous) {
+        $previous = !empty($this->settingsStore()->read('settings.json')['maintenance_mode']);
+        (new RecoveryStateStore($this->basePath))->mutate(static fn (array $state): array =>
+            array_replace($state, ['previous_maintenance' => $previous]));
+        $this->settingsStore()->mutate('settings.json', static function (array $settings) use (&$previous): array {
+            if ($settings === []) { throw new \RuntimeException('update_maintenance_settings_invalid'); }
+            $previous = !empty($settings['maintenance_mode']);
             $settings['maintenance_mode'] = true;
-            $this->writeSettings($settings);
-        }
+            return $settings;
+        });
         return $previous;
     }
 
@@ -195,9 +189,11 @@ final class UpdateApplyService
         if ($previous) {
             return;
         }
-        $settings = $this->readSettings();
-        $settings['maintenance_mode'] = false;
-        $this->writeSettings($settings);
+        $this->settingsStore()->mutate('settings.json', static function (array $settings): array {
+            if ($settings === []) { throw new \RuntimeException('update_maintenance_settings_invalid'); }
+            $settings['maintenance_mode'] = false;
+            return $settings;
+        });
     }
 
     private function restoreMaintenanceSafely(?bool $previous): ?string
@@ -213,30 +209,11 @@ final class UpdateApplyService
         }
     }
 
-    /** @return array<string,mixed> */
-    private function readSettings(): array
+    private function settingsStore(): \App\Core\Storage\JsonStore
     {
-        $path = $this->basePath . '/data/settings.json';
-        $data = json_decode((string) @file_get_contents($path), true);
-        if (!is_array($data)) {
-            throw new \RuntimeException('update_maintenance_settings_invalid');
-        }
-        return $data;
-    }
-
-    /** @param array<string,mixed> $settings */
-    private function writeSettings(array $settings): void
-    {
-        $path = $this->basePath . '/data/settings.json';
-        $json = json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if (!is_string($json)) {
-            throw new \RuntimeException('update_maintenance_settings_invalid');
-        }
-        $tmp = $path . '.update-tmp';
-        if (@file_put_contents($tmp, $json . PHP_EOL, LOCK_EX) === false || !@rename($tmp, $path)) {
-            @unlink($tmp);
-            throw new \RuntimeException('update_maintenance_settings_write_failed');
-        }
+        return new \App\Core\Storage\JsonStore($this->basePath . '/data',
+            new \App\Core\Storage\AtomicFileWriter($this->basePath . '/data',
+                new \App\Core\Storage\FileLockManager($this->basePath . '/storage/cache/locks/update-settings')));
     }
 
     /** @param array<string,mixed> $prepared */

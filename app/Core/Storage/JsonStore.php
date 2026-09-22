@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Core/Storage/JsonStore.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -40,6 +43,15 @@ final class JsonStore
         }
     }
 
+    public function exists(string $path): bool
+    {
+        $target = $this->writer->resolvePath($path);
+        if (file_exists($target) && !is_file($target)) {
+            throw new StorageException('JSON target is not a regular file: ' . $target);
+        }
+        return is_file($target);
+    }
+
     /**
      * @param array<string|int, mixed> $default
      * @return array<string|int, mixed>
@@ -68,7 +80,7 @@ final class JsonStore
 
     /**
      * @param array<string|int, mixed> $default
-     * @return array{data: array<string|int, mixed>, hash: string|null}
+     * @return array{data: array<string|int, mixed>, hash: string|null, contents: string|null}
      */
     public function snapshot(string $path, array $default = []): array
     {
@@ -80,7 +92,7 @@ final class JsonStore
                     throw new StorageException('Storage snapshot target is not a regular file: ' . $target);
                 }
 
-                return ['data' => $default, 'hash' => null];
+                return ['data' => $default, 'hash' => null, 'contents' => null];
             }
 
             $contents = file_get_contents($target);
@@ -91,6 +103,7 @@ final class JsonStore
             return [
                 'data' => $this->decode($contents, $target),
                 'hash' => hash('sha256', $contents),
+                'contents' => $contents,
             ];
         });
     }
@@ -234,6 +247,19 @@ final class JsonStore
      * @param array<string|int, mixed> $data
      */
     private function encode(array $data): string
+    {
+        return self::encodeCanonical($data);
+    }
+
+    /**
+     * Serializes a canonical FlatCMS JSON document without writing it.
+     *
+     * Multi-file transactions need the exact same representation as JsonStore
+     * before they can calculate a generation checksum.
+     *
+     * @param array<string|int, mixed> $data
+     */
+    public static function encodeCanonical(array $data): string
     {
         try {
             return json_encode($data, self::JSON_FLAGS) . PHP_EOL;

@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Users/Views/admin/form.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -141,11 +144,13 @@
                         data-msg-readonly="<?= __('avatar_private_action', 'Users') ?>"
                         data-msg-invalid-type="<?= __('invalid_file_type', 'Users') ?>"
                         data-msg-file-too-large="<?= __('file_too_large', 'Users') ?>"
-                        data-msg-confirm-remove="<?= __('confirm_remove_avatar', 'Users') ?>">
+                        data-msg-confirm-remove="<?= __('confirm_remove_avatar', 'Users') ?>"
+                        data-msg-delete="<?= __('delete', 'Core') ?>"
+                        data-msg-avatar-alt="<?= __('avatar', 'Users') ?>">
                         <div class="avatar-preview-wrapper">
                             <div class="avatar-preview" id="avatarPreview">
                                 <?php if (!empty($avatarUrl)): ?>
-                                    <img src="<?= $avatarUrl ?>" alt="Avatar" class="avatar-image" id="avatarImage">
+                                    <img src="<?= $avatarUrl ?>" alt="<?= e(__('avatar', 'Users')) ?>" class="avatar-image" id="avatarImage">
                                 <?php else: ?>
                                     <div class="avatar-placeholder" id="avatarPlaceholder">
                                         <svg class="avatar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

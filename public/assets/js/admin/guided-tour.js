@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/js/admin/guided-tour.js
+ * Version: 2.0.0-dev
  */
 
 (function () {
@@ -413,7 +416,7 @@
             popover.innerHTML = ''
                 + '<div class="flatcms-guided-tour-head">'
                 + '  <h3 class="flatcms-guided-tour-title"></h3>'
-                + '  <button type="button" class="flatcms-guided-tour-close" data-action="close" aria-label="Close">'
+                + '  <button type="button" class="flatcms-guided-tour-close" data-action="close">'
                 + '    <i class="fas fa-times"></i>'
                 + '  </button>'
                 + '</div>'
@@ -441,18 +444,21 @@
             this.nextButton = popover.querySelector('[data-action="next"]');
             this.skipButton = popover.querySelector('[data-action="skip"]');
             this.closeButton = popover.querySelector('[data-action="close"]');
+            if (this.closeButton) {
+                this.closeButton.setAttribute('aria-label', String(this.labels.close || ''));
+            }
 
             if (this.skipButton) {
-                this.skipButton.textContent = this.labels.skip || 'Skip';
+                this.skipButton.textContent = this.labels.skip || '';
             }
             if (this.prevButton) {
-                this.prevButton.textContent = this.labels.previous || 'Previous';
+                this.prevButton.textContent = this.labels.previous || '';
             }
             if (this.nextButton) {
-                this.nextButton.textContent = this.labels.next || 'Next';
+                this.nextButton.textContent = this.labels.next || '';
             }
             if (this.closeButton) {
-                this.closeButton.setAttribute('aria-label', this.labels.close || 'Close');
+                this.closeButton.setAttribute('aria-label', this.labels.close || '');
             }
 
             if (this.backdropEl) {
@@ -512,13 +518,13 @@
 
             if (this.promptCloseButton) {
                 this.promptCloseButton.innerHTML = '<i class="fas fa-times"></i>';
-                this.promptCloseButton.setAttribute('aria-label', this.labels.close || 'Close');
+                this.promptCloseButton.setAttribute('aria-label', this.labels.close || '');
             }
             if (this.promptStartButton) {
-                this.promptStartButton.textContent = this.labels.promptStart || 'Start tutorial';
+                this.promptStartButton.textContent = this.labels.promptStart || '';
             }
             if (this.promptQuitButton) {
-                this.promptQuitButton.textContent = this.labels.promptQuit || 'Quit';
+                this.promptQuitButton.textContent = this.labels.promptQuit || '';
             }
 
             if (this.promptBackdropEl) {
@@ -789,11 +795,11 @@
             }
             if (this.nextButton) {
                 this.nextButton.textContent = isLast
-                    ? (this.labels.finish || 'Finish')
-                    : (this.labels.next || 'Next');
+                    ? (this.labels.finish || '')
+                    : (this.labels.next || '');
             }
             if (this.counterEl) {
-                const template = this.labels.stepCounter || 'Step :current/:total';
+                const template = this.labels.stepCounter || '';
                 this.counterEl.textContent = template
                     .replace(':current', String(safeIndex + 1))
                     .replace(':total', String(this.steps.length));

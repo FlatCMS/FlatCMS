@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: themes/admin/admin-modern-pro/views/partials/head.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -29,14 +32,15 @@
 
     <!-- Theme initialization (external JS to prevent flash) -->
     <script src="<?= theme_asset('js/theme-init.js', 'admin') ?>"></script>
+    <script src="<?= asset('js/admin/flatcms-ui-primitives.js') ?>"></script>
 
     <!-- Font Awesome (local) -->
     <link rel="stylesheet" href="<?= asset('dists/fontawesome/css/all.min.css') ?>">
 
     <link rel="stylesheet" href="<?= asset('css/admin/base.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/admin/themes/admin-modern-pro.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/admin/themes/admin-modern-pro.css') ?>" data-editor-content-theme>
     <?php if ($themeCustomizationAsset !== ''): ?>
-        <link rel="stylesheet" href="<?= e($themeCustomizationAsset) ?>">
+        <link rel="stylesheet" href="<?= e($themeCustomizationAsset) ?>" data-editor-content-theme>
     <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('dists/ckeditor5/ckeditor5.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/admin/ckeditor.css') ?>">

@@ -3,6 +3,11 @@
  * FlatCMS - Flat-File Content Management System
  * Copyright (C) 2026 Alain BROYE
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/UpdateManager/Config/routes.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -17,6 +22,8 @@ $router->group(['prefix' => 'admin', 'middleware' => 'auth'], function (Router $
         ->name('admin.updates.check');
     $router->post('/updates/recovery', [\App\Modules\UpdateManager\Controllers\AdminController::class, 'resumeRecovery'])
         ->name('admin.updates.recovery');
+    $router->post('/updates/finalize', [\App\Modules\UpdateManager\Controllers\AdminController::class, 'finalizeRecovery'])
+        ->name('admin.updates.finalize');
     $router->post('/updates/install/core/{version}', [\App\Modules\UpdateManager\Controllers\AdminController::class, 'installCore'])
         ->name('admin.updates.install.core');
 });

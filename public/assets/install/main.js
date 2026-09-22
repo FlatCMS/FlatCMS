@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/install/main.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -11,8 +14,8 @@
 
     const root = document.documentElement;
     const body = document.body;
-    const loadingLabel = (body && body.dataset && body.dataset.loadingLabel) ? body.dataset.loadingLabel : 'Loading...';
-    const copiedLabel = (body && body.dataset && body.dataset.commandCopiedLabel) ? body.dataset.commandCopiedLabel : 'Command copied';
+    const loadingLabel = (body && body.dataset && body.dataset.loadingLabel) ? body.dataset.loadingLabel : '';
+    const copiedLabel = (body && body.dataset && body.dataset.commandCopiedLabel) ? body.dataset.commandCopiedLabel : '';
 
     // ============================================
     // Auto-submit forms avec animation
@@ -189,7 +192,7 @@
         if (previewName || previewDesc || previewUrl) {
             const updateSitePreview = () => {
                 if (previewName) {
-                    const fallback = previewName.getAttribute('data-preview-default') || 'FlatCMS';
+                    const fallback = previewName.getAttribute('data-preview-default') || '';
                     const value = (siteNameInput && siteNameInput.value.trim()) ? siteNameInput.value.trim() : fallback;
                     previewName.textContent = value;
                 }
@@ -406,7 +409,7 @@
             const modalTitle = document.getElementById('config-modal-title');
             const modalPath = document.getElementById('config-modal-path');
             const modalBody = document.getElementById('config-modal-body');
-            const emptyText = configModal.getAttribute('data-config-empty') || 'No content';
+            const emptyText = configModal.getAttribute('data-config-empty') || '';
             const openButtons = document.querySelectorAll('[data-config-open]');
             const closeButtons = configModal.querySelectorAll('[data-config-close]');
             const copyBtn = configModal.querySelector('[data-config-copy]');

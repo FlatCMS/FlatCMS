@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: public/assets/js/admin/admin-modern-pro.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -175,7 +178,10 @@
   // ============================================
   document.querySelectorAll('[data-confirm]').forEach(function(element) {
     element.addEventListener('click', function(e) {
-      const message = element.dataset.confirm || 'Êtes-vous sûr ?';
+      const confirmModal = document.getElementById('confirmModal');
+      const message = element.dataset.confirm
+        || (confirmModal && confirmModal.dataset.defaultMessage)
+        || '';
       if (!confirm(message)) {
         e.preventDefault();
         e.stopPropagation();

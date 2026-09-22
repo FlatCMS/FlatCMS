@@ -151,6 +151,7 @@
     "assistant_floating_open": "Full assistant",
     "assistant_floating_context_empty": "Choose a field or block so I can suggest something useful.",
     "assistant_floating_aria": "Open Flatty",
+    "assistant_optimize_with_flatty": "Optimize with Flatty",
     "assistant_contact_form_ready_reply": "I've prepared the right Contact form insertion.",
     "assistant_contact_form_ready_note": "Selected form: :name. Shortcode used: :shortcode",
     "assistant_contact_form_missing_reply": "I couldn't find any form ready to insert.",

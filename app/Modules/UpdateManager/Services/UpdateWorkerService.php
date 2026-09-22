@@ -3,6 +3,11 @@
  * FlatCMS - Flat-File Content Management System
  * Copyright (C) 2026 Alain BROYE
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/UpdateManager/Services/UpdateWorkerService.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -14,6 +19,11 @@ final class UpdateWorkerService
     /** @return array<string,mixed> */
     public function applyCore(string $version): array
     {
+        // A synchronous child cannot drain the parent that is waiting for it.
+        // Reuse the in-process fallback; its promoted lease lasts until request exit.
+        if (\App\Core\Storage\ApplicationLock::for(BASE_PATH)->holdsLease()) {
+            return (new UpdateApplyService())->apply('core', 'flatcms', $version);
+        }
         $worker = BASE_PATH . '/app/Modules/UpdateManager/bin/update-worker.php';
         $php = $this->resolvePhpCli();
 

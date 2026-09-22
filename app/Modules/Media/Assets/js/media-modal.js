@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Media/Assets/js/media-modal.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -381,12 +384,12 @@
 
         function getDirectoryLabel(context) {
             const normalized = normalizeContext(context);
-            return normalized === '' ? (getRootDirectoryLabel() || 'Root') : normalized;
+            return normalized === '' ? getRootDirectoryLabel() : normalized;
         }
 
         function updateDirectoryUi() {
             if (directoryCurrent) {
-                const prefix = getCurrentDirectoryLabel() || 'Current directory';
+                const prefix = getCurrentDirectoryLabel();
                 directoryCurrent.textContent = `${prefix}: ${getDirectoryLabel(activeContext)}`;
             }
 
@@ -395,7 +398,7 @@
             }
 
             if (!directories.length) {
-                directoryList.innerHTML = `<p class="media-modal-directory-empty">${escapeAttribute(getDirectoryEmptyLabel() || 'No subdirectory.')}</p>`;
+                directoryList.innerHTML = `<p class="media-modal-directory-empty">${escapeAttribute(getDirectoryEmptyLabel())}</p>`;
                 return;
             }
 

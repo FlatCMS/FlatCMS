@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Menu/Controllers/AdminController.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -16,7 +19,6 @@ use App\Core\BaseController;
 use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
-use App\Helpers\IconHelper;
 use App\Modules\Pages\Services\PageTranslationService;
 use App\Modules\Posts\Services\PostTranslationService;
 
@@ -167,16 +169,6 @@ class AdminController extends BaseController
 
         $this->session->flash('success', __('menu_saved', 'Menu'));
         $this->redirect(url('/admin/menus'));
-    }
-
-    public function icons(): void
-    {
-        if (!$this->authorize('menus.view')) {
-            return;
-        }
-
-        $icons = IconHelper::getAllIcons();
-        $this->json($icons);
     }
 
     protected function buildAvailableItems(array $pages): array

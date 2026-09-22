@@ -27,7 +27,6 @@
   "guided_tour_start_now": "Iniciar visita ahora",
   "guided_tour_title": "Visita guiada de admin",
   "homepage_canonical_hint": "Cuando una página se usa como inicio, su URL /page/... redirige a la raíz del sitio.",
-  "homepage_editor_builder": "Builder",
   "homepage_editor_classic": "Clásico",
   "homepage_mode": "Comportamiento de la página de inicio",
   "homepage_mode_hint": "Elige entre la portada nativa del tema y una página publicada servida en la URL raíz.",

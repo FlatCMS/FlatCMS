@@ -27,7 +27,6 @@
   "guided_tour_start_now": "Tour jetzt starten",
   "guided_tour_title": "Gefuhrte Admin-Tour",
   "homepage_canonical_hint": "Wenn eine Seite als Startseite verwendet wird, leitet ihre /page/...-URL zur Website-Wurzel weiter.",
-  "homepage_editor_builder": "Builder",
   "homepage_editor_classic": "Klassisch",
   "homepage_mode": "Verhalten der Startseite",
   "homepage_mode_hint": "Wählen Sie zwischen der nativen Theme-Startseite und einer veröffentlichten Seite auf der Root-URL.",

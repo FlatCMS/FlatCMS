@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Media/Assets/js/media.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -66,12 +69,12 @@
         return window.mediaConfig || {};
     }
 
-    function getLabel(key, fallback) {
+    function getLabel(key) {
         if (config && config.i18n && typeof config.i18n[key] === 'string' && config.i18n[key].trim() !== '') {
             return config.i18n[key];
         }
 
-        return String(fallback || '');
+        return '';
     }
 
     function normalizeContext(raw) {
@@ -103,17 +106,17 @@
     }
 
     function showRootDirectoryForbidden() {
-        showToast(getLabel('media_root_directory_forbidden', ''), 'error');
+        showToast(getLabel('media_root_directory_forbidden'), 'error');
     }
 
     function showRootUploadForbidden() {
-        showToast(getLabel('media_root_upload_forbidden', ''), 'error');
+        showToast(getLabel('media_root_upload_forbidden'), 'error');
     }
 
     function getCurrentDirectoryLabel(context) {
         const normalized = normalizeContext(context);
         if (normalized === '') {
-            return getLabel('root_directory', (config.labels && config.labels.root_directory) || '');
+            return getLabel('root_directory');
         }
 
         return normalized;
@@ -266,8 +269,8 @@
 
     function confirmLeaveMedia(callback) {
         var modalApi = getMediaModalApi();
-        var message = getLabel('media_ai_leave_message', 'Newly uploaded files are still waiting for AI indexing.');
-        var warning = getLabel('media_ai_leave_warning', 'Leave the media library without indexing them now?');
+        var message = getLabel('media_ai_leave_message');
+        var warning = getLabel('media_ai_leave_warning');
 
         if (!modalApi) {
             var confirmed = window.confirm(message + '\n\n' + warning);
@@ -284,7 +287,7 @@
             }
         }, {
             warning: warning,
-            confirmText: getLabel('media_ai_leave_confirm', 'Leave without indexing'),
+            confirmText: getLabel('media_ai_leave_confirm'),
         });
     }
 
@@ -321,7 +324,7 @@
             }
 
             event.preventDefault();
-            event.returnValue = getLabel('media_ai_leave_message', 'Newly uploaded files are still waiting for AI indexing.');
+            event.returnValue = getLabel('media_ai_leave_message');
             return event.returnValue;
         });
     }
@@ -536,13 +539,13 @@
 
                 var thead = document.createElement('thead');
                 thead.innerHTML = '<tr>' +
-                    '<th class="media-select-column"><input type="checkbox" class="media-row-checkbox" id="mediaSelectAll" aria-label="' + escapeAttribute(getLabel('media_select_all', 'Tout sélectionner')) + '"></th>' +
-                    '<th class="media-thumb-column">' + escapeHtml(getLabel('media_preview', 'Vignette')) + '</th>' +
-                    '<th>' + escapeHtml(getLabel('media_name', 'Nom du fichier')) + '</th>' +
-                    '<th>' + escapeHtml(getLabel('media_folder', 'Dossier')) + '</th>' +
-                    '<th>' + escapeHtml(getLabel('media_dimensions', 'Dimensions')) + '</th>' +
-                    '<th>' + escapeHtml(getLabel('media_size', 'Poids')) + '</th>' +
-                    '<th class="table-actions-header">' + escapeHtml(getLabel('media_actions', 'Actions')) + '</th>' +
+                    '<th class="media-select-column"><input type="checkbox" class="media-row-checkbox" id="mediaSelectAll" aria-label="' + escapeAttribute(getLabel('media_select_all')) + '"></th>' +
+                    '<th class="media-thumb-column">' + escapeHtml(getLabel('media_preview')) + '</th>' +
+                    '<th>' + escapeHtml(getLabel('media_name')) + '</th>' +
+                    '<th>' + escapeHtml(getLabel('media_folder')) + '</th>' +
+                    '<th>' + escapeHtml(getLabel('media_dimensions')) + '</th>' +
+                    '<th>' + escapeHtml(getLabel('media_size')) + '</th>' +
+                    '<th class="table-actions-header">' + escapeHtml(getLabel('media_actions')) + '</th>' +
                     '</tr>';
                 table.appendChild(thead);
 
@@ -588,16 +591,16 @@
             var fileName = file.original_name || file.name;
             var filePath = file.path || '';
             var renameListAction = canEditMedia
-                ? '<button type="button" class="table-action table-action-edit" data-action="media-rename" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '" title="' + escapeAttribute(getLabel('media_rename', 'Rename')) + '"><i class="fas fa-i-cursor"></i></button>'
+                ? '<button type="button" class="table-action table-action-edit" data-action="media-rename" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '" title="' + escapeAttribute(getLabel('media_rename')) + '"><i class="fas fa-i-cursor"></i></button>'
                 : '';
             var deleteListAction = canDeleteMedia
-                ? '<button type="button" class="table-action table-action-delete" data-action="media-delete-open" data-type="file" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '" title="' + escapeAttribute(getLabel('delete', 'Delete')) + '"><i class="fas fa-trash"></i></button>'
+                ? '<button type="button" class="table-action table-action-delete" data-action="media-delete-open" data-type="file" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '" title="' + escapeAttribute(getLabel('delete')) + '"><i class="fas fa-trash"></i></button>'
                 : '';
             var renameGridAction = canEditMedia
-                ? '<button data-action="media-rename" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '"><i class="fas fa-i-cursor"></i><span>' + escapeAttribute(getLabel('media_rename', 'Rename')) + '</span></button>'
+                ? '<button data-action="media-rename" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '"><i class="fas fa-i-cursor"></i><span>' + escapeAttribute(getLabel('media_rename')) + '</span></button>'
                 : '';
             var deleteGridAction = canDeleteMedia
-                ? '<div class="media-browser-actions-divider"></div><button class="action-delete" data-action="media-delete-open" data-type="file" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '"><i class="fas fa-trash"></i><span>' + escapeAttribute(getLabel('delete', 'Delete')) + '</span></button>'
+                ? '<div class="media-browser-actions-divider"></div><button class="action-delete" data-action="media-delete-open" data-type="file" data-id="' + (file.id || 0) + '" data-name="' + escapeAttribute(fileName) + '" data-path="' + escapeAttribute(filePath) + '"><i class="fas fa-trash"></i><span>' + escapeAttribute(getLabel('delete')) + '</span></button>'
                 : '';
 
             if (currentViewMode === 'list') {
@@ -627,10 +630,10 @@
                     '<td>' + escapeHtml(dimensionsLabel) + '</td>' +
                     '<td>' + escapeHtml(sizeLabel) + '</td>' +
                     '<td><div class="table-actions table-actions-compact">' +
-                        '<button type="button" class="table-action table-action-view" data-action="media-preview" data-url="' + escapeAttribute(file.url) + '" data-mime="' + escapeAttribute(file.mime || '') + '" data-name="' + escapeAttribute(fileName) + '" title="' + escapeAttribute(getLabel('media_preview', 'Preview')) + '"><i class="fas fa-eye"></i></button>' +
-                        '<button type="button" class="table-action table-action-download" data-action="media-download" data-url="' + escapeAttribute(file.url) + '" data-name="' + escapeAttribute(fileName) + '" title="' + escapeAttribute(getLabel('media_download', 'Download')) + '"><i class="fas fa-download"></i></button>' +
+                        '<button type="button" class="table-action table-action-view" data-action="media-preview" data-url="' + escapeAttribute(file.url) + '" data-mime="' + escapeAttribute(file.mime || '') + '" data-name="' + escapeAttribute(fileName) + '" title="' + escapeAttribute(getLabel('media_preview')) + '"><i class="fas fa-eye"></i></button>' +
+                        '<button type="button" class="table-action table-action-download" data-action="media-download" data-url="' + escapeAttribute(file.url) + '" data-name="' + escapeAttribute(fileName) + '" title="' + escapeAttribute(getLabel('media_download')) + '"><i class="fas fa-download"></i></button>' +
                         renameListAction +
-                        '<button type="button" class="table-action table-action-default" data-action="media-copy-url" data-url="' + escapeAttribute(file.url) + '" title="' + escapeAttribute(getLabel('copy_url', 'Copy URL')) + '"><i class="fas fa-link"></i></button>' +
+                        '<button type="button" class="table-action table-action-default" data-action="media-copy-url" data-url="' + escapeAttribute(file.url) + '" title="' + escapeAttribute(getLabel('copy_url')) + '"><i class="fas fa-link"></i></button>' +
                         deleteListAction +
                     '</div></td>';
             } else {
@@ -639,10 +642,10 @@
                         '<button class="media-browser-actions-toggle"><i class="fas fa-ellipsis-v"></i></button>' +
                         '<div class="media-browser-actions-list">' +
                             '<span class="media-browser-actions-item-name"><strong>' + escapeHtml(fileName) + '</strong></span>' +
-                            '<button data-action="media-preview" data-url="' + escapeAttribute(file.url) + '" data-mime="' + escapeAttribute(file.mime || '') + '" data-name="' + escapeAttribute(fileName) + '"><i class="fas fa-eye"></i><span>' + escapeAttribute(getLabel('media_preview', 'Preview')) + '</span></button>' +
-                            '<button data-action="media-download" data-url="' + escapeAttribute(file.url) + '" data-name="' + escapeAttribute(fileName) + '"><i class="fas fa-download"></i><span>' + escapeAttribute(getLabel('media_download', 'Download')) + '</span></button>' +
+                            '<button data-action="media-preview" data-url="' + escapeAttribute(file.url) + '" data-mime="' + escapeAttribute(file.mime || '') + '" data-name="' + escapeAttribute(fileName) + '"><i class="fas fa-eye"></i><span>' + escapeAttribute(getLabel('media_preview')) + '</span></button>' +
+                            '<button data-action="media-download" data-url="' + escapeAttribute(file.url) + '" data-name="' + escapeAttribute(fileName) + '"><i class="fas fa-download"></i><span>' + escapeAttribute(getLabel('media_download')) + '</span></button>' +
                             renameGridAction +
-                            '<button data-action="media-copy-url" data-url="' + escapeAttribute(file.url) + '"><i class="fas fa-link"></i><span>' + escapeAttribute(getLabel('copy_url', 'Copy URL')) + '</span></button>' +
+                            '<button data-action="media-copy-url" data-url="' + escapeAttribute(file.url) + '"><i class="fas fa-link"></i><span>' + escapeAttribute(getLabel('copy_url')) + '</span></button>' +
                             deleteGridAction +
                         '</div>' +
                     '</div>' +
@@ -833,7 +836,7 @@
         syncMediaSelectionVisuals();
 
         if (countLabel) {
-            countLabel.textContent = getLabel('media_batch_selected_count', ':count').replace(':count', String(selectedPaths.length));
+            countLabel.textContent = getLabel('media_batch_selected_count').replace(':count', String(selectedPaths.length));
         }
 
         if (selectAll instanceof HTMLInputElement) {
@@ -851,7 +854,7 @@
                 submitButton.setAttribute('data-action', 'confirm-delete');
                 submitButton.setAttribute('data-message', form.getAttribute('data-delete-message') || '');
                 submitButton.setAttribute('data-warning', form.getAttribute('data-delete-warning') || '');
-                submitButton.setAttribute('data-item-name', getLabel('media_batch_delete_items_label', ':count').replace(':count', String(selectedPaths.length)));
+                submitButton.setAttribute('data-item-name', getLabel('media_batch_delete_items_label').replace(':count', String(selectedPaths.length)));
             } else {
                 submitButton.removeAttribute('data-action');
                 submitButton.removeAttribute('data-message');
@@ -1160,7 +1163,7 @@
 
     function getDriveLabelText() {
         if (currentFolder === null) {
-            return getLabel('media_uploads_root', 'Fichiers uploadés');
+            return getLabel('media_uploads_root');
         }
         if (currentContext !== '') {
             var parts = currentContext.split('/');
@@ -1208,7 +1211,7 @@
             fileInput.accept = folderConfig.accept || '*/*';
         }
         if (acceptedFormats && folderConfig) {
-            const acceptedLabel = (config.labels && config.labels.accepted_formats) || 'Formats acceptés';
+            const acceptedLabel = (config.labels && config.labels.accepted_formats) || '';
             acceptedFormats.textContent = acceptedLabel + ': ' + (folderConfig.extensions || []).join(', ');
         }
         
@@ -1265,7 +1268,7 @@
 
         var currentFolderName = document.getElementById('currentFolderName');
         if (currentFolderName) {
-            currentFolderName.textContent = getLabel('media_uploads_root', 'Fichiers uploadés');
+            currentFolderName.textContent = getLabel('media_uploads_root');
         }
 
         var filesGrid = document.getElementById('filesGrid');
@@ -1473,19 +1476,18 @@
     function getFileLabel(count, mode) {
         const labels = config.labels || {};
         if (mode === 'in') {
-            const singular = labels.file_in || labels.files_in || 'file in';
+            const singular = labels.file_in || labels.files_in || '';
             const plural = labels.files_in || singular;
             return count === 1 ? singular : plural;
         }
-        const singular = labels.file_label || 'file';
-        const plural = labels.files_label || singular + 's';
+        const singular = labels.file_label || labels.files_label || '';
+        const plural = labels.files_label || singular;
         return count === 1 ? singular : plural;
     }
 
     function getDirectoryCountLabel(count) {
         var key = count === 1 ? 'media_folder_count' : 'media_folders_count';
-        var fallback = count === 1 ? '%d folder' : '%d folders';
-        return getLabel(key, fallback).replace('%d', String(count));
+        return getLabel(key).replace('%d', String(count));
     }
 
     function updateFilesCountDisplay(count) {
@@ -1570,13 +1572,13 @@
 
             var thead = document.createElement('thead');
             thead.innerHTML = '<tr>' +
-                '<th class="media-select-column"><input type="checkbox" class="media-row-checkbox" id="mediaSelectAll" aria-label="' + escapeAttribute(getLabel('media_select_all', 'Tout sélectionner')) + '"></th>' +
-                '<th class="media-thumb-column">' + escapeHtml(getLabel('media_preview', 'Vignette')) + '</th>' +
-                '<th>' + escapeHtml(getLabel('media_name', 'Nom du fichier')) + '</th>' +
-                '<th>' + escapeHtml(getLabel('media_folder', 'Dossier')) + '</th>' +
-                '<th>' + escapeHtml(getLabel('media_dimensions', 'Dimensions')) + '</th>' +
-                '<th>' + escapeHtml(getLabel('media_size', 'Poids')) + '</th>' +
-                '<th class="table-actions-header">' + escapeHtml(getLabel('media_actions', 'Actions')) + '</th>' +
+                '<th class="media-select-column"><input type="checkbox" class="media-row-checkbox" id="mediaSelectAll" aria-label="' + escapeAttribute(getLabel('media_select_all')) + '"></th>' +
+                '<th class="media-thumb-column">' + escapeHtml(getLabel('media_preview')) + '</th>' +
+                '<th>' + escapeHtml(getLabel('media_name')) + '</th>' +
+                '<th>' + escapeHtml(getLabel('media_folder')) + '</th>' +
+                '<th>' + escapeHtml(getLabel('media_dimensions')) + '</th>' +
+                '<th>' + escapeHtml(getLabel('media_size')) + '</th>' +
+                '<th class="table-actions-header">' + escapeHtml(getLabel('media_actions')) + '</th>' +
                 '</tr>';
             table.appendChild(thead);
 
@@ -1619,10 +1621,10 @@
             var fullDirectoryPath = currentFolder ? currentFolder + '/' + path : '';
             var canDeleteDirectory = canDeleteMedia && fullDirectoryPath !== '';
             var deleteListAction = canDeleteDirectory
-                ? '<button type="button" class="table-action table-action-delete" data-action="media-delete-open" data-type="directory" data-id="0" data-name="' + escapeAttribute(directoryName) + '" data-path="' + escapeAttribute(fullDirectoryPath) + '" title="' + escapeAttribute(getLabel('delete', 'Delete')) + '"><i class="fas fa-trash"></i></button>'
+                ? '<button type="button" class="table-action table-action-delete" data-action="media-delete-open" data-type="directory" data-id="0" data-name="' + escapeAttribute(directoryName) + '" data-path="' + escapeAttribute(fullDirectoryPath) + '" title="' + escapeAttribute(getLabel('delete')) + '"><i class="fas fa-trash"></i></button>'
                 : '';
             var deleteGridAction = canDeleteDirectory
-                ? '<div class="media-browser-actions-divider"></div><button class="action-delete" data-action="media-delete-open" data-type="directory" data-id="0" data-name="' + escapeAttribute(directoryName) + '" data-path="' + escapeAttribute(fullDirectoryPath) + '"><i class="fas fa-trash"></i><span>' + escapeAttribute(getLabel('delete', 'Delete')) + '</span></button>'
+                ? '<div class="media-browser-actions-divider"></div><button class="action-delete" data-action="media-delete-open" data-type="directory" data-id="0" data-name="' + escapeAttribute(directoryName) + '" data-path="' + escapeAttribute(fullDirectoryPath) + '"><i class="fas fa-trash"></i><span>' + escapeAttribute(getLabel('delete')) + '</span></button>'
                 : '';
             var metaHtml = '';
             if (count > 0) {
@@ -1648,7 +1650,7 @@
                     '<td>-</td>' +
                     '<td>' + metaHtml + '</td>' +
                     '<td><div class="table-actions table-actions-compact">' +
-                        '<button type="button" class="table-action table-action-view" data-action="media-directory-open" data-path="' + escapeAttribute(path) + '" title="' + escapeAttribute(getLabel('media_open', 'Open')) + '"><i class="fas fa-folder-open"></i></button>' +
+                        '<button type="button" class="table-action table-action-view" data-action="media-directory-open" data-path="' + escapeAttribute(path) + '" title="' + escapeAttribute(getLabel('media_open')) + '"><i class="fas fa-folder-open"></i></button>' +
                         deleteListAction +
                     '</div></td>';
             } else {
@@ -1657,7 +1659,7 @@
                         '<button class="media-browser-actions-toggle"><i class="fas fa-ellipsis-v"></i></button>' +
                         '<div class="media-browser-actions-list">' +
                             '<span class="media-browser-actions-item-name"><strong>' + escapeHtml(directoryName) + '</strong></span>' +
-                            '<button data-action="media-directory-open" data-path="' + escapeAttribute(path) + '"><i class="fas fa-folder-open"></i><span>' + escapeAttribute(getLabel('media_open', 'Open')) + '</span></button>' +
+                            '<button data-action="media-directory-open" data-path="' + escapeAttribute(path) + '"><i class="fas fa-folder-open"></i><span>' + escapeAttribute(getLabel('media_open')) + '</span></button>' +
                             deleteGridAction +
                         '</div>' +
                     '</div>' +
@@ -1772,17 +1774,17 @@
         .then(function(response) { return response.json(); })
         .then(function(result) {
             if (result.success) {
-                showToast(getLabel('media_move_success', 'Item moved successfully.'), 'success');
+                showToast(getLabel('media_move_success'), 'success');
                 loadDirectories(currentFolder);
                 loadFiles(currentFolder, currentContext);
                 updateTabCount(currentFolder);
             } else {
-                var msg = result.message || result.error || getLabel('media_move_failed', 'Move failed.');
+                var msg = result.message || result.error || getLabel('media_move_failed');
                 showToast(msg, 'error');
             }
         })
         .catch(function() {
-            showToast(getLabel('media_move_failed', 'Move failed.'), 'error');
+            showToast(getLabel('media_move_failed'), 'error');
         });
     }
 
@@ -1794,7 +1796,7 @@
         var rootBtn = document.createElement('button');
         rootBtn.type = 'button';
         rootBtn.className = 'media-breadcrumb-link';
-        rootBtn.textContent = getLabel('media_uploads_root', 'Fichiers uploadés');
+        rootBtn.textContent = getLabel('media_uploads_root');
         rootBtn.addEventListener('click', function() {
             if (currentFolder === null) {
                 loadRootDirectories();
@@ -2115,16 +2117,16 @@
 
                 if (response.success) {
                     addPendingAiPaths(extractUploadedPaths(response));
-                    showToast(response.message || 'Upload réussi', 'success');
+                    showToast(response.message || getLabel('upload_success'), 'success');
                     loadDirectories(currentFolder);
                     loadFiles(currentFolder, currentContext);
                     updateTabCount(currentFolder);
                 } else {
-                    showToast(response.message || 'Erreur lors de l\'upload', 'error');
+                    showToast(response.message || getLabel('upload_failed'), 'error');
                 }
             } catch (e) {
                 console.error('Upload error:', e);
-                showToast('Erreur serveur', 'error');
+                showToast(getLabel('upload_failed'), 'error');
             }
             
             const fileInput = document.getElementById('fileInput');
@@ -2133,7 +2135,7 @@
 
         xhr.addEventListener('error', function() {
             hideElement(progressDiv);
-            showToast('Erreur réseau', 'error');
+            showToast(getLabel('upload_failed'), 'error');
         });
 
         xhr.open('POST', config.uploadUrl);
@@ -2209,7 +2211,7 @@
         const input = document.getElementById('directoryName');
         const context = resolveDirectoryCreateContext(input instanceof HTMLInputElement ? input.value : '');
         if (context === '') {
-            showToast(getLabel('directory_invalid', ''), 'error');
+            showToast(getLabel('directory_invalid'), 'error');
             return;
         }
 
@@ -2228,18 +2230,18 @@
             })
             .then(function(data) {
                 if (!data || data.success !== true) {
-                    showToast((data && (data.message || data.error)) || getLabel('directory_create_error', ''), 'error');
+                    showToast((data && (data.message || data.error)) || getLabel('directory_create_error'), 'error');
                     return;
                 }
 
                 closeDirectoryModal();
-                showToast(data.message || getLabel('directory_created', ''), 'success');
+                showToast(data.message || getLabel('directory_created'), 'success');
                 loadDirectories(currentFolder);
                 loadFiles(currentFolder, currentContext);
             })
             .catch(function(error) {
                 console.error('Directory creation error:', error);
-                showToast(getLabel('directory_create_error', ''), 'error');
+                showToast(getLabel('directory_create_error'), 'error');
             });
     }
 
@@ -2329,12 +2331,12 @@
                 loadFiles(currentFolder, currentContext);
                 updateTabCount(currentFolder);
             } else {
-                showToast(data.message || getLabel('delete_error', ''), 'error');
+                showToast(data.message || getLabel('delete_error'), 'error');
             }
         })
         .catch(error => {
             closeDeleteModal();
-            showToast(getLabel('delete_error', ''), 'error');
+            showToast(getLabel('delete_error'), 'error');
         });
     }
 
@@ -2343,7 +2345,7 @@
      */
     function copyUrl(url) {
         navigator.clipboard.writeText(url).then(function() {
-            showToast(getLabel('media_url_copied', 'URL copied'), 'success');
+            showToast(getLabel('media_url_copied'), 'success');
         }).catch(function() {
             var input = document.createElement('input');
             input.value = url;
@@ -2351,7 +2353,7 @@
             input.select();
             document.execCommand('copy');
             document.body.removeChild(input);
-            showToast(getLabel('media_url_copied', 'URL copied'), 'success');
+            showToast(getLabel('media_url_copied'), 'success');
         });
     }
 
@@ -2371,7 +2373,7 @@
         } else if (mime === 'application/pdf') {
             content = '<div class="media-preview-content"><iframe class="media-preview-frame" src="' + escapeAttribute(url) + '"></iframe></div>';
         } else if (mime && (mime.startsWith('text/') || mime === 'application/json' || mime === 'application/xml')) {
-            content = '<div class="media-preview-content"><pre class="media-text-preview">' + escapeHtml(getLabel('loading', 'Loading...')) + '</pre></div>';
+            content = '<div class="media-preview-content"><pre class="media-text-preview">' + escapeHtml(getLabel('loading')) + '</pre></div>';
         } else {
             content = '<div class="media-preview-content media-preview-content-empty"><i class="fas fa-file media-preview-icon"></i><p class="media-preview-filename">' + escapeHtml(name) + '</p></div>';
         }
@@ -2393,7 +2395,7 @@
             })
             .catch(function() {
                 var pre = body.querySelector('.media-text-preview');
-                if (pre) pre.textContent = getLabel('error', 'Error') + ': ' + escapeHtml(name);
+                if (pre) pre.textContent = getLabel('toast_error_title') + ': ' + escapeHtml(name);
             });
         }
     }
@@ -2462,17 +2464,17 @@
         .then(function(data) {
             closeRenameModal();
             if (data.success) {
-                showToast(data.message || getLabel('media_rename_success', ''), 'success');
+                showToast(data.message || getLabel('media_rename_success'), 'success');
                 loadDirectories(currentFolder);
                 loadFiles(currentFolder, currentContext);
                 updateTabCount(currentFolder);
             } else {
-                showToast(data.message || getLabel('media_rename_error', ''), 'error');
+                showToast(data.message || getLabel('media_rename_error'), 'error');
             }
         })
         .catch(function() {
             closeRenameModal();
-            showToast(getLabel('media_rename_error', 'Rename failed'), 'error');
+            showToast(getLabel('media_rename_error'), 'error');
         });
     }
 
@@ -2518,7 +2520,7 @@
         .then(data => {
             hideElement(progress);
             showElement(result);
-            if (resultText) resultText.textContent = data.message || 'Synchronisation terminée';
+            if (resultText) resultText.textContent = data.message || '';
             
             setTimeout(() => {
                 closeSyncModal();
@@ -2527,7 +2529,7 @@
         })
         .catch(error => {
             hideElement(progress);
-            showToast('Erreur', 'error');
+            showToast(getLabel('toast_error_title'), 'error');
             if (confirmBtn) confirmBtn.disabled = false;
         });
     }
@@ -2537,7 +2539,7 @@
         var button = actionEl instanceof HTMLElement ? actionEl : null;
         var target = resolveAiIndexTarget(button);
         if (!target) {
-            showToast(getLabel('media_ai_index_failed', 'AI indexing failed.'), 'error');
+            showToast(getLabel('media_ai_index_failed'), 'error');
             return;
         }
 
@@ -2568,12 +2570,12 @@
 
     function runAiIndex(target, button) {
         if (!canUploadMedia || !config.aiIndexUrl) {
-            showToast(getLabel('media_ai_index_failed', 'AI indexing failed.'), 'error');
+            showToast(getLabel('media_ai_index_failed'), 'error');
             return;
         }
 
         setAiButtonsBusy(true);
-        showToast(getLabel('media_ai_indexing', 'AI indexing in progress...'), 'info');
+        showToast(getLabel('media_ai_indexing'), 'info');
 
         var formData = new FormData();
         formData.append('_token', config.csrfToken);
@@ -2599,7 +2601,7 @@
 
                 if (data && data.success) {
                     removePendingAiPaths([].concat(data.completed_paths || []));
-                    showToast(data.message || getLabel('media_ai_indexing', 'AI indexing complete.'), 'success');
+                    showToast(data.message || getLabel('media_ai_indexing'), 'success');
 
                     if (currentFolder) {
                         loadFiles(currentFolder, currentContext);
@@ -2611,11 +2613,11 @@
                     return;
                 }
 
-                showToast((data && data.message) || getLabel('media_ai_index_failed', 'AI indexing failed.'), 'error');
+                showToast((data && data.message) || getLabel('media_ai_index_failed'), 'error');
             })
             .catch(function() {
                 setAiButtonsBusy(false);
-                showToast(getLabel('media_ai_index_failed', 'AI indexing failed.'), 'error');
+                showToast(getLabel('media_ai_index_failed'), 'error');
             });
     }
 

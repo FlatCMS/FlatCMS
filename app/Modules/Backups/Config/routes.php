@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Backups/Config/routes.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -16,6 +19,7 @@ use App\Core\Router;
 $router->group(['prefix' => 'admin', 'middleware' => 'auth'], function (Router $router) {
     $router->get('/backups', [\App\Modules\Backups\Controllers\AdminController::class, 'index'])->name('admin.backups');
     $router->post('/backups/create', [\App\Modules\Backups\Controllers\AdminController::class, 'create'])->name('admin.backups.create');
+    $router->get('/backups/download/{filename}/key', [\App\Modules\Backups\Controllers\AdminController::class, 'downloadKey'])->name('admin.backups.download_key');
     $router->get('/backups/download/{filename}', [\App\Modules\Backups\Controllers\AdminController::class, 'download'])->name('admin.backups.download');
     $router->post('/backups/restore-upload', [\App\Modules\Backups\Controllers\AdminController::class, 'restoreUpload'])->name('admin.backups.restore_upload');
     $router->post('/backups/{filename}/restore', [\App\Modules\Backups\Controllers\AdminController::class, 'restore'])->name('admin.backups.restore');

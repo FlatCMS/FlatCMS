@@ -3,6 +3,11 @@
  * FlatCMS - Flat-File Content Management System
  * Copyright (C) 2026 Alain BROYE
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/UpdateManager/Views/admin/index.php
+ * Version: 2.0.0-dev
  */
 
 $status = is_array($status ?? null) ? $status : [];
@@ -18,6 +23,7 @@ $checkedLabel = $checkedTimestamp !== false ? date('d/m/Y H:i', $checkedTimestam
 $canManageUpdates = !empty($canManageUpdates);
 $updateInProgress = !empty($updateInProgress);
 $updateMonitoring = !empty($updateMonitoring);
+$finalizationAvailable = !empty($finalizationAvailable);
 $recoveryRequired = !empty($recoveryRequired);
 $updateOperationLocked = !empty($updateOperationLocked);
 $cssPath = BASE_PATH . '/app/Modules/UpdateManager/Assets/css/update-manager.css';
@@ -50,6 +56,31 @@ $statusClass = static fn (string $value): string => match ($value) {
         </form>
     <?php endif; ?>
 </div>
+
+<?php if ($finalizationAvailable): ?>
+    <section class="card update-manager-finalization" aria-labelledby="update-finalization-title">
+        <div class="card-header">
+            <h2 id="update-finalization-title"><?= __('updates_finalization_title', 'UpdateManager') ?></h2>
+        </div>
+        <div class="card-body">
+            <p><?= __('updates_finalization_notice', 'UpdateManager') ?></p>
+            <?php if ($canManageUpdates): ?>
+                <form method="POST" action="<?= e(url('/admin/updates/finalize')) ?>" class="update-manager-finalization-form">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="recovery_id" value="<?= e((string) ($recoveryState['recovery_id'] ?? '')) ?>">
+                    <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="verified" value="1" required>
+                        <?= __('updates_finalization_confirm', 'UpdateManager') ?>
+                    </label>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        <?= __('updates_finalization_action', 'UpdateManager') ?>
+                    </button>
+                </form>
+            <?php endif; ?>
+        </div>
+    </section>
+<?php endif; ?>
 
 <div class="alert alert-info update-manager-readonly">
     <i class="fas fa-shield-halved" aria-hidden="true"></i>

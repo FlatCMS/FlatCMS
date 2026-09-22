@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: themes/admin/default/views/partials/head.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -26,12 +29,13 @@
     <meta name="csrf-token" content="<?= $csrf_token ?>">
     <link rel="icon" href="<?= e($siteFaviconUrl) ?>">
     <title><?= e($pageTitle ?? __('admin_title', 'Core')) ?> - <?= __('app_name', 'Core') ?></title>
+    <script src="<?= asset('js/admin/flatcms-ui-primitives.js') ?>"></script>
     <link rel="stylesheet" href="<?= asset('dists/fontawesome/css/all.min.css') ?>">
 
     <link rel="stylesheet" href="<?= asset('css/admin/base.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/admin/themes/default.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/admin/themes/default.css') ?>" data-editor-content-theme>
     <?php if ($themeCustomizationAsset !== ''): ?>
-        <link rel="stylesheet" href="<?= e($themeCustomizationAsset) ?>">
+        <link rel="stylesheet" href="<?= e($themeCustomizationAsset) ?>" data-editor-content-theme>
     <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('dists/ckeditor5/ckeditor5.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/admin/ckeditor.css') ?>">

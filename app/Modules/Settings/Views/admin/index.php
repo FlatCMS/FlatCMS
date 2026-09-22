@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Settings/Views/admin/index.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -839,9 +842,7 @@ $settingsAiAttrs = static function (
                                     <?php if (!is_array($siteHomepageSummary)): ?>
                                         <?= __('homepage_summary_none', 'Settings') ?>
                                     <?php else: ?>
-                                        <?= (string) ($siteHomepageSummary['editor_mode'] ?? 'classic') === 'builder'
-                                            ? __('homepage_editor_builder', 'Settings')
-                                            : __('homepage_editor_classic', 'Settings') ?>
+                                        <?= __('homepage_editor_classic', 'Settings') ?>
                                     <?php endif; ?>
                                 </strong>
                             </div>

@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Settings/Services/EnvConfigManager.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -12,6 +15,10 @@ declare(strict_types=1);
 namespace App\Modules\Settings\Services;
 
 use App\Core\Security\SecretBox;
+use App\Core\EnvironmentFile;
+use App\Core\Storage\AtomicFileWriter;
+use App\Core\Storage\FileLockManager;
+use App\Core\Storage\StorageException;
 
 final class EnvConfigManager
 {
@@ -148,6 +155,19 @@ final class EnvConfigManager
      */
     public function writeValues(array $input, bool $includeEmpty = false): void
     {
+        $writer = $this->writer();
+        $writer->synchronized(self::ENV_LOCAL_PATH, function () use ($input, $includeEmpty, $writer): void {
+            $this->writeLockedValues($input, $includeEmpty, $writer);
+        });
+    }
+
+    private function writer(): AtomicFileWriter
+    {
+        return new AtomicFileWriter(BASE_PATH, new FileLockManager(STORAGE_PATH . '/cache/locks/env'), 0755, 0600);
+    }
+
+    private function writeLockedValues(array $input, bool $includeEmpty, AtomicFileWriter $writer): void
+    {
         $existingValues = $this->readStoredValues();
         $sanitized = $this->sanitizeInput($input, $existingValues);
         $block = $this->buildManagedBlock($sanitized, $includeEmpty);
@@ -175,8 +195,6 @@ final class EnvConfigManager
             }
             $existing = (string) $raw;
         }
-        $this->backupIfNeeded($existing);
-
         $withoutManagedBlock = $this->stripManagedBlock($existing);
         $withoutManagedBlock = trim($withoutManagedBlock);
 
@@ -186,9 +204,10 @@ final class EnvConfigManager
         }
         $content .= $block . PHP_EOL;
 
-        $written = @file_put_contents($path, $content, LOCK_EX);
-        if ($written === false) {
-            throw new \RuntimeException(self::ERROR_ENV_LOCAL_WRITE_FAILED);
+        try {
+            $writer->write($path, $content);
+        } catch (StorageException $exception) {
+            throw new \RuntimeException(self::ERROR_ENV_LOCAL_WRITE_FAILED, 0, $exception);
         }
 
         foreach ($sanitized as $key => $value) {
@@ -208,16 +227,16 @@ final class EnvConfigManager
      */
     public function writePartialValues(array $input): void
     {
-        $existingValues = $this->readStoredValues();
-        $payload = $existingValues;
-
-        foreach ($this->allowedKeys() as $key) {
-            if (array_key_exists($key, $input)) {
-                $payload[$key] = $input[$key];
+        $writer = $this->writer();
+        $writer->synchronized(self::ENV_LOCAL_PATH, function () use ($input, $writer): void {
+            $payload = $this->readStoredValues();
+            foreach ($this->allowedKeys() as $key) {
+                if (array_key_exists($key, $input)) {
+                    $payload[$key] = $input[$key];
+                }
             }
-        }
-
-        $this->writeValues($payload);
+            $this->writeLockedValues($payload, false, $writer);
+        });
     }
 
     public function ensureDefaults(): void
@@ -306,6 +325,15 @@ final class EnvConfigManager
             $values[$key] = trim((string) env($key, ''));
         }
 
+        // Read disk after acquiring the write lock, not the request's stale env snapshot.
+        foreach ([BASE_PATH . '/.env', self::ENV_LOCAL_PATH] as $path) {
+            foreach (EnvironmentFile::read($path) as $key => $value) {
+                if (array_key_exists($key, $values)) {
+                    $values[$key] = $value;
+                }
+            }
+        }
+
         return $values;
     }
 
@@ -358,7 +386,7 @@ final class EnvConfigManager
         }
 
         if (in_array($key, self::BOOLEAN_KEYS, true)) {
-            return $this->normalizeBoolean($value) === 1;
+            return true;
         }
 
         return trim($value) !== '';
@@ -377,21 +405,6 @@ final class EnvConfigManager
             . '\R*/s';
 
         return (string) preg_replace($pattern, '', $content);
-    }
-
-    private function backupIfNeeded(string $existing): void
-    {
-        if ($existing === '') {
-            return;
-        }
-
-        $backupDir = STORAGE_PATH . '/backups/env';
-        if (!is_dir($backupDir) && !@mkdir($backupDir, 0755, true) && !is_dir($backupDir)) {
-            return;
-        }
-
-        $backupPath = $backupDir . '/.env.local.backup.' . date('Ymd_His');
-        @file_put_contents($backupPath, $existing, LOCK_EX);
     }
 
     private function formatEnvValue(string $value): string

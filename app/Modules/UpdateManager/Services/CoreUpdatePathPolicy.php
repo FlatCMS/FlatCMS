@@ -3,6 +3,11 @@
  * FlatCMS - Flat-File Content Management System
  * Copyright (C) 2026 Alain BROYE
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/UpdateManager/Services/CoreUpdatePathPolicy.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -13,7 +18,7 @@ final class CoreUpdatePathPolicy
 {
     private const TOP_FILES = [
         'VERSION', 'flatcms.json', 'index.php', 'public/index.php',
-        'public/.htaccess', 'data/.htaccess', 'storage/.htaccess', 'nginx.conf',
+        '.htaccess', 'public/.htaccess', 'data/.htaccess', 'storage/.htaccess', 'nginx.conf',
         'README.md', 'LICENSE', 'LICENSING.md', 'COMMERCIAL_LICENSE.md',
         'CLA.md', 'TRADEMARK.md', 'THIRD_PARTY_NOTICES.md',
     ];
@@ -36,8 +41,13 @@ final class CoreUpdatePathPolicy
         'uploads/',
         'public/uploads/',
         'resources/licenses/',
+        'resources/downloads/',
+        'resources/Addons/',
+        'resources/uploads/',
         'resources/Store/',
         'resources/updates/catalogs/',
+        'public/assets/extensions/',
+        'public/assets/plugins/',
     ];
 
     /** @return array<int,string> */
@@ -93,7 +103,7 @@ final class CoreUpdatePathPolicy
         }
 
         foreach (self::BLOCKED_PREFIXES as $blocked) {
-            if (str_starts_with($path, $blocked)) {
+            if (str_starts_with(strtolower($path), strtolower($blocked)) || strtolower($path) === strtolower(rtrim($blocked, '/'))) {
                 return false;
             }
         }
@@ -124,7 +134,7 @@ final class CoreUpdatePathPolicy
         }
         $candidate = rtrim($path, '/') . '/';
         foreach (self::BLOCKED_PREFIXES as $blocked) {
-            if (str_starts_with($candidate, $blocked) || str_starts_with($blocked, $candidate)) {
+            if (str_starts_with(strtolower($candidate), strtolower($blocked)) || str_starts_with(strtolower($blocked), strtolower($candidate))) {
                 return false;
             }
         }

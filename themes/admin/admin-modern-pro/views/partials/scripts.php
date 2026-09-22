@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: themes/admin/admin-modern-pro/views/partials/scripts.php
+ * Version: 2.0.0-dev
  */
 
 $adminToastConfig = [
@@ -42,8 +45,7 @@ $tinyApiKeyForCdn = $tinyApiKeySafe !== '' ? $tinyApiKeySafe : 'no-api-key';
 <?php endforeach; ?>
 <script src="<?= asset('dists/ckeditor5/translations/flatcms.umd.js') ?>"></script>
 <script src="<?= asset('js/admin/ckeditor-provider-init.js') ?>"></script>
-<script src="<?= asset('js/admin/flatcms-ui-primitives.js') ?>"></script>
-<script src="<?= asset('js/admin/editor-provider-init.js') ?>"></script>
+<script src="<?= asset('js/admin/editor-provider-init.js') ?>" data-content-css="<?= asset('css/admin/tinymce-content.css') ?>"></script>
 <?php
 $adminFooterAssetsHtml = \App\Core\HookAssets::render('admin.assets.footer', [
     'settings' => \App\Core\FlatFile::settings(),

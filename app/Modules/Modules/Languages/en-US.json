@@ -28,6 +28,7 @@
   "extensions_zip_outside_scope": "The package tries to write outside its folder. Installation blocked.",
   "module_conflict_active": "Disable :module to enable this module.",
   "module_delete_failed": "Unable to delete this module.",
+  "module_cleanup_pending": "The component was uninstalled, but a temporary residue must be removed manually.",
   "module_deleted_success": "Module :module deleted.",
   "module_dependencies": "Dependencies",
   "module_dependencies_missing": "Missing dependencies: :modules",

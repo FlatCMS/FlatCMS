@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: themes/frontend/default/assets/css/style.css
+ * Version: 2.0.0-dev
  */
 
 :root {
@@ -1731,7 +1734,7 @@ span.logo-icon {
   padding: 2.5rem 0 4rem;
 }
 
-.content-wrapper-builder .content-builder {
+.content-wrapper .content-layout {
   width: 100%;
   max-width: none;
 }

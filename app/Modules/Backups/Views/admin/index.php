@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Backups/Views/admin/index.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -136,6 +139,11 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                     <label class="form-label" for="backup_zip"><?= __('backups_upload_field', 'Backups') ?></label>
                     <input type="file" name="backup_zip" id="backup_zip" class="form-input" accept=".zip,application/zip" required>
                     <span class="form-hint"><?= __('backups_upload_hint', 'Backups') ?></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="backup_key"><?= __('backups_upload_key_field', 'Backups') ?></label>
+                    <input type="file" name="backup_key" id="backup_key" class="form-input" accept=".key,application/octet-stream,text/plain">
+                    <span class="form-hint"><?= __('backups_upload_key_hint', 'Backups') ?></span>
                 </div>
                 <?php if ($canManageBackups): ?>
                     <button
@@ -291,6 +299,7 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                         $createdBy = trim((string) ($backup['created_by'] ?? ''));
                         $sourceUrl = trim((string) ($backup['source_url'] ?? ''));
                         $jsonFilesCount = (int) ($backup['json_files_count'] ?? 0);
+                        $htmlFilesCount = (int) ($backup['html_files_count'] ?? 0);
                         $mediaFilesCount = (int) ($backup['media_files_count'] ?? 0);
                         $totalFilesCount = (int) ($backup['total_files_count'] ?? ($jsonFilesCount + $mediaFilesCount));
                         ?>
@@ -329,11 +338,12 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                                     <div class="backups-meta">
                                         <?php if ($isFullBackup): ?>
                                             <span><?= __('backups_full_scope', 'Backups') ?></span>
-                                            <?php if (empty($backup['key_available'])): ?>
+                                            <?php if (!empty($backup['key_required']) && empty($backup['key_available'])): ?>
                                                 <span><?= __('backups_full_key_missing', 'Backups') ?></span>
                                             <?php endif; ?>
                                         <?php else: ?>
                                             <span><?= __('backups_table_files_json', 'Backups', ['count' => (string) $jsonFilesCount]) ?></span>
+                                            <span><?= __('backups_table_files_html', 'Backups', ['count' => (string) $htmlFilesCount]) ?></span>
                                             <span><?= __('backups_table_files_media', 'Backups', ['count' => (string) $mediaFilesCount]) ?></span>
                                         <?php endif; ?>
                                     </div>
@@ -353,6 +363,17 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                                         <i class="fas fa-download" aria-hidden="true"></i>
                                         <span class="backups-action-label"><?= __('download', 'Core') ?></span>
                                     </a>
+                                    <?php if ($canManageBackups && !empty($backup['key_required']) && !empty($backup['key_available'])): ?>
+                                        <a
+                                            href="<?= url('/admin/backups/download/' . rawurlencode($filename) . '/key') ?>"
+                                            class="table-action table-action-download"
+                                            title="<?= e(__('backups_download_key_action', 'Backups')) ?>"
+                                            aria-label="<?= e(__('backups_download_key_action', 'Backups')) ?>"
+                                        >
+                                            <i class="fas fa-key" aria-hidden="true"></i>
+                                            <span class="backups-action-label"><?= __('backups_download_key_action', 'Backups') ?></span>
+                                        </a>
+                                    <?php endif; ?>
                                     <?php if ($canManageBackups): ?>
                                         <form method="POST" action="<?= url('/admin/backups/' . rawurlencode($filename) . '/restore') ?>" class="form-inline">
                                             <?= csrf_field() ?>
@@ -366,7 +387,7 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
                                                 data-item-name="<?= e($filename) ?>"
                                                 title="<?= e(__('backups_restore_action', 'Backups')) ?>"
                                                 aria-label="<?= e(__('backups_restore_action', 'Backups')) ?>"
-                                                <?= $zipAvailable && (!$isFullBackup || !empty($backup['key_available'])) ? '' : 'disabled' ?>
+                                                <?= $zipAvailable && (empty($backup['key_required']) || !empty($backup['key_available'])) ? '' : 'disabled' ?>
                                             >
                                                 <i class="fas fa-rotate-left" aria-hidden="true"></i>
                                                 <span class="backups-action-label"><?= __('backups_restore_action', 'Backups') ?></span>

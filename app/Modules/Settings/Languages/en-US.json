@@ -27,7 +27,6 @@
   "guided_tour_start_now": "Start the tour now",
   "guided_tour_title": "Admin guided tour",
   "homepage_canonical_hint": "When a page is used as the homepage, its /page/... URL redirects to the site root.",
-  "homepage_editor_builder": "Builder",
   "homepage_editor_classic": "Classic",
   "homepage_mode": "Homepage behavior",
   "homepage_mode_hint": "Choose between the native theme homepage and a published page served on the root URL.",

@@ -27,7 +27,6 @@
   "guided_tour_start_now": "Avvia tour adesso",
   "guided_tour_title": "Tour guidato admin",
   "homepage_canonical_hint": "Quando una pagina viene usata come homepage, la sua URL /page/... reindirizza alla radice del sito.",
-  "homepage_editor_builder": "Builder",
   "homepage_editor_classic": "Classico",
   "homepage_mode": "Comportamento della homepage",
   "homepage_mode_hint": "Scegli tra la home nativa del tema e una pagina pubblicata servita sulla URL radice.",

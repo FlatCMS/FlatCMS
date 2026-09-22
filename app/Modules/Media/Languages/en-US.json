@@ -104,7 +104,7 @@
     "media_tour_files_title": "Manage stored files",
     "media_tour_files_content": "The grid shows the media inside the current folder. You can review them, reuse them in other modules, or delete them.",
     "media_tour_next_action_title": "Next recommended step",
-    "media_tour_initial_content": "Start by choosing a file family. Once the active folder is selected, you can upload media, review the result in the grid, and reuse the files in Pages, Posts, Contact, or the Builders.",
+    "media_tour_initial_content": "Start by choosing a file family. Once the active folder is selected, you can upload media, review the result in the grid, and reuse the files in Pages, Posts, or Contact.",
     "media_help_badge": "Workflow",
     "media_help_title": "Organize media by family",
     "media_help_intro": "Choose the right logical folder first, then upload files, and use sync only when the disk changed outside the admin.",

@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Menu/Views/admin/index.php
+ * Version: 2.0.0-dev
  */
 
 $menuItems = $menuItems ?? [];
@@ -54,7 +57,7 @@ $menuConfig = [
     'maxDepth' => 3,
     'rootItemWarningThreshold' => 6,
     'indentStep' => 26,
-    'iconsEndpoint' => url('/admin/menus/icons'),
+    'iconsEndpoint' => url('/admin/ui/icons'),
     'iconImagesEndpoint' => url('/admin/media/api/images'),
     'iconUploadEndpoint' => url('/admin/media/upload'),
     'csrfToken' => csrf_token(),
@@ -66,6 +69,7 @@ $menuConfig = [
     'levelLabels' => $levelLabels,
     'messages' => [
         'confirmRemove' => __('confirm_delete', 'Core'),
+        'confirmDelete' => __('delete', 'Core'),
         'labelRequired' => __('label_required', 'Menu'),
         'maxRootItemsReached' => __('menu_root_items_warning', 'Menu'),
         'menuEmpty' => __('menu_empty', 'Menu'),
@@ -88,6 +92,9 @@ $menuConfig = [
         'customIconEmpty' => __('icon_custom_empty', 'Menu'),
         'customIconUnavailable' => __('icon_custom_unavailable', 'Menu'),
         'mediaModalUnavailable' => __('media_modal_unavailable', 'Menu'),
+        'toastErrorTitle' => __('toast_error_title', 'Core'),
+        'toastWarningTitle' => __('warning', 'Core'),
+        'toastSuccessTitle' => __('success', 'Core'),
     ],
     'toastDuration' => 1500,
     'defaults' => [
@@ -523,15 +530,15 @@ if (!function_exists('menu_render_item')) {
     </div>
 </template>
 
-<div id="menuIconModal" class="menu-icon-modal" aria-hidden="true">
-    <div class="menu-icon-dialog">
-        <div class="menu-icon-header">
-            <h3><?= __('icon_picker_title', 'Menu') ?></h3>
-            <button type="button" class="menu-icon-close" data-action="icon-modal-close" aria-label="<?= __('close', 'Core') ?>">
+<div id="menuIconModal" class="modal-overlay fc-ui-icon-picker" aria-hidden="true" hidden>
+    <div class="modal-container modal-lg fc-ui-icon-picker__dialog" role="dialog" aria-modal="true" aria-labelledby="menuIconModalTitle">
+        <div class="modal-header">
+            <h3 id="menuIconModalTitle" class="modal-title"><?= __('icon_picker_title', 'Menu') ?></h3>
+            <button type="button" class="modal-close" data-fc-icon-picker-close aria-label="<?= __('close', 'Core') ?>">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="menu-icon-search">
+        <div class="fc-ui-icon-picker__search">
             <input type="text" class="form-input" id="menuIconSearch" placeholder="<?= __('icon_search', 'Menu') ?>">
             <div class="menu-icon-upload-row">
                 <div class="menu-icon-upload-copy">
@@ -544,11 +551,11 @@ if (!function_exists('menu_render_item')) {
                 </button>
             </div>
         </div>
-        <div class="menu-icon-section-header">
+        <div class="fc-ui-icon-picker__section-header">
             <h4><?= __('icon_fontawesome_library', 'Menu') ?></h4>
         </div>
-        <div id="menuIconGrid" class="menu-icon-grid">
-            <div class="menu-icon-loading"><?= __('icon_loading', 'Menu') ?></div>
+        <div id="menuIconGrid" class="fc-ui-icon-picker__grid">
+            <div class="fc-ui-icon-picker__state"><?= __('icon_loading', 'Menu') ?></div>
         </div>
     </div>
 </div>
@@ -560,7 +567,7 @@ if (!function_exists('menu_render_item')) {
                 <h3><?= __('menu_translate_title', 'Menu') ?></h3>
                 <p class="menu-translation-subtitle"><?= __('menu_translate_intro', 'Menu') ?></p>
             </div>
-            <button type="button" class="menu-icon-close" data-action="translation-modal-close" aria-label="<?= __('close', 'Core') ?>">
+            <button type="button" class="modal-close" data-action="translation-modal-close" aria-label="<?= __('close', 'Core') ?>">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -628,4 +635,4 @@ if (!function_exists('menu_render_item')) {
     <?php endif; ?>
 <?php endif; ?>
 
-<script src="<?= module_asset('Menu', 'js/menu.js') ?><?= $menuScriptVersion !== '' ? ('?v=' . $menuScriptVersion) : '' ?>"></script>
+<script src="<?= module_asset('Menu', 'js/menu.js') ?><?= $menuScriptVersion !== '' ? ('?v=' . $menuScriptVersion) : '' ?>" defer></script>

@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Media/Repositories/MediaRepository.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);

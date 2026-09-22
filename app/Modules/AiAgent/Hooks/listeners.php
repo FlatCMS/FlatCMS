@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/AiAgent/Hooks/listeners.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -16,7 +19,17 @@ $aiAgentCanUse = static function (): bool {
     }
 
     $role = \App\Modules\Auth\Services\RoleService::normalizeRole((string) ($user['role'] ?? 'member'));
-    return \App\Modules\Auth\Services\RoleService::hasPermission($role, 'ai.use');
+    if (!\App\Modules\Auth\Services\RoleService::hasPermission($role, 'ai.use')) {
+        return false;
+    }
+
+    try {
+        $status = (new \App\Services\AI\AIManager())->configurationStatus();
+        return ($status['configured'] ?? false) === true
+            && ($status['transport_ready'] ?? false) === true;
+    } catch (\Throwable) {
+        return false;
+    }
 };
 
 hook_register('auth.permissions.extend', static function (): array {

@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Modules/Controllers/AdminController.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -16,6 +19,7 @@ use App\Core\I18n;
 use App\Core\ModuleManager;
 use App\Core\ModuleStateRepository;
 use App\Core\RuntimeAssetPublisher;
+use App\Modules\Modules\Services\ComponentUninstallService;
 use App\Services\Licensing\ExtensionLicenseService;
 
 class AdminController extends BaseController
@@ -573,20 +577,18 @@ class AdminController extends BaseController
 
         hook_run('modules.before_delete', $meta);
         try {
-            (new RuntimeAssetPublisher())->removeComponentAssets($meta);
+            $uninstall = (new ComponentUninstallService())->uninstall($name, $meta);
         } catch (\Throwable $exception) {
-            error_log('[FlatCMS][Modules] Unable to remove public assets: ' . $exception->getMessage());
+            error_log('[FlatCMS][Modules] Unable to uninstall component: ' . $exception->getMessage());
             $this->session->flash('error', __('module_delete_failed', 'Modules'));
             $this->redirect(url('/admin/modules'));
             return;
         }
 
-        $this->removeModuleTranslations($name);
-        $this->removeDirectory($path);
-
-        $this->stateRepository->remove($name);
-
         hook_run('modules.after_delete', $meta);
+        if ((bool) ($uninstall['cleanup_pending'] ?? false)) {
+            $this->session->flash('warning', __('module_cleanup_pending', 'Modules'));
+        }
         $this->session->flash('success', __('module_deleted_success', 'Modules', ['module' => $meta['name'] ?? $name]));
         $this->redirect(url('/admin/modules'));
     }
@@ -1321,27 +1323,6 @@ class AdminController extends BaseController
         } catch (\Throwable $exception) {
             error_log('[FlatCMS][Modules] Unable to publish public assets: ' . $exception->getMessage());
             return false;
-        }
-    }
-
-    private function removeModuleTranslations(string $moduleName): void
-    {
-        $moduleName = preg_replace('/[^a-zA-Z0-9_-]/', '', $moduleName) ?: $moduleName;
-        $paths = [
-            $this->modulesPath . '/' . $moduleName . '/Languages',
-            $this->extensionsPath . '/' . $moduleName . '/Languages',
-            $this->pluginsPath . '/' . $moduleName . '/Languages',
-        ];
-
-        foreach ($paths as $langDir) {
-            if (!is_dir($langDir)) {
-                continue;
-            }
-            foreach (glob($langDir . '/*.json') as $file) {
-                @unlink($file);
-            }
-            // remove empty dir
-            @rmdir($langDir);
         }
     }
 

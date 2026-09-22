@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Languages/Assets/js/languages.js
+ * Version: 2.0.0-dev
  */
 
 (function() {
@@ -127,7 +130,7 @@
         })
         .catch(function(err) {
             console.error('Languages moduleTranslations error:', moduleName, err);
-            var message = config.i18n.loadingError || 'Erreur de chargement des traductions';
+            var message = config.i18n.loadingError || '';
             content.innerHTML = '<div class="module-loading module-loading-error"><i class="fas fa-exclamation-triangle"></i> ' + escapeHtml(message) + '</div>';
         });
     }
@@ -343,7 +346,7 @@
         })
         .then(function(data) {
             if (!data || data.success !== true) {
-                throw new Error(data && data.message ? data.message : 'Save failed');
+                throw new Error(data && data.message ? data.message : 'language_save_failed');
             }
 
             // Update originals
@@ -371,7 +374,7 @@
                 btnEl.disabled = false;
                 btnEl.innerHTML = '<i class="fas fa-save"></i> ' + config.i18n.saveModule;
             }
-            showToast(config.i18n.saveModuleError || "Erreur lors de l'enregistrement du module", 'error');
+            showToast(config.i18n.saveModuleError || '', 'error');
         });
     }
 
@@ -425,7 +428,7 @@
                     copyBtn.dataset.key = key;
                     copyBtn.dataset.value = referenceValue;
                     copyBtn.dataset.module = mod;
-                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> ' + (config.i18n.copyRef || 'Copy from reference');
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> ' + (config.i18n.copyRef || '');
                     refBlock.appendChild(copyBtn);
                 } else {
                     copyBtn.dataset.value = referenceValue;
@@ -846,7 +849,7 @@
         Promise.all(promises).then(function() {
             showToast(config.i18n.allSaved, 'success');
         }).catch(function() {
-            showToast(config.i18n.saveAllError || "Erreur lors de l'enregistrement des traductions", 'error');
+            showToast(config.i18n.saveAllError || '', 'error');
         }).finally(function() {
             if (saveAllBtn) {
                 saveAllBtn.disabled = false;
@@ -929,8 +932,8 @@
             ? 'fas fa-circle-exclamation'
             : (toastType === 'warning' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-check');
         var title = toastType === 'error'
-            ? 'Erreur'
-            : (toastType === 'warning' ? 'Info' : 'Succes');
+            ? config.i18n.toastErrorTitle
+            : (toastType === 'warning' ? config.i18n.toastWarningTitle : config.i18n.toastSuccessTitle);
 
         var toast = document.createElement('div');
         toast.className = 'menu-toast menu-toast-' + toastType;

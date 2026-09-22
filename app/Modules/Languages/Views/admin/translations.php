@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Languages/Views/admin/translations.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -216,7 +219,10 @@ $translationsConfig = [
         'scanFillMissing' => __('scan_fill_missing', 'Languages'),
         'translationMissingSingular' => __('translation_missing_singular', 'Languages'),
         'translationMissingPlural' => __('translation_missing_plural', 'Languages'),
-        'keys' => __('keys', 'Languages')
+        'keys' => __('keys', 'Languages'),
+        'toastErrorTitle' => __('toast_error_title', 'Core'),
+        'toastWarningTitle' => __('warning', 'Core'),
+        'toastSuccessTitle' => __('success', 'Core'),
     ]
 ];
 $translationsConfigJson = e(json_encode($translationsConfig));

@@ -3,21 +3,32 @@
  * FlatCMS - Flat-File Content Management System
  * Copyright (C) 2026 Alain BROYE
  * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Backups/Services/FullBackupService.php
+ * Version: 2.0.0-dev
  */
 declare(strict_types=1);
 
 namespace App\Modules\Backups\Services;
 
+use App\Core\Storage\StoragePathGuard;
+use App\Core\Storage\StreamFileTransaction;
+
 final class FullBackupService
 {
     private const ARCHIVE_KIND = 'flatcms-full-backup';
-    private const ARCHIVE_VERSION = 1;
+    private const ARCHIVE_VERSION = 2;
+    private const SUPPORTED_ARCHIVE_VERSIONS = [1, 2];
     private const BACKUP_PREFIX = 'flatcms-full-backup';
-    private const SECRET_CIPHER = 'aes-256-gcm';
-
     private string $basePath;
     private string $backupRoot;
     private string $keyRoot;
+    private BackupSecretCipher $secretCipher;
+
+    /** @var null|callable(string,string):void */
+    private $checkpoint;
 
     /** @var array<int,string> */
     private array $excludedPrefixes = [
@@ -29,18 +40,35 @@ final class FullBackupService
         'storage/backups/',
         'storage/cache/',
         'storage/logs/',
+        'storage/locks/',
         'storage/sessions/',
+        'storage/sync/',
         'storage/tmp/',
+        'storage/transactions/',
+        'storage/trash/media-purge/',
+        'storage/trash/media-transactions/',
         'storage/update-artifacts/',
         'storage/update-manager/',
         'storage/recovery/',
     ];
 
-    public function __construct(?string $basePath = null, ?string $backupRoot = null, ?string $keyRoot = null)
+    public function __construct(
+        ?string $basePath = null,
+        ?string $backupRoot = null,
+        ?string $keyRoot = null,
+        ?callable $checkpoint = null
+    )
     {
         $this->basePath = rtrim($basePath ?: BASE_PATH, '/\\');
         $this->backupRoot = $backupRoot ?: $this->basePath . '/storage/backups/full';
         $this->keyRoot = $keyRoot ?: $this->basePath . '/storage/recovery/keys';
+        $this->checkpoint = $checkpoint;
+        $this->secretCipher = new BackupSecretCipher(
+            $this->basePath,
+            $this->keyRoot,
+            'full-backups',
+            'backups_full'
+        );
     }
 
     /** @return array<int,array<string,mixed>> */
@@ -73,6 +101,22 @@ final class FullBackupService
         return is_file($path) ? $path : null;
     }
 
+    public function resolveStoredKeyPath(string $filename): ?string
+    {
+        $path = $this->resolveStoredBackupPath($filename);
+        if ($path === null) {
+            return null;
+        }
+        $manifest = $this->readManifestOnly($path);
+        $backupId = trim((string) ($manifest['backup_id'] ?? ''));
+        if (preg_match('/^[0-9]{14}-[a-f0-9]{12}$/D', $backupId) !== 1) {
+            return null;
+        }
+        $keyPath = $this->keyRoot . '/' . basename($backupId) . '.key';
+
+        return is_file($keyPath) && !is_link($keyPath) ? $keyPath : null;
+    }
+
     public function deleteStoredBackup(string $filename): void
     {
         $path = $this->resolveStoredBackupPath($filename);
@@ -92,86 +136,101 @@ final class FullBackupService
         }
     }
 
-    /** @param array<string,string> $context @return array<string,mixed> */
-    public function restoreStoredBackup(string $filename, array $context = []): array
+    /**
+     * @param array<string,string> $context
+     * @param callable(string):bool|null $accept
+     * @return array<string,mixed>
+     */
+    public function restoreStoredBackup(string $filename, array $context = [], ?callable $accept = null): array
     {
         $path = $this->resolveStoredBackupPath($filename);
         if ($path === null) {
             throw new \RuntimeException('backups_archive_not_found');
         }
-        $manifest = $this->readManifestOnly($path);
-        $backupId = trim((string) ($manifest['backup_id'] ?? ''));
-        $keyPath = $backupId !== '' ? $this->keyRoot . '/' . basename($backupId) . '.key' : '';
-        if ($keyPath === '' || !is_file($keyPath)) {
+        $keyPath = $this->resolveStoredKeyPath(basename($path));
+        if ($keyPath === null) {
             throw new \RuntimeException('backups_full_key_invalid');
         }
 
-        $rollbackContext = $context;
-        $rollbackContext['reason'] = 'pre_full_restore';
-        $rollback = $this->createBackup($rollbackContext);
-        $result = $this->restoreBackupTo($path, $this->basePath, $keyPath);
-        $result['rollback'] = $rollback;
-        return $result;
+        // The streamed transaction owns one provisional before-generation, not another ZIP per retry.
+        $manifest = $this->validateBackup($path, $keyPath);
+        $expectedVersion = trim((string) ($manifest['flatcms_version'] ?? ''));
+        $validator = $accept === null ? null : static fn (): bool => $accept($expectedVersion);
+
+        return $this->restoreBackupTo($path, $this->basePath, $keyPath, $validator);
     }
 
     /** @param array<string,mixed> $context @return array<string,mixed> */
     public function createBackup(array $context = []): array
     {
-        $this->assertZip();
-        $this->ensureDirectory($this->backupRoot, 0750);
-        $this->ensureDirectory($this->keyRoot, 0700);
+        return \App\Core\Storage\ApplicationLock::for($this->basePath)->exclusive(fn (): array => $this->createBackupUnderLease($context));
+    }
 
-        $backupId = gmdate('YmdHis') . '-' . bin2hex(random_bytes(6));
-        $filename = self::BACKUP_PREFIX . '-' . date('Ymd_His') . '-' . substr($backupId, -12) . '.zip';
+    private function createBackupUnderLease(array $context): array
+    {
+        $this->assertZip();
+        $guard = new StoragePathGuard($this->basePath);
+        $guard->ensureDirectory($this->backupRoot, 0750);
+        $guard->ensureDirectory($this->keyRoot, 0700);
+
+        $backupId = (string) ($context['backup_id'] ?? (gmdate('YmdHis') . '-' . bin2hex(random_bytes(6))));
+        if (preg_match('/^[0-9]{14}-[a-f0-9]{12}$/D', $backupId) !== 1) {
+            throw new \RuntimeException('backups_full_manifest_invalid');
+        }
+        $filename = self::BACKUP_PREFIX . '-' . $backupId . '.zip';
         $path = $this->backupRoot . '/' . $filename;
         $keyPath = $this->keyRoot . '/' . $backupId . '.key';
-        $secretKey = random_bytes(32);
-        if (@file_put_contents($keyPath, base64_encode($secretKey), LOCK_EX) === false) {
-            throw new \RuntimeException('backups_full_key_create_failed');
+        $partial = $path . '.partial';
+        foreach ([$path, $keyPath, $partial] as $candidate) {
+            $guard->resolve($candidate);
+            if (file_exists($candidate)) { throw new \RuntimeException('backups_full_create_failed'); }
         }
-        @chmod($keyPath, 0600);
-
         $files = $this->collectFiles($context);
         if ($files === []) {
-            @unlink($keyPath);
             throw new \RuntimeException('backups_full_no_files');
         }
 
         $manifest = $this->buildManifest($backupId, $files, $context);
         $zip = new \ZipArchive();
-        if ($zip->open($path, \ZipArchive::CREATE | \ZipArchive::EXCL) !== true) {
-            @unlink($keyPath);
-            throw new \RuntimeException('backups_full_create_failed');
-        }
-
         try {
+            $secretKey = $this->secretCipher->generate();
+            $this->secretCipher->persist(basename($keyPath), $secretKey);
+            $this->checkpoint('key_persisted', basename($keyPath));
+            if ($zip->open($partial, \ZipArchive::CREATE | \ZipArchive::EXCL) !== true) {
+                throw new \RuntimeException('backups_full_create_failed');
+            }
             foreach ($files as $relative => $meta) {
                 if (!empty($meta['secret'])) {
                     $plain = (string) @file_get_contents($this->basePath . '/' . $relative);
-                    $payload = $this->encryptSecret($plain, $secretKey);
-                    $entry = 'secrets/' . $this->secretEntryName($relative) . '.json';
+                    $payload = $this->secretCipher->encrypt($plain, $secretKey);
+                    $entry = 'secrets/' . $this->secretCipher->entryName($relative) . '.json';
                     if (!$zip->addFromString($entry, json_encode($payload, JSON_UNESCAPED_SLASHES) ?: '')) {
                         throw new \RuntimeException('backups_full_write_failed');
                     }
                     $manifest['files'][$relative]['entry'] = $entry;
+                    $this->checkpoint('file_added', $relative);
                     continue;
                 }
                 $entry = 'files/' . $relative;
                 if (!$zip->addFile($this->basePath . '/' . $relative, $entry)) {
                     throw new \RuntimeException('backups_full_write_failed');
                 }
+                $this->checkpoint('file_added', $relative);
             }
             $encoded = json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             if (!is_string($encoded) || !$zip->addFromString('manifest.json', $encoded)) {
                 throw new \RuntimeException('backups_full_manifest_failed');
             }
+            if (!$zip->close()) { throw new \RuntimeException('backups_full_create_failed'); }
+            @chmod($partial, 0600);
+            $this->validateBackup($partial, $keyPath);
+            if (!rename($partial, $path)) { throw new \RuntimeException('backups_full_create_failed'); }
         } catch (\Throwable $exception) {
-            $zip->close();
-            @unlink($path);
+            try { $zip->close(); } catch (\Throwable) {}
+            @unlink($partial);
             @unlink($keyPath);
             throw $exception;
         }
-        $zip->close();
 
         if (!is_file($path) || (int) @filesize($path) < 1) {
             @unlink($keyPath);
@@ -192,8 +251,15 @@ final class FullBackupService
         ];
     }
 
+    private function checkpoint(string $event, string $subject): void
+    {
+        if ($this->checkpoint !== null) {
+            ($this->checkpoint)($event, $subject);
+        }
+    }
+
     /** @return array<string,mixed> */
-    public function validateBackup(string $path): array
+    public function validateBackup(string $path, ?string $keyPath = null): array
     {
         $this->assertZip();
         if (!is_file($path)) {
@@ -205,14 +271,21 @@ final class FullBackupService
         }
         try {
             $manifest = json_decode((string) $zip->getFromName('manifest.json'), true);
-            if (!is_array($manifest) || ($manifest['kind'] ?? '') !== self::ARCHIVE_KIND || (int) ($manifest['version'] ?? 0) !== self::ARCHIVE_VERSION) {
+            if (!is_array($manifest) || ($manifest['kind'] ?? '') !== self::ARCHIVE_KIND
+                || !in_array((int) ($manifest['version'] ?? 0), self::SUPPORTED_ARCHIVE_VERSIONS, true)) {
                 throw new \RuntimeException('backups_full_manifest_invalid');
             }
             $files = is_array($manifest['files'] ?? null) ? $manifest['files'] : [];
+            if ($files === []) { throw new \RuntimeException('backups_full_manifest_invalid'); }
+            $key = $keyPath !== null ? $this->secretCipher->read($keyPath) : null;
             foreach ($files as $relative => $meta) {
                 $relative = $this->normalizeRelative((string) $relative);
                 if ($relative === '') {
                     throw new \RuntimeException('backups_full_path_invalid');
+                }
+                if ((int) ($manifest['version'] ?? 0) >= 2
+                    && (string) ($meta['family'] ?? '') !== $this->classifyFile($relative)) {
+                    throw new \RuntimeException('backups_full_manifest_invalid');
                 }
                 $entry = trim((string) ($meta['entry'] ?? (!empty($meta['secret']) ? '' : 'files/' . $relative)));
                 if ($entry === '' || $zip->locateName($entry) === false) {
@@ -224,11 +297,21 @@ final class FullBackupService
                         throw new \RuntimeException('backups_full_entry_missing');
                     }
                     $hash = hash_init('sha256');
-                    hash_update_stream($hash, $stream);
+                    $size = hash_update_stream($hash, $stream);
+                    $complete = feof($stream);
                     fclose($stream);
                     $actual = strtolower(hash_final($hash));
-                    if (!hash_equals(strtolower((string) ($meta['sha256'] ?? '')), $actual)) {
+                    if (!$complete || $size !== (int) ($meta['size_bytes'] ?? -1)
+                        || !hash_equals(strtolower((string) ($meta['sha256'] ?? '')), $actual)) {
                         throw new \RuntimeException('backups_full_hash_mismatch');
+                    }
+                } elseif ($key !== null) {
+                    $payload = json_decode((string) $zip->getFromName($entry), true, 512, JSON_THROW_ON_ERROR);
+                    $plain = is_array($payload) ? $this->secretCipher->decrypt($payload, $key) : '';
+                    if (!is_array($payload)
+                        || strlen($plain) !== (int) ($meta['size_bytes'] ?? -1)
+                        || !hash_equals(strtolower((string) ($meta['sha256'] ?? '')), hash('sha256', $plain))) {
+                        throw new \RuntimeException('backups_full_secret_decrypt_failed');
                     }
                 }
             }
@@ -238,15 +321,46 @@ final class FullBackupService
         }
     }
 
-    /** @return array<string,mixed> */
-    public function restoreBackupTo(string $path, string $targetBase, string $keyPath): array
+    /**
+     * @param callable():bool|null $accept
+     * @return array<string,mixed>
+     */
+    public function restoreBackupTo(string $path, string $targetBase, string $keyPath, ?callable $accept = null): array
+    {
+        $guard = new StoragePathGuard($targetBase);
+        $targetBase = $guard->root();
+        $transaction = new StreamFileTransaction($targetBase, 'full-restoration');
+        return $transaction->synchronized(fn (): array => $this->restoreBackupUnlocked(
+            $path,
+            $targetBase,
+            $keyPath,
+            $transaction,
+            $accept
+        ));
+    }
+
+    public function recoverRestoration(?string $targetBase = null): void
+    {
+        (new StreamFileTransaction($targetBase ?? $this->basePath, 'full-restoration'))->recover();
+    }
+
+    /**
+     * @param callable():bool|null $accept
+     */
+    private function restoreBackupUnlocked(
+        string $path,
+        string $targetBase,
+        string $keyPath,
+        StreamFileTransaction $transaction,
+        ?callable $accept = null
+    ): array
     {
         $manifest = $this->validateBackup($path);
         $targetBase = rtrim($targetBase, '/\\');
         if ($targetBase === '') {
             throw new \RuntimeException('backups_full_restore_target_invalid');
         }
-        $secretKey = $this->readSecretKey($keyPath);
+        $secretKey = $this->secretCipher->read($keyPath);
         $zip = new \ZipArchive();
         if ($zip->open($path) !== true) {
             throw new \RuntimeException('backups_full_open_failed');
@@ -254,34 +368,52 @@ final class FullBackupService
         $restored = 0;
         try {
             $files = is_array($manifest['files'] ?? null) ? $manifest['files'] : [];
+            if ($files === []) { throw new \RuntimeException('backups_full_manifest_invalid'); }
             $manifestExcluded = $this->normalizeExcludedPrefixes($manifest['excluded_prefixes'] ?? []);
-            $this->pruneManagedFiles($targetBase, array_keys($files), $manifestExcluded);
+            $paths = new StoragePathGuard($targetBase);
+            $secrets = [];
+            // Resolve every destination and authenticate ALL secrets before the first write.
             foreach ($files as $relative => $meta) {
+                if (!is_array($meta) || $this->normalizeRelative((string) $relative) !== (string) $relative
+                    || $this->isExcluded((string) $relative, !empty($manifest['include_diagnostics']), $manifestExcluded)) {
+                    throw new \RuntimeException('backups_full_path_invalid');
+                }
+                $target = $paths->resolve((string) $relative);
+                if (is_dir($target)) { throw new \RuntimeException('backups_full_target_collision'); }
+                if (!empty($meta['secret'])) {
+                    $payload = json_decode((string) $zip->getFromName((string) ($meta['entry'] ?? '')), true);
+                    if (!is_array($payload)) { throw new \RuntimeException('backups_full_secret_invalid'); }
+                    $secrets[$relative] = $this->secretCipher->decrypt($payload, $secretKey);
+                }
+            }
+            $operations = [];
+            foreach ($files as $relative => $meta) {
+                // Diagnostic snapshots are useful for inspection, never canonical restore targets.
+                if ($this->isExcluded((string) $relative, false, $manifestExcluded)) { continue; }
                 $relative = $this->normalizeRelative((string) $relative);
-                $target = $targetBase . '/' . $relative;
-                $this->ensureDirectory(dirname($target), 0755);
                 $entry = (string) ($meta['entry'] ?? (!empty($meta['secret']) ? '' : 'files/' . $relative));
                 if (!empty($meta['secret'])) {
-                    $payload = json_decode((string) $zip->getFromName($entry), true);
-                    if (!is_array($payload)) {
-                        throw new \RuntimeException('backups_full_secret_invalid');
-                    }
-                    $content = $this->decryptSecret($payload, $secretKey);
-                    $this->atomicWrite($target, $content, (int) ($meta['mode'] ?? 0600));
+                    $plain = $secrets[$relative];
+                    $operations[] = ['path' => $relative, 'sha256' => hash('sha256', $plain), 'size' => strlen($plain),
+                        'mode' => (int) ($meta['mode'] ?? 0600), 'open' => static function () use ($plain) {
+                            $stream = fopen('php://temp', 'w+b');
+                            if (!is_resource($stream)) { throw new \RuntimeException('backups_restore_write_failed'); }
+                            if (fwrite($stream, $plain) !== strlen($plain) || !rewind($stream)) {
+                                fclose($stream);
+                                throw new \RuntimeException('backups_restore_write_failed');
+                            }
+                            return $stream;
+                        }];
                 } else {
-                    $stream = $zip->getStream($entry);
-                    if (!is_resource($stream)) {
-                        throw new \RuntimeException('backups_full_entry_missing');
-                    }
-                    $this->atomicWriteStream($target, $stream, (int) ($meta['mode'] ?? 0644));
-                    fclose($stream);
-                    $actual = strtolower((string) hash_file('sha256', $target));
-                    if (!hash_equals(strtolower((string) ($meta['sha256'] ?? '')), $actual)) {
-                        throw new \RuntimeException('backups_full_restore_verify_failed');
-                    }
+                    $operations[] = ['path' => $relative, 'sha256' => (string) $meta['sha256'], 'size' => (int) $meta['size_bytes'],
+                        'mode' => (int) ($meta['mode'] ?? 0644), 'open' => static fn () => $zip->getStream($entry)];
                 }
                 $restored++;
             }
+            foreach ($this->obsoleteManagedFiles($targetBase, array_keys($files), $manifestExcluded) as $relative) {
+                $operations[] = ['path' => $relative, 'open' => null];
+            }
+            $transaction->commit($operations, $accept);
         } finally {
             $zip->close();
         }
@@ -293,8 +425,7 @@ final class FullBackupService
     {
         $manifest = $this->readManifestOnly($path);
         $createdTs = (int) ($manifest['created_unix'] ?? (@filemtime($path) ?: time()));
-        $backupId = trim((string) ($manifest['backup_id'] ?? ''));
-        $keyPath = $backupId !== '' ? $this->keyRoot . '/' . basename($backupId) . '.key' : '';
+        $keyPath = $this->resolveStoredKeyPath(basename($path));
 
         return [
             'backup_type' => 'full',
@@ -309,7 +440,8 @@ final class FullBackupService
             'total_files_count' => (int) ($manifest['files_count'] ?? 0),
             'size_bytes' => (int) (@filesize($path) ?: 0),
             'scope' => (string) ($manifest['scope'] ?? ''),
-            'key_available' => $keyPath !== '' && is_file($keyPath),
+            'key_required' => true,
+            'key_available' => $keyPath !== null,
         ];
     }
 
@@ -323,7 +455,8 @@ final class FullBackupService
         }
         try {
             $manifest = json_decode((string) $zip->getFromName('manifest.json'), true);
-            if (!is_array($manifest) || ($manifest['kind'] ?? '') !== self::ARCHIVE_KIND || (int) ($manifest['version'] ?? 0) !== self::ARCHIVE_VERSION) {
+            if (!is_array($manifest) || ($manifest['kind'] ?? '') !== self::ARCHIVE_KIND
+                || !in_array((int) ($manifest['version'] ?? 0), self::SUPPORTED_ARCHIVE_VERSIONS, true)) {
                 throw new \RuntimeException('backups_full_manifest_invalid');
             }
             return $manifest;
@@ -350,12 +483,13 @@ final class FullBackupService
             if ($relative === '' || $this->isExcluded($relative, $includeDiagnostics, $contextExcluded) || basename($relative) === '.DS_Store') {
                 continue;
             }
-            $secret = in_array($relative, ['.env', '.env.local'], true);
+            $secret = $this->isSecretFile($relative);
             $files[$relative] = [
-                'sha256' => $secret ? '' : strtolower((string) hash_file('sha256', $item->getPathname())),
+                'sha256' => strtolower((string) hash_file('sha256', $item->getPathname())),
                 'size_bytes' => (int) $item->getSize(),
                 'mode' => ((int) $item->getPerms()) & 0777,
                 'secret' => $secret,
+                'family' => $this->classifyFile($relative),
             ];
         }
         ksort($files);
@@ -377,6 +511,7 @@ final class FullBackupService
             'flatcms_version' => $this->readFlatCmsVersion(),
             'files_count' => count($files),
             'scope' => trim((string) ($context['scope'] ?? 'full-installation-excluding-runtime')),
+            'families' => $this->familySummary($files),
             'include_diagnostics' => !empty($context['include_diagnostics']),
             'excluded_prefixes' => $this->effectiveExcludedPrefixes($context),
             'files' => $files,
@@ -401,6 +536,57 @@ final class FullBackupService
             }
         }
         return 'unknown';
+    }
+
+    private function isSecretFile(string $relative): bool
+    {
+        return in_array($relative, ['.env', '.env.local', 'storage/app/secretbox.key'], true)
+            || str_starts_with($relative, 'resources/licenses/');
+    }
+
+    private function classifyFile(string $relative): string
+    {
+        if (in_array($relative, ['.env', '.env.local'], true)) {
+            return 'persistent_data';
+        }
+
+        foreach ([
+            'data/',
+            'public/uploads/',
+            'resources/downloads/',
+            'resources/licenses/',
+            'resources/uploads/',
+            'storage/app/',
+            'storage/uploads/',
+            'storage/trash/media/',
+            'storage/trash/themes/',
+        ] as $prefix) {
+            if (str_starts_with($relative, $prefix)) {
+                return 'persistent_data';
+            }
+        }
+
+        return 'product_code';
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $files
+     * @return array<string, array{files_count: int}>
+     */
+    private function familySummary(array $files): array
+    {
+        $summary = [
+            'product_code' => ['files_count' => 0],
+            'persistent_data' => ['files_count' => 0],
+        ];
+        foreach ($files as $meta) {
+            $family = (string) ($meta['family'] ?? '');
+            if (isset($summary[$family])) {
+                $summary[$family]['files_count']++;
+            }
+        }
+
+        return $summary;
     }
 
     /** @param array<int,string> $extraExcluded */
@@ -451,70 +637,37 @@ final class FullBackupService
     private function normalizeRelative(string $relative): string
     {
         $relative = ltrim(str_replace('\\', '/', trim($relative)), '/');
-        if ($relative === '' || str_contains($relative, "\0") || preg_match('#(^|/)\.\.(/|$)#', $relative)) {
+        if ($relative === '' || str_contains($relative, "\0") || str_contains($relative, ':') || preg_match('#(^|/)\.\.?(/|$)#', $relative)) {
             return '';
         }
         return $relative;
     }
 
-    /** @return array<string,string> */
-    private function encryptSecret(string $plain, string $key): array
-    {
-        $iv = random_bytes(12);
-        $tag = '';
-        $cipher = openssl_encrypt($plain, self::SECRET_CIPHER, $key, OPENSSL_RAW_DATA, $iv, $tag);
-        if (!is_string($cipher)) {
-            throw new \RuntimeException('backups_full_secret_encrypt_failed');
-        }
-        return ['iv' => base64_encode($iv), 'tag' => base64_encode($tag), 'cipher' => base64_encode($cipher)];
-    }
-
-    /** @param array<string,mixed> $payload */
-    private function decryptSecret(array $payload, string $key): string
-    {
-        $iv = base64_decode((string) ($payload['iv'] ?? ''), true);
-        $tag = base64_decode((string) ($payload['tag'] ?? ''), true);
-        $cipher = base64_decode((string) ($payload['cipher'] ?? ''), true);
-        if (!is_string($iv) || !is_string($tag) || !is_string($cipher)) {
-            throw new \RuntimeException('backups_full_secret_invalid');
-        }
-        $plain = openssl_decrypt($cipher, self::SECRET_CIPHER, $key, OPENSSL_RAW_DATA, $iv, $tag);
-        if (!is_string($plain)) {
-            throw new \RuntimeException('backups_full_secret_decrypt_failed');
-        }
-        return $plain;
-    }
-
-    private function readSecretKey(string $keyPath): string
-    {
-        $raw = trim((string) @file_get_contents($keyPath));
-        $key = base64_decode($raw, true);
-        if (!is_string($key) || strlen($key) !== 32) {
-            throw new \RuntimeException('backups_full_key_invalid');
-        }
-        return $key;
-    }
-
-    private function secretEntryName(string $relative): string
-    {
-        return rtrim(strtr(base64_encode($relative), '+/', '-_'), '=');
-    }
-
     /** @param array<int,string> $expected */
-    private function pruneManagedFiles(string $targetBase, array $expected, array $manifestExcluded = []): void
+    private function obsoleteManagedFiles(string $targetBase, array $expected, array $manifestExcluded = []): array
     {
+        $obsolete = [];
+        $paths = new StoragePathGuard($targetBase);
         $expectedSet = array_fill_keys(array_map([$this, 'normalizeRelative'], $expected), true);
         foreach (['app', 'bin', 'config', 'data', 'public', 'resources', 'themes', 'storage'] as $root) {
-            $absolute = $targetBase . '/' . $root;
+            $absolute = $paths->resolve($root);
             if (!is_dir($absolute)) {
                 continue;
             }
             $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($absolute, \FilesystemIterator::SKIP_DOTS),
+                new \RecursiveCallbackFilterIterator(
+                    new \RecursiveDirectoryIterator($absolute, \FilesystemIterator::SKIP_DOTS),
+                    function (\SplFileInfo $item) use ($paths, $manifestExcluded): bool {
+                        $relative = $paths->relative($item->getPathname());
+                        if ($this->isExcluded($relative, false, $manifestExcluded)) { return false; }
+                        $paths->resolve($relative);
+                        return true;
+                    }
+                ),
                 \RecursiveIteratorIterator::CHILD_FIRST
             );
             foreach ($iterator as $item) {
-                if (!$item instanceof \SplFileInfo || $item->isLink()) {
+                if (!$item instanceof \SplFileInfo) {
                     continue;
                 }
                 $relative = $this->normalizeRelative(substr($item->getPathname(), strlen($targetBase) + 1));
@@ -522,54 +675,14 @@ final class FullBackupService
                     continue;
                 }
                 if ($item->isFile() && !isset($expectedSet[$relative])) {
-                    @unlink($item->getPathname());
-                } elseif ($item->isDir()) {
-                    @rmdir($item->getPathname());
+                    $obsolete[] = $relative;
                 }
             }
         }
+        sort($obsolete, SORT_STRING);
+        return $obsolete;
     }
 
-    private function atomicWrite(string $target, string $content, int $mode): void
-    {
-        $tmp = $target . '.flatcms-full-restore.tmp';
-        if (@file_put_contents($tmp, $content, LOCK_EX) === false) {
-            throw new \RuntimeException('backups_full_restore_write_failed');
-        }
-        @chmod($tmp, $mode > 0 ? $mode : 0644);
-        $this->swap($tmp, $target);
-    }
-
-    /** @param resource $stream */
-    private function atomicWriteStream(string $target, $stream, int $mode): void
-    {
-        $tmp = $target . '.flatcms-full-restore.tmp';
-        $out = @fopen($tmp, 'wb');
-        if (!is_resource($out)) {
-            throw new \RuntimeException('backups_full_restore_write_failed');
-        }
-        $ok = stream_copy_to_stream($stream, $out);
-        fclose($out);
-        if ($ok === false) {
-            @unlink($tmp);
-            throw new \RuntimeException('backups_full_restore_write_failed');
-        }
-        @chmod($tmp, $mode > 0 ? $mode : 0644);
-        $this->swap($tmp, $target);
-    }
-
-    private function swap(string $tmp, string $target): void
-    {
-        if (!@rename($tmp, $target)) {
-            if (is_file($target)) {
-                @unlink($target);
-            }
-            if (!@rename($tmp, $target)) {
-                @unlink($tmp);
-                throw new \RuntimeException('backups_full_restore_swap_failed');
-            }
-        }
-    }
 
     private function ensureDirectory(string $path, int $mode): void
     {
@@ -583,7 +696,7 @@ final class FullBackupService
         if (!class_exists(\ZipArchive::class)) {
             throw new \RuntimeException('backups_full_zip_required');
         }
-        if (!function_exists('openssl_encrypt') || !function_exists('openssl_decrypt')) {
+        if (!$this->secretCipher->available()) {
             throw new \RuntimeException('backups_full_openssl_required');
         }
     }
