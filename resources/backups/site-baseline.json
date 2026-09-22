@@ -51,9 +51,9 @@
             },
             "Auth": {
                 "path": "app/Modules/Auth",
-                "sha256": "754bbb26a4a679e3fbe4a5cda3dcf9707a6356601109025857076fc3eba77b1d",
+                "sha256": "76af9075e98bfab36eb2258e63c1cd204e34db88f94e5898edebe38b21ca0ec3",
                 "files_count": 29,
-                "size_bytes": 284561,
+                "size_bytes": 288290,
                 "identity": {
                     "name": "Auth",
                     "version": "1.0.1",
@@ -65,9 +65,9 @@
             },
             "Backups": {
                 "path": "app/Modules/Backups",
-                "sha256": "c78da7fca500c1fe5d345119ec21dd64482e7499c098d3a9f92b7b28fe150115",
+                "sha256": "be4fc5b5b4427e681533195eddabbf3e5337a43a0a8f2aacc707fac73720ae3d",
                 "files_count": 17,
-                "size_bytes": 212059,
+                "size_bytes": 249906,
                 "identity": {
                     "name": "Backups",
                     "version": "1.0.2",
@@ -275,9 +275,9 @@
             },
             "Settings": {
                 "path": "app/Modules/Settings",
-                "sha256": "e0e5f8f4c7ad849fb030191ebdb400c7cc2877ac6d8b5fd0452a2bee11638908",
+                "sha256": "ede902f84973293a6ed5f3284b10c7189b1d8c0769612c8b25ecc12a4ea9588d",
                 "files_count": 28,
-                "size_bytes": 683380,
+                "size_bytes": 687356,
                 "identity": {
                     "name": "Settings",
                     "version": "1.0.1",

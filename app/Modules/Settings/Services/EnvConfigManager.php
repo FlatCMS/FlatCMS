@@ -135,6 +135,118 @@ final class EnvConfigManager
     }
 
     /**
+     * Export only values explicitly stored in .env.local and managed by Settings.
+     * Secret values are normalized to SecretBox ciphertext before leaving the source.
+     *
+     * @return array<string,string>
+     */
+    public function exportPortableValues(): array
+    {
+        if (!is_file(self::ENV_LOCAL_PATH)) {
+            return [];
+        }
+
+        $stored = EnvironmentFile::read(self::ENV_LOCAL_PATH);
+        $values = [];
+        $secretBox = new SecretBox();
+        foreach ($this->allowedKeys() as $key) {
+            if (!array_key_exists($key, $stored)) {
+                continue;
+            }
+
+            $value = trim((string) $stored[$key]);
+            if (in_array($key, self::BOOLEAN_KEYS, true)) {
+                $values[$key] = (string) $this->normalizeBoolean($value);
+                continue;
+            }
+            if (in_array($key, self::SECRET_KEYS, true)) {
+                if ($value === '') {
+                    $values[$key] = '';
+                    continue;
+                }
+                $plain = $secretBox->decrypt($value);
+                if ($plain === '' && $value !== '') {
+                    throw new \RuntimeException('backups_site_portable_settings_invalid');
+                }
+                $values[$key] = $plain;
+                continue;
+            }
+
+            $value = str_replace("\0", '', $value);
+            $values[$key] = str_replace(["\r\n", "\r"], "\n", $value);
+        }
+
+        return $values;
+    }
+
+    /**
+     * Build the target .env.local while preserving all unmanaged target settings.
+     *
+     * @param array<string,mixed> $values
+     */
+    public function buildPortableEnvLocalContent(array $values, string $existingContent): string
+    {
+        $normalized = [];
+        $secretBox = new SecretBox();
+
+        foreach ($this->allowedKeys() as $key) {
+            if (!array_key_exists($key, $values)) {
+                continue;
+            }
+            if (is_array($values[$key]) || is_object($values[$key])) {
+                throw new \RuntimeException('backups_site_portable_settings_invalid');
+            }
+
+            $value = trim((string) $values[$key]);
+            if (in_array($key, self::BOOLEAN_KEYS, true)) {
+                $normalized[$key] = (string) $this->normalizeBoolean($value);
+                continue;
+            }
+            if (in_array($key, self::SECRET_KEYS, true)) {
+                if ($value !== '' && $secretBox->isEncrypted($value)) {
+                    throw new \RuntimeException('backups_site_portable_settings_invalid');
+                }
+                $stored = $value === '' ? '' : $secretBox->encrypt($value);
+                if ($value !== '' && !$secretBox->isEncrypted($stored)) {
+                    throw new \RuntimeException('backups_site_portable_settings_invalid');
+                }
+                $normalized[$key] = $stored;
+                continue;
+            }
+
+            $value = str_replace("\0", '', $value);
+            $normalized[$key] = str_replace(["\r\n", "\r"], "\n", $value);
+        }
+
+        $withoutManagedBlock = trim($this->stripManagedBlock($existingContent));
+        $content = $withoutManagedBlock === ''
+            ? ''
+            : $withoutManagedBlock . PHP_EOL . PHP_EOL;
+        $content .= $this->buildPortableManagedBlock($normalized) . PHP_EOL;
+
+        return $content;
+    }
+
+    /** @param array<string,string> $values */
+    private function buildPortableManagedBlock(array $values): string
+    {
+        $lines = [
+            self::MANAGED_BLOCK_START,
+            '# Restored from a portable FlatCMS SiteBackup',
+        ];
+
+        foreach ($this->allowedKeys() as $key) {
+            if (!array_key_exists($key, $values)) {
+                continue;
+            }
+            $lines[] = $key . '=' . $this->formatEnvValue((string) $values[$key]);
+        }
+
+        $lines[] = self::MANAGED_BLOCK_END;
+        return implode(PHP_EOL, $lines);
+    }
+
+    /**
      * @return array{path:string,exists:bool,writable:bool}
      */
     public function status(): array

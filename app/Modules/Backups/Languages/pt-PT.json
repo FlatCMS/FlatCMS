@@ -110,5 +110,19 @@
   "backups_site_openssl_required": "O OpenSSL é necessário para proteger os segredos SiteBackup.",
   "backups_site_secret_invalid": "O segredo cifrado do SiteBackup é inválido.",
   "backups_site_secret_encrypt_failed": "Não foi possível cifrar o segredo SiteBackup.",
-  "backups_site_secret_decrypt_failed": "Não foi possível autenticar ou decifrar o segredo SiteBackup."
+  "backups_site_secret_decrypt_failed": "Não foi possível autenticar ou decifrar o segredo SiteBackup.",
+  "backups_site_baseline_missing": "A referência de portabilidade do SiteBackup não foi encontrada.",
+  "backups_site_baseline_invalid": "A referência de portabilidade do SiteBackup é inválida.",
+  "backups_site_baseline_manifest_invalid": "O manifesto de um componente nativo é inválido para a verificação de portabilidade.",
+  "backups_site_baseline_path_invalid": "Um caminho da referência de portabilidade é inválido.",
+  "backups_site_baseline_read_failed": "Não foi possível ler um ficheiro necessário à verificação de portabilidade.",
+  "backups_site_baseline_root_missing": "Falta um componente nativo esperado do FlatCMS.",
+  "backups_site_baseline_symlink_forbidden": "Uma ligação simbólica inesperada impede a verificação de portabilidade.",
+  "backups_site_baseline_version_missing": "Não foi possível determinar a versão do FlatCMS.",
+  "backups_site_baseline_write_failed": "Não foi possível guardar a referência de portabilidade do SiteBackup.",
+  "backups_site_portability_blocked": "A cópia portátil foi bloqueada porque o Core, um módulo nativo ou um tema nativo foi modificado.",
+  "backups_site_target_portability_blocked": "O restauro foi bloqueado porque a instalação de destino já não corresponde à referência do Core FlatCMS.",
+  "backups_site_version_incompatible": "Esta cópia portátil foi criada com uma versão do FlatCMS diferente da instalação de destino.",
+  "backups_site_portable_settings_invalid": "As definições sensíveis transportadas por esta cópia são inválidas ou não podem ser lidas.",
+  "backups_site_portable_license_invalid": "Uma licença transportada por esta cópia é inválida ou não pode ser lida."
 }

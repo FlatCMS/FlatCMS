@@ -110,5 +110,19 @@
   "backups_site_openssl_required": "OpenSSL es obligatorio para proteger los secretos de SiteBackup.",
   "backups_site_secret_invalid": "El secreto cifrado de SiteBackup no es válido.",
   "backups_site_secret_encrypt_failed": "No se ha podido cifrar el secreto de SiteBackup.",
-  "backups_site_secret_decrypt_failed": "No se ha podido autenticar o descifrar el secreto de SiteBackup."
+  "backups_site_secret_decrypt_failed": "No se ha podido autenticar o descifrar el secreto de SiteBackup.",
+  "backups_site_baseline_missing": "Falta la referencia de portabilidad de SiteBackup.",
+  "backups_site_baseline_invalid": "La referencia de portabilidad de SiteBackup no es válida.",
+  "backups_site_baseline_manifest_invalid": "El manifiesto de un componente nativo no es válido para la comprobación de portabilidad.",
+  "backups_site_baseline_path_invalid": "Una ruta de la referencia de portabilidad no es válida.",
+  "backups_site_baseline_read_failed": "No se ha podido leer un archivo necesario para comprobar la portabilidad.",
+  "backups_site_baseline_root_missing": "Falta un componente nativo esperado de FlatCMS.",
+  "backups_site_baseline_symlink_forbidden": "Un enlace simbólico inesperado impide comprobar la portabilidad.",
+  "backups_site_baseline_version_missing": "No se ha podido determinar la versión de FlatCMS.",
+  "backups_site_baseline_write_failed": "No se ha podido guardar la referencia de portabilidad de SiteBackup.",
+  "backups_site_portability_blocked": "La copia portable está bloqueada porque se ha modificado el Core, un módulo nativo o un tema nativo.",
+  "backups_site_target_portability_blocked": "La restauración está bloqueada porque la instalación de destino ya no coincide con su referencia del Core de FlatCMS.",
+  "backups_site_version_incompatible": "Esta copia portable se creó con una versión de FlatCMS distinta de la instalación de destino.",
+  "backups_site_portable_settings_invalid": "Los ajustes sensibles transportados por esta copia no son válidos o no se pueden leer.",
+  "backups_site_portable_license_invalid": "Una licencia transportada por esta copia no es válida o no se puede leer."
 }

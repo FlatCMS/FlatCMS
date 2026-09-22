@@ -23,10 +23,11 @@ use App\Core\Storage\StreamFileTransaction;
 final class SiteBackupService
 {
     private const ARCHIVE_KIND = 'flatcms-site-backup';
-    private const ARCHIVE_VERSION = 2;
-    private const SUPPORTED_ARCHIVE_VERSIONS = [1, 2];
+    private const ARCHIVE_VERSION = 3;
+    private const SUPPORTED_ARCHIVE_VERSIONS = [1, 2, 3];
     private const TMP_UPLOAD_PREFIX = 'site-upload-';
     private const BACKUP_PREFIX = 'flatcms-site-backup';
+    private const PORTABLE_SECRETS_ENTRY = 'transport/site-secrets.json';
     private ?StreamFileTransaction $restoration = null;
 
     private string $dataRoot;
@@ -41,8 +42,9 @@ final class SiteBackupService
     private string $storageSecretKeyPath;
     private string $keyRoot;
     private BackupSecretCipher $secretCipher;
+    private SiteBackupBaselineService $baselineService;
 
-    public function __construct()
+    public function __construct(?SiteBackupBaselineService $baselineService = null)
     {
         $storageRoot = defined('STORAGE_PATH') ? (string) STORAGE_PATH : BASE_PATH . '/storage';
 
@@ -63,6 +65,7 @@ final class SiteBackupService
             'site-backups',
             'backups_site'
         );
+        $this->baselineService = $baselineService ?? new SiteBackupBaselineService();
     }
 
     public function zipAvailable(): bool
@@ -106,7 +109,12 @@ final class SiteBackupService
         $this->assertZipAvailable();
         $this->ensureDirectories();
 
-        $files = $this->snapshotArchiveFiles();
+        $portability = $this->baselineService->inspect();
+        if (empty($portability['portable'])) {
+            throw new \RuntimeException('backups_site_portability_blocked');
+        }
+
+        $files = $this->snapshotArchiveFiles($portability);
         if ($files === []) {
             throw new \RuntimeException('backups_error_no_data');
         }
@@ -117,10 +125,10 @@ final class SiteBackupService
         $partial = $path . '.partial';
         $keyPath = '';
         $secretKey = null;
-        $manifest = $this->buildManifest($backupId, $files, $context);
+        $manifest = $this->buildManifest($backupId, $files, $context, $portability);
 
         try {
-            if (isset($files['storage/app/secretbox.key'])) {
+            if ($this->containsSecretEntries($files)) {
                 $secretKey = $this->secretCipher->generate();
                 $keyPath = $this->secretCipher->persist('site-' . $backupId . '.key', $secretKey);
             }
@@ -340,12 +348,115 @@ final class SiteBackupService
             if ($zip->open($archivePath) !== true) { throw new \RuntimeException('backups_archive_open_failed'); }
             try {
                 $payload = $this->readArchivePayload($archivePath, $zip, $keyPath);
+                $archiveVersion = max(1, (int) ($payload['manifest']['version'] ?? 1));
+                $internalWrites = $archiveVersion >= 3
+                    ? $this->preparePortableInternalWrites($payload['files'])
+                    : [];
                 $payload['files'] = $this->adaptRestoredFilesToCurrentInstallation($payload['files']);
-                $this->mirrorArchiveFiles($payload['files'], $zip, [], $accept);
+                $portableRoots = is_array($payload['portable_roots'] ?? null)
+                    ? $payload['portable_roots']
+                    : [];
+                $this->mirrorArchiveFiles(
+                    $payload['files'],
+                    $zip,
+                    [],
+                    $accept,
+                    $archiveVersion,
+                    $portableRoots,
+                    $internalWrites
+                );
+                if ($archiveVersion >= 3) {
+                    (new \App\Core\RuntimeAssetPublisher())->publishAll();
+                }
                 $this->clearRuntimeCaches();
-                return ['restored_files_count' => count($payload['files']), 'manifest' => $payload['manifest']];
+                return [
+                    'restored_files_count' => count($payload['files']) + count($internalWrites),
+                    'manifest' => $payload['manifest'],
+                ];
             } finally { $zip->close(); }
         });
+    }
+
+    /**
+     * Consume the encrypted logical transport and convert it to target-specific writes.
+     *
+     * @param array<string,string|array<string,mixed>> $files
+     * @return array<string,string>
+     */
+    private function preparePortableInternalWrites(array &$files): array
+    {
+        if (!array_key_exists(self::PORTABLE_SECRETS_ENTRY, $files)) {
+            return [];
+        }
+
+        $raw = $files[self::PORTABLE_SECRETS_ENTRY];
+        unset($files[self::PORTABLE_SECRETS_ENTRY]);
+        if (!is_string($raw)) {
+            throw new \RuntimeException('backups_site_portable_settings_invalid');
+        }
+
+        try {
+            $transport = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            throw new \RuntimeException('backups_site_portable_settings_invalid', 0, $exception);
+        }
+        if (!is_array($transport)
+            || (int) ($transport['schema'] ?? 0) !== 1
+            || !is_array($transport['integrations'] ?? null)
+            || !is_array($transport['settings_secrets'] ?? null)
+            || !is_array($transport['licenses'] ?? null)
+            || array_diff(array_keys($transport), ['schema', 'integrations', 'settings_secrets', 'licenses']) !== []) {
+            throw new \RuntimeException('backups_site_portable_settings_invalid');
+        }
+
+        $writes = [];
+        $integrations = (array) $transport['integrations'];
+        if ($integrations !== []) {
+            $envPath = BASE_PATH . '/.env.local';
+            $existingEnv = '';
+            if (is_file($envPath)) {
+                $existingEnv = @file_get_contents($envPath);
+                if (!is_string($existingEnv)) {
+                    throw new \RuntimeException('backups_restore_write_failed');
+                }
+            }
+            $writes['.env.local'] = (new \App\Modules\Settings\Services\EnvConfigManager())
+                ->buildPortableEnvLocalContent($integrations, $existingEnv);
+        }
+
+        $settingsSecrets = (array) $transport['settings_secrets'];
+        if (array_diff(array_keys($settingsSecrets), ['mail_smtp_password']) !== []) {
+            throw new \RuntimeException('backups_site_portable_settings_invalid');
+        }
+        if (array_key_exists('mail_smtp_password', $settingsSecrets)) {
+            $plainPassword = $settingsSecrets['mail_smtp_password'];
+            if (!is_string($plainPassword) || !isset($files['data/settings.json'])
+                || !is_string($files['data/settings.json'])) {
+                throw new \RuntimeException('backups_site_portable_settings_invalid');
+            }
+
+            $settings = json_decode($files['data/settings.json'], true);
+            if (!is_array($settings)) {
+                throw new \RuntimeException('backups_archive_invalid_json');
+            }
+
+            $secretBox = new SecretBox();
+            $stored = $plainPassword === '' ? '' : $secretBox->encrypt($plainPassword);
+            if ($plainPassword !== '' && !$secretBox->isEncrypted($stored)) {
+                throw new \RuntimeException('backups_site_portable_settings_invalid');
+            }
+            $settings['mail_smtp_password'] = $stored;
+            $files['data/settings.json'] = $this->encodeJson($settings);
+        }
+
+        $licenses = (array) $transport['licenses'];
+        if ($licenses !== []) {
+            $writes['resources/licenses/licenses.json'] =
+                (new \App\Modules\Auth\Services\LicenseVaultService())
+                    ->buildPortableVaultContent($licenses);
+        }
+
+        return $writes;
     }
 
     /**
@@ -389,14 +500,28 @@ final class SiteBackupService
         array $files,
         ?\ZipArchive $zip = null,
         array $extraDeletes = [],
-        ?callable $accept = null
+        ?callable $accept = null,
+        int $scopeVersion = 2,
+        array $portableRoots = [],
+        array $internalWrites = []
     ): void
     {
-        $this->transaction()->synchronized(function () use ($files, $zip, $extraDeletes, $accept): void {
+        $this->transaction()->synchronized(function () use (
+            $files,
+            $zip,
+            $extraDeletes,
+            $accept,
+            $scopeVersion,
+            $portableRoots,
+            $internalWrites
+        ): void {
             $operations = [];
-            $existing = $this->existingArchivePaths();
+            $pruneRoots = $scopeVersion >= 3
+                ? array_values(array_unique(array_merge($portableRoots, $this->currentPortableRoots())))
+                : [];
+            $existing = $this->existingArchivePaths($scopeVersion, $pruneRoots);
             foreach ($files as $relative => $content) {
-                $this->absolutePathForRelative($relative);
+                $this->absolutePathForRelative($relative, $scopeVersion, $portableRoots);
                 $operation = ['path' => $relative];
                 if ($this->isSecretEntry($relative)) { $operation['mode'] = 0600; }
                 if (is_string($content)) {
@@ -415,11 +540,14 @@ final class SiteBackupService
                         'open' => isset($content['source'])
                             ? static fn () => fopen((new StoragePathGuard(BASE_PATH))->resolve($content['source']), 'rb')
                             : static fn () => $zip?->getStreamIndex($content['zip_index'])];
+                    if (isset($content['mode'])) {
+                        $operation['mode'] = (int) $content['mode'];
+                    }
                 }
                 $operations[] = $operation;
             }
             foreach (array_diff($existing, array_keys($files)) as $relative) {
-                $this->absolutePathForRelative($relative);
+                $this->absolutePathForRelative($relative, $scopeVersion, $pruneRoots);
                 $operations[] = ['path' => $relative, 'open' => null];
             }
             foreach ($extraDeletes as $relative) {
@@ -432,8 +560,77 @@ final class SiteBackupService
                 }
                 $operations[] = ['path' => $relative, 'open' => null];
             }
+            foreach ($internalWrites as $relative => $content) {
+                if (!in_array($relative, ['.env.local', 'resources/licenses/licenses.json'], true)
+                    || !is_string($content)) {
+                    throw new \RuntimeException('backups_restore_write_failed');
+                }
+                (new StoragePathGuard(BASE_PATH))->resolve($relative);
+                $operations[] = [
+                    'path' => $relative,
+                    'sha256' => hash('sha256', $content),
+                    'size' => strlen($content),
+                    'mode' => 0600,
+                    'open' => static function () use ($content) {
+                        $stream = fopen('php://temp', 'w+b');
+                        if (!is_resource($stream)
+                            || fwrite($stream, $content) !== strlen($content)
+                            || !rewind($stream)) {
+                            if (is_resource($stream)) {
+                                fclose($stream);
+                            }
+                            throw new \RuntimeException('backups_restore_write_failed');
+                        }
+                        return $stream;
+                    },
+                ];
+            }
             $this->transaction()->commit($operations, $accept);
+
+            if ($scopeVersion >= 3) {
+                $obsoleteRoots = array_values(array_diff($pruneRoots, $portableRoots));
+                $this->pruneEmptyPortableRoots($obsoleteRoots);
+            }
         });
+    }
+
+    /** @param list<string> $roots */
+    private function pruneEmptyPortableRoots(array $roots): void
+    {
+        $guard = new StoragePathGuard(BASE_PATH);
+
+        foreach ($roots as $relativeRoot) {
+            $relativeRoot = trim((string) $relativeRoot, '/');
+            if ($relativeRoot === '') {
+                continue;
+            }
+
+            $absoluteRoot = $guard->resolve($relativeRoot);
+            if (!is_dir($absoluteRoot) || is_link($absoluteRoot)) {
+                continue;
+            }
+
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($absoluteRoot, \FilesystemIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::CHILD_FIRST
+            );
+
+            foreach ($iterator as $item) {
+                if (!$item->isDir() || $item->isLink()) {
+                    continue;
+                }
+                $path = $item->getPathname();
+                $entries = scandir($path);
+                if (is_array($entries) && count($entries) === 2) {
+                    @rmdir($path);
+                }
+            }
+
+            $entries = scandir($absoluteRoot);
+            if (is_array($entries) && count($entries) === 2) {
+                @rmdir($absoluteRoot);
+            }
+        }
     }
 
     /**
@@ -466,8 +663,8 @@ final class SiteBackupService
 
             $kind = trim((string) ($manifest['kind'] ?? ''));
             $version = (int) ($manifest['version'] ?? 0);
-            if ($kind === self::ARCHIVE_KIND && $version === self::ARCHIVE_VERSION) {
-                return $this->readVersionTwoPayload($zip, $manifest, $keyPath);
+            if ($kind === self::ARCHIVE_KIND && in_array($version, [2, 3], true)) {
+                return $this->readVersionedPayload($zip, $manifest, $keyPath);
             }
             if (($kind !== '' && $kind !== self::ARCHIVE_KIND)
                 || ($version !== 0 && !in_array($version, self::SUPPORTED_ARCHIVE_VERSIONS, true))) {
@@ -484,13 +681,18 @@ final class SiteBackupService
      * @param array<string,mixed> $manifest
      * @return array{manifest:array<string,mixed>,files:array<string,string|array<string,mixed>>}
      */
-    private function readVersionTwoPayload(\ZipArchive $zip, array $manifest, ?string $keyPath): array
+    private function readVersionedPayload(\ZipArchive $zip, array $manifest, ?string $keyPath): array
     {
         $backupId = trim((string) ($manifest['backup_id'] ?? ''));
         $inventory = is_array($manifest['files'] ?? null) ? $manifest['files'] : [];
         if (preg_match('/^[0-9]{14}-[a-f0-9]{12}$/D', $backupId) !== 1 || $inventory === []) {
             throw new \RuntimeException('backups_archive_invalid_manifest');
         }
+
+        $version = (int) ($manifest['version'] ?? 0);
+        $portableRoots = $version >= 3
+            ? $this->validatePortableManifestScope($manifest, $inventory)
+            : [];
 
         $secretRequired = !empty($manifest['secret_key_required']);
         $secretKey = null;
@@ -509,19 +711,26 @@ final class SiteBackupService
                 throw new \RuntimeException('backups_archive_invalid_manifest');
             }
             $normalized = $this->normalizeArchiveEntry($relative);
-            if ($normalized !== $relative || !$this->isAllowedArchiveEntry($normalized) || $normalized === 'manifest.json'
+            if ($normalized !== $relative
+                || !$this->isAllowedArchiveEntryForVersion($normalized, $version, $portableRoots)
+                || $normalized === 'manifest.json'
                 || isset($files[$normalized])) {
                 throw new \RuntimeException('backups_archive_invalid_manifest');
             }
             $secret = !empty($meta['secret']);
+            if ($version >= 3 && $secret !== $this->isSecretEntry($normalized)) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
             $entry = trim((string) ($meta['entry'] ?? ''));
             $expectedEntry = $secret
                 ? 'secrets/' . $this->secretCipher->entryName($normalized) . '.json'
                 : $normalized;
             $sha256 = strtolower(trim((string) ($meta['sha256'] ?? '')));
             $size = (int) ($meta['size_bytes'] ?? -1);
+            $mode = (int) ($meta['mode'] ?? 0644);
             if ($entry !== $expectedEntry || isset($declaredEntries[$entry])
-                || preg_match('/^[a-f0-9]{64}$/D', $sha256) !== 1 || $size < 0) {
+                || preg_match('/^[a-f0-9]{64}$/D', $sha256) !== 1 || $size < 0
+                || $mode < 0 || $mode > 0777) {
                 throw new \RuntimeException('backups_archive_invalid_manifest');
             }
             $index = $zip->locateName($entry);
@@ -551,12 +760,13 @@ final class SiteBackupService
                 continue;
             }
 
-            if ($this->isMediaEntry($normalized)) {
+            if ($this->isMediaEntry($normalized)
+                || ($version >= 3 && $this->isPortableRootEntry($normalized, $portableRoots))) {
                 $metadata = $this->streamMetadata($zip->getStreamIndex($index));
                 if ($metadata['size'] !== $size || !hash_equals($sha256, $metadata['sha256'])) {
                     throw new \RuntimeException('backups_archive_invalid');
                 }
-                $files[$normalized] = $metadata + ['zip_index' => $index];
+                $files[$normalized] = $metadata + ['zip_index' => $index, 'mode' => $mode];
                 continue;
             }
 
@@ -581,7 +791,7 @@ final class SiteBackupService
         }
         $this->assertNoUndeclaredArchiveEntries($zip, $declaredEntries);
 
-        return ['manifest' => $manifest, 'files' => $files];
+        return ['manifest' => $manifest, 'files' => $files, 'portable_roots' => $portableRoots];
     }
 
     /**
@@ -600,7 +810,7 @@ final class SiteBackupService
             if ($normalized === '' || str_ends_with($normalized, '/') || $normalized === 'manifest.json') {
                 continue;
             }
-            if (!$this->isAllowedArchiveEntry($normalized) || isset($files[$normalized])) {
+            if (!$this->isAllowedArchiveEntryForVersion($normalized, 1, []) || isset($files[$normalized])) {
                 throw new \RuntimeException('backups_archive_invalid');
             }
             if ($this->isMediaEntry($normalized)) {
@@ -657,28 +867,81 @@ final class SiteBackupService
         } finally { fclose($stream); }
     }
 
-    /** List the prune scope without reading old payloads or treating corrupt JSON as missing. @return list<string> */
-    private function existingArchivePaths(): array
+    /**
+     * List the prune scope without reading old payloads or treating corrupt JSON as missing.
+     * @param list<string> $portableRoots
+     * @return list<string>
+     */
+    private function existingArchivePaths(int $scopeVersion = 2, array $portableRoots = []): array
     {
         $guard = new StoragePathGuard(BASE_PATH);
         $roots = ['data', 'public/uploads', 'storage/uploads/avatars'];
-        if (!$this->uploadsAliasesPublicUploads()) { $roots[] = 'uploads'; }
-        $files = [];
-        foreach ($roots as $relativeRoot) {
-            $root = $guard->resolve($relativeRoot);
-            if (!is_dir($root)) { continue; }
-            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
-            foreach ($iterator as $item) {
-                $guard->resolve($item->getPathname());
-                if (!$item->isFile() || in_array($item->getBasename(), ['.gitkeep', '.DS_Store'], true)) { continue; }
-                $relative = $this->buildArchiveRelativePath($root, $relativeRoot, $item->getPathname());
-                if ($this->isAllowedArchiveEntry($relative)) { $files[] = $relative; }
+        if (!$this->uploadsAliasesPublicUploads()) {
+            $roots[] = 'uploads';
+        }
+        if ($scopeVersion >= 3) {
+            $roots[] = 'resources/uploads/contact';
+            foreach ($portableRoots as $portableRoot) {
+                $portableRoot = trim((string) $portableRoot, '/');
+                if ($portableRoot !== '') {
+                    $roots[] = $portableRoot;
+                }
             }
         }
-        $key = $guard->resolve($this->storageSecretKeyPath);
-        if (is_file($key)) { $files[] = 'storage/app/secretbox.key'; }
+
+        $files = [];
+        foreach (array_values(array_unique($roots)) as $relativeRoot) {
+            $root = $guard->resolve($relativeRoot);
+            if (!is_dir($root)) {
+                continue;
+            }
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $item) {
+                $guard->resolve($item->getPathname());
+                if (!$item->isFile() || $item->isLink()
+                    || in_array($item->getBasename(), ['.gitkeep', '.DS_Store'], true)) {
+                    continue;
+                }
+                $relative = $this->buildArchiveRelativePath($root, $relativeRoot, $item->getPathname());
+                if ($this->isAllowedArchiveEntryForVersion($relative, $scopeVersion, $portableRoots)) {
+                    $files[] = $relative;
+                }
+            }
+        }
+        if ($scopeVersion <= 2) {
+            $key = $guard->resolve($this->storageSecretKeyPath);
+            if (is_file($key)) {
+                $files[] = 'storage/app/secretbox.key';
+            }
+        }
         sort($files);
-        return $files;
+        return array_values(array_unique($files));
+    }
+
+    /** @return list<string> */
+    private function currentPortableRoots(): array
+    {
+        $inspection = $this->baselineService->inspect();
+        if (empty($inspection['portable'])) {
+            throw new \RuntimeException('backups_site_target_portability_blocked');
+        }
+
+        $roots = [];
+        foreach (['modules', 'extensions', 'plugins', 'themes'] as $catalog) {
+            foreach ((array) ($inspection['added'][$catalog] ?? []) as $meta) {
+                if (!is_array($meta)) {
+                    continue;
+                }
+                $path = trim((string) ($meta['path'] ?? ''), '/');
+                if ($path !== '') {
+                    $roots[] = $path;
+                }
+            }
+        }
+        sort($roots);
+        return array_values(array_unique($roots));
     }
 
     /**
@@ -743,8 +1006,12 @@ final class SiteBackupService
      * @param array<string, string> $context
      * @return array<string, mixed>
      */
-    private function buildManifest(string $backupId, array $files, array $context = []): array
-    {
+    private function buildManifest(
+        string $backupId,
+        array $files,
+        array $context = [],
+        array $portability = []
+    ): array {
         $settings = FlatFile::settings();
         $siteName = trim((string) ($settings['site_name'] ?? config('app.name', 'FlatCMS')));
         $defaultLanguage = trim((string) ($settings['default_language'] ?? config('app.locale', 'fr-FR')));
@@ -757,6 +1024,9 @@ final class SiteBackupService
             $sourceUrl = trim((string) config('app.url', ''));
         }
 
+        $components = $this->portableManifestComponents($portability);
+        $themes = $this->portableManifestThemes($portability);
+
         return [
             'kind' => self::ARCHIVE_KIND,
             'version' => self::ARCHIVE_VERSION,
@@ -765,6 +1035,7 @@ final class SiteBackupService
             'created_unix' => time(),
             'reason' => $reason,
             'flatcms_version' => CoreManifest::version('1.0.0'),
+            'baseline_schema' => 1,
             'site_name' => $siteName,
             'default_language' => $defaultLanguage,
             'source_url' => $sourceUrl,
@@ -774,10 +1045,104 @@ final class SiteBackupService
             'total_files_count' => count($files),
             'created_by' => $createdBy,
             'created_by_email' => $createdByEmail,
-            'scope' => 'site-data-html-media-avatars-encrypted-instance-key',
+            'scope' => 'portable-site-data-media-private-components-themes-licenses-secrets',
             'includes_media' => true,
-            'secret_key_required' => isset($files['storage/app/secretbox.key']),
+            'secret_key_required' => $this->containsSecretEntries($files),
+            'components' => $components,
+            'themes' => $themes,
+            'families' => $this->buildPortableFamilySummary($files, $components, $themes),
             'files' => $this->buildFileInventory($files),
+        ];
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function portableManifestComponents(array $portability): array
+    {
+        $result = [];
+        foreach (['modules' => 'module', 'extensions' => 'extension', 'plugins' => 'plugin'] as $catalog => $type) {
+            foreach ((array) ($portability['added'][$catalog] ?? []) as $meta) {
+                if (!is_array($meta)) {
+                    continue;
+                }
+                $path = trim((string) ($meta['path'] ?? ''));
+                if ($path === '') {
+                    continue;
+                }
+                $result[] = [
+                    'catalog' => $catalog,
+                    'type' => $type,
+                    'key' => basename($path),
+                    'path' => $path,
+                    'status' => 'added',
+                    'sha256' => (string) ($meta['sha256'] ?? ''),
+                    'files_count' => (int) ($meta['files_count'] ?? 0),
+                    'size_bytes' => (int) ($meta['size_bytes'] ?? 0),
+                    'identity' => is_array($meta['identity'] ?? null) ? $meta['identity'] : [],
+                ];
+            }
+        }
+        return $result;
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function portableManifestThemes(array $portability): array
+    {
+        $result = [];
+        foreach ((array) ($portability['added']['themes'] ?? []) as $meta) {
+            if (!is_array($meta)) {
+                continue;
+            }
+            $path = trim((string) ($meta['path'] ?? ''));
+            if ($path === '') {
+                continue;
+            }
+            $relative = preg_replace('#^themes/#', '', $path) ?? '';
+            $parts = explode('/', $relative, 2);
+            $result[] = [
+                'type' => 'theme',
+                'theme_type' => (string) ($parts[0] ?? ''),
+                'key' => (string) ($parts[1] ?? basename($path)),
+                'path' => $path,
+                'status' => 'added',
+                'sha256' => (string) ($meta['sha256'] ?? ''),
+                'files_count' => (int) ($meta['files_count'] ?? 0),
+                'size_bytes' => (int) ($meta['size_bytes'] ?? 0),
+                'identity' => is_array($meta['identity'] ?? null) ? $meta['identity'] : [],
+            ];
+        }
+        return $result;
+    }
+
+    /** @param list<array<string,mixed>> $components @param list<array<string,mixed>> $themes */
+    private function buildPortableFamilySummary(array $files, array $components, array $themes): array
+    {
+        $licenses = 0;
+        $secrets = 0;
+        $private = 0;
+        foreach ($files as $relative => $content) {
+            if (str_starts_with($relative, 'resources/uploads/contact/')) {
+                $private++;
+            }
+            if ($this->isSecretEntry($relative)) {
+                $secrets++;
+            }
+            if ($relative === self::PORTABLE_SECRETS_ENTRY && is_string($content)) {
+                $transport = json_decode($content, true);
+                if (is_array($transport) && is_array($transport['licenses'] ?? null)) {
+                    $licenses = count($transport['licenses']);
+                }
+            }
+        }
+
+        return [
+            'data_files' => $this->countDataFilesByExtension($files, 'json')
+                + $this->countDataFilesByExtension($files, 'html'),
+            'media_files' => $this->countMediaFiles($files),
+            'private_files' => $private,
+            'component_count' => count($components),
+            'theme_count' => count($themes),
+            'license_files' => $licenses,
+            'secret_files' => $secrets,
         ];
     }
 
@@ -819,7 +1184,7 @@ final class SiteBackupService
     /**
      * @return array<string, string|array<string,mixed>>
      */
-    private function snapshotArchiveFiles(): array
+    private function snapshotArchiveFiles(array $portability = []): array
     {
         $files = [];
         $files += $this->snapshotJsonDirectory($this->dataRoot, 'data');
@@ -827,15 +1192,109 @@ final class SiteBackupService
             'cache/runtime-css/',
         ]);
         $files += $this->snapshotFileDirectory($this->storageAvatarsRoot, 'storage/uploads/avatars');
-        $files += $this->snapshotExactFile($this->storageSecretKeyPath, 'storage/app/secretbox.key');
+        $files += $this->snapshotFileDirectory(
+            BASE_PATH . '/resources/uploads/contact',
+            'resources/uploads/contact'
+        );
+
+        $this->appendPortableSecretsTransport($files, $portability);
 
         if (!$this->uploadsAliasesPublicUploads()) {
             $files += $this->snapshotFileDirectory($this->uploadsRoot, 'uploads');
         }
 
+        $developmentExclusions = ['.git/', '.svn/', '.idea/', '.vscode/'];
+        foreach (['modules', 'extensions', 'plugins', 'themes'] as $catalog) {
+            foreach ((array) ($portability['added'][$catalog] ?? []) as $meta) {
+                if (!is_array($meta)) {
+                    continue;
+                }
+                $relative = trim((string) ($meta['path'] ?? ''), '/');
+                if ($relative === '') {
+                    continue;
+                }
+                $files += $this->snapshotFileDirectory(
+                    BASE_PATH . '/' . $relative,
+                    $relative,
+                    $developmentExclusions
+                );
+            }
+        }
+
         ksort($files);
 
         return $files;
+    }
+
+    /**
+     * @param array<string,string|array<string,mixed>> $files
+     * @param array<string,mixed> $portability
+     */
+    private function appendPortableSecretsTransport(array &$files, array $portability): void
+    {
+        $integrations = (new \App\Modules\Settings\Services\EnvConfigManager())
+            ->exportPortableValues();
+
+        $settingsSecrets = [];
+        if (isset($files['data/settings.json']) && is_string($files['data/settings.json'])) {
+            $settings = json_decode($files['data/settings.json'], true);
+            if (!is_array($settings)) {
+                throw new \RuntimeException('backups_archive_invalid_json');
+            }
+
+            $storedSmtpPassword = trim((string) ($settings['mail_smtp_password'] ?? ''));
+            if ($storedSmtpPassword !== '') {
+                $plainSmtpPassword = (new SecretBox())->decrypt($storedSmtpPassword);
+                if ($plainSmtpPassword === '') {
+                    throw new \RuntimeException('backups_site_portable_settings_invalid');
+                }
+                $settingsSecrets['mail_smtp_password'] = $plainSmtpPassword;
+                $settings['mail_smtp_password'] = '';
+                $files['data/settings.json'] = $this->encodeJson($settings);
+            }
+        }
+
+        $licenseCandidates = [];
+        foreach (['modules', 'extensions', 'plugins', 'themes'] as $catalog) {
+            foreach ((array) ($portability['added'][$catalog] ?? []) as $meta) {
+                if (!is_array($meta)) {
+                    continue;
+                }
+                $path = trim((string) ($meta['path'] ?? ''), '/');
+                if ($path !== '') {
+                    $licenseCandidates[] = basename($path);
+                }
+                $identity = is_array($meta['identity'] ?? null) ? $meta['identity'] : [];
+                foreach (['name', 'slug'] as $field) {
+                    $candidate = trim((string) ($identity[$field] ?? ''));
+                    if ($candidate !== '') {
+                        $licenseCandidates[] = $candidate;
+                    }
+                }
+            }
+        }
+        $licenseCandidates = array_values(array_unique($licenseCandidates));
+
+        $licenses = $licenseCandidates === []
+            ? []
+            : (new \App\Modules\Auth\Services\LicenseVaultService())
+                ->exportPortableLicenses($licenseCandidates);
+
+        if ($integrations === [] && $settingsSecrets === [] && $licenses === []) {
+            return;
+        }
+
+        $transport = [
+            'schema' => 1,
+            'integrations' => $integrations,
+            'settings_secrets' => $settingsSecrets,
+            'licenses' => $licenses,
+        ];
+        $encoded = json_encode(
+            $transport,
+            JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+        $files[self::PORTABLE_SECRETS_ENTRY] = $encoded . PHP_EOL;
     }
 
     /**
@@ -1067,10 +1526,15 @@ final class SiteBackupService
         return gmdate('YmdHis') . '-' . bin2hex(random_bytes(6));
     }
 
-    private function absolutePathForRelative(string $relativePath): string
-    {
+    /** @param list<string> $portableRoots */
+    private function absolutePathForRelative(
+        string $relativePath,
+        int $scopeVersion = 2,
+        array $portableRoots = []
+    ): string {
         $normalized = $this->normalizeArchiveEntry($relativePath);
-        if (!$this->isAllowedArchiveEntry($normalized) || $normalized === 'manifest.json') {
+        if (!$this->isAllowedArchiveEntryForVersion($normalized, $scopeVersion, $portableRoots)
+            || $normalized === 'manifest.json') {
             throw new \RuntimeException('backups_restore_write_failed');
         }
 
@@ -1102,7 +1566,7 @@ final class SiteBackupService
             return '';
         }
 
-        if ($this->isAllowedArchiveEntry($normalized)) {
+        if ($this->isAllowedArchiveEntryForVersion($normalized, 1, [])) {
             return $normalized;
         }
 
@@ -1124,29 +1588,236 @@ final class SiteBackupService
         return $stripped;
     }
 
-    private function isAllowedArchiveEntry(string $entryName): bool
+    /**
+     * @param array<string,mixed> $manifest
+     * @param array<string,mixed> $inventory
+     * @return list<string>
+     */
+    private function validatePortableManifestScope(array $manifest, array $inventory): array
+    {
+        if ((int) ($manifest['baseline_schema'] ?? 0) !== 1) {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+
+        $sourceVersion = trim((string) ($manifest['flatcms_version'] ?? ''));
+        $targetVersion = CoreManifest::version('1.0.0');
+        if ($sourceVersion === '' || !hash_equals($targetVersion, $sourceVersion)) {
+            throw new \RuntimeException('backups_site_version_incompatible');
+        }
+
+        $targetInspection = $this->baselineService->inspect();
+        if (empty($targetInspection['portable'])) {
+            throw new \RuntimeException('backups_site_target_portability_blocked');
+        }
+
+        $baseline = $this->baselineService->read();
+        $roots = [];
+        $seen = [];
+
+        $components = $manifest['components'] ?? null;
+        $themes = $manifest['themes'] ?? null;
+        if (!is_array($components) || !is_array($themes)) {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+
+        $componentRules = [
+            'modules' => ['type' => 'module', 'prefix' => 'app/Modules', 'manifest' => 'module.json'],
+            'extensions' => ['type' => 'extension', 'prefix' => 'app/Extensions', 'manifest' => 'extension.json'],
+            'plugins' => ['type' => 'plugin', 'prefix' => 'app/Plugins', 'manifest' => 'plugin.json'],
+        ];
+
+        foreach ($components as $item) {
+            if (!is_array($item)) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $catalog = trim((string) ($item['catalog'] ?? ''));
+            $rule = $componentRules[$catalog] ?? null;
+            if (!is_array($rule) || (string) ($item['type'] ?? '') !== $rule['type']) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $root = $this->validatePortableManifestItem(
+                $item,
+                (string) $rule['prefix'],
+                (string) $rule['manifest'],
+                (array) ($baseline['components'][$catalog] ?? []),
+                $inventory
+            );
+            if (isset($seen[$root])) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $seen[$root] = true;
+            $roots[] = $root;
+        }
+
+        foreach ($themes as $item) {
+            if (!is_array($item) || (string) ($item['type'] ?? '') !== 'theme') {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $themeType = trim((string) ($item['theme_type'] ?? ''));
+            if (!in_array($themeType, ['frontend', 'admin'], true)) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $baselineThemes = (array) ($baseline['components']['themes'] ?? []);
+            $root = $this->validatePortableManifestItem(
+                $item,
+                'themes/' . $themeType,
+                'theme.json',
+                $baselineThemes,
+                $inventory,
+                $themeType . '/'
+            );
+            if (isset($seen[$root])) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $seen[$root] = true;
+            $roots[] = $root;
+        }
+
+        sort($roots);
+        return $roots;
+    }
+
+    /**
+     * @param array<string,mixed> $item
+     * @param array<string,mixed> $baselineCatalog
+     * @param array<string,mixed> $inventory
+     */
+    private function validatePortableManifestItem(
+        array $item,
+        string $prefix,
+        string $manifestName,
+        array $baselineCatalog,
+        array $inventory,
+        string $baselineKeyPrefix = ''
+    ): string {
+        $key = trim((string) ($item['key'] ?? ''));
+        $path = trim((string) ($item['path'] ?? ''), '/');
+        if ($key === '' || str_contains($key, '/') || str_contains($key, '\\')
+            || preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/D', $key) !== 1
+            || $path !== $prefix . '/' . $key
+            || (string) ($item['status'] ?? '') !== 'added') {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+
+        $baselineKey = $baselineKeyPrefix . $key;
+        if (isset($baselineCatalog[$baselineKey])) {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+        if (!isset($inventory[$path . '/' . $manifestName])) {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+
+        $fingerprint = $this->fingerprintInventoryRoot($inventory, $path);
+        $expectedHash = strtolower(trim((string) ($item['sha256'] ?? '')));
+        if (preg_match('/^[a-f0-9]{64}$/D', $expectedHash) !== 1
+            || !hash_equals($expectedHash, $fingerprint['sha256'])
+            || (int) ($item['files_count'] ?? -1) !== $fingerprint['files_count']
+            || (int) ($item['size_bytes'] ?? -1) !== $fingerprint['size_bytes']) {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+
+        return $path;
+    }
+
+    /**
+     * @param array<string,mixed> $inventory
+     * @return array{sha256:string,files_count:int,size_bytes:int}
+     */
+    private function fingerprintInventoryRoot(array $inventory, string $root): array
+    {
+        $prefix = rtrim($root, '/') . '/';
+        $entries = [];
+        foreach ($inventory as $relative => $meta) {
+            if (!is_string($relative) || !is_array($meta) || !str_starts_with($relative, $prefix)) {
+                continue;
+            }
+            $child = substr($relative, strlen($prefix));
+            $sha256 = strtolower(trim((string) ($meta['sha256'] ?? '')));
+            $size = (int) ($meta['size_bytes'] ?? -1);
+            if ($child === '' || preg_match('/^[a-f0-9]{64}$/D', $sha256) !== 1 || $size < 0) {
+                throw new \RuntimeException('backups_archive_invalid_manifest');
+            }
+            $entries[$child] = ['sha256' => $sha256, 'size' => $size];
+        }
+        if ($entries === []) {
+            throw new \RuntimeException('backups_archive_invalid_manifest');
+        }
+        ksort($entries);
+
+        $hash = hash_init('sha256');
+        $bytes = 0;
+        foreach ($entries as $child => $meta) {
+            $bytes += $meta['size'];
+            hash_update($hash, $child . "\0" . $meta['size'] . "\0" . $meta['sha256'] . "\n");
+        }
+
+        return [
+            'sha256' => hash_final($hash),
+            'files_count' => count($entries),
+            'size_bytes' => $bytes,
+        ];
+    }
+
+    /** @param list<string> $portableRoots */
+    private function isAllowedArchiveEntryForVersion(string $entryName, int $version, array $portableRoots): bool
     {
         if ($entryName === '' || str_contains($entryName, '../') || str_starts_with($entryName, '../')) {
             return false;
         }
-
         if ($entryName === 'manifest.json') {
             return true;
         }
-
         if ($this->isDataJsonEntry($entryName) || $this->isDataHtmlEntry($entryName)) {
             return true;
         }
 
+        if ($version <= 2) {
+            return $this->isLegacyMediaEntry($entryName)
+                || $entryName === 'storage/app/secretbox.key';
+        }
+
+        if ($entryName === self::PORTABLE_SECRETS_ENTRY) {
+            return true;
+        }
+        if ($entryName === 'storage/app/secretbox.key'
+            || str_starts_with($entryName, 'resources/licenses/')) {
+            return false;
+        }
         if ($this->isMediaEntry($entryName)) {
             return true;
         }
 
-        if ($this->isSecretEntry($entryName)) {
-            return true;
+        foreach ($portableRoots as $root) {
+            $root = rtrim((string) $root, '/');
+            if ($root !== '' && str_starts_with($entryName, $root . '/')) {
+                return true;
+            }
         }
 
         return false;
+    }
+
+    /** @param list<string> $portableRoots */
+    private function isPortableRootEntry(string $entryName, array $portableRoots): bool
+    {
+        foreach ($portableRoots as $root) {
+            $root = rtrim((string) $root, '/');
+            if ($root !== '' && str_starts_with($entryName, $root . '/')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function isLegacyMediaEntry(string $entryName): bool
+    {
+        if (str_starts_with($entryName, 'public/uploads/')) {
+            return !str_starts_with($entryName, 'public/uploads/cache/runtime-css/');
+        }
+        if (str_starts_with($entryName, 'storage/uploads/avatars/')) {
+            return true;
+        }
+        return str_starts_with($entryName, 'uploads/');
     }
 
     private function isValidJson(string $content): bool
@@ -1234,7 +1905,7 @@ final class SiteBackupService
             }
 
             $basename = (string) $item->getBasename();
-            if ($basename === '.gitkeep' || $basename === '.DS_Store') {
+            if ($basename === '.gitkeep' || $basename === '.DS_Store' || str_starts_with($basename, '._')) {
                 continue;
             }
 
@@ -1310,7 +1981,19 @@ final class SiteBackupService
 
     private function isSecretEntry(string $entryName): bool
     {
-        return $entryName === 'storage/app/secretbox.key';
+        return $entryName === 'storage/app/secretbox.key'
+            || $entryName === self::PORTABLE_SECRETS_ENTRY
+            || str_starts_with($entryName, 'resources/licenses/');
+    }
+
+    private function containsSecretEntries(array $files): bool
+    {
+        foreach (array_keys($files) as $relative) {
+            if ($this->isSecretEntry((string) $relative)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function isMediaEntry(string $entryName): bool
@@ -1320,6 +2003,10 @@ final class SiteBackupService
         }
 
         if (str_starts_with($entryName, 'storage/uploads/avatars/')) {
+            return true;
+        }
+
+        if (str_starts_with($entryName, 'resources/uploads/contact/')) {
             return true;
         }
 

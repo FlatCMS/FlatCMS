@@ -286,6 +286,101 @@ final class LicenseVaultService
         return $summaries;
     }
 
+    /**
+     * Export selected licence records for a portable SiteBackup.
+     * Plain keys must only be placed inside the independently encrypted backup transport.
+     *
+     * @param array<int,string> $modules
+     * @return array<int,array<string,mixed>>
+     */
+    public function exportPortableLicenses(array $modules = []): array
+    {
+        $summaries = $this->listModuleLicenses($modules);
+        $portable = [];
+
+        foreach ($summaries as $summary) {
+            $module = trim((string) ($summary['module'] ?? ''));
+            if ($module === '') {
+                continue;
+            }
+
+            $plainKey = $this->decryptModuleLicenseKey($module);
+            if ($plainKey === '') {
+                throw new \RuntimeException('backups_site_portable_license_invalid');
+            }
+
+            $portable[] = [
+                'license_id' => (string) ($summary['license_id'] ?? ''),
+                'module' => $module,
+                'key' => $plainKey,
+                'domain' => (string) ($summary['domain'] ?? ''),
+                'status' => (string) ($summary['status'] ?? 'inactive'),
+                'updated_at' => (string) ($summary['updated_at'] ?? ''),
+                'owner_user_id' => (string) ($summary['owner_user_id'] ?? ''),
+                'created_at' => (string) ($summary['created_at'] ?? ''),
+                'last_reveal_at' => (string) ($summary['last_reveal_at'] ?? ''),
+                'last_reveal_by' => (string) ($summary['last_reveal_by'] ?? ''),
+                'reveal_attempts' => max(0, (int) ($summary['reveal_attempts'] ?? 0)),
+            ];
+        }
+
+        return $portable;
+    }
+
+    /**
+     * Rebuild the vault payload using the target installation's vault key.
+     * The original licensed domain is intentionally preserved for post-restore revalidation.
+     *
+     * @param array<int,array<string,mixed>> $licenses
+     */
+    public function buildPortableVaultContent(array $licenses): string
+    {
+        $records = [];
+        $seen = [];
+
+        foreach ($licenses as $license) {
+            if (!is_array($license)) {
+                throw new \RuntimeException('backups_site_portable_license_invalid');
+            }
+
+            $module = trim((string) ($license['module'] ?? ''));
+            $plainKey = trim((string) ($license['key'] ?? ''));
+            if ($module === '' || $plainKey === '' || isset($seen[$module])) {
+                throw new \RuntimeException('backups_site_portable_license_invalid');
+            }
+            $seen[$module] = true;
+
+            $id = trim((string) ($license['license_id'] ?? ''));
+            if ($id === '') {
+                $id = $this->generateId();
+            }
+
+            $existing = [
+                'created_at' => (string) ($license['created_at'] ?? ''),
+                'last_reveal_at' => (string) ($license['last_reveal_at'] ?? ''),
+                'last_reveal_by' => (string) ($license['last_reveal_by'] ?? ''),
+                'reveal_attempts' => max(0, (int) ($license['reveal_attempts'] ?? 0)),
+            ];
+
+            $records[] = $this->buildRecord(
+                $id,
+                $module,
+                $plainKey,
+                normalize_host((string) ($license['domain'] ?? '')),
+                trim((string) ($license['status'] ?? 'inactive')),
+                trim((string) ($license['updated_at'] ?? '')),
+                trim((string) ($license['owner_user_id'] ?? '')),
+                $existing
+            );
+        }
+
+        $encoded = json_encode(
+            ['licenses' => $records],
+            JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+        return $encoded . PHP_EOL;
+    }
+
     public function incrementRevealAttempts(string $module): void
     {
         $this->mutateRecords(static function (array $records) use ($module): array {

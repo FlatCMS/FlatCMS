@@ -110,5 +110,19 @@
   "backups_site_openssl_required": "OpenSSL ist zum Schutz der SiteBackup-Geheimnisse erforderlich.",
   "backups_site_secret_invalid": "Das verschlüsselte SiteBackup-Geheimnis ist ungültig.",
   "backups_site_secret_encrypt_failed": "Das SiteBackup-Geheimnis konnte nicht verschlüsselt werden.",
-  "backups_site_secret_decrypt_failed": "Das SiteBackup-Geheimnis konnte nicht authentifiziert oder entschlüsselt werden."
+  "backups_site_secret_decrypt_failed": "Das SiteBackup-Geheimnis konnte nicht authentifiziert oder entschlüsselt werden.",
+  "backups_site_baseline_missing": "Die SiteBackup-Portabilitätsreferenz fehlt.",
+  "backups_site_baseline_invalid": "Die SiteBackup-Portabilitätsreferenz ist ungültig.",
+  "backups_site_baseline_manifest_invalid": "Das Manifest einer nativen Komponente ist für die Portabilitätsprüfung ungültig.",
+  "backups_site_baseline_path_invalid": "Ein Pfad der Portabilitätsreferenz ist ungültig.",
+  "backups_site_baseline_read_failed": "Eine für die Portabilitätsprüfung erforderliche Datei konnte nicht gelesen werden.",
+  "backups_site_baseline_root_missing": "Eine erwartete native FlatCMS-Komponente fehlt.",
+  "backups_site_baseline_symlink_forbidden": "Ein unerwarteter symbolischer Link verhindert die Portabilitätsprüfung.",
+  "backups_site_baseline_version_missing": "Die FlatCMS-Version konnte nicht ermittelt werden.",
+  "backups_site_baseline_write_failed": "Die SiteBackup-Portabilitätsreferenz konnte nicht gespeichert werden.",
+  "backups_site_portability_blocked": "Die portable Sicherung wurde blockiert, weil der Core, ein natives Modul oder ein natives Theme geändert wurde.",
+  "backups_site_target_portability_blocked": "Die Wiederherstellung wurde blockiert, weil die Zielinstallation nicht mehr ihrer FlatCMS-Core-Referenz entspricht.",
+  "backups_site_version_incompatible": "Diese portable Sicherung wurde mit einer anderen FlatCMS-Version als die Zielinstallation erstellt.",
+  "backups_site_portable_settings_invalid": "Die in dieser Sicherung transportierten sensiblen Einstellungen sind ungültig oder nicht lesbar.",
+  "backups_site_portable_license_invalid": "Eine in dieser Sicherung transportierte Lizenz ist ungültig oder nicht lesbar."
 }

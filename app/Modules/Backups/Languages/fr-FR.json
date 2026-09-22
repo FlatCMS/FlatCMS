@@ -110,5 +110,19 @@
   "backups_site_openssl_required": "OpenSSL est requis pour protéger les secrets SiteBackup.",
   "backups_site_secret_invalid": "Le secret chiffré de l’archive SiteBackup est invalide.",
   "backups_site_secret_encrypt_failed": "Le secret SiteBackup n’a pas pu être chiffré.",
-  "backups_site_secret_decrypt_failed": "Le secret SiteBackup n’a pas pu être authentifié ou déchiffré."
+  "backups_site_secret_decrypt_failed": "Le secret SiteBackup n’a pas pu être authentifié ou déchiffré.",
+  "backups_site_baseline_missing": "Le référentiel de portabilité SiteBackup est introuvable.",
+  "backups_site_baseline_invalid": "Le référentiel de portabilité SiteBackup est invalide.",
+  "backups_site_baseline_manifest_invalid": "Le manifeste d’un composant natif est invalide pour la portabilité.",
+  "backups_site_baseline_path_invalid": "Un chemin du référentiel de portabilité est invalide.",
+  "backups_site_baseline_read_failed": "Impossible de lire un fichier nécessaire au contrôle de portabilité.",
+  "backups_site_baseline_root_missing": "Un élément natif attendu de FlatCMS est manquant.",
+  "backups_site_baseline_symlink_forbidden": "Un lien symbolique inattendu empêche le contrôle de portabilité.",
+  "backups_site_baseline_version_missing": "La version de FlatCMS ne peut pas être déterminée.",
+  "backups_site_baseline_write_failed": "Impossible d’enregistrer le référentiel de portabilité SiteBackup.",
+  "backups_site_portability_blocked": "La sauvegarde portable est bloquée car le Core, un module natif ou un thème natif a été modifié.",
+  "backups_site_target_portability_blocked": "La restauration est bloquée car l’installation cible ne correspond pas à son Core FlatCMS de référence.",
+  "backups_site_version_incompatible": "Cette sauvegarde portable a été créée avec une version de FlatCMS différente de celle de l’installation cible.",
+  "backups_site_portable_settings_invalid": "Les réglages sensibles transportés par cette sauvegarde sont invalides ou illisibles.",
+  "backups_site_portable_license_invalid": "Une licence transportée par cette sauvegarde est invalide ou illisible."
 }

@@ -256,6 +256,9 @@ final class SiteBackupBaselineService
             }
             $pathname = $item->getPathname();
             $child = ltrim(str_replace('\\', '/', substr($pathname, strlen($absolute))), '/');
+            if ($this->isDevelopmentMetadataPath($child)) {
+                continue;
+            }
             $files[$child] = $pathname;
         }
         ksort($files);
@@ -278,6 +281,16 @@ final class SiteBackupBaselineService
             'files_count' => count($files),
             'size_bytes' => $bytes,
         ];
+    }
+
+    private function isDevelopmentMetadataPath(string $relative): bool
+    {
+        foreach (['.git', '.svn', '.idea', '.vscode'] as $directory) {
+            if ($relative === $directory || str_starts_with($relative, $directory . '/')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** @return array<string,mixed> */

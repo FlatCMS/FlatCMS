@@ -110,5 +110,19 @@
   "backups_site_openssl_required": "OpenSSL is required to protect SiteBackup secrets.",
   "backups_site_secret_invalid": "The encrypted SiteBackup secret is invalid.",
   "backups_site_secret_encrypt_failed": "The SiteBackup secret could not be encrypted.",
-  "backups_site_secret_decrypt_failed": "The SiteBackup secret could not be authenticated or decrypted."
+  "backups_site_secret_decrypt_failed": "The SiteBackup secret could not be authenticated or decrypted.",
+  "backups_site_baseline_missing": "The SiteBackup portability baseline is missing.",
+  "backups_site_baseline_invalid": "The SiteBackup portability baseline is invalid.",
+  "backups_site_baseline_manifest_invalid": "A native component manifest is invalid for portability checks.",
+  "backups_site_baseline_path_invalid": "A portability baseline path is invalid.",
+  "backups_site_baseline_read_failed": "A file required for portability checks could not be read.",
+  "backups_site_baseline_root_missing": "An expected native FlatCMS component is missing.",
+  "backups_site_baseline_symlink_forbidden": "An unexpected symbolic link prevents the portability check.",
+  "backups_site_baseline_version_missing": "The FlatCMS version could not be determined.",
+  "backups_site_baseline_write_failed": "The SiteBackup portability baseline could not be saved.",
+  "backups_site_portability_blocked": "The portable backup is blocked because the Core, a native module, or a native theme has been modified.",
+  "backups_site_target_portability_blocked": "The restore is blocked because the target installation no longer matches its FlatCMS Core baseline.",
+  "backups_site_version_incompatible": "This portable backup was created with a different FlatCMS version than the target installation.",
+  "backups_site_portable_settings_invalid": "The sensitive settings carried by this backup are invalid or unreadable.",
+  "backups_site_portable_license_invalid": "A licence carried by this backup is invalid or unreadable."
 }
