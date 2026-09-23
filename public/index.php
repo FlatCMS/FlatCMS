@@ -88,6 +88,7 @@ function flatcms_load_env_file(string $path): void
 // 1) .env (base), 2) .env.local (override local admin)
 flatcms_load_env_file(dirname(__DIR__) . '/.env');
 flatcms_load_env_file(dirname(__DIR__) . '/.env.local');
+require_once dirname(__DIR__) . '/app/Core/Security/TrustedProxyPolicy.php';
 
 /**
  * Retourne un chemin de requête normalisé.
@@ -175,32 +176,11 @@ function flatcms_block_sensitive_paths(): void
  */
 function flatcms_is_secure_request(): bool
 {
-    if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
-        return true;
-    }
-    if ((string) ($_SERVER['SERVER_PORT'] ?? '') === '443') {
-        return true;
-    }
-
-    $forwardedProto = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
-    if ($forwardedProto !== '' && in_array('https', array_map('trim', explode(',', $forwardedProto)), true)) {
-        return true;
-    }
-
-    $requestScheme = strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? ''));
-    if ($requestScheme === 'https') {
-        return true;
-    }
-
-    $cfVisitor = (string) ($_SERVER['HTTP_CF_VISITOR'] ?? '');
-    if ($cfVisitor !== '') {
-        $decoded = json_decode($cfVisitor, true);
-        if (is_array($decoded) && strtolower((string) ($decoded['scheme'] ?? '')) === 'https') {
-            return true;
-        }
-    }
-
-    return false;
+    return \App\Core\Security\TrustedProxyPolicy::isSecureRequest(
+        $_SERVER,
+        (string) ($_ENV['TRUST_PROXY_HEADERS'] ?? getenv('TRUST_PROXY_HEADERS') ?: '0'),
+        (string) ($_ENV['TRUSTED_PROXY_CIDRS'] ?? getenv('TRUSTED_PROXY_CIDRS') ?: '')
+    );
 }
 
 /**

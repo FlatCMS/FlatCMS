@@ -17,29 +17,8 @@
 }
 
 .backups-stats {
-  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-3);
   margin-bottom: var(--spacing-4);
-}
-
-.backups-stat {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-secondary);
-  padding: var(--spacing-4);
-  display: grid;
-  gap: var(--spacing-1);
-}
-
-.backups-stat-label {
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-}
-
-.backups-stat-value {
-  font-size: 1.15rem;
-  color: var(--color-text-primary);
 }
 
 .backups-path-list {
@@ -63,23 +42,6 @@
   margin: 0;
   color: var(--color-text-secondary);
   word-break: break-word;
-}
-
-.backups-warning {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-3);
-  margin-bottom: var(--spacing-4);
-  padding: var(--spacing-3) var(--spacing-4);
-  border: 1px solid color-mix(in srgb, var(--color-warning) 55%, var(--color-border));
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-secondary));
-  color: var(--color-text-primary);
-}
-
-.backups-warning-danger {
-  border-color: color-mix(in srgb, var(--color-danger) 58%, var(--color-border));
-  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-bg-secondary));
 }
 
 .backups-table-card .table td {
@@ -123,13 +85,7 @@
   align-items: center;
   justify-content: center;
   width: auto;
-  min-height: 36px;
   flex: 0 0 auto;
-}
-
-.backups-actions .table-action {
-  width: 36px;
-  height: 36px;
 }
 
 .backups-action-label {

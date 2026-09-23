@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace App\Modules\Settings\Services;
 
 use App\Core\Security\SecretBox;
+use App\Core\Security\TrustedProxyPolicy;
 use App\Core\EnvironmentFile;
 use App\Core\Storage\AtomicFileWriter;
 use App\Core\Storage\FileLockManager;
@@ -30,6 +31,9 @@ final class EnvConfigManager
     public const ERROR_ENV_LOCAL_NOT_WRITABLE = 'env_local_not_writable';
     public const ERROR_ENV_LOCAL_READ_FAILED = 'env_local_read_failed';
     public const ERROR_ENV_LOCAL_WRITE_FAILED = 'env_local_write_failed';
+    public const ERROR_TRUSTED_PROXY_CIDRS_REQUIRED = 'trusted_proxy_cidrs_required';
+    public const ERROR_TRUSTED_PROXY_CIDRS_INVALID = 'trusted_proxy_cidrs_invalid';
+    public const ERROR_TRUSTED_PROXY_CIDRS_TOO_BROAD = 'trusted_proxy_cidrs_too_broad';
 
     /**
      * @var array<int,string>
@@ -66,6 +70,8 @@ final class EnvConfigManager
         'AUTH_2FA_EMAIL_DISABLE_REMEMBER',
         'AUTH_2FA_SLOW_LOG_THRESHOLD_MS',
         'DEMO_FORCE_LICENSE_WARNING',
+        'TRUST_PROXY_HEADERS',
+        'TRUSTED_PROXY_CIDRS',
     ];
 
     /**
@@ -81,6 +87,13 @@ final class EnvConfigManager
         'AUTH_2FA_EMAIL_ENABLED',
         'AUTH_2FA_EMAIL_DISABLE_REMEMBER',
         'DEMO_FORCE_LICENSE_WARNING',
+        'TRUST_PROXY_HEADERS',
+    ];
+
+    /** @var array<int,string> */
+    private const NON_PORTABLE_KEYS = [
+        'TRUST_PROXY_HEADERS',
+        'TRUSTED_PROXY_CIDRS',
     ];
 
     /**
@@ -150,6 +163,9 @@ final class EnvConfigManager
         $values = [];
         $secretBox = new SecretBox();
         foreach ($this->allowedKeys() as $key) {
+            if (in_array($key, self::NON_PORTABLE_KEYS, true)) {
+                continue;
+            }
             if (!array_key_exists($key, $stored)) {
                 continue;
             }
@@ -189,7 +205,20 @@ final class EnvConfigManager
         $normalized = [];
         $secretBox = new SecretBox();
 
+        $existingValues = EnvironmentFile::parse($existingContent);
+        foreach (self::NON_PORTABLE_KEYS as $key) {
+            if (!array_key_exists($key, $existingValues)) {
+                continue;
+            }
+            $normalized[$key] = in_array($key, self::BOOLEAN_KEYS, true)
+                ? (string) $this->normalizeBoolean((string) $existingValues[$key])
+                : trim((string) $existingValues[$key]);
+        }
+
         foreach ($this->allowedKeys() as $key) {
+            if (in_array($key, self::NON_PORTABLE_KEYS, true)) {
+                continue;
+            }
             if (!array_key_exists($key, $values)) {
                 continue;
             }
@@ -403,6 +432,21 @@ final class EnvConfigManager
             $value = str_replace(["\r\n", "\r"], "\n", $value);
 
             $sanitized[$key] = $value;
+        }
+
+        try {
+            $sanitized['TRUSTED_PROXY_CIDRS'] = TrustedProxyPolicy::normalizeCidrs(
+                (string) ($sanitized['TRUSTED_PROXY_CIDRS'] ?? '')
+            );
+        } catch (\InvalidArgumentException $exception) {
+            $reason = $exception->getMessage() === TrustedProxyPolicy::ERROR_CIDR_TOO_BROAD
+                ? self::ERROR_TRUSTED_PROXY_CIDRS_TOO_BROAD
+                : self::ERROR_TRUSTED_PROXY_CIDRS_INVALID;
+            throw new \RuntimeException($reason, 0, $exception);
+        }
+
+        if (($sanitized['TRUST_PROXY_HEADERS'] ?? '0') === '1' && $sanitized['TRUSTED_PROXY_CIDRS'] === '') {
+            throw new \RuntimeException(self::ERROR_TRUSTED_PROXY_CIDRS_REQUIRED);
         }
 
         return $sanitized;

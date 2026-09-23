@@ -119,14 +119,18 @@ class TokenRepository
         });
     }
 
-    public function countFailedAttempts(string $ip): int
+    public function countFailedAttempts(string $ip, ?string $email = null): int
     {
         $attempts = $this->loadAttempts();
         $cutoff = time() - self::BLOCK_DURATION;
         $count = 0;
+        $normalizedEmail = self::normalizeEmail($email);
 
         foreach ($attempts as $attempt) {
-            if ((string) ($attempt['ip'] ?? '') === $ip
+            $matchesIp = (string) ($attempt['ip'] ?? '') === $ip;
+            $matchesEmail = $normalizedEmail !== ''
+                && self::normalizeEmail((string) ($attempt['email'] ?? '')) === $normalizedEmail;
+            if (($matchesIp || $matchesEmail)
                 && !(bool) ($attempt['success'] ?? false)
                 && (int) ($attempt['created_at'] ?? 0) > $cutoff) {
                 $count++;
@@ -136,19 +140,23 @@ class TokenRepository
         return $count;
     }
 
-    public function isBlocked(string $ip): bool
+    public function isBlocked(string $ip, ?string $email = null): bool
     {
-        return $this->countFailedAttempts($ip) >= self::MAX_ATTEMPTS;
+        return $this->countFailedAttempts($ip, $email) >= self::MAX_ATTEMPTS;
     }
 
-    public function getRemainingBlockTime(string $ip): int
+    public function getRemainingBlockTime(string $ip, ?string $email = null): int
     {
         $attempts = $this->loadAttempts();
         $cutoff = time() - self::BLOCK_DURATION;
         $lastFailed = 0;
+        $normalizedEmail = self::normalizeEmail($email);
 
         foreach ($attempts as $attempt) {
-            if ((string) ($attempt['ip'] ?? '') === $ip
+            $matchesIp = (string) ($attempt['ip'] ?? '') === $ip;
+            $matchesEmail = $normalizedEmail !== ''
+                && self::normalizeEmail((string) ($attempt['email'] ?? '')) === $normalizedEmail;
+            if (($matchesIp || $matchesEmail)
                 && !(bool) ($attempt['success'] ?? false)
                 && (int) ($attempt['created_at'] ?? 0) > $cutoff) {
                 $lastFailed = max($lastFailed, (int) ($attempt['created_at'] ?? 0));
@@ -163,14 +171,22 @@ class TokenRepository
         return max(0, $unblockAt - time());
     }
 
-    public function clearAttempts(string $ip): void
+    public function clearAttempts(string $ip, ?string $email = null): void
     {
-        $this->mutateAttempts(static function (array $attempts) use ($ip): array {
+        $normalizedEmail = self::normalizeEmail($email);
+        $this->mutateAttempts(static function (array $attempts) use ($ip, $normalizedEmail): array {
             return array_values(array_filter(
                 $attempts,
                 static fn (array $entry): bool => (string) ($entry['ip'] ?? '') !== $ip
+                    && ($normalizedEmail === ''
+                        || self::normalizeEmail((string) ($entry['email'] ?? '')) !== $normalizedEmail)
             ));
         });
+    }
+
+    private static function normalizeEmail(?string $email): string
+    {
+        return strtolower(trim((string) $email));
     }
 
     public function cleanOldAttempts(): void

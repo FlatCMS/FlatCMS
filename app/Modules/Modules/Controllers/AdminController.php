@@ -940,7 +940,7 @@ class AdminController extends BaseController
     private function verifyManifestFileIntegrity(array $manifest, string $moduleDir, string $manifestFile): bool
     {
         if (!array_key_exists('files', $manifest)) {
-            return true;
+            return false;
         }
 
         $files = $manifest['files'];

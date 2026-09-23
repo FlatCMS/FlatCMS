@@ -108,6 +108,7 @@
   "module_sidebar_visibility": "Sidebar admin",
   "module_sidebar_visible": "Visible",
   "module_sidebar_visible_success": ":module affiché dans la sidebar.",
+  "module_developer": "Développeur",
   "module_status": "Statut",
   "module_type": "Type",
   "module_type_admin": "Admin",

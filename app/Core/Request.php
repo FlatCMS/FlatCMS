@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Core\Security\TrustedProxyPolicy;
+
 class Request
 {
     private array $params = [];
@@ -310,36 +312,56 @@ class Request
 
     public function ip(): string
     {
-        $cfRay = (string) ($_SERVER['HTTP_CF_RAY'] ?? '');
+        $remoteAddr = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+        if (!filter_var($remoteAddr, FILTER_VALIDATE_IP)) {
+            return '0.0.0.0';
+        }
+
+        if (!$this->trustsProxyHeaders($remoteAddr)) {
+            return $remoteAddr;
+        }
+
+        $cfRay = trim((string) ($_SERVER['HTTP_CF_RAY'] ?? ''));
         $cfConnectingIp = trim((string) ($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
         if ($cfRay !== '' && filter_var($cfConnectingIp, FILTER_VALIDATE_IP)) {
             return $cfConnectingIp;
         }
 
-        $remoteAddr = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
-        if (filter_var($remoteAddr, FILTER_VALIDATE_IP)) {
-            return $remoteAddr;
-        }
-
-        $trustProxy = strtolower((string) ($_ENV['TRUST_PROXY_HEADERS'] ?? '0'));
-        if (in_array($trustProxy, ['1', 'true', 'yes', 'on'], true)) {
-            $forwardedFor = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
-            if ($forwardedFor !== '') {
-                foreach (explode(',', $forwardedFor) as $candidate) {
-                    $candidate = trim($candidate);
-                    if (filter_var($candidate, FILTER_VALIDATE_IP)) {
-                        return $candidate;
-                    }
-                }
-            }
-
-            $realIp = trim((string) ($_SERVER['HTTP_X_REAL_IP'] ?? ''));
-            if (filter_var($realIp, FILTER_VALIDATE_IP)) {
-                return $realIp;
+        $forwardedFor = array_filter(array_map(
+            'trim',
+            explode(',', (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''))
+        ));
+        $chain = array_values(array_filter(
+            [...$forwardedFor, $remoteAddr],
+            static fn (string $candidate): bool => filter_var($candidate, FILTER_VALIDATE_IP) !== false
+        ));
+        for ($index = count($chain) - 1; $index >= 0; $index--) {
+            if (!$this->isTrustedProxy($chain[$index])) {
+                return $chain[$index];
             }
         }
 
-        return '0.0.0.0';
+        $realIp = trim((string) ($_SERVER['HTTP_X_REAL_IP'] ?? ''));
+        if (filter_var($realIp, FILTER_VALIDATE_IP)) {
+            return $realIp;
+        }
+
+        return $remoteAddr;
+    }
+
+    private function trustsProxyHeaders(string $remoteAddr): bool
+    {
+        return TrustedProxyPolicy::shouldTrustHeaders(
+            $remoteAddr,
+            (string) ($_ENV['TRUST_PROXY_HEADERS'] ?? getenv('TRUST_PROXY_HEADERS') ?: '0'),
+            (string) ($_ENV['TRUSTED_PROXY_CIDRS'] ?? getenv('TRUSTED_PROXY_CIDRS') ?: '')
+        );
+    }
+
+    private function isTrustedProxy(string $ip): bool
+    {
+        $configured = (string) ($_ENV['TRUSTED_PROXY_CIDRS'] ?? getenv('TRUSTED_PROXY_CIDRS') ?: '');
+        return TrustedProxyPolicy::isTrusted($ip, $configured);
     }
 
     public function userAgent(): string
@@ -349,32 +371,11 @@ class Request
 
     public function isSecure(): bool
     {
-        if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
-            return true;
-        }
-        if ((string) ($_SERVER['SERVER_PORT'] ?? '') === '443') {
-            return true;
-        }
-
-        $forwardedProto = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
-        if ($forwardedProto !== '' && in_array('https', array_map('trim', explode(',', $forwardedProto)), true)) {
-            return true;
-        }
-
-        $requestScheme = strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? ''));
-        if ($requestScheme === 'https') {
-            return true;
-        }
-
-        $cfVisitor = (string) ($_SERVER['HTTP_CF_VISITOR'] ?? '');
-        if ($cfVisitor !== '') {
-            $decoded = json_decode($cfVisitor, true);
-            if (is_array($decoded) && strtolower((string) ($decoded['scheme'] ?? '')) === 'https') {
-                return true;
-            }
-        }
-
-        return false;
+        return TrustedProxyPolicy::isSecureRequest(
+            $_SERVER,
+            (string) ($_ENV['TRUST_PROXY_HEADERS'] ?? getenv('TRUST_PROXY_HEADERS') ?: '0'),
+            (string) ($_ENV['TRUSTED_PROXY_CIDRS'] ?? getenv('TRUSTED_PROXY_CIDRS') ?: '')
+        );
     }
 
     public function fullUrl(): string

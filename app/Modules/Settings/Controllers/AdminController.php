@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Settings/Controllers/AdminController.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -16,6 +19,7 @@ use App\Core\FlatFile;
 use App\Core\I18n;
 use App\Core\Mail\Mailer;
 use App\Core\Security\SecretBox;
+use App\Core\Security\TrustedProxyPolicy;
 use App\Services\AI\AIManager;
 use App\Services\AI\DTO\AiRequest;
 use App\Services\AI\Exceptions\AiConfigurationException;
@@ -124,6 +128,19 @@ class AdminController extends BaseController
         $documentationService = new IntegrationsDocumentationService();
         $integrationValues = $envManager->readCurrentValues();
         $integrationEnvStatus = $envManager->status();
+        $proxyRemoteAddress = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+        if (filter_var($proxyRemoteAddress, FILTER_VALIDATE_IP) === false) {
+            $proxyRemoteAddress = '';
+        }
+        $proxyCidrs = (string) ($integrationValues['TRUSTED_PROXY_CIDRS'] ?? '');
+        $proxyHeadersEnabled = ((int) ($integrationValues['TRUST_PROXY_HEADERS'] ?? 0) === 1);
+        $proxyDiagnostics = [
+            'remote_address' => $proxyRemoteAddress,
+            'resolved_address' => $this->request->ip(),
+            'remote_address_trusted' => $proxyHeadersEnabled
+                && $proxyRemoteAddress !== ''
+                && TrustedProxyPolicy::isTrusted($proxyRemoteAddress, $proxyCidrs),
+        ];
         $fhseCapabilities = $fhseCapabilityService->read();
         $aiProviderStatus = [];
         try {
@@ -161,6 +178,7 @@ class AdminController extends BaseController
             'fallbackTimezone' => $fallbackTimezone,
             'integrationValues' => $integrationValues,
             'integrationEnvStatus' => $integrationEnvStatus,
+            'proxyDiagnostics' => $proxyDiagnostics,
             'fhseCapabilities' => $fhseCapabilities,
             'integrationsFieldHelp' => $documentationService->buildFieldHelpIndex(I18n::getLocale()),
             'aiProviderStatus' => $aiProviderStatus,
@@ -515,6 +533,11 @@ class AdminController extends BaseController
                 $integrationPayload = [];
             }
 
+            if ((string) $this->request->input('trusted_proxy_preset', '') === 'local') {
+                $integrationPayload['TRUST_PROXY_HEADERS'] = '1';
+                $integrationPayload['TRUSTED_PROXY_CIDRS'] = TrustedProxyPolicy::LOCAL_CIDRS;
+            }
+
             $envManager = new EnvConfigManager();
             try {
                 $envManager->writePartialValues($integrationPayload);
@@ -540,6 +563,12 @@ class AdminController extends BaseController
                     $this->session->flash('error', __('integrations_env_save_failed_not_writable', 'Settings'));
                 } elseif ($reason === EnvConfigManager::ERROR_ENV_LOCAL_READ_FAILED || $reason === EnvConfigManager::ERROR_ENV_LOCAL_WRITE_FAILED) {
                     $this->session->flash('error', __('integrations_env_save_failed_write', 'Settings'));
+                } elseif ($reason === EnvConfigManager::ERROR_TRUSTED_PROXY_CIDRS_REQUIRED) {
+                    $this->session->flash('error', __('reverse_proxy_error_cidrs_required', 'Settings'));
+                } elseif ($reason === EnvConfigManager::ERROR_TRUSTED_PROXY_CIDRS_TOO_BROAD) {
+                    $this->session->flash('error', __('reverse_proxy_error_cidrs_too_broad', 'Settings'));
+                } elseif ($reason === EnvConfigManager::ERROR_TRUSTED_PROXY_CIDRS_INVALID) {
+                    $this->session->flash('error', __('reverse_proxy_error_cidrs_invalid', 'Settings'));
                 } else {
                     $this->session->flash('error', __('integrations_env_save_failed', 'Settings'));
                 }

@@ -26,6 +26,12 @@ final class EnvironmentFile
         if (!is_string($contents)) {
             throw new \RuntimeException('environment_file_read_failed');
         }
+        return self::parse($contents);
+    }
+
+    /** @return array<string, string> */
+    public static function parse(string $contents): array
+    {
         $values = [];
         foreach (preg_split('/\R/', $contents) ?: [] as $line) {
             $line = trim($line);

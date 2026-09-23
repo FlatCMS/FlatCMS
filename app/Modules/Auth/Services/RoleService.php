@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Auth/Services/RoleService.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -109,7 +112,7 @@ class RoleService
         'languages.translations',
 
         // Themes
-        'themes.view', 'themes.edit',
+        'themes.view', 'themes.edit', 'themes.manage',
 
         // Modules
         'modules.view', 'modules.manage',
@@ -141,7 +144,7 @@ class RoleService
             'settings.view', 'settings.edit',
             'languages.view', 'languages.create', 'languages.edit', 'languages.delete',
             'languages.translations',
-            'themes.view', 'themes.edit',
+            'themes.view', 'themes.edit', 'themes.manage',
             'modules.view', 'modules.manage',
             'hooks.view', 'hooks.manage',
             'profile.view', 'profile.edit',

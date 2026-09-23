@@ -78,18 +78,18 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
         <div class="card-header">
             <div>
                 <h3 class="card-title"><?= __('backups_create_title', 'Backups') ?></h3>
-                <p class="module-installer-hint"><?= __('backups_create_hint', 'Backups') ?></p>
+                <p class="card-description"><?= __('backups_create_hint', 'Backups') ?></p>
             </div>
         </div>
         <div class="card-body">
-            <div class="backups-stats">
-                <div class="backups-stat">
-                    <span class="backups-stat-label"><?= __('backups_stat_archives', 'Backups') ?></span>
-                    <strong class="backups-stat-value"><?= e((string) count($backups)) ?></strong>
+            <div class="admin-stats-grid backups-stats">
+                <div class="admin-stat-card">
+                    <span class="admin-stat-card__label"><?= __('backups_stat_archives', 'Backups') ?></span>
+                    <strong class="admin-stat-card__value"><?= e((string) count($backups)) ?></strong>
                 </div>
-                <div class="backups-stat">
-                    <span class="backups-stat-label"><?= __('backups_stat_total_size', 'Backups') ?></span>
-                    <strong class="backups-stat-value"><?= e(human_size($totalBackupSize)) ?></strong>
+                <div class="admin-stat-card">
+                    <span class="admin-stat-card__label"><?= __('backups_stat_total_size', 'Backups') ?></span>
+                    <strong class="admin-stat-card__value"><?= e(human_size($totalBackupSize)) ?></strong>
                 </div>
             </div>
 
@@ -124,13 +124,15 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
         <div class="card-header">
             <div>
                 <h3 class="card-title"><?= __('backups_restore_title', 'Backups') ?></h3>
-                <p class="module-installer-hint"><?= __('backups_restore_hint', 'Backups') ?></p>
+                <p class="card-description"><?= __('backups_restore_hint', 'Backups') ?></p>
             </div>
         </div>
         <div class="card-body">
-            <div class="backups-warning">
-                <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
-                <span><?= __('backups_restore_warning', 'Backups') ?></span>
+            <div class="alert alert-warning" role="alert">
+                <i class="alert-icon fas fa-triangle-exclamation" aria-hidden="true"></i>
+                <div class="alert-content">
+                    <span class="alert-message"><?= __('backups_restore_warning', 'Backups') ?></span>
+                </div>
             </div>
 
             <form method="POST" action="<?= url('/admin/backups/restore-upload') ?>" enctype="multipart/form-data" class="module-installer-form">
@@ -169,13 +171,15 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
     <div class="card-header">
         <div>
             <h3 class="card-title"><?= __('backups_reset_title', 'Backups') ?></h3>
-            <p class="module-installer-hint"><?= __('backups_reset_hint', 'Backups') ?></p>
+            <p class="card-description"><?= __('backups_reset_hint', 'Backups') ?></p>
         </div>
     </div>
     <div class="card-body">
-        <div class="backups-warning">
-            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
-            <span><?= __('backups_reset_warning', 'Backups') ?></span>
+        <div class="alert alert-warning" role="alert">
+            <i class="alert-icon fas fa-triangle-exclamation" aria-hidden="true"></i>
+            <div class="alert-content">
+                <span class="alert-message"><?= __('backups_reset_warning', 'Backups') ?></span>
+            </div>
         </div>
 
         <?php if ($canManageBackups): ?>
@@ -203,13 +207,15 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
     <div class="card-header">
         <div>
             <h3 class="card-title"><?= __('backups_site_reset_title', 'Backups') ?></h3>
-            <p class="module-installer-hint"><?= __('backups_site_reset_hint', 'Backups') ?></p>
+            <p class="card-description"><?= __('backups_site_reset_hint', 'Backups') ?></p>
         </div>
     </div>
     <div class="card-body">
-        <div class="backups-warning backups-warning-danger">
-            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
-            <span><?= __('backups_site_reset_warning', 'Backups') ?></span>
+        <div class="alert alert-danger" role="alert">
+            <i class="alert-icon fas fa-triangle-exclamation" aria-hidden="true"></i>
+            <div class="alert-content">
+                <span class="alert-message"><?= __('backups_site_reset_warning', 'Backups') ?></span>
+            </div>
         </div>
 
         <?php if ($canManageBackups): ?>
@@ -237,13 +243,15 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
     <div class="card-header">
         <div>
             <h3 class="card-title"><?= __('backups_factory_reset_title', 'Backups') ?></h3>
-            <p class="module-installer-hint"><?= __('backups_factory_reset_hint', 'Backups') ?></p>
+            <p class="card-description"><?= __('backups_factory_reset_hint', 'Backups') ?></p>
         </div>
     </div>
     <div class="card-body">
-        <div class="backups-warning backups-warning-danger">
-            <i class="fas fa-skull-crossbones" aria-hidden="true"></i>
-            <span><?= __('backups_factory_reset_warning', 'Backups') ?></span>
+        <div class="alert alert-danger" role="alert">
+            <i class="alert-icon fas fa-skull-crossbones" aria-hidden="true"></i>
+            <div class="alert-content">
+                <span class="alert-message"><?= __('backups_factory_reset_warning', 'Backups') ?></span>
+            </div>
         </div>
 
         <?php if ($canManageBackups): ?>
@@ -278,7 +286,7 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
     <div class="card-header">
         <div>
             <h3 class="card-title"><?= __('backups_list_title', 'Backups') ?></h3>
-            <p class="module-installer-hint"><?= __('backups_list_hint', 'Backups', ['count' => (string) count($backups)]) ?></p>
+            <p class="card-description"><?= __('backups_list_hint', 'Backups', ['count' => (string) count($backups)]) ?></p>
         </div>
     </div>
 

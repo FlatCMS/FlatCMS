@@ -274,7 +274,7 @@ class AdminController extends BaseController
         $data = $this->request->only(['title', 'slug', 'excerpt', 'content', 'featured_image', 'meta_title', 'meta_description', 'status']);
         $data['content'] = flatcms_reconcile_editor_html(
             (string) ($data['content'] ?? ''),
-            null,
+            (string) ($post['content'] ?? ''),
             (string) $this->request->input('content__editor_baseline', '')
         );
         $data['categories'] = $this->isCategoriesEnabled()

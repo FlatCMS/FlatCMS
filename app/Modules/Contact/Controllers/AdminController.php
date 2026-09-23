@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Contact/Controllers/AdminController.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -12,6 +15,7 @@ declare(strict_types=1);
 namespace App\Modules\Contact\Controllers;
 
 use App\Core\BaseController;
+use App\Modules\Contact\Support\CsvCellSanitizer;
 use App\Core\ContentDocumentStore;
 use App\Core\FlatFile;
 use App\Core\I18n;
@@ -148,7 +152,7 @@ class AdminController extends BaseController
         ]);
 
         foreach ($items as $item) {
-            fputcsv($output, [
+            fputcsv($output, CsvCellSanitizer::sanitizeRow([
                 (string) ($item['id'] ?? ''),
                 (string) ($item['name'] ?? ''),
                 (string) ($item['email'] ?? ''),
@@ -160,7 +164,7 @@ class AdminController extends BaseController
                 (string) ($item['source_url'] ?? ''),
                 (string) ($item['ip'] ?? ''),
                 (string) ($item['user_agent'] ?? ''),
-            ]);
+            ]));
         }
 
         fclose($output);

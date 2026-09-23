@@ -89,6 +89,12 @@ $integrationsFieldHelp = is_array($integrationsFieldHelp ?? null) ? $integration
 $aiProviderStatus = is_array($aiProviderStatus ?? null) ? $aiProviderStatus : [];
 $integrationEnvPath = (string) ($integrationEnvStatus['path'] ?? (BASE_PATH . '/.env.local'));
 $integrationEnvWritable = !empty($integrationEnvStatus['writable']);
+$proxyDiagnostics = is_array($proxyDiagnostics ?? null) ? $proxyDiagnostics : [];
+$trustedProxyEnabled = ((int) ($integrationValues['TRUST_PROXY_HEADERS'] ?? 0) === 1);
+$trustedProxyCidrs = trim((string) ($integrationValues['TRUSTED_PROXY_CIDRS'] ?? ''));
+$proxyRemoteAddress = trim((string) ($proxyDiagnostics['remote_address'] ?? ''));
+$proxyResolvedAddress = trim((string) ($proxyDiagnostics['resolved_address'] ?? ''));
+$proxyRemoteAddressTrusted = !empty($proxyDiagnostics['remote_address_trusted']);
 $turnstileEnabledGlobal = ((int) ($integrationValues['TURNSTILE_ENABLED'] ?? 0) === 1);
 $openAiApiKeyConfigured = trim((string) env('OPENAI_API_KEY', '')) !== '';
 $turnstileSecretConfigured = trim((string) env('TURNSTILE_SECRET_KEY', '')) !== '';
@@ -2045,6 +2051,76 @@ $settingsAiAttrs = static function (
                     <input type="hidden" name="env[DEMO_FORCE_LICENSE_WARNING]" value="0">
 
                     <div class="form-hint"><?= __('auth_2fa_email_mail_hint', 'Settings') ?></div>
+                </div>
+
+                <div class="settings-system-block">
+                    <div class="settings-system-block-title"><?= __('system_reverse_proxy', 'Settings') ?></div>
+                    <div class="form-hint"><?= __('reverse_proxy_intro', 'Settings') ?></div>
+
+                    <div class="form-group">
+                        <label class="form-inline">
+                            <input type="hidden" name="env[TRUST_PROXY_HEADERS]" value="0">
+                            <input
+                                type="checkbox"
+                                id="env_trust_proxy_headers"
+                                class="form-check-input"
+                                name="env[TRUST_PROXY_HEADERS]"
+                                value="1"
+                                <?= $trustedProxyEnabled ? 'checked' : '' ?>
+                            >
+                            <?= __('reverse_proxy_enabled', 'Settings') ?>
+                        </label>
+                        <div class="form-hint"><?= __('reverse_proxy_enabled_hint', 'Settings') ?></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="env_trusted_proxy_cidrs" class="form-label"><?= __('reverse_proxy_cidrs', 'Settings') ?></label>
+                        <textarea
+                            id="env_trusted_proxy_cidrs"
+                            name="env[TRUSTED_PROXY_CIDRS]"
+                            class="form-input"
+                            rows="3"
+                            placeholder="<?= e(__('reverse_proxy_cidrs_placeholder', 'Settings')) ?>"
+                            autocomplete="off"
+                            autocapitalize="none"
+                            autocorrect="off"
+                            spellcheck="false"
+                        ><?= e($trustedProxyCidrs) ?></textarea>
+                        <div class="form-hint"><?= __('reverse_proxy_cidrs_hint', 'Settings') ?></div>
+                    </div>
+
+                    <dl class="settings-system-list">
+                        <div class="settings-system-row">
+                            <dt><?= __('reverse_proxy_direct_peer', 'Settings') ?></dt>
+                            <dd><code><?= e($proxyRemoteAddress !== '' ? $proxyRemoteAddress : __('not_available', 'Settings')) ?></code></dd>
+                        </div>
+                        <div class="settings-system-row">
+                            <dt><?= __('reverse_proxy_resolved_client', 'Settings') ?></dt>
+                            <dd><code><?= e($proxyResolvedAddress !== '' ? $proxyResolvedAddress : __('not_available', 'Settings')) ?></code></dd>
+                        </div>
+                        <div class="settings-system-row">
+                            <dt><?= __('reverse_proxy_peer_status', 'Settings') ?></dt>
+                            <dd>
+                                <span class="settings-status-badge <?= $proxyRemoteAddressTrusted ? 'is-ok' : 'is-warning' ?>">
+                                    <?= $proxyRemoteAddressTrusted
+                                        ? __('reverse_proxy_peer_trusted', 'Settings')
+                                        : __('reverse_proxy_peer_untrusted', 'Settings') ?>
+                                </span>
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <div class="settings-inline-actions">
+                        <button type="submit" class="btn btn-secondary" name="trusted_proxy_preset" value="local">
+                            <i class="fas fa-network-wired" aria-hidden="true"></i>
+                            <?= __('reverse_proxy_local_preset', 'Settings') ?>
+                        </button>
+                    </div>
+                    <div class="form-hint"><?= __('reverse_proxy_local_preset_hint', 'Settings') ?></div>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                        <span><?= __('reverse_proxy_warning', 'Settings') ?></span>
+                    </div>
                 </div>
 
                 <div class="settings-system-block">

@@ -50,12 +50,13 @@ class AdminController extends BaseController
             'activeAdmin' => $activeAdmin,
             'activeFrontend' => $activeFrontend,
             'themeArchiveAvailable' => $this->themeArchiveAvailable(),
+            'canManageThemes' => can('themes.manage'),
         ], 'admin.main');
     }
 
     public function install(): void
     {
-        if (!$this->authorize('themes.edit')) {
+        if (!$this->authorize('themes.manage')) {
             return;
         }
 
@@ -299,6 +300,13 @@ class AdminController extends BaseController
                 $this->redirect(url('/admin/themes'));
                 return;
             }
+
+            if (!$this->verifyManifestFileIntegrity($manifest, $themeDir, $themeJson)) {
+                $this->cleanupInstall($zipPath, $extractDir);
+                $this->session->flash('error', __('themes_signature_invalid', 'Themes'));
+                $this->redirect(url('/admin/themes'));
+                return;
+            }
         }
 
         $targetBase = $this->themesPath . '/' . $type;
@@ -350,7 +358,7 @@ class AdminController extends BaseController
 
     public function activate(string $type, string $name): void
     {
-        if (!$this->authorize('themes.edit')) {
+        if (!$this->authorize('themes.manage')) {
             return;
         }
 
@@ -393,7 +401,7 @@ class AdminController extends BaseController
 
     public function trash(string $type, string $name): void
     {
-        if (!$this->authorize('themes.edit')) {
+        if (!$this->authorize('themes.manage')) {
             return;
         }
 
@@ -645,6 +653,63 @@ class AdminController extends BaseController
     {
         $value = trim((string) $this->request->input($key, $default));
         return in_array($value, $allowed, true) ? $value : $default;
+    }
+
+    private function verifyManifestFileIntegrity(array $manifest, string $themeDir, string $manifestFile): bool
+    {
+        $files = $manifest['files'] ?? null;
+        if (!is_array($files) || $files === []) {
+            return false;
+        }
+
+        $themeRoot = realpath($themeDir);
+        $manifestReal = realpath($manifestFile);
+        if ($themeRoot === false || $manifestReal === false) {
+            return false;
+        }
+
+        $expectedPaths = [];
+        foreach ($files as $relativePath => $expectedHash) {
+            $relativePath = str_replace('\\', '/', (string) $relativePath);
+            if (
+                $relativePath === ''
+                || str_starts_with($relativePath, '/')
+                || str_contains($relativePath, '..')
+                || !is_string($expectedHash)
+            ) {
+                return false;
+            }
+
+            $target = realpath($themeRoot . '/' . $relativePath);
+            if ($target === false || !is_file($target) || !str_starts_with($target, $themeRoot . DIRECTORY_SEPARATOR)) {
+                return false;
+            }
+
+            $expected = strtolower(trim($expectedHash));
+            if (!preg_match('/^[a-f0-9]{64}$/', $expected)) {
+                return false;
+            }
+            if (!hash_equals($expected, hash_file('sha256', $target) ?: '')) {
+                return false;
+            }
+
+            $expectedPaths[str_replace('\\', '/', $target)] = true;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($themeRoot, \FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $item) {
+            if (!$item->isFile()) {
+                continue;
+            }
+            $path = str_replace('\\', '/', $item->getPathname());
+            if ($path !== str_replace('\\', '/', $manifestReal) && !isset($expectedPaths[$path])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function resetCustomization(string $type, string $name): void

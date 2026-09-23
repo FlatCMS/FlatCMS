@@ -12,6 +12,10 @@
 - isole les composants optionnels afin que leur absence ou désactivation ne bloque plus le Core ;
 - unifie les primitives d'administration, IconPicker, Media, éditeurs, modales, toasts et interfaces responsives ;
 - ajoute le diagnostic d'installation, la publication contrôlée des assets et les contrôles SEO déterministes ;
+- aligne Posts sur l'intégrité éditoriale de Pages afin de préserver le HTML structuré et ses traductions lors des sauvegardes CKEditor ;
+- ajoute l'administration des proxys inverses et refuse les en-têtes forwardés hors des relais CIDR explicitement autorisés ;
+- renforce Auth contre la rotation d'adresse IP, neutralise les formules dans les exports CSV et sépare la gestion des thèmes du simple droit d'édition ;
+- exige une table de fichiers signée et exhaustive pour les composants officiels installables ;
 - renforce les contrats de packaging, de licences, d'i18n et de compatibilité Apache/Nginx.
 
 ## 1.1.7

@@ -22,6 +22,7 @@
  * @var string|bool $activeFrontend
  * @var string|bool $activeAdmin
  * @var bool $themeArchiveAvailable
+ * @var bool $canManageThemes
  */
 $themesCssVersion = file_exists(BASE_PATH . '/app/Modules/Themes/Assets/css/themes-module.css')
     ? (string) filemtime(BASE_PATH . '/app/Modules/Themes/Assets/css/themes-module.css')
@@ -123,12 +124,16 @@ ksort($categoryOptions);
             <p class="admin-guidance-card__copy"><?= __('themes_help_intro', 'Themes') ?></p>
         </div>
         <ul class="admin-guidance-card__list">
-            <li><?= __('themes_help_step_install', 'Themes') ?></li>
-            <li><?= __('themes_help_step_activate', 'Themes') ?></li>
+            <?php if ($canManageThemes): ?>
+                <li><?= __('themes_help_step_install', 'Themes') ?></li>
+                <li><?= __('themes_help_step_activate', 'Themes') ?></li>
+            <?php endif; ?>
             <li><?= __('themes_help_step_cleanup', 'Themes') ?></li>
         </ul>
         <div class="admin-guidance-card__actions">
-            <a href="#themesInstallerCard" class="btn btn-primary"><?= __('themes_help_action_install', 'Themes') ?></a>
+            <?php if ($canManageThemes): ?>
+                <a href="#themesInstallerCard" class="btn btn-primary"><?= __('themes_help_action_install', 'Themes') ?></a>
+            <?php endif; ?>
             <a href="#themesFrontendSection" class="btn btn-secondary"><?= __('themes_help_action_frontend', 'Themes') ?></a>
         </div>
     </div>
@@ -181,6 +186,7 @@ ksort($categoryOptions);
     </div>
 </div>
 
+<?php if ($canManageThemes): ?>
 <div class="card theme-installer-card" id="themesInstallerCard">
     <div class="card-header">
         <h3 class="card-title"><?= __('themes_installer_title', 'Themes') ?></h3>
@@ -201,6 +207,7 @@ ksort($categoryOptions);
         </form>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- Frontend Themes -->
 <div class="card" id="themesFrontendSection" data-theme-section data-theme-section-type="frontend">
@@ -217,7 +224,9 @@ ksort($categoryOptions);
                 <h2 class="admin-empty-state-panel__title"><?= __('themes_empty_title', 'Themes') ?></h2>
                 <p class="admin-empty-state-panel__text"><?= __('themes_empty_text', 'Themes') ?></p>
                 <div class="admin-empty-state-panel__actions">
-                    <a href="#themesInstallerCard" class="btn btn-primary"><?= __('themes_empty_action_install', 'Themes') ?></a>
+                    <?php if ($canManageThemes): ?>
+                        <a href="#themesInstallerCard" class="btn btn-primary"><?= __('themes_empty_action_install', 'Themes') ?></a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -271,7 +280,7 @@ ksort($categoryOptions);
                             <p class="theme-desc"><?= e($theme['description']) ?></p>
                         <?php endif; ?>
                         <div class="theme-actions theme-actions-compact">
-                            <?php if ($name !== $activeFrontend): ?>
+                            <?php if ($canManageThemes && $name !== $activeFrontend): ?>
                                 <form action="<?= url("/admin/themes/activate/frontend/{$name}") ?>" method="POST" class="form-inline">
                                     <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-primary btn-sm"><?= __('activate', 'Themes') ?></button>
@@ -317,7 +326,9 @@ ksort($categoryOptions);
                 <h2 class="admin-empty-state-panel__title"><?= __('themes_empty_title', 'Themes') ?></h2>
                 <p class="admin-empty-state-panel__text"><?= __('themes_empty_text', 'Themes') ?></p>
                 <div class="admin-empty-state-panel__actions">
-                    <a href="#themesInstallerCard" class="btn btn-primary"><?= __('themes_empty_action_install', 'Themes') ?></a>
+                    <?php if ($canManageThemes): ?>
+                        <a href="#themesInstallerCard" class="btn btn-primary"><?= __('themes_empty_action_install', 'Themes') ?></a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -371,7 +382,7 @@ ksort($categoryOptions);
                             <p class="theme-desc"><?= e($theme['description']) ?></p>
                         <?php endif; ?>
                         <div class="theme-actions theme-actions-compact">
-                            <?php if ($name !== $activeAdmin): ?>
+                            <?php if ($canManageThemes && $name !== $activeAdmin): ?>
                                 <form action="<?= url("/admin/themes/activate/admin/{$name}") ?>" method="POST" class="form-inline">
                                     <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-primary btn-sm"><?= __('activate', 'Themes') ?></button>
@@ -412,7 +423,9 @@ ksort($categoryOptions);
             <p class="admin-empty-state-panel__text"><?= __('themes_filter_empty_text', 'Themes') ?></p>
             <div class="admin-empty-state-panel__actions">
                 <a href="#themesToolbar" class="btn btn-secondary"><?= __('themes_filter_empty_action_toolbar', 'Themes') ?></a>
-                <a href="#themesInstallerCard" class="btn btn-primary"><?= __('themes_empty_action_install', 'Themes') ?></a>
+                <?php if ($canManageThemes): ?>
+                    <a href="#themesInstallerCard" class="btn btn-primary"><?= __('themes_empty_action_install', 'Themes') ?></a>
+                <?php endif; ?>
             </div>
         </div>
     </div>

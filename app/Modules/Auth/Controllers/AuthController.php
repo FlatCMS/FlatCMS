@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Auth/Controllers/AuthController.php
+ * Version: 2.0.0-dev
  */
 
 declare(strict_types=1);
@@ -229,8 +232,8 @@ class AuthController extends BaseController
 
         // Brute force check
         $ip = $this->request->ip();
-        if ($this->tokenRepo->isBlocked($ip)) {
-            $remaining = $this->tokenRepo->getRemainingBlockTime($ip);
+        if ($this->tokenRepo->isBlocked($ip, $email)) {
+            $remaining = $this->tokenRepo->getRemainingBlockTime($ip, $email);
             $minutes = (int) ceil($remaining / 60);
             $this->session->flash('error', __('account_locked', 'Auth', ['minutes' => $minutes]));
             $this->session->flash('old', ['email' => $email]);
@@ -241,7 +244,7 @@ class AuthController extends BaseController
         $user = $this->authService->attempt($email, $password);
 
         if ($user) {
-            $this->tokenRepo->clearAttempts($ip);
+            $this->tokenRepo->clearAttempts($ip, $email);
             $this->tokenRepo->recordLoginAttempt($ip, $email, true);
 
             if ($this->shouldRequireEmail2fa($user)) {
@@ -280,7 +283,7 @@ class AuthController extends BaseController
             }
         } else {
             $this->tokenRepo->recordLoginAttempt($ip, $email, false);
-            $failedCount = $this->tokenRepo->countFailedAttempts($ip);
+            $failedCount = $this->tokenRepo->countFailedAttempts($ip, $email);
             $remaining = 5 - $failedCount;
 
             if ($remaining > 0 && $remaining <= 3) {

@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * See LICENSE, LICENSING.md and TRADEMARK.md.
+ *
+ * File: app/Modules/Modules/Views/admin/index.php
+ * Version: 2.0.0-dev
  */
 
 ?>
@@ -100,7 +103,8 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
         $lifecycleStatus = strtolower((string) ($meta['lifecycle_status'] ?? ($isEnabled ? 'enabled' : 'disabled')));
         $filterStatus = $lifecycleStatus === 'enabled' ? ($isRequired ? 'required' : 'enabled') : 'disabled';
         $status = $lockedBy ? 'locked' : $filterStatus;
-        $searchValue = strtolower(trim($translatedName . ' ' . $translatedDesc . ' ' . $translatedType . ' ' . $name));
+        $developer = trim((string) ($meta['developer'] ?? $meta['author'] ?? $meta['vendor'] ?? ''));
+        $searchValue = strtolower(trim($translatedName . ' ' . $translatedDesc . ' ' . $translatedType . ' ' . $developer . ' ' . $name));
         $locationLabel = $resolveLocationLabel($location);
         $isSidebarVisible = (bool) ($meta['sidebar_visible'] ?? true);
         $isSidebarManageable = (bool) ($meta['sidebar_manageable'] ?? true);
@@ -188,6 +192,10 @@ $renderModuleCards = static function (array $items) use ($enabledModules, $locke
                         <div class="module-detail">
                             <span class="module-detail-label"><?= __('module_sidebar_visibility', 'Modules') ?></span>
                             <span class="module-detail-value"><?= __($isSidebarManageable ? ($isSidebarVisible ? 'module_sidebar_visible' : 'module_sidebar_hidden') : 'module_sidebar_not_applicable', 'Modules') ?></span>
+                        </div>
+                        <div class="module-detail">
+                            <span class="module-detail-label"><?= __('module_developer', 'Modules') ?></span>
+                            <span class="module-detail-value"><?= e($developer !== '' ? $developer : '-') ?></span>
                         </div>
                         <?php if ($replacedBy !== ''): ?>
                             <div class="module-detail">
