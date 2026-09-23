@@ -16,11 +16,18 @@
   "backups_reset_action": "Zurücksetzen",
   "backups_reset_confirm": "Möchten Sie FlatCMS wirklich zurücksetzen? Inhalte und Medien werden geleert. Erstellen Sie vorher eine manuelle Sicherung, wenn Sie diese behalten möchten.",
   "backups_reset_success": "FlatCMS wurde zurückgesetzt und die Dateien wurden geprüft. Temporäre Kopie gelöscht.",
+  "backups_site_reset_title": "Website-Daten zurücksetzen",
+  "backups_site_reset_hint": "Löscht alle Website-Daten und Anpassungen und behält nur den ältesten Super-Administrator sowie den für FlatCMS erforderlichen technischen Zustand bei.",
+  "backups_site_reset_warning": "Alle anderen Konten, Einstellungen, Inhalte, Medien, Logos, benutzerdefinierten Übersetzungen, Integrationen, API-Schlüssel, Lizenzen, Formulare, privaten Anhänge und Papierkorb-Einträge werden gelöscht. Nach der FlatCMS-Installation hinzugefügte Module, Erweiterungen, Plugins und Themes werden ebenfalls entfernt. Bestehende Sicherungen bleiben erhalten.",
+  "backups_site_reset_action": "Website-Daten löschen",
+  "backups_site_reset_confirm": "Möchten Sie wirklich alle Website-Daten löschen? Nur der älteste Super-Administrator bleibt erhalten. Bestehende Sicherungen bleiben verfügbar.",
+  "backups_site_reset_success": "Die Website-Daten wurden gelöscht. Der ursprüngliche Super-Administrator und bestehende Sicherungen wurden beibehalten.",
+  "backups_site_reset_super_admin_missing": "Es wurde kein gültiger Super-Administrator gefunden. Das Zurücksetzen wurde abgebrochen.",
   "backups_factory_reset_title": "Werkseinstellungen wiederherstellen",
   "backups_factory_reset_hint": "Löscht alle Laufzeitdaten, aktiviert das Install-Modul erneut und startet die Installation ab Schritt 1 neu.",
-  "backups_factory_reset_warning": "Konten, Einstellungen, Inhalte, Medien, Übersetzungen, Formulare, private Anhänge und installed.lock werden entfernt. Die temporäre Kopie wird nach der Prüfung gelöscht. Erstellen Sie zum Aufbewahren eine manuelle Sicherung.",
+  "backups_factory_reset_warning": "Konten, Einstellungen, Inhalte, Medien, Übersetzungen, Formulare, private Anhänge, installed.lock sowie alle lokal gespeicherten SiteBackup- und FullBackup-Sicherungen werden gelöscht. Laden Sie Sicherungen, die Sie behalten möchten, vorher herunter.",
   "backups_factory_reset_action": "Installation neu starten",
-  "backups_factory_reset_confirm": "Möchten Sie wirklich komplett neu beginnen? FlatCMS löscht alle Laufzeitdaten, aktiviert Install erneut und leitet Sie zu Schritt 1 der Installation weiter.",
+  "backups_factory_reset_confirm": "Möchten Sie wirklich von vorne beginnen? FlatCMS löscht alle Laufzeitdaten sowie alle lokal gespeicherten SiteBackup- und FullBackup-Sicherungen, reaktiviert Install und führt Sie zu Installationsschritt 1 zurück.",
   "backups_factory_reset_sensitive_label": "Auch meine sensiblen Daten löschen",
   "backups_factory_reset_sensitive_hint": "Alle privaten Schlüssel (API-Schlüssel, Tokens, Lizenzen usw.) werden dauerhaft gelöscht.",
   "backups_restore_title": "Website wiederherstellen",
@@ -124,5 +131,6 @@
   "backups_site_target_portability_blocked": "Die Wiederherstellung wurde blockiert, weil die Zielinstallation nicht mehr ihrer FlatCMS-Core-Referenz entspricht.",
   "backups_site_version_incompatible": "Diese portable Sicherung wurde mit einer anderen FlatCMS-Version als die Zielinstallation erstellt.",
   "backups_site_portable_settings_invalid": "Die in dieser Sicherung transportierten sensiblen Einstellungen sind ungültig oder nicht lesbar.",
-  "backups_site_portable_license_invalid": "Eine in dieser Sicherung transportierte Lizenz ist ungültig oder nicht lesbar."
+  "backups_site_portable_license_invalid": "Eine in dieser Sicherung transportierte Lizenz ist ungültig oder nicht lesbar.",
+  "backups_restore_assets_failed": "Die öffentlichen Assets konnten nicht veröffentlicht werden. Die Wiederherstellung wurde abgebrochen."
 }

@@ -7,6 +7,8 @@
 - généralise les écritures JSON atomiques, verrouillées et récupérables ;
 - sécurise les mises à jour Core avec capsule de récupération, rollback et finalisation vérifiée ;
 - rend les sauvegardes, restaurations et suppressions de dossiers transactionnelles ;
+- introduit SiteBackup V3 : archives portables entre installations FlatCMS identiques, composants ajoutés et documentation inclus, secrets chiffrés, contrôle du Core de référence, publication d'assets atomique et rollback vérifié ;
+- ajoute la réinitialisation des données du site en conservant le premier Super Admin et les sauvegardes, ainsi qu'une réinitialisation usine complète ;
 - isole les composants optionnels afin que leur absence ou désactivation ne bloque plus le Core ;
 - unifie les primitives d'administration, IconPicker, Media, éditeurs, modales, toasts et interfaces responsives ;
 - ajoute le diagnostic d'installation, la publication contrôlée des assets et les contrôles SEO déterministes ;

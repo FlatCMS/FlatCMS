@@ -199,6 +199,40 @@ $totalBackupSize = (int) ($totalBackupSize ?? 0);
     </div>
 </div>
 
+<div class="card" id="backups-site-reset-card">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><?= __('backups_site_reset_title', 'Backups') ?></h3>
+            <p class="module-installer-hint"><?= __('backups_site_reset_hint', 'Backups') ?></p>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="backups-warning backups-warning-danger">
+            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+            <span><?= __('backups_site_reset_warning', 'Backups') ?></span>
+        </div>
+
+        <?php if ($canManageBackups): ?>
+            <form method="POST" action="<?= url('/admin/backups/site-reset') ?>" class="backups-action-form">
+                <?= csrf_field() ?>
+                <button
+                    type="submit"
+                    class="btn btn-danger"
+                    data-action="confirm-delete"
+                    data-message="<?= e(__('backups_site_reset_confirm', 'Backups')) ?>"
+                    data-confirm-text="<?= e(__('backups_site_reset_action', 'Backups')) ?>"
+                    data-warning="<?= e(__('backups_site_reset_warning', 'Backups')) ?>"
+                    data-item-name="<?= e(__('backups_site_reset_title', 'Backups')) ?>"
+                    <?= $zipAvailable ? '' : 'disabled' ?>
+                >
+                    <i class="fas fa-eraser" aria-hidden="true"></i>
+                    <?= __('backups_site_reset_action', 'Backups') ?>
+                </button>
+            </form>
+        <?php endif; ?>
+    </div>
+</div>
+
 <div class="card" id="backups-factory-reset-card">
     <div class="card-header">
         <div>

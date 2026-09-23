@@ -234,6 +234,26 @@ final class AdminController extends BaseController
         $this->redirect(url('/admin/backups'));
     }
 
+    public function siteReset(): void
+    {
+        if (!$this->authorize('backups.manage')) {
+            return;
+        }
+
+        if (!$this->verifyCsrf()) {
+            return;
+        }
+
+        try {
+            $this->service->resetSiteData($this->backupContext('site_reset'));
+            $this->session->flash('success', __('backups_site_reset_success', 'Backups'));
+        } catch (\RuntimeException $exception) {
+            $this->session->flash('error', $this->failureMessage($exception));
+        }
+
+        $this->redirect(url('/admin/backups'));
+    }
+
     public function factoryReset(): void
     {
         if (!$this->authorize('backups.manage')) {
@@ -260,17 +280,21 @@ final class AdminController extends BaseController
 
     private function failureMessage(\RuntimeException $exception): string
     {
+        $translatedKey = '';
         for ($cause = $exception; $cause !== null; $cause = $cause->getPrevious()) {
             if ($cause->getMessage() === 'runtime_transaction_acceptance_failed') {
                 return __('backups_restore_health_check_failed', 'Backups');
             }
+            if ($translatedKey === ''
+                && preg_match('/^backups_[a-z0-9_]+$/D', $cause->getMessage()) === 1) {
+                $translatedKey = $cause->getMessage();
+            }
         }
-        $key = $exception->getMessage();
-        if (preg_match('/^backups_[a-z0-9_]+$/D', $key) !== 1) {
-            error_log('[Backups] ' . $exception::class . ': ' . $key);
-            $key = 'backups_operation_failed';
+        if ($translatedKey === '') {
+            error_log('[Backups] ' . $exception::class . ': ' . $exception->getMessage());
+            $translatedKey = 'backups_operation_failed';
         }
-        return __($key, 'Backups');
+        return __($translatedKey, 'Backups');
     }
 
     private function acceptRestoredRuntime(string $version, string $scope): bool

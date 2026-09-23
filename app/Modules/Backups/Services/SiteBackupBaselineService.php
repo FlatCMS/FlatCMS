@@ -25,6 +25,28 @@ final class SiteBackupBaselineService
         'app/Core',
         'app/Helpers',
         'app/Services',
+        'app/ThirdParty',
+        'bin',
+        'config',
+        'public/assets/css',
+        'public/assets/dists',
+        'public/assets/img',
+        'public/assets/install',
+        'public/assets/js',
+        'resources/server',
+        'resources/views',
+    ];
+
+    /** @var list<string> */
+    private const PROTECTED_FILES = [
+        '.htaccess',
+        'VERSION',
+        'flatcms.json',
+        'index.php',
+        'public/.htaccess',
+        'public/index.php',
+        'public/recovery.php',
+        'recovery.php',
     ];
 
     private string $basePath;
@@ -44,6 +66,10 @@ final class SiteBackupBaselineService
         foreach (self::PROTECTED_ROOTS as $relative) {
             $protected[$relative] = $this->fingerprintDirectory($relative);
         }
+        foreach (self::PROTECTED_FILES as $relative) {
+            $protected[$relative] = $this->fingerprintFile($relative);
+        }
+        ksort($protected);
 
         return [
             'schema' => self::SCHEMA_VERSION,
@@ -293,10 +319,31 @@ final class SiteBackupBaselineService
 
         $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
         return in_array($extension, [
-            'md', 'xlsx', 'xls', 'docx', 'pptx',
             'bak', 'tmp', 'orig', 'rej',
             'zip', 'tar', 'tgz', 'gz',
         ], true);
+    }
+
+    /** @return array{path:string,sha256:string,files_count:int,size_bytes:int} */
+    private function fingerprintFile(string $relative): array
+    {
+        $absolute = $this->absolute($relative);
+        if (!is_file($absolute) || is_link($absolute)) {
+            throw new \RuntimeException('backups_site_baseline_root_missing');
+        }
+
+        $size = filesize($absolute);
+        $digest = hash_file('sha256', $absolute);
+        if (!is_int($size) || !is_string($digest)) {
+            throw new \RuntimeException('backups_site_baseline_read_failed');
+        }
+
+        return [
+            'path' => $relative,
+            'sha256' => $digest,
+            'files_count' => 1,
+            'size_bytes' => $size,
+        ];
     }
 
     /** @return array<string,mixed> */

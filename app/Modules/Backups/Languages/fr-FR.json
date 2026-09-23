@@ -16,11 +16,18 @@
   "backups_reset_action": "Réinitialiser",
   "backups_reset_confirm": "Voulez-vous vraiment réinitialiser FlatCMS ? Le contenu et les médias seront vidés. Créez d’abord une sauvegarde manuelle si vous souhaitez la conserver.",
   "backups_reset_success": "FlatCMS a été réinitialisé et ses fichiers vérifiés. Copie temporaire supprimée.",
+  "backups_site_reset_title": "Réinitialiser les données du site",
+  "backups_site_reset_hint": "Supprime toutes les données et personnalisations du site en conservant uniquement le Super Administrateur le plus ancien et l’état technique nécessaire à FlatCMS.",
+  "backups_site_reset_warning": "Tous les autres comptes, réglages, contenus, médias, logos, traductions personnalisées, intégrations, clés API, licences, formulaires, pièces jointes privées et éléments de corbeille seront supprimés. Les modules, extensions, plugins et thèmes ajoutés après l’installation de FlatCMS seront également supprimés. Les sauvegardes existantes sont conservées.",
+  "backups_site_reset_action": "Effacer les données du site",
+  "backups_site_reset_confirm": "Voulez-vous vraiment supprimer toutes les données du site ? Seul le Super Administrateur le plus ancien sera conservé. Les sauvegardes existantes resteront disponibles.",
+  "backups_site_reset_success": "Les données du site ont été supprimées. Le Super Administrateur d’origine et les sauvegardes ont été conservés.",
+  "backups_site_reset_super_admin_missing": "Aucun Super Administrateur valide n’a été trouvé. La réinitialisation a été annulée.",
   "backups_factory_reset_title": "Réinitialisation usine",
   "backups_factory_reset_hint": "Supprime toutes les données runtime, réactive le module Install et relance l’installation depuis l’étape 1.",
-  "backups_factory_reset_warning": "Les comptes, réglages, contenus, médias, traductions, formulaires, pièces jointes privées et installed.lock seront supprimés. La copie temporaire sera supprimée après vérification. Créez une sauvegarde manuelle pour la conserver.",
+  "backups_factory_reset_warning": "Les comptes, réglages, contenus, médias, traductions, formulaires, pièces jointes privées, installed.lock ainsi que toutes les sauvegardes SiteBackup et FullBackup stockées localement seront supprimés. Téléchargez les sauvegardes que vous souhaitez conserver avant de continuer.",
   "backups_factory_reset_action": "Relancer l’installation",
-  "backups_factory_reset_confirm": "Voulez-vous vraiment repartir de zéro ? FlatCMS va supprimer toutes les données runtime, réactiver Install et vous renvoyer vers l’étape 1 de l’installation.",
+  "backups_factory_reset_confirm": "Voulez-vous vraiment repartir de zéro ? FlatCMS va supprimer toutes les données runtime ainsi que les sauvegardes SiteBackup et FullBackup stockées localement, réactiver Install et vous renvoyer vers l’étape 1 de l’installation.",
   "backups_factory_reset_sensitive_label": "Supprimer aussi mes données sensibles",
   "backups_factory_reset_sensitive_hint": "Toutes vos clés privées (API, tokens, licences, etc.) seront supprimées définitivement.",
   "backups_restore_title": "Restaurer un site",
@@ -124,5 +131,6 @@
   "backups_site_target_portability_blocked": "La restauration est bloquée car l’installation cible ne correspond pas à son Core FlatCMS de référence.",
   "backups_site_version_incompatible": "Cette sauvegarde portable a été créée avec une version de FlatCMS différente de celle de l’installation cible.",
   "backups_site_portable_settings_invalid": "Les réglages sensibles transportés par cette sauvegarde sont invalides ou illisibles.",
-  "backups_site_portable_license_invalid": "Une licence transportée par cette sauvegarde est invalide ou illisible."
+  "backups_site_portable_license_invalid": "Une licence transportée par cette sauvegarde est invalide ou illisible.",
+  "backups_restore_assets_failed": "Les assets publics n’ont pas pu être publiés. La restauration a été annulée."
 }

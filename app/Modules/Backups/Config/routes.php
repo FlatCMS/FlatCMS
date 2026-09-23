@@ -25,5 +25,6 @@ $router->group(['prefix' => 'admin', 'middleware' => 'auth'], function (Router $
     $router->post('/backups/{filename}/restore', [\App\Modules\Backups\Controllers\AdminController::class, 'restore'])->name('admin.backups.restore');
     $router->post('/backups/{filename}/delete', [\App\Modules\Backups\Controllers\AdminController::class, 'delete'])->name('admin.backups.delete');
     $router->post('/backups/reset', [\App\Modules\Backups\Controllers\AdminController::class, 'reset'])->name('admin.backups.reset');
+    $router->post('/backups/site-reset', [\App\Modules\Backups\Controllers\AdminController::class, 'siteReset'])->name('admin.backups.site_reset');
     $router->post('/backups/factory-reset', [\App\Modules\Backups\Controllers\AdminController::class, 'factoryReset'])->name('admin.backups.factory_reset');
 });

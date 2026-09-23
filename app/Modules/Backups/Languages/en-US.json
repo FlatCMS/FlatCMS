@@ -16,11 +16,18 @@
   "backups_reset_action": "Reset",
   "backups_reset_confirm": "Do you really want to reset FlatCMS? Content and media will be cleared. Create a manual backup first if you want to keep it.",
   "backups_reset_success": "FlatCMS has been reset and its files verified. Temporary copy removed.",
+  "backups_site_reset_title": "Reset site data",
+  "backups_site_reset_hint": "Deletes all site data and customizations while keeping only the oldest Super Admin and the technical state required by FlatCMS.",
+  "backups_site_reset_warning": "All other accounts, settings, content, media, logos, custom translations, integrations, API keys, licenses, forms, private attachments and trash items will be deleted. Modules, extensions, plugins and themes added after FlatCMS installation will also be removed. Existing backups are preserved.",
+  "backups_site_reset_action": "Delete site data",
+  "backups_site_reset_confirm": "Do you really want to delete all site data? Only the oldest Super Admin will be kept. Existing backups will remain available.",
+  "backups_site_reset_success": "Site data has been deleted. The original Super Admin and existing backups were preserved.",
+  "backups_site_reset_super_admin_missing": "No valid Super Admin was found. The reset was cancelled.",
   "backups_factory_reset_title": "Factory reset",
   "backups_factory_reset_hint": "Deletes all runtime data, re-enables the Install module, and restarts the installer from step 1.",
-  "backups_factory_reset_warning": "Accounts, settings, content, media, translations, forms, private attachments and installed.lock will be removed. The temporary copy is removed after verification. Create a manual backup to keep it.",
+  "backups_factory_reset_warning": "Accounts, settings, content, media, translations, forms, private attachments, installed.lock, and all locally stored SiteBackup and FullBackup archives will be deleted. Download any backups you want to keep before continuing.",
   "backups_factory_reset_action": "Restart installation",
-  "backups_factory_reset_confirm": "Do you really want to start from scratch? FlatCMS will delete all runtime data, re-enable Install, and send you back to step 1 of the installer.",
+  "backups_factory_reset_confirm": "Do you really want to start over? FlatCMS will delete all runtime data and all locally stored SiteBackup and FullBackup archives, reactivate Install, and return you to installation step 1.",
   "backups_factory_reset_sensitive_label": "Also delete my sensitive data",
   "backups_factory_reset_sensitive_hint": "All private keys (API keys, tokens, licenses, etc.) will be permanently deleted.",
   "backups_restore_title": "Restore a site",
@@ -124,5 +131,6 @@
   "backups_site_target_portability_blocked": "The restore is blocked because the target installation no longer matches its FlatCMS Core baseline.",
   "backups_site_version_incompatible": "This portable backup was created with a different FlatCMS version than the target installation.",
   "backups_site_portable_settings_invalid": "The sensitive settings carried by this backup are invalid or unreadable.",
-  "backups_site_portable_license_invalid": "A licence carried by this backup is invalid or unreadable."
+  "backups_site_portable_license_invalid": "A licence carried by this backup is invalid or unreadable.",
+  "backups_restore_assets_failed": "Public assets could not be published. The restore was cancelled."
 }

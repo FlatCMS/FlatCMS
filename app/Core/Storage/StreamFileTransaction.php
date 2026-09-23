@@ -62,10 +62,15 @@ final class StreamFileTransaction
      *
      * @param array<int,array{path:string,open:callable|null,sha256?:string,size?:int,mode?:int}> $operations
      * @param callable():bool|null $accept
+     * @param callable():void|null $afterRollback
      */
-    public function commit(array $operations, ?callable $accept = null): void
+    public function commit(
+        array $operations,
+        ?callable $accept = null,
+        ?callable $afterRollback = null
+    ): void
     {
-        $this->synchronized(function () use ($operations, $accept): void {
+        $this->synchronized(function () use ($operations, $accept, $afterRollback): void {
             $entries = [];
             $sources = [];
             foreach ($operations as $operation) {
@@ -85,7 +90,16 @@ final class StreamFileTransaction
                 $entries[$path] = ['path' => $path, 'before' => $before, 'after' => $after];
                 $sources[$path] = $open;
             }
-            if ($entries === []) { return; }
+            if ($entries === []) {
+                try {
+                    if ($accept !== null && $accept() !== true) {
+                        throw new StorageException('runtime_transaction_acceptance_failed');
+                    }
+                } catch (\Throwable $exception) {
+                    $this->runAfterRollback($afterRollback, $exception);
+                }
+                return;
+            }
             $this->validateTargetSet(array_keys($entries));
             $state = ['schema' => 1, 'scope' => $this->scope, 'state' => 'staging', 'operations' => array_values($entries)];
             $this->journal->write('active.json', $state);
@@ -130,11 +144,32 @@ final class StreamFileTransaction
                 catch (\Throwable $recoveryError) {
                     throw new StorageException('Streamed rollback requires recovery; journal retained.', 0, $recoveryError);
                 }
-                throw new StorageException('Streamed transaction reported an error; journal recovery completed.', 0, $exception);
+                $this->runAfterRollback($afterRollback, $exception);
             }
             // A cleanup failure retains COMMITTED, never rolls back an already verified generation.
             $this->cleanup();
         });
+    }
+
+    private function runAfterRollback(?callable $afterRollback, \Throwable $cause): never
+    {
+        if ($afterRollback !== null) {
+            try {
+                $afterRollback();
+            } catch (\Throwable $rollbackError) {
+                throw new StorageException(
+                    'Streamed rollback completed but its post-rollback reconciliation failed.',
+                    0,
+                    $rollbackError
+                );
+            }
+        }
+
+        throw new StorageException(
+            'Streamed transaction reported an error; journal recovery completed.',
+            0,
+            $cause
+        );
     }
 
     private function recoverUnlocked(): void

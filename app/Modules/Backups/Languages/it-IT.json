@@ -16,11 +16,18 @@
   "backups_reset_action": "Reimposta",
   "backups_reset_confirm": "Vuoi davvero reimpostare FlatCMS? Contenuti e media saranno svuotati. Crea prima un backup manuale se desideri conservarlo.",
   "backups_reset_success": "FlatCMS è stato reimpostato e i file sono stati verificati. Copia temporanea eliminata.",
+  "backups_site_reset_title": "Reimposta i dati del sito",
+  "backups_site_reset_hint": "Elimina tutti i dati e le personalizzazioni del sito, conservando solo il Super Amministratore più anziano e lo stato tecnico necessario a FlatCMS.",
+  "backups_site_reset_warning": "Tutti gli altri account, impostazioni, contenuti, media, loghi, traduzioni personalizzate, integrazioni, chiavi API, licenze, moduli, allegati privati ed elementi del cestino saranno eliminati. Saranno rimossi anche moduli, estensioni, plugin e temi aggiunti dopo l’installazione di FlatCMS. I backup esistenti vengono conservati.",
+  "backups_site_reset_action": "Elimina i dati del sito",
+  "backups_site_reset_confirm": "Vuoi davvero eliminare tutti i dati del sito? Verrà conservato solo il Super Amministratore più anziano. I backup esistenti resteranno disponibili.",
+  "backups_site_reset_success": "I dati del sito sono stati eliminati. Il Super Amministratore originale e i backup esistenti sono stati conservati.",
+  "backups_site_reset_super_admin_missing": "Non è stato trovato alcun Super Amministratore valido. La reimpostazione è stata annullata.",
   "backups_factory_reset_title": "Ripristino di fabbrica",
   "backups_factory_reset_hint": "Elimina tutti i dati runtime, riattiva il modulo Install e riavvia l’installazione dal passo 1.",
-  "backups_factory_reset_warning": "Account, impostazioni, contenuti, media, traduzioni, moduli di contatto, allegati privati e installed.lock saranno rimossi. La copia temporanea verrà eliminata dopo la verifica. Crea un backup manuale per conservarlo.",
+  "backups_factory_reset_warning": "Account, impostazioni, contenuti, media, traduzioni, moduli, allegati privati, installed.lock e tutti i backup SiteBackup e FullBackup memorizzati localmente saranno eliminati. Scarica prima i backup che desideri conservare.",
   "backups_factory_reset_action": "Riavvia installazione",
-  "backups_factory_reset_confirm": "Vuoi davvero ripartire da zero? FlatCMS eliminerà tutti i dati runtime, riattiverà Install e ti riporterà al passo 1 dell’installazione.",
+  "backups_factory_reset_confirm": "Vuoi davvero ripartire da zero? FlatCMS eliminerà tutti i dati runtime e tutti i backup SiteBackup e FullBackup memorizzati localmente, riattiverà Install e tornerà al passaggio 1 dell’installazione.",
   "backups_factory_reset_sensitive_label": "Elimina anche i miei dati sensibili",
   "backups_factory_reset_sensitive_hint": "Tutte le chiavi private (API, token, licenze, ecc.) saranno eliminate definitivamente.",
   "backups_restore_title": "Ripristina un sito",
@@ -124,5 +131,6 @@
   "backups_site_target_portability_blocked": "Il ripristino è bloccato perché l’installazione di destinazione non corrisponde più al riferimento del Core FlatCMS.",
   "backups_site_version_incompatible": "Questo backup portabile è stato creato con una versione di FlatCMS diversa da quella dell’installazione di destinazione.",
   "backups_site_portable_settings_invalid": "Le impostazioni sensibili trasportate da questo backup non sono valide o leggibili.",
-  "backups_site_portable_license_invalid": "Una licenza trasportata da questo backup non è valida o leggibile."
+  "backups_site_portable_license_invalid": "Una licenza trasportata da questo backup non è valida o leggibile.",
+  "backups_restore_assets_failed": "Non è stato possibile pubblicare gli asset pubblici. Il ripristino è stato annullato."
 }

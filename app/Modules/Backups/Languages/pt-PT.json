@@ -16,11 +16,18 @@
   "backups_reset_action": "Repor",
   "backups_reset_confirm": "Tem a certeza de que pretende repor o FlatCMS? O conteúdo e os media serão esvaziados. Crie primeiro uma cópia de segurança manual se a quiser conservar.",
   "backups_reset_success": "O FlatCMS foi reposto e os ficheiros foram verificados. Cópia temporária eliminada.",
+  "backups_site_reset_title": "Repor os dados do site",
+  "backups_site_reset_hint": "Elimina todos os dados e personalizações do site, mantendo apenas o Super Administrador mais antigo e o estado técnico necessário ao FlatCMS.",
+  "backups_site_reset_warning": "Todas as outras contas, definições, conteúdos, media, logótipos, traduções personalizadas, integrações, chaves API, licenças, formulários, anexos privados e itens do lixo serão eliminados. Os módulos, extensões, plugins e temas adicionados após a instalação do FlatCMS também serão removidos. As cópias de segurança existentes são preservadas.",
+  "backups_site_reset_action": "Eliminar os dados do site",
+  "backups_site_reset_confirm": "Pretende realmente eliminar todos os dados do site? Apenas o Super Administrador mais antigo será mantido. As cópias de segurança existentes continuarão disponíveis.",
+  "backups_site_reset_success": "Os dados do site foram eliminados. O Super Administrador original e as cópias de segurança existentes foram preservados.",
+  "backups_site_reset_super_admin_missing": "Não foi encontrado nenhum Super Administrador válido. A reposição foi cancelada.",
   "backups_factory_reset_title": "Reposição de fábrica",
   "backups_factory_reset_hint": "Elimina todos os dados runtime, reativa o módulo Install e reinicia a instalação a partir da etapa 1.",
-  "backups_factory_reset_warning": "As contas, definições, conteúdos, media, traduções, formulários, anexos privados e installed.lock serão removidos. A cópia temporária será eliminada após a verificação. Crie uma cópia manual para a conservar.",
+  "backups_factory_reset_warning": "As contas, definições, conteúdos, media, traduções, formulários, anexos privados, installed.lock e todas as cópias SiteBackup e FullBackup armazenadas localmente serão eliminados. Transfira primeiro as cópias que pretende conservar.",
   "backups_factory_reset_action": "Reiniciar instalação",
-  "backups_factory_reset_confirm": "Tem a certeza de que pretende começar do zero? O FlatCMS vai eliminar todos os dados runtime, reativar o Install e devolvê-lo à etapa 1 do instalador.",
+  "backups_factory_reset_confirm": "Pretende realmente recomeçar do zero? O FlatCMS eliminará todos os dados de runtime e todas as cópias SiteBackup e FullBackup armazenadas localmente, reativará o Install e regressará ao passo 1 da instalação.",
   "backups_factory_reset_sensitive_label": "Eliminar também os meus dados sensíveis",
   "backups_factory_reset_sensitive_hint": "Todas as chaves privadas (API, tokens, licenças, etc.) serão eliminadas definitivamente.",
   "backups_restore_title": "Restaurar um site",
@@ -124,5 +131,6 @@
   "backups_site_target_portability_blocked": "O restauro foi bloqueado porque a instalação de destino já não corresponde à referência do Core FlatCMS.",
   "backups_site_version_incompatible": "Esta cópia portátil foi criada com uma versão do FlatCMS diferente da instalação de destino.",
   "backups_site_portable_settings_invalid": "As definições sensíveis transportadas por esta cópia são inválidas ou não podem ser lidas.",
-  "backups_site_portable_license_invalid": "Uma licença transportada por esta cópia é inválida ou não pode ser lida."
+  "backups_site_portable_license_invalid": "Uma licença transportada por esta cópia é inválida ou não pode ser lida.",
+  "backups_restore_assets_failed": "Não foi possível publicar os recursos públicos. O restauro foi cancelado."
 }

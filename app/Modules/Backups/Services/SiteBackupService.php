@@ -28,6 +28,10 @@ final class SiteBackupService
     private const TMP_UPLOAD_PREFIX = 'site-upload-';
     private const BACKUP_PREFIX = 'flatcms-site-backup';
     private const PORTABLE_SECRETS_ENTRY = 'transport/site-secrets.json';
+    private const DEFAULT_THEMES = [
+        'admin' => 'admin-modern-pro',
+        'frontend' => 'modern-pro',
+    ];
     private ?StreamFileTransaction $restoration = null;
 
     private string $dataRoot;
@@ -43,8 +47,12 @@ final class SiteBackupService
     private string $keyRoot;
     private BackupSecretCipher $secretCipher;
     private SiteBackupBaselineService $baselineService;
+    private \Closure $assetPublisher;
 
-    public function __construct(?SiteBackupBaselineService $baselineService = null)
+    public function __construct(
+        ?SiteBackupBaselineService $baselineService = null,
+        ?callable $assetPublisher = null
+    )
     {
         $storageRoot = defined('STORAGE_PATH') ? (string) STORAGE_PATH : BASE_PATH . '/storage';
 
@@ -66,6 +74,9 @@ final class SiteBackupService
             'backups_site'
         );
         $this->baselineService = $baselineService ?? new SiteBackupBaselineService();
+        $this->assetPublisher = $assetPublisher !== null
+            ? \Closure::fromCallable($assetPublisher)
+            : static fn (): array => (new \App\Core\RuntimeAssetPublisher())->publishAll();
     }
 
     public function zipAvailable(): bool
@@ -289,9 +300,40 @@ final class SiteBackupService
     }
 
     /**
+     * Remove all site-owned runtime data while keeping the oldest Super Admin
+     * and the technical bootstrap required by an already-installed instance.
+     *
      * @param array<string, string> $context
      * @return array<string, mixed>
      */
+    public function resetSiteData(array $context = []): array
+    {
+        return $this->transaction()->synchronized(function (): array {
+            $resetFiles = $this->buildSiteDataResetSnapshot();
+            $preservedAdmin = $this->oldestSuperAdminFromSnapshot($resetFiles);
+            $addedRoots = $this->siteDataResetAddedRoots();
+            $internalWrites = $this->siteDataResetInternalWrites();
+
+            $this->mirrorArchiveFiles(
+                $resetFiles,
+                null,
+                $this->siteDataResetResidualFiles(),
+                null,
+                3,
+                [],
+                $internalWrites,
+                $addedRoots
+            );
+            $this->clearRuntimeCaches();
+
+            return [
+                'reset_files_count' => count($resetFiles) + count($internalWrites),
+                'removed_component_roots_count' => count($addedRoots),
+                'preserved_super_admin_id' => (string) ($preservedAdmin['id'] ?? ''),
+            ];
+        });
+    }
+
     public function factoryResetSite(array $context = [], bool $deleteSensitive = false): array
     {
         return $this->transaction()->synchronized(function () use ($deleteSensitive): array {
@@ -365,9 +407,6 @@ final class SiteBackupService
                     $portableRoots,
                     $internalWrites
                 );
-                if ($archiveVersion >= 3) {
-                    (new \App\Core\RuntimeAssetPublisher())->publishAll();
-                }
                 $this->clearRuntimeCaches();
                 return [
                     'restored_files_count' => count($payload['files']) + count($internalWrites),
@@ -503,7 +542,8 @@ final class SiteBackupService
         ?callable $accept = null,
         int $scopeVersion = 2,
         array $portableRoots = [],
-        array $internalWrites = []
+        array $internalWrites = [],
+        ?array $pruneRootsOverride = null
     ): void
     {
         $this->transaction()->synchronized(function () use (
@@ -513,11 +553,14 @@ final class SiteBackupService
             $accept,
             $scopeVersion,
             $portableRoots,
-            $internalWrites
+            $internalWrites,
+            $pruneRootsOverride
         ): void {
             $operations = [];
             $pruneRoots = $scopeVersion >= 3
-                ? array_values(array_unique(array_merge($portableRoots, $this->currentPortableRoots())))
+                ? array_values(array_unique(
+                    $pruneRootsOverride ?? array_merge($portableRoots, $this->currentPortableRoots())
+                ))
                 : [];
             $existing = $this->existingArchivePaths($scopeVersion, $pruneRoots);
             foreach ($files as $relative => $content) {
@@ -554,7 +597,11 @@ final class SiteBackupService
                 $allowedFactoryResetDelete = $relative === 'data/installed.lock'
                     || $relative === '.env.local'
                     || str_starts_with($relative, 'resources/uploads/contact/')
-                    || str_starts_with($relative, 'resources/licenses/');
+                    || str_starts_with($relative, 'resources/licenses/')
+                    || str_starts_with($relative, 'storage/trash/')
+                    || str_starts_with($relative, 'storage/backups/site/')
+                    || str_starts_with($relative, 'storage/backups/full/')
+                    || str_starts_with($relative, 'storage/recovery/keys/');
                 if (!$allowedFactoryResetDelete) {
                     throw new \RuntimeException('backups_restore_write_failed');
                 }
@@ -585,13 +632,34 @@ final class SiteBackupService
                     },
                 ];
             }
-            $this->transaction()->commit($operations, $accept);
+            $transactionAccept = $accept;
+            $afterRollback = null;
+            if ($scopeVersion >= 3) {
+                $transactionAccept = function () use ($accept): bool {
+                    $this->publishRuntimeAssets();
+                    return $accept === null || $accept() === true;
+                };
+                $afterRollback = function (): void {
+                    $this->publishRuntimeAssets();
+                };
+            }
+
+            $this->transaction()->commit($operations, $transactionAccept, $afterRollback);
 
             if ($scopeVersion >= 3) {
                 $obsoleteRoots = array_values(array_diff($pruneRoots, $portableRoots));
                 $this->pruneEmptyPortableRoots($obsoleteRoots);
             }
         });
+    }
+
+    private function publishRuntimeAssets(): void
+    {
+        try {
+            ($this->assetPublisher)();
+        } catch (\Throwable $exception) {
+            throw new \RuntimeException('backups_restore_assets_failed', 0, $exception);
+        }
     }
 
     /** @param list<string> $roots */
@@ -900,11 +968,18 @@ final class SiteBackupService
             );
             foreach ($iterator as $item) {
                 $guard->resolve($item->getPathname());
-                if (!$item->isFile() || $item->isLink()
-                    || in_array($item->getBasename(), ['.gitkeep', '.DS_Store'], true)) {
+                if (!$item->isFile() || $item->isLink()) {
                     continue;
                 }
+
                 $relative = $this->buildArchiveRelativePath($root, $relativeRoot, $item->getPathname());
+                $basename = $item->getBasename();
+                $housekeeping = in_array($basename, ['.gitkeep', '.DS_Store'], true)
+                    || str_starts_with($basename, '._');
+                if ($housekeeping && !$this->isPortableRootEntry($relative, $portableRoots)) {
+                    continue;
+                }
+
                 if ($this->isAllowedArchiveEntryForVersion($relative, $scopeVersion, $portableRoots)) {
                     $files[] = $relative;
                 }
@@ -1972,7 +2047,6 @@ final class SiteBackupService
 
         $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
         return in_array($extension, [
-            'md', 'xlsx', 'xls', 'docx', 'pptx',
             'bak', 'tmp', 'orig', 'rej',
             'zip', 'tar', 'tgz', 'gz',
         ], true);
@@ -2120,6 +2194,232 @@ final class SiteBackupService
     }
 
     /**
+     * @return array<string, string|array<string,mixed>>
+     */
+    private function buildSiteDataResetSnapshot(): array
+    {
+        $settings = $this->readJsonFile(BASE_PATH . '/data/settings.json');
+        $freshSettings = $this->buildSiteDataResetSettingsPayload($settings);
+        $locale = (string) ($freshSettings['default_language'] ?? 'fr-FR');
+        $superAdmin = $this->findOldestSuperAdmin();
+
+        $files = [
+            $superAdmin['relative'] => $superAdmin['content'],
+            'data/settings.json' => $this->encodeJson($freshSettings),
+            'data/modules.json' => $this->encodeJson($this->buildSiteDataResetModulesPayload()),
+            'data/core/auth/login_attempts.json' => $this->encodeJson([]),
+            'data/site_routing.json' => $this->encodeJson([
+                'homepage' => [
+                    'mode' => 'native',
+                    'ref_type' => '',
+                    'ref_group' => '',
+                ],
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]),
+            'data/promo_banner_translations.json' => $this->encodeJson([
+                'updated_at' => date('Y-m-d H:i:s'),
+                'translations' => (object) [],
+            ]),
+            'data/core/menus/menus.json' => $this->encodeJson($this->buildResetMenusPayload()),
+            'data/core/footer/footer.json' => $this->encodeJson($this->buildResetFooterPayload($freshSettings, $locale)),
+            'data/core/media/media.json' => $this->encodeJson([]),
+            'data/languages/' . $locale . '.json' => $this->encodeJson(
+                $this->buildSiteDataResetLanguagePayload($locale)
+            ),
+        ];
+
+        $files += $this->snapshotSuperAdminAvatar($superAdmin['user']);
+        ksort($files);
+
+        return $files;
+    }
+
+    /**
+     * @param array<string,string|array<string,mixed>> $snapshot
+     * @return array<string,mixed>
+     */
+    private function oldestSuperAdminFromSnapshot(array $snapshot): array
+    {
+        foreach ($snapshot as $relative => $content) {
+            if (!str_starts_with($relative, 'data/users/') || !str_ends_with($relative, '.json')
+                || !is_string($content)) {
+                continue;
+            }
+            $decoded = json_decode($content, true);
+            if (is_array($decoded) && ($decoded['role'] ?? '') === 'super_admin') {
+                return $decoded;
+            }
+        }
+
+        throw new \RuntimeException('backups_site_reset_super_admin_missing');
+    }
+
+    /**
+     * @return array{relative:string,content:string,user:array<string,mixed>}
+     */
+    private function findOldestSuperAdmin(): array
+    {
+        $usersRoot = (new StoragePathGuard(BASE_PATH))->resolve('data/users');
+        $candidates = [];
+
+        foreach (glob($usersRoot . '/*.json') ?: [] as $path) {
+            (new StoragePathGuard(BASE_PATH))->resolve($path);
+            if (!is_file($path) || is_link($path)) {
+                continue;
+            }
+
+            $user = $this->readJsonFile($path);
+            if (($user['role'] ?? '') !== 'super_admin') {
+                continue;
+            }
+
+            $filename = basename($path);
+            $sortKey = '99999999999999_' . $filename;
+            if (preg_match('/^(\d{14})_[a-f0-9]{8}\.json$/D', $filename, $matches) === 1) {
+                $sortKey = $matches[1] . '_' . $filename;
+            } else {
+                $createdAt = strtotime((string) ($user['created_at'] ?? ''));
+                if (is_int($createdAt) && $createdAt > 0) {
+                    $sortKey = date('YmdHis', $createdAt) . '_' . $filename;
+                }
+            }
+
+            $content = @file_get_contents($path);
+            if (!is_string($content)) {
+                throw new \RuntimeException('backups_archive_write_failed');
+            }
+
+            $candidates[] = [
+                'sort' => $sortKey,
+                'relative' => 'data/users/' . $filename,
+                'content' => $content,
+                'user' => $user,
+            ];
+        }
+
+        if ($candidates === []) {
+            throw new \RuntimeException('backups_site_reset_super_admin_missing');
+        }
+
+        usort($candidates, static fn (array $left, array $right): int =>
+            strcmp((string) $left['sort'], (string) $right['sort'])
+        );
+
+        $selected = $candidates[0];
+        return [
+            'relative' => (string) $selected['relative'],
+            'content' => (string) $selected['content'],
+            'user' => (array) $selected['user'],
+        ];
+    }
+
+    /**
+     * @param array<string,mixed> $user
+     * @return array<string, string>
+     */
+    private function snapshotSuperAdminAvatar(array $user): array
+    {
+        $avatar = ltrim(trim((string) ($user['avatar'] ?? '')), '/');
+        if ($avatar === '') {
+            return [];
+        }
+
+        if (str_starts_with($avatar, 'avatars/')) {
+            $relative = 'storage/uploads/' . $avatar;
+        } elseif (str_starts_with($avatar, 'storage/uploads/avatars/')) {
+            $relative = $avatar;
+        } elseif (str_starts_with($avatar, 'uploads/avatars/')) {
+            $relative = 'public/' . $avatar;
+        } else {
+            return [];
+        }
+
+        $normalized = $this->normalizeArchiveEntry($relative);
+        if (!str_starts_with($normalized, 'storage/uploads/avatars/')
+            && !str_starts_with($normalized, 'public/uploads/avatars/')) {
+            return [];
+        }
+
+        return $this->snapshotExactFile(
+            (new StoragePathGuard(BASE_PATH))->resolve($normalized),
+            $normalized
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $settings
+     * @return array<string,mixed>
+     */
+    private function buildSiteDataResetSettingsPayload(array $settings): array
+    {
+        $locale = trim((string) ($settings['default_language'] ?? $settings['language'] ?? 'fr-FR'));
+        if (!\App\Modules\Install\Support\Lang::isAvailable($locale)) {
+            $locale = 'fr-FR';
+        }
+
+        $siteUrl = trim((string) ($settings['site_url'] ?? ''));
+        if ($siteUrl === '' || filter_var($siteUrl, FILTER_VALIDATE_URL) === false) {
+            $siteUrl = rtrim((string) base_url(), '/');
+        }
+
+        $timezone = trim((string) ($settings['timezone'] ?? 'Europe/Paris'));
+        if (!in_array($timezone, \DateTimeZone::listIdentifiers(), true)) {
+            $timezone = 'Europe/Paris';
+        }
+
+        $installedAt = trim((string) ($settings['installed_at'] ?? ''));
+        if ($installedAt === '') {
+            $installedAt = date('Y-m-d H:i:s');
+        }
+
+        return [
+            'site_name' => 'FlatCMS',
+            'site_description' => '',
+            'site_slogan' => '',
+            'site_name_enabled' => 1,
+            'site_slogan_enabled' => 1,
+            'site_logo_variant' => 'compact',
+            'site_url' => $siteUrl,
+            'site_email' => '',
+            'timezone' => $timezone,
+            'language' => $locale,
+            'default_language' => $locale,
+            'admin_theme' => self::DEFAULT_THEMES['admin'],
+            'frontend_theme' => self::DEFAULT_THEMES['frontend'],
+            'mail_from_name' => 'FlatCMS',
+            'contact_notification_enabled' => 1,
+            'contact_notification_email' => '',
+            'contact_enable_captcha' => 0,
+            'url_routing_mode' => 'auto',
+            'url_rewrite_last_status' => 'unknown',
+            'url_rewrite_last_check_at' => date('Y-m-d H:i:s'),
+            'admin_guided_tour_enabled' => 1,
+            'installed_at' => $installedAt,
+            'version' => flatcms_version('1.0.0'),
+        ];
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function buildSiteDataResetLanguagePayload(string $locale): array
+    {
+        $native = \App\Core\I18n::getLocalizedLanguageName($locale, $locale);
+        if ($native === '') {
+            $native = $locale;
+        }
+        $prefix = strtolower((string) strtok($locale, '-'));
+
+        return [
+            'name' => $native,
+            'native' => $native,
+            'direction' => in_array($prefix, ['ar', 'fa', 'he', 'ur'], true) ? 'rtl' : 'ltr',
+            'active' => true,
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
      * @return array<string, string>
      */
     private function buildFactoryResetBootstrapSnapshot(): array
@@ -2132,7 +2432,7 @@ final class SiteBackupService
     /**
      * @return array<string, mixed>
      */
-    private function buildFactoryResetModulesPayload(): array
+    private function buildFactoryResetModulesPayload(bool $enableInstall = true, ?array $allowedPaths = null): array
     {
         $state = [];
         $roots = [
@@ -2154,6 +2454,13 @@ final class SiteBackupService
                     continue;
                 }
 
+                if ($allowedPaths !== null) {
+                    $relativeDir = ltrim(str_replace('\\', '/', substr($dir, strlen(rtrim(BASE_PATH, '/\\')))), '/');
+                    if (!isset($allowedPaths[$relativeDir])) {
+                        continue;
+                    }
+                }
+
                 $manifestPath = $dir . '/' . $manifestName;
                 if (!is_file($manifestPath)) { continue; }
                 try { $manifest = $this->readJsonFile($manifestPath); }
@@ -2163,7 +2470,7 @@ final class SiteBackupService
                     $enabled = true;
                 }
                 if ($name === 'Install') {
-                    $enabled = true;
+                    $enabled = $enableInstall;
                 }
 
                 $item = [
@@ -2181,6 +2488,173 @@ final class SiteBackupService
         ksort($state);
 
         return $state;
+    }
+
+    /**
+     * Rebuild module runtime state strictly from components shipped in the release baseline.
+     *
+     * @return array<string,mixed>
+     */
+    private function buildSiteDataResetModulesPayload(): array
+    {
+        $baseline = $this->baselineService->read();
+        $allowed = [];
+
+        foreach (['modules', 'extensions', 'plugins'] as $catalog) {
+            foreach ((array) ($baseline['components'][$catalog] ?? []) as $meta) {
+                if (!is_array($meta)) {
+                    continue;
+                }
+                $path = trim((string) ($meta['path'] ?? ''), '/');
+                if ($path !== '') {
+                    $allowed[$path] = true;
+                }
+            }
+        }
+
+        return $this->buildFactoryResetModulesPayload(false, $allowed);
+    }
+
+    /**
+     * Added components are identified by the release baseline, not by self-declared
+     * official/origin metadata. Public runtime roots are included so reset leaves no assets.
+     *
+     * @return list<string>
+     */
+    private function siteDataResetAddedRoots(): array
+    {
+        $inspection = $this->baselineService->inspect();
+        $roots = [];
+        $addedSourceRoots = [];
+
+        foreach (['modules', 'extensions', 'plugins', 'themes'] as $catalog) {
+            foreach ((array) ($inspection['added'][$catalog] ?? []) as $meta) {
+                if (!is_array($meta)) {
+                    continue;
+                }
+                $path = trim((string) ($meta['path'] ?? ''), '/');
+                if ($path === '') {
+                    continue;
+                }
+                (new StoragePathGuard(BASE_PATH))->resolve($path);
+                $roots[] = $path;
+                $addedSourceRoots[$path] = true;
+
+                if ($catalog === 'themes'
+                    && preg_match('#^themes/(admin|frontend)/([A-Za-z0-9_-]+)$#D', $path, $matches) === 1) {
+                    $publicTheme = 'public/themes/' . $matches[1] . '/' . $matches[2];
+                    (new StoragePathGuard(BASE_PATH))->resolve($publicTheme);
+                    $roots[] = $publicTheme;
+                }
+            }
+        }
+
+        if ($addedSourceRoots !== []) {
+            \App\Core\ModuleManager::clearCatalogCache();
+            $manager = new \App\Core\ModuleManager([
+                BASE_PATH . '/app/Modules',
+                BASE_PATH . '/app/Extensions',
+                BASE_PATH . '/app/Plugins',
+            ], BASE_PATH . '/data/modules.json');
+
+            foreach ($manager->all() as $meta) {
+                if (!is_array($meta)) {
+                    continue;
+                }
+                $source = trim((string) ($meta['path'] ?? ''));
+                if ($source === '') {
+                    continue;
+                }
+                $relativeSource = ltrim(str_replace(
+                    '\\',
+                    '/',
+                    substr($source, strlen(rtrim(BASE_PATH, '/\\')))
+                ), '/');
+                if (!isset($addedSourceRoots[$relativeSource])) {
+                    continue;
+                }
+
+                $publicPath = trim((string) ($meta['public_assets_path'] ?? ''));
+                if ($publicPath === '') {
+                    continue;
+                }
+                $base = rtrim(str_replace('\\', '/', BASE_PATH), '/');
+                $normalizedPublic = str_replace('\\', '/', $publicPath);
+                if (!str_starts_with($normalizedPublic, $base . '/')) {
+                    throw new \RuntimeException('backups_restore_write_failed');
+                }
+                $relativePublic = ltrim(substr($normalizedPublic, strlen($base)), '/');
+                if ($relativePublic !== '') {
+                    (new StoragePathGuard(BASE_PATH))->resolve($relativePublic);
+                    $roots[] = $relativePublic;
+                }
+            }
+        }
+
+        sort($roots);
+        return array_values(array_unique($roots));
+    }
+
+    /**
+     * Keep unmanaged server/runtime variables in .env.local, but wipe the block
+     * managed by Settings (API keys, OAuth, analytics, captcha, etc.).
+     *
+     * @return array<string,string>
+     */
+    private function siteDataResetInternalWrites(): array
+    {
+        $path = (new StoragePathGuard(BASE_PATH))->resolve('.env.local');
+        if (!is_file($path) || is_link($path)) {
+            return [];
+        }
+
+        $existing = @file_get_contents($path);
+        if (!is_string($existing)) {
+            throw new \RuntimeException('backups_restore_write_failed');
+        }
+
+        return [
+            '.env.local' => (new \App\Modules\Settings\Services\EnvConfigManager())
+                ->buildPortableEnvLocalContent([], $existing),
+        ];
+    }
+
+    /** @return list<string> */
+    private function siteDataResetResidualFiles(): array
+    {
+        $guard = new StoragePathGuard(BASE_PATH);
+        $files = [];
+
+        foreach (['resources/licenses', 'storage/trash'] as $relativeRoot) {
+            $root = $guard->resolve($relativeRoot);
+            if (is_file($root)) {
+                throw new \RuntimeException('backups_restore_write_failed');
+            }
+            if (!is_dir($root)) {
+                continue;
+            }
+
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $item) {
+                $guard->resolve($item->getPathname());
+                if (!$item->isFile() || $item->isLink()) {
+                    continue;
+                }
+
+                $relative = $this->buildArchiveRelativePath(
+                    $root,
+                    $relativeRoot,
+                    $item->getPathname()
+                );
+                $files[] = $relative;
+            }
+        }
+
+        $files = array_values(array_unique($files));
+        sort($files);
+        return $files;
     }
 
     /** @return list<string> */
@@ -2206,6 +2680,32 @@ final class SiteBackupService
                         $item->getPathname()
                     );
                 }
+            }
+        }
+
+        foreach (['storage/backups/site', 'storage/backups/full', 'storage/recovery/keys', 'storage/trash'] as $relativeRoot) {
+            $root = $guard->resolve($relativeRoot);
+            if (is_file($root)) {
+                throw new \RuntimeException('backups_restore_write_failed');
+            }
+            if (!is_dir($root)) {
+                continue;
+            }
+
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $item) {
+                $guard->resolve($item->getPathname());
+                if (!$item->isFile() || $item->isLink()) {
+                    continue;
+                }
+
+                $files[] = $this->buildArchiveRelativePath(
+                    $root,
+                    $relativeRoot,
+                    $item->getPathname()
+                );
             }
         }
 

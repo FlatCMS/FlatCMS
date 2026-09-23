@@ -1,6 +1,6 @@
 {
     "name": "Backups",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "description": "Site data backup and restore manager.",
     "type": "system",
     "author": "Alain BROYE",
@@ -14,5 +14,5 @@
     "vendor": "FlatCMS",
     "official": true,
     "origin": "flatcms",
-    "signature": "fkHBqp+hPN8Bv21JmbXIEZ7BRnqvmSGkZoEePYb/aWCFupPHFNi4nDxO785+6G7U6YUXqh/zYINd1KwCeB63MB120eNknKLWv9ehZO3qmLa1nVfg+CsFDZRrzIg6Y9c5oakbfHoctj9odZnb6QDwQZT7+9YtQAVjlcpNRyvl6ht3vLXYyS7DxcqDEOE8WcViA2o3cCXeHce3tsrCJ99kbvq+0kmaT9ekcj5aQnWCUGkeM0CPzgg8ryM6tHtAhfjnpvkjc8MQiD4t5rwUr13AD4pNij8DGY78vwSwyewrHc1AxjLQ0z8zSSSceaX+dGBC7yuomscZs0DflYJVxRDxuMGvkHHW9Yk82KqVcvf9X45RUvJJB9WUFeK6fSwgkwaW3YQcFgvlaHgJO2LegUsA47w5Ct/sKYH8BE5EDog+Y0eNxGye5iZjcbD9yfpG73ktITWMHOHq4aKOds9S6ybS/YwHUjwE+nwDJFDKrXmHx88yWJmSQzJCX1NRwIczLsQk5EYPK7Vvt3umZA4ObF25zffmZCrKecVYMmL+BZF5WP9WRA36YNIeoAAI/ooIQYb/QlKYKZT2+4wuPfQgYxd1lgX+ZgsR4zDTDbSjR0UmJbzcCoX53ISGlIHo2sAbz0466onSg3uDodVoiEy8/F9KRm7unw/MvXAB6xo+m6g4TCQ="
+    "signature": "oWtXwydUUPqVzcCG3TlYA/IUKFa1Zjb8D7bUADWHUP+kKi+dv/GjMY9XPfpH6LAejZNf83ICdDei0BSeHAWj9u/u5zqFFh0KiR3ME0lJbV57mnFgOR/1zrSzC0WsahF4EMUWBt9Dl9EIXzroRDwnTphZWswyNKbwn8id+p5GHzRW41Mkeo7pqDVCYB91uft/M5zcMBKhGt/jeYWWPIE7bPCPlTgRKfmXm2b7ZhHbDXy9IK4+Oc+cpNvpM5opZef8LndLjW4Z6K5omhy6WSkPqTYl9PNYdCXdowriZq89Jy3+kD5rIRecjf8NlZIZUVH3pk+rfDvQ7kbEPFB7HrIRnZ9SyKBcWhq8P/gsMRWgFHvygyQ7ddIuNTfh6WjuuUNI/WHoyqkL9z7MOBgF//f8qOeNyiLf8xkZfwbxUSqPBKgz0bJbHo7LbMZaaLZXvXL1Icmd/qxz9ZUdTzRBHLnlezJiZhE0XqJYrcnNI5gTkIQ9HRG3ejdhKoi+HG3WEn91vjv5h13ZsZL8G5jHTg32I+sWfTJ/SqBEvEARwtKjTQC6vGcMdVB2lzk3Vs1178zphxPvYuOMCrVlDq0LtElPMR9AM0NJmpQBgVqflqx6yXZSOZTvbDiLOMdRo/RyQb+M1sn4xug9ypivFM0qSQHJYz6P1EPo8TWDiBy74vX3c8w="
 }
