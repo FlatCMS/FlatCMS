@@ -74,12 +74,6 @@
             "files_count": 1,
             "size_bytes": 233
         },
-        "public/.htaccess": {
-            "path": "public/.htaccess",
-            "sha256": "6217ff433373786b5a23a0436be627cf28cd7f89a93551a925db1289a52e2b06",
-            "files_count": 1,
-            "size_bytes": 1697
-        },
         "public/assets/css": {
             "path": "public/assets/css",
             "sha256": "f4f4f86fe96dd03954f73f07be0a6cc47ed837ca26515de4052dacd98a354f04",
@@ -173,9 +167,9 @@
             },
             "Backups": {
                 "path": "app/Modules/Backups",
-                "sha256": "50147908aa76a6a55c9ed05b8424eece899cb6ffbafb558a61dd799eba5dbc9f",
+                "sha256": "26f5e9e072f5750ccd1b8a4e533ac32b7c10f3bd4a68cec648edb6590784c9ef",
                 "files_count": 18,
-                "size_bytes": 281472,
+                "size_bytes": 281761,
                 "identity": {
                     "name": "Backups",
                     "version": "1.1.0",

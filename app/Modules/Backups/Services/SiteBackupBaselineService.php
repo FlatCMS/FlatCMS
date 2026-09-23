@@ -43,10 +43,17 @@ final class SiteBackupBaselineService
         'VERSION',
         'flatcms.json',
         'index.php',
-        'public/.htaccess',
         'public/index.php',
         'public/recovery.php',
         'recovery.php',
+    ];
+
+    /** @var list<string> */
+    private const ENVIRONMENT_GENERATED_FILES = [
+        'nginx.conf',
+        'public/.htaccess',
+        'public/web.config',
+        'web.config',
     ];
 
     private string $basePath;
@@ -129,6 +136,9 @@ final class SiteBackupBaselineService
 
         $protectedChanges = [];
         foreach ((array) ($baseline['protected_roots'] ?? []) as $relative => $expected) {
+            if (in_array((string) $relative, self::ENVIRONMENT_GENERATED_FILES, true)) {
+                continue;
+            }
             $actual = $current['protected_roots'][$relative] ?? null;
             if (!$this->sameFingerprint($expected, $actual)) {
                 $protectedChanges[] = (string) $relative;
