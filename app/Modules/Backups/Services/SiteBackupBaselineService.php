@@ -39,7 +39,6 @@ final class SiteBackupBaselineService
 
     /** @var list<string> */
     private const PROTECTED_FILES = [
-        '.htaccess',
         'VERSION',
         'flatcms.json',
         'index.php',
@@ -50,6 +49,7 @@ final class SiteBackupBaselineService
 
     /** @var list<string> */
     private const ENVIRONMENT_GENERATED_FILES = [
+        '.htaccess',
         'nginx.conf',
         'public/.htaccess',
         'public/web.config',

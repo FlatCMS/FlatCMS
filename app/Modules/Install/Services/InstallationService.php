@@ -202,8 +202,11 @@ final class InstallationService
         $files = [];
         $serverType = $this->environment['server_type'] ?? 'unknown';
 
-        if ($this->generateHtaccess()) {
+        if ($this->generatePublicHtaccess()) {
             $files['htaccess'] = PUBLIC_PATH . '/.htaccess';
+        }
+        if ($this->generateRootHtaccess()) {
+            $files['htaccess_root'] = BASE_PATH . '/.htaccess';
         }
         if ($serverType === 'iis') {
             if ($this->generatePublicWebConfig($siteUrl)) {
@@ -451,7 +454,7 @@ XML;
         return true;
     }
 
-    private function generateHtaccess(): bool
+    private function generatePublicHtaccess(): bool
     {
         $serverType = $this->environment['server_type'] ?? 'unknown';
 
@@ -547,6 +550,52 @@ HTACCESS;
 
         $this->writeTextFile($htaccessPath, $htaccessContent, 'Unable to write public/.htaccess.');
         return true;
+    }
+
+    private function generateRootHtaccess(): bool
+    {
+        $serverType = $this->environment['server_type'] ?? 'unknown';
+        if (!in_array($serverType, ['apache', 'litespeed', 'unknown'], true)
+            || !$this->usesProjectRootDocumentRoot()) {
+            return false;
+        }
+
+        $content = <<<'HTACCESS'
+# FlatCMS: project-root document root. Public assets stay under public/.
+RewriteEngine On
+
+# Never expose private application trees, including on a copied installation.
+RewriteRule ^(?:app|bin|config|data|resources|storage|themes|vendor)(?:/|$) - [F,L,NC]
+RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
+RewriteRule (^|/)(?:web\.config|nginx\.conf|composer\.(?:json|lock))$ - [F,L,NC]
+RewriteRule \.(?:bak|backup(?:\..*)?|old|orig|save|swp|dist|example|log|lock)$ - [F,L,NC]
+
+RewriteRule ^(?:index|recovery)\.php$ - [L]
+RewriteRule ^public(?:/|$) - [L]
+# Keep content image URLs portable without creating an uploads alias on disk.
+RewriteRule ^(uploads|assets|modules|widgets)/(.*)$ public/$1/$2 [L]
+RewriteRule ^ index.php [L,QSA]
+HTACCESS;
+
+        $this->writeTextFile(BASE_PATH . '/.htaccess', $content . PHP_EOL, 'Unable to write root .htaccess.');
+        return true;
+    }
+
+    private function usesProjectRootDocumentRoot(): bool
+    {
+        $documentRoot = trim((string) ($this->environment['document_root'] ?? ''));
+        if ($documentRoot === 'root') {
+            return true;
+        }
+        if ($documentRoot === '' || $documentRoot === 'public') {
+            return false;
+        }
+
+        $resolvedDocumentRoot = realpath($documentRoot) ?: $documentRoot;
+        $resolvedBasePath = realpath(BASE_PATH) ?: BASE_PATH;
+
+        return rtrim(str_replace('\\', '/', $resolvedDocumentRoot), '/')
+            === rtrim(str_replace('\\', '/', $resolvedBasePath), '/');
     }
 
     private function getCurrentDateTime(): string

@@ -2,12 +2,6 @@
     "schema": 1,
     "flatcms_version": "2.0.0",
     "protected_roots": {
-        ".htaccess": {
-            "path": ".htaccess",
-            "sha256": "eb5e8a4ea62bbb8082e804eae4284f152b180af588e674f3b89702f213d63278",
-            "files_count": 1,
-            "size_bytes": 733
-        },
         "VERSION": {
             "path": "VERSION",
             "sha256": "c28fcca53637bc88e124af1725df13cb98c69dedefd62fb3cdbe1cdb6b760624",
@@ -52,9 +46,9 @@
         },
         "bin": {
             "path": "bin",
-            "sha256": "9c31966397eebd3ef36ef3fb288695b73bb5185d16f39925a6f93e5abd5a58ab",
-            "files_count": 1,
-            "size_bytes": 1580
+            "sha256": "3731621cd8e7244b5975f9b1c3ad8215cc7e349397d793aacff366f31646176e",
+            "files_count": 2,
+            "size_bytes": 1599
         },
         "config": {
             "path": "config",
@@ -167,7 +161,7 @@
             },
             "Backups": {
                 "path": "app/Modules/Backups",
-                "sha256": "26f5e9e072f5750ccd1b8a4e533ac32b7c10f3bd4a68cec648edb6590784c9ef",
+                "sha256": "bb1e616a351f202707e1ad88f30606427569d19c785a1374e466a8c3453e4bee",
                 "files_count": 18,
                 "size_bytes": 281761,
                 "identity": {
@@ -279,9 +273,9 @@
             },
             "Install": {
                 "path": "app/Modules/Install",
-                "sha256": "bd619ea6870f5301410695b458528cc1e11728c0c87876d7f0c3508e8baac460",
+                "sha256": "984370b60aaed072a2cef0af435c7a01066137e1dfd9ad1b2bf8730281fbed8b",
                 "files_count": 98,
-                "size_bytes": 2464256,
+                "size_bytes": 2466212,
                 "identity": {
                     "name": "Install",
                     "version": "1.0.0",
@@ -433,9 +427,9 @@
             },
             "UpdateManager": {
                 "path": "app/Modules/UpdateManager",
-                "sha256": "8264eb0bfc972dfaf6af35af9700058cead17b827a1ff736e54c306aef0fe4d4",
+                "sha256": "33185dd59729f09c6a7e7a1acf9637da958024f5b42ce13c179597a38379beec",
                 "files_count": 47,
-                "size_bytes": 290528,
+                "size_bytes": 290518,
                 "identity": {
                     "name": "UpdateManager",
                     "version": "0.4.9",

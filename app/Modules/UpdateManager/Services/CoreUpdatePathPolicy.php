@@ -18,7 +18,7 @@ final class CoreUpdatePathPolicy
 {
     private const TOP_FILES = [
         'VERSION', 'flatcms.json', 'index.php', 'public/index.php',
-        '.htaccess', 'public/.htaccess', 'data/.htaccess', 'storage/.htaccess', 'nginx.conf',
+        'app/.htaccess', 'data/.htaccess', 'storage/.htaccess', 'themes/.htaccess',
         'README.md', 'LICENSE', 'LICENSING.md', 'COMMERCIAL_LICENSE.md',
         'CLA.md', 'TRADEMARK.md', 'THIRD_PARTY_NOTICES.md',
     ];
